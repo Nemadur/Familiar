@@ -1,5 +1,8 @@
 export type Locale = {
 	meta: {
+		app_name: string;
+		description: string;
+		keywords: string;
 		label: string;
 		flag: string;
 		currency: {
@@ -105,6 +108,29 @@ export type Locale = {
 		language_select: {
 			search: string;
 			select: string;
+		};
+	};
+	footer: {
+		about: {
+			title: string;
+			description: string;
+		};
+		sections: {
+			socials: string;
+			navigation: string;
+			resources: string;
+		};
+		links: {
+			home: string;
+			blog: string;
+			faq: string;
+			sponsors: string;
+			terms: string;
+			documentation: string;
+		};
+		copyright: {
+			rights: string;
+			made_with: string;
 		};
 	};
 };

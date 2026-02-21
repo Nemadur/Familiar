@@ -16,8 +16,8 @@ import {
 } from "../icons/icons";
 import { Button } from "../ui/button";
 import AuthModal from "./auth/modal";
+import UserDropDown from "./profile/drop-down";
 import LanguageSelect from "./select/language";
-import UserDropDown from "./user/drop-down";
 
 export default function Header() {
 	const { t } = useTranslation();

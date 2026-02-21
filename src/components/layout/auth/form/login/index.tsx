@@ -31,7 +31,7 @@ import type { LoginData } from "@/types/auth/schema/login";
 
 function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 	const [showPassword, setShowPassword] = useState(false);
-	const { refreshSession } = useAuth();
+	const { login: authLogin } = useAuth();
 	const { t } = useTranslation();
 
 	const form = useFormValidation({
@@ -44,28 +44,19 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 
 	const { handleSubmit, isPending, control } = form;
 
-	const onSubmit = async (_data: LoginData) => {
-		const loginPromise = new Promise<{ success: boolean; error?: string }>(
-			async (resolve, reject) => {
-				try {
-					const _response = await refreshSession();
+	const onSubmit = async (data: LoginData) => {
+		const loginPromise = authLogin(data);
 
-					toast.promise(loginPromise, {
-						loading: "Signing you in...",
-						success: async (response) => {
-							if (response.success) {
-								onSuccess();
-								return "You have successfully signed in!";
-							}
-							throw new Error(response.error || "Unknown error");
-						},
-					});
-					resolve({ success: true });
-				} catch (error) {
-					reject({ success: false, error: (error as Error).message });
-				}
+		toast.promise(loginPromise, {
+			loading: "Signing you in...",
+			success: () => {
+				onSuccess();
+				return "You have successfully signed in!";
 			},
-		);
+			error: (error) => {
+				return error.message || "Unknown error";
+			},
+		});
 	};
 
 	return (

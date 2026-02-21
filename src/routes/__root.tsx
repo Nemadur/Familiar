@@ -10,7 +10,9 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Container } from "@/components/layout/container";
 import Footer from "@/components/layout/footer";
-import { setSSRLanguage } from "@/lib/i18n";
+import TanStackQueryDevtools from "@/integrations/tanstack-query/devtools";
+import i18n, { setSSRLanguage } from "@/lib/i18n";
+import { seo } from "@/lib/seo";
 import { QueryClientProvider } from "@/providers/query-client";
 import { ThemeProvider } from "@/providers/theme";
 import Header from "../components/layout/header";
@@ -29,9 +31,9 @@ export const Route = createRootRouteWithContext<{
 				name: "viewport",
 				content: "width=device-width, initial-scale=1",
 			},
-			{
-				title: "TanStack Start Starter",
-			},
+			...seo({
+				title: i18n.t("seo.defaults.title"),
+			}),
 		],
 		links: [
 			{
@@ -48,11 +50,9 @@ export const Route = createRootRouteWithContext<{
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	const context = Route.useRouteContext();
-	const matches = useMatches();
-	const location = useLocation();
 
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang={i18n.language || "en"} suppressHydrationWarning>
 			<head>
 				<HeadContent />
 			</head>
@@ -82,6 +82,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 										name: "Tanstack Router",
 										render: <TanStackRouterDevtoolsPanel />,
 									},
+									TanStackQueryDevtools,
 								]}
 							/>
 						</QueryClientProvider>

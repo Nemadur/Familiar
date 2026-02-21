@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+// import { createUser } from "@/data/user";
 import useFormValidation from "@/hooks/use-form-validation";
+import { supabase } from "@/lib/supabase";
 import {
 	register,
 	registerStep0,
@@ -93,30 +95,49 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 		}
 	};
 
-	const submit = async (_data: RegisterData) => {
-		//TODO: submit to server
-		// Mock implementation for now as per original file
-		const registerPromise = new Promise<{ success: boolean; error?: string }>(
-			async (resolve, reject) => {
-				try {
-					// Simulate API call
-					await new Promise((r) => setTimeout(r, 1000));
-					// const response = await refreshSession();
+	const submit = async (data: RegisterData) => {
+		toast.error("Registration is currently disabled.");
+		/*
+		const registerPromise = (async () => {
+			// 1. Create user in Supabase
+			const { data: authData, error: authError } = await supabase.auth.signUp({
+				email: data.email,
+				password: data.password,
+			});
 
-					toast.promise(registerPromise, {
-						loading: "Creating account...",
-						success: async (_response) => {
-							onSuccess();
-							return "Account created successfully!";
-						},
-						error: (err) => err.message,
-					});
-					resolve({ success: true });
-				} catch (error) {
-					reject({ success: false, error: (error as Error).message });
-				}
+			if (authError) throw new Error(authError.message);
+			if (!authData.user) throw new Error("No user returned from Supabase");
+
+			// 2. Create user in local DB
+			try {
+				await createUser({
+					data: {
+						uuid: authData.user.id,
+						username: data.username,
+						display_name: data.display_name,
+					},
+				});
+			} catch (dbError) {
+				console.error("Failed to create local user:", dbError);
+				// Optional: Rollback Supabase user creation?
+				// For now, we'll throw, but the user exists in Supabase.
+				throw new Error(
+					"Failed to create account profile. Please contact support.",
+				);
+			}
+
+			return "Account created successfully!";
+		})();
+
+		toast.promise(registerPromise, {
+			loading: "Creating account...",
+			success: () => {
+				onSuccess();
+				return "Account created successfully!";
 			},
-		);
+			error: (err) => err.message || "Unknown error",
+		});
+		*/
 	};
 
 	const goNext = () => {

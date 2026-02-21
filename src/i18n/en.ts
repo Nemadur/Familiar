@@ -1,7 +1,23 @@
 import type { Locale } from "@/types/i18n";
 
 const en: Locale = {
+	seo: {
+		defaults: {
+			title: "Familiar",
+			description: "Your art station",
+			keywords: "art, familiar, commission",
+		},
+		home: {
+			title: "Welcome to Familiar",
+			description: "Your art station",
+		},
+		profile: {
+			title: "Profile (@{{username}})",
+			description: "User profile for @{{username}}",
+		},
+	},
 	meta: {
+		app_name: "Familiar",
 		label: "English",
 		flag: "🇺🇸",
 		currency: {
@@ -11,7 +27,7 @@ const en: Locale = {
 		},
 	},
 	header: {
-		title: "Familiar",
+		title: "$t(meta.app_name)",
 		navigation: {
 			home: "Home",
 			shop: "Shop",
@@ -107,6 +123,30 @@ const en: Locale = {
 		language_select: {
 			search: "Search languages",
 			select: "Select language",
+		},
+	},
+	footer: {
+		about: {
+			title: "$t(meta.app_name)",
+			description:
+				"$t(meta.app_name) is a social platform for artists to connect with each other.",
+		},
+		sections: {
+			socials: "Socials",
+			navigation: "Navigation",
+			resources: "Resources",
+		},
+		links: {
+			home: "Home",
+			blog: "Blog",
+			faq: "FAQ",
+			sponsors: "Sponsors",
+			terms: "Terms",
+			documentation: "Documentation",
+		},
+		copyright: {
+			rights: "All rights reserved",
+			made_with: "Made with ❤️",
 		},
 	},
 };

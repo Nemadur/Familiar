@@ -142,3 +142,7 @@ code {
     @apply transition-none;
   }
 }
+
+.link {
+  @apply underline underline-offset-4 text-blue-600 hover:text-blue-800 decoration-blue-500/30 hover:decoration-blue-800;
+}

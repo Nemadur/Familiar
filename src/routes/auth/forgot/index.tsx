@@ -15,7 +15,7 @@ function ForgotPage() {
 		<div className="grid h-[calc(100vh-6rem)] mt-2 lg:grid-cols-2">
 			<div className="flex flex-col gap-4 p-6 md:p-10">
 				<div className="flex flex-1 items-center justify-center">
-					<div className="w-full max-w-xs">
+					<div className="w-full max-w-md">
 						<ForgotForm
 							onSuccess={() => {}}
 							onModeChange={() => navigate({ to: "/auth/login" })}
@@ -23,7 +23,7 @@ function ForgotPage() {
 					</div>
 				</div>
 			</div>
-			<div className="bg-muted relative hidden lg:block">
+			<div className="bg-muted relative hidden lg:block rounded-4xl overflow-hidden">
 				<img
 					src="https://images.pexels.com/photos/1570264/pexels-photo-1570264.jpeg"
 					alt="Familiar"

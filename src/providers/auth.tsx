@@ -1,12 +1,14 @@
 import * as React from "react";
-import { getUserByUsername } from "@/data/user";
+import { getUserById } from "@/data/user";
+import { supabase } from "@/lib/supabase";
+import type { LoginData } from "@/types/auth/schema/login";
 import type { User } from "@/types/user";
 
 interface AuthContext {
 	user: User | null;
 	pending: boolean;
 	refreshSession: () => Promise<void>;
-	login: (username: string) => Promise<void>;
+	login: (data: LoginData) => Promise<void>;
 	logout: () => Promise<void>;
 	onAuthStateChange: (callback: (user: User | null) => void) => () => void;
 }
@@ -27,24 +29,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const refreshSession = React.useCallback(async () => {
 		setPending(true);
 		try {
-			const storedUsername = localStorage.getItem("familiar-username");
-			if (storedUsername) {
-				const fetchedUser = await getUserByUsername({
-					data: { username: storedUsername },
+			const {
+				data: { user },
+				error,
+			} = await supabase.auth.getUser();
+
+			if (error) {
+				// Only log unexpected errors. "Auth session missing!" is expected when not logged in.
+				if (error.message !== "Auth session missing!") {
+					console.error("Failed to get user:", error);
+				}
+				setUser(null);
+				notifyListeners(null);
+				return;
+			}
+
+			if (user) {
+				// Fetch user details from database using Supabase User ID
+				const fetchedUser = await getUserById({
+					data: { uuid: user.id },
 				});
 
 				if (fetchedUser) {
 					setUser(fetchedUser);
 					notifyListeners(fetchedUser);
+				} else {
+					console.warn(
+						"User authenticated in Supabase but not found in database.",
+					);
+					setUser(null);
+					notifyListeners(null);
 				}
-
+			} else {
 				setUser(null);
 				notifyListeners(null);
-				localStorage.removeItem("familiar-username");
 			}
-
-			setUser(null);
-			notifyListeners(null);
 		} catch (error) {
 			console.error("Failed to refresh session:", error);
 			setUser(null);
@@ -55,17 +74,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, [notifyListeners]);
 
 	const login = React.useCallback(
-		async (username: string) => {
+		async (data: LoginData) => {
 			setPending(true);
 			try {
-				const fetchedUser = await getUserByUsername({ data: { username } });
-				if (fetchedUser) {
-					localStorage.setItem("familiar-username", username);
-					setUser(fetchedUser);
-					notifyListeners(fetchedUser);
+				const { error } = await supabase.auth.signInWithPassword({
+					email: data.email,
+					password: data.password,
+				});
+
+				if (error) {
+					throw new Error(error.message);
 				}
 
-				throw new Error("User not found");
+				await refreshSession();
 			} catch (error) {
 				console.error("Login failed:", error);
 				throw error;
@@ -73,15 +94,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				setPending(false);
 			}
 		},
-		[notifyListeners],
+		[refreshSession],
 	);
 
 	const logout = React.useCallback(async () => {
 		setPending(true);
 		try {
-			localStorage.removeItem("familiar-username");
+			await supabase.auth.signOut();
 			setUser(null);
 			notifyListeners(null);
+		} catch (error) {
+			console.error("Logout failed:", error);
 		} finally {
 			setPending(false);
 		}
@@ -90,8 +113,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const onAuthStateChange = React.useCallback(
 		(callback: (user: User | null) => void) => {
 			listeners.current.push(callback);
-			// Call immediately with current state
-			// callback(user); // Optional: depends on desired behavior, but usually subscription implies future updates.
 			return () => {
 				listeners.current = listeners.current.filter((l) => l !== callback);
 			};
@@ -100,8 +121,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	);
 
 	React.useEffect(() => {
+		// Initial session check
 		refreshSession();
-	}, [refreshSession]);
+
+		// Listen for auth changes
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange(async (event, session) => {
+			if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+				if (session?.user) {
+					const fetchedUser = await getUserById({
+						data: { uuid: session.user.id },
+					});
+					if (fetchedUser) {
+						setUser(fetchedUser);
+						notifyListeners(fetchedUser);
+					}
+				}
+			} else if (event === "SIGNED_OUT") {
+				setUser(null);
+				notifyListeners(null);
+			}
+		});
+
+		return () => {
+			subscription.unsubscribe();
+		};
+	}, [refreshSession, notifyListeners]);
 
 	const value = React.useMemo(
 		() => ({

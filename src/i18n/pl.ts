@@ -1,7 +1,23 @@
 import type { Locale } from "@/types/i18n";
 
 const pl: Locale = {
+	seo: {
+		defaults: {
+			title: "Familiar",
+			description: "Twoja artystyczna przystań",
+			keywords: "sztuka, familiar, zlecenia",
+		},
+		home: {
+			title: "Witamy w Familiar",
+			description: "Twoja artystyczna przystań",
+		},
+		profile: {
+			title: "Profil (@{{username}})",
+			description: "Profil użytkownika @{{username}}",
+		},
+	},
 	meta: {
+		app_name: "Familiar",
 		label: "Polski",
 		flag: "🇵🇱",
 		currency: {
@@ -11,7 +27,7 @@ const pl: Locale = {
 		},
 	},
 	header: {
-		title: "Familiar",
+		title: "$t(meta.app_name)",
 		navigation: {
 			home: "Strona główna",
 			shop: "Sklep",
@@ -107,6 +123,30 @@ const pl: Locale = {
 		language_select: {
 			search: "Szukaj języka",
 			select: "Wybierz język",
+		},
+	},
+	footer: {
+		about: {
+			title: "$t(meta.app_name)",
+			description:
+				"$t(meta.app_name) to platforma społecznościowa dla artystów, aby łączyć się ze sobą.",
+		},
+		sections: {
+			socials: "Sociale",
+			navigation: "Nawigacja",
+			resources: "Zasoby",
+		},
+		links: {
+			home: "Strona główna",
+			blog: "Blog",
+			faq: "FAQ",
+			sponsors: "Sponsorzy",
+			terms: "Regulamin",
+			documentation: "Dokumentacja",
+		},
+		copyright: {
+			rights: "Wszelkie prawa zastrzeżone",
+			made_with: "Stworzone z ❤️",
 		},
 	},
 };

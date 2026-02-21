@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
@@ -57,11 +59,9 @@ function InputGroupAddon({
 	className,
 	align = "inline-start",
 	...props
-}: React.ComponentProps<"button"> &
-	VariantProps<typeof inputGroupAddonVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
 	return (
-		<button
-			type="button"
+		<div
 			data-slot="input-group-addon"
 			data-align={align}
 			className={cn(inputGroupAddonVariants({ align }), className)}
@@ -73,17 +73,6 @@ function InputGroupAddon({
 					"input,textarea",
 				) as HTMLElement;
 				input?.focus();
-			}}
-			onKeyDown={(e) => {
-				if ((e.target as HTMLElement).closest("button")) {
-					return;
-				}
-				if (e.key === "Enter" || e.key === " ") {
-					const input = e.currentTarget.parentElement?.querySelector(
-						"input,textarea",
-					) as HTMLElement;
-					input?.focus();
-				}
 			}}
 			{...props}
 		/>

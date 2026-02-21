@@ -46,7 +46,7 @@ export function AccountTypeSelector({
 						<label
 							key={opt.key}
 							className={cn(
-								"group relative w-full cursor-pointer rounded-xl border text-left transition-all",
+								"group relative w-full cursor-pointer rounded-2xl border text-left transition-all",
 								"p-2 sm:p-3",
 								"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 outline-none",
 								selected

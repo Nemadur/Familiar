@@ -1,12 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import {
-	OutlineArrowRight,
-	SolidLogo,
-	SolidLogoText,
-} from "@/components/icons/icons";
+import { useTranslation } from "react-i18next";
+import { OutlineArrowRight, SolidLogoText } from "@/components/icons/icons";
 
 export default function Footer() {
 	const currentYear = new Date().getFullYear();
+	const { t } = useTranslation();
 
 	const socialLinks = [
 		{ label: "GitHub", href: "https://github.com" },
@@ -18,44 +16,55 @@ export default function Footer() {
 	];
 
 	const navigationLinks = [
-		{ label: "Home", href: "/" },
-		{ label: "Blog", href: "/blog" },
-		{ label: "FAQ", href: "/faq" },
-		{ label: "Sponsors", href: "/sponsors" },
-		{ label: "Terms", href: "/tos" },
+		{ label: t("footer.links.home"), href: "/" },
+		{ label: t("footer.links.blog"), href: "/blog" },
+		{ label: t("footer.links.faq"), href: "/faq" },
+		{ label: t("footer.links.sponsors"), href: "/sponsors" },
+		{ label: t("footer.links.terms"), href: "/tos" },
 	];
 
 	const resourceLinks = [
-		{ label: "Documentation", href: "#" },
-		{ label: "Blog", href: "/blog" },
+		{ label: t("footer.links.documentation"), href: "#" },
+		{ label: t("footer.links.blog"), href: "/blog" },
 	];
 
 	return (
 		<footer className={"mt-auto"}>
 			{/* Main Footer Content */}
-			<div className="rounded-3xl bg-primary/6 p-6">
-				<div className="flex flex-col items-start justify-between gap-8 md:flex-row">
+			<div className={"rounded-3xl bg-primary/6 p-6"}>
+				<div
+					className={
+						"flex flex-col items-start justify-between gap-8 md:flex-row"
+					}
+				>
 					{/* Logo and info */}
-					<div className="w-full space-y-4 md:w-auto">
+					<div className={"w-full space-y-4 md:w-auto"}>
 						<SolidLogoText size={80} />
-						<div className="space-y-2">
-							<span className=" mt-4 font-bold text-sm uppercase tracking-wider">
-								Familiar
+						<div className={"space-y-2"}>
+							<span
+								className={"mt-4 font-bold text-sm uppercase tracking-wider"}
+							>
+								{t("footer.about.title")}
 							</span>
-							<p className="text-xs tracking-wider">
-								Familiar is a social platform for artists to connect with each
-								other.
+							<p className={"text-xs tracking-wider"}>
+								{t("footer.about.description")}
 							</p>
 						</div>
 					</div>
 
 					{/* Links */}
-					<div className="grid w-full grid-cols-1 gap-8 md:flex md:w-auto md:gap-8">
+					<div
+						className={
+							"grid w-full grid-cols-1 gap-8 md:flex md:w-auto md:gap-8"
+						}
+					>
 						{/* Social Links */}
-						<div className="space-y-4">
-							<h4 className="font-bold text-xs tracking-wider">Socials</h4>
+						<div className={"space-y-4"}>
+							<h4 className={"font-bold text-xs tracking-wider"}>
+								{t("footer.sections.socials")}
+							</h4>
 
-							<div className="space-y-2">
+							<div className={"space-y-2"}>
 								{socialLinks.map((link) => (
 									<LinkWithArrow
 										key={link.label}
@@ -68,9 +77,11 @@ export default function Footer() {
 						</div>
 
 						{/* Navigation Links */}
-						<div className="space-y-4">
-							<h4 className="font-bold text-xs tracking-wider">Navigation</h4>
-							<div className="space-y-2">
+						<div className={"space-y-4"}>
+							<h4 className={"font-bold text-xs tracking-wider"}>
+								{t("footer.sections.navigation")}
+							</h4>
+							<div className={"space-y-2"}>
 								{navigationLinks.map((link) => (
 									<LinkWithArrow
 										key={link.label}
@@ -82,10 +93,12 @@ export default function Footer() {
 						</div>
 
 						{/* Resources */}
-						<div className="space-y-4">
-							<h4 className="font-bold text-xs tracking-wider">Resources</h4>
+						<div className={"space-y-4"}>
+							<h4 className={"font-bold text-xs tracking-wider"}>
+								{t("footer.sections.resources")}
+							</h4>
 
-							<div className="space-y-2">
+							<div className={"space-y-2"}>
 								{resourceLinks.map((link) => (
 									<LinkWithArrow
 										key={link.label}
@@ -102,13 +115,25 @@ export default function Footer() {
 
 			{/* <SectionSeparator /> */}
 
-			<div className="p-6">
-				<div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-					<p className="text-gray-500 text-xs uppercase tracking-wider dark:text-gray-500">
-						&copy; {currentYear} All rights reserved
+			<div className={"p-6"}>
+				<div
+					className={
+						"flex flex-col items-center justify-between gap-4 sm:flex-row"
+					}
+				>
+					<p
+						className={
+							"text-gray-500 text-xs uppercase tracking-wider dark:text-gray-500"
+						}
+					>
+						&copy; {currentYear} {t("footer.copyright.rights")}
 					</p>
-					<p className="text-gray-500 text-xs uppercase tracking-wider dark:text-gray-500">
-						Made with ❤️
+					<p
+						className={
+							"text-gray-500 text-xs uppercase tracking-wider dark:text-gray-500"
+						}
+					>
+						{t("footer.copyright.made_with")}
 					</p>
 				</div>
 			</div>

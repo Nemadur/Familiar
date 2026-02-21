@@ -9,16 +9,23 @@ export interface User {
 	};
 	accent_color: string;
 	banned_until?: Date | null;
-	is_premium?: boolean | null;
-	is_verified?: boolean | null;
+	is_premium: boolean;
+	is_verified: boolean;
 	created_at: Date;
 	badges?: Badges[] | null;
 	social_links?: SocialLinks[] | null;
 	timezone?: string | null;
-	spoken_languages?: string[] | null;
+	spoken_languages?: SpokenLanguage[] | null;
 	tos?: {
 		summary: string;
 	} | null;
+	roles: string[];
+	pronouns?: string | null;
+}
+
+export interface SpokenLanguage {
+	locale: string;
+	experience: "native" | "fluent" | "communicative" | "learning";
 }
 
 export interface Badges {
