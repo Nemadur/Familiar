@@ -6,11 +6,11 @@
 
 ## High-level goals
 
-- **Auth**: accounts live in `auth.users` (Supabase). Public app data lives in `public.*` tables.
+- **Auth**: accounts live in `auth.users` (Supabase). familiar app data lives in `familiar.*` tables.
 - **Normalized profile**: profile core is small, while optional lists (languages/links/badges/roles) are separate tables.
 - **Core discovery via tags**: posts, commissions and shop items support `tags` + fast search with **GIN indexes**.
 - **Content safety**: optional `content_warnings[]` (NSFW/sensitive content) for easy filtering.
-- **Privacy**: profiles and sonas can be public or private; private content is visible to accepted followers.
+- **Privacy**: profiles and sonas can be familiar or private; private content is visible to accepted followers.
 - **Moderation**: strikes expire, auto-ban at 3 active strikes; invite system penalizes “bad inviters”.
 - **Social**: follow requests, saves, likes, blocks, notifications.
 - **Media**: unified asset table with dimensions (bento grid support).
@@ -33,7 +33,7 @@
 
 - **User**
   - `auth.users` (Supabase) → account
-  - `public.profiles` → public profile info (PK = `auth.users.id`)
+  - `familiar.profiles` → familiar profile info (PK = `auth.users.id`)
 - **Roles (multi-role)**
   - `roles` defines roles (client/artist/moderator/admin)
   - `user_roles` assigns multiple roles per user
@@ -72,7 +72,7 @@
 
 ## Enums / “types” used
 
-- `visibility`: `public | unlisted | private`
+- `visibility`: `familiar | unlisted | private`
 - `media_type`: `image | video | audio | file | other`
 - `listing_status`: `open | closed | waitlist | draft`
 - `content_warning`: `sexual | nudity | violence | gore | self_harm | drugs | hate | flashing | other`
@@ -97,7 +97,7 @@
 ## 1) Users & profile
 
 ### `profiles`
-Core public profile record.
+Core familiar profile record.
 
 - **PK**: `user_id` (uuid, references `auth.users.id`)
 - **Key fields**:
@@ -114,7 +114,7 @@ Core public profile record.
 Multi-role support (artist + moderator etc.).
 
 - `roles(role_key, label, is_staff)`
-- `user_roles(user_id, role_key, is_public, granted_by, granted_at)`
+- `user_roles(user_id, role_key, is_familiar, granted_by, granted_at)`
 - Staff roles automatically grant **staff badge** (`user_badges.staff`).
 
 ### `user_spoken_languages`, `user_links`
@@ -322,8 +322,8 @@ Split tables to keep strong FK integrity:
 
 # RLS (Row Level Security) summary
 
-- **profiles**: public viewable if:
-  - profile is public, or viewer is accepted follower, or viewer is the owner
+- **profiles**: familiar viewable if:
+  - profile is familiar, or viewer is accepted follower, or viewer is the owner
   - AND there is no mutual block
 - **sonas**: viewable if owner OR (owner is viewable AND sona is not private) OR accepted follower
 - **posts/listings/shop items**: viewable if creator profile is viewable (privacy-aware) and visibility/status allows it
@@ -359,5 +359,5 @@ Split tables to keep strong FK integrity:
 - If you want tags as a controlled taxonomy (autocomplete + synonyms), add:
   - `tags` table + `tag_aliases` + join tables (instead of `text[]`).
 - If you want NSFW filtering more granular, extend `content_warning` enum.
-- If you want “public sona but private owner”, you can decouple sona visibility from owner visibility (currently it follows owner privacy + own flag).
+- If you want “familiar sona but private owner”, you can decouple sona visibility from owner visibility (currently it follows owner privacy + own flag).
 - For moderation/admin UI, add policies using `user_roles` (moderator/admin) or manage via `service_role`.
