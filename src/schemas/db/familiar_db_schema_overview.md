@@ -1,12 +1,12 @@
 # Familiar — Database schema (Supabase/Postgres) overview
 
-> This document describes what’s already implemented in the database schema **v0.2.2** and how the data is structured.
+> This document describes what’s already implemented in the database schema **v0.2.7** and how the data is structured.
 
 ---
 
 ## High-level goals
 
-- **Auth**: accounts live in `auth.users` (Supabase). Public app data lives in `public.*` tables.
+- **Auth**: accounts live in `auth.users` (Supabase). App data lives in `familiar.*` tables.
 - **Normalized profile**: profile core is small, while optional lists (languages/links/badges/roles) are separate tables.
 - **Core discovery via tags**: posts, commissions and shop items support `tags` + fast search with **GIN indexes**.
 - **Content safety**: optional `content_warnings[]` (NSFW/sensitive content) for easy filtering.
@@ -19,7 +19,7 @@
 
 ## Version used by this doc
 
-- **Schema file**: `familiar_supabase_schema_v0_2_2.sql`
+- **Schema file**: `supabase_schema_familiar_v0_2_6.sql`
 - Includes patches:
   - v0.1 → base schema
   - v0.1.1 → media width/height patch (already included in base table)
@@ -33,7 +33,7 @@
 
 - **User**
   - `auth.users` (Supabase) → account
-  - `public.profiles` → public profile info (PK = `auth.users.id`)
+  - `familiar.profiles` → public profile info (PK = `auth.users.id`)
 - **Roles (multi-role)**
   - `roles` defines roles (client/artist/moderator/admin)
   - `user_roles` assigns multiple roles per user
@@ -60,6 +60,8 @@
   - `shop_items` + `shop_item_media`
   - variants: `shop_item_variants`
   - orders: `shop_orders` + `shop_order_items`
+- **Folders (collections)**
+  - `folders` + `folder_posts` / `folder_commission_listings` / `folder_shop_items`
 - **Social + Safety**
   - follows: `follows` (supports private follow requests)
   - saves: `saved_posts`, `saved_shop_items`, `saved_commission_listings`
@@ -81,6 +83,7 @@
 - `shop_item_type`: `digital | physical`
 - `shop_order_status`: `draft | paid | fulfilled | cancelled | refunded`
 - `follow_status`: `pending | accepted | rejected | blocked | cancelled`
+- `folder_visibility`: `private | public | url_only`
 - `ban_type`: `temp | perm`
 - `language_experience`: `native | fluent | communicative | learning | basic`
 - `report_target_type`: `user | post | shop_item | commission_listing | sona | message`
@@ -103,7 +106,7 @@ Core public profile record.
 - **Key fields**:
   - `username` (citext, unique)
   - `display_name`, `timezone`, `pronouns`, `bio`
-  - `avatar_path`, `cover_path`
+  - `avatar_asset_id`, `cover_asset_id` (FK → `media_assets`), `accent_color`
   - privacy: `is_private`
   - premium/verified: `is_verified`, `is_premium`, `premium_until`
 - **Bio rule**:
@@ -123,7 +126,7 @@ Multi-role support (artist + moderator etc.).
 
 ### `badges`, `user_badges`
 - system badges seeded: `verified`, `premium`, `staff`
-- user badges can include additional custom ones later.
+- badges can include `description` and `color` (hex).
 
 ### Subscriptions
 - `subscription_plans`: plans/feature set (monthly/yearly)
@@ -181,7 +184,7 @@ Ordered list of media assets: `{ post_id, asset_id, sort_order }`
 - `owner_id`, `slug` (citext unique), `name`
 - `about jsonb`, `privacy jsonb` (app-level flags)
 - **plus** hard privacy flag: `is_private`
-- `avatar_path`, `cover_path`
+- `avatar_asset_id`, `cover_asset_id` (FK → `media_assets`)
 
 ### `sona_reference_sheets`
 Ordered reference assets.
@@ -265,7 +268,26 @@ Variants with their own deltas and stock.
 
 ---
 
-## 7) Social, safety, moderation
+## 7) Folders (collections)
+
+User-created folders that can contain **posts**, **commission listings**, and **shop items** (not media files).
+
+### `folders`
+- Nested folders via `parent_id`
+- Visibility: `private | public | url_only`
+- `url_only` uses `share_token` (+ optional `share_expires_at`) and is intended to be accessed via RPC.
+
+### Folder contents (typed joins)
+- `folder_posts(folder_id, post_id)`
+- `folder_commission_listings(folder_id, listing_id)`
+- `folder_shop_items(folder_id, item_id)`
+
+### URL-only sharing (RPC)
+- `get_folder_by_token(token)` → folder metadata
+- `get_folder_items_by_token(token)` → unified feed of items in the folder
+- `rotate_folder_token(folder_id, expires_at?)` → owner-only token rotation
+
+## 8) Social, safety, moderation
 
 ### Follows (requests)
 - `follows(follower_id, followed_user_id)` plus:

@@ -39,9 +39,9 @@ function ProfileFeedTabs<T extends string>({
 							key={item.id}
 							value={item.id}
 							size={size}
-							className="gap-2"
+							className="gap-2 font-semibold"
 						>
-							{IconComponent && <IconComponent className={iconSize} />}
+							{/* {IconComponent && <IconComponent className={iconSize} />} */}
 							{item.label}
 							{isActive && (
 								<motion.div
@@ -66,11 +66,11 @@ function ProfileFeedTabs<T extends string>({
 
 function ProfileFeedTabsSkeleton({ className }: { className?: string }) {
 	return (
-		<div className={cn("flex w-fit gap-2 p-1", className)}>
+		<div className={cn("flex w-fit gap-2", className)}>
 			{[1, 2, 3, 4].map((i) => (
 				<div
 					key={i}
-					className="inline-flex items-center justify-center whitespace-nowrap rounded-md py-1.5 text-sm font-medium gap-2"
+					className="inline-flex items-center justify-center whitespace-nowrap rounded-md py-4 text-sm font-medium gap-2"
 				>
 					<Skeleton className="size-10 rounded-full" />
 					<Skeleton className="h-10 w-32 rounded-full" />

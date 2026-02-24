@@ -1,39 +1,36 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Suspense } from "react";
-import { UserProfileSkeleton } from "@/components/layout/profile/profile";
-import UserProfileWrapper from "@/components/layout/profile/wrapper";
-import i18n from "@/lib/i18n";
-import { seo } from "@/lib/seo";
+import { createFileRoute } from "@tanstack/react-router";
+import { OutlineUser } from "@/components/icons/icons";
+import { EmptyPage } from "@/components/layout/empty-page";
+import { UserFeedContent } from "@/components/layout/profile/feed-content";
+import { useAvailableFeeds } from "@/hooks/use-available-feeds";
+import { useSuspenseUser } from "@/hooks/use-user";
+import { useAuth } from "@/providers/auth";
 
 export const Route = createFileRoute("/$username/")({
-	loader: async ({ params }) => {
-		return {
-			username: params.username,
-			seo: {
-				title: i18n.t("seo.profile.title", { username: params.username }),
-				description: i18n.t("seo.profile.description", {
-					username: params.username,
-				}),
-			},
-		};
-	},
-	head: ({ loaderData }) => ({
-		meta: seo({
-			title: loaderData?.seo?.title ?? "",
-			description: loaderData?.seo?.description ?? "",
-		}),
-	}),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const { username } = Route.useLoaderData();
-	const { tab } = Route.useSearch();
-	const navigate = useNavigate();
+	const { username } = Route.useParams();
+	const { data: user } = useSuspenseUser(username);
+	const { user: me } = useAuth();
+	const isMe = me?.username === user?.username;
 
-	return (
-		<Suspense fallback={<UserProfileSkeleton />}>
-			<UserProfileWrapper username={username} />
-		</Suspense>
-	);
+	const availableFeeds = useAvailableFeeds(user!, isMe);
+
+	if (availableFeeds.length === 0) {
+		return (
+			<div className="flex h-full flex-1 flex-col items-center justify-center">
+				<EmptyPage
+					icon={OutlineUser}
+					title="No content yet"
+					description="This user hasn't posted anything yet."
+				/>
+			</div>
+		);
+	}
+
+	const defaultTab = availableFeeds[0].id;
+
+	return <UserFeedContent user={user!} tab={defaultTab} isMe={isMe} />;
 }

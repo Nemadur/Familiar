@@ -124,6 +124,85 @@ const pl: Locale = {
 			search: "Szukaj języka",
 			select: "Wybierz język",
 		},
+		portfolio: {
+			filters: {
+				all: "Wszystkie",
+				commissions_only: "Tylko zlecenia",
+			},
+			folder: {
+				items: "{{count}} elementów",
+			},
+			search_placeholder: "Szukaj folderów...",
+		},
+		profile: {
+			tabs: {
+				commissions: "Zlecenia",
+				portfolio: "Portfolio",
+				characters: "Postacie",
+				saved: "Zapisane",
+				liked: "Polubione",
+			},
+			private_content: {
+				title: "Ta zawartość jest prywatna",
+				description: "Nie masz uprawnień do wyświetlania tej zawartości.",
+			},
+			actions: {
+				follow: "Obserwuj",
+				unfollow: "Przestań obserwować",
+				edit_profile: "Edytuj profil",
+				followers: "Obserwujący",
+				following: "Obserwowani",
+				work_queue: "Kolejka prac",
+			},
+			info: {
+				local_time: "Czas lokalny",
+				suspended: "To konto jest zawieszone.",
+				about_me: "O mnie",
+			},
+			details: {
+				stats: {
+					followers: "Obserwujący",
+					following: "Obserwowani",
+					works: "Prace",
+				},
+				joined: "Dołączył(a)",
+				local: "lokalnie",
+				bio: "Biografia",
+				languages: "Języki",
+			},
+			languages: {
+				levels: {
+					native: "Ojczysty",
+					fluent: "Biegły",
+					communicative: "Komunikatywny",
+					learning: "Uczący się",
+					basic: "Podstawowy",
+				},
+			},
+			commissions: {
+				card: {
+					from: "Od",
+					start_request: "Zleć",
+					join_waitlist: "Dołącz do kolejki",
+					get_notified: "Powiadom mnie",
+					content_warning: "Treść wrażliwa",
+					sensitive_content: "Treść wrażliwa",
+					contains_tags: "Ten materiał zawiera {{tags}}",
+					show_content: "Pokaż treść",
+					hide_content: "Ukryj treść",
+				},
+				empty: {
+					title: "Brak zleceń",
+					description: "Ten użytkownik nie utworzył jeszcze żadnych zleceń.",
+				},
+			},
+			feeds: {
+				empty: {
+					title: "Brak zawartości",
+					description: "Ten użytkownik jeszcze nic nie opublikował.",
+				},
+			},
+		},
 	},
 	footer: {
 		about: {

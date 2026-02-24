@@ -4,6 +4,7 @@ import type { IconProps } from "../../icons-props";
 export const SolidLogoText: React.FC<IconProps> = ({
 	className,
 	size = 100,
+	style,
 }) => (
 	<svg
 		width={size}
@@ -11,6 +12,7 @@ export const SolidLogoText: React.FC<IconProps> = ({
 		viewBox="0 0 175 182"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
+		style={style}
 		className={className}
 	>
 		<title>Gecko creative</title>

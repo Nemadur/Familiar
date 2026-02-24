@@ -1,8 +1,23 @@
 export type Locale = {
+	seo: {
+		defaults: {
+			title: string;
+			description: string;
+			keywords: string;
+		};
+		home: {
+			title: string;
+			description: string;
+		};
+		profile: {
+			title: string;
+			description: string;
+		};
+	};
 	meta: {
 		app_name: string;
-		description: string;
-		keywords: string;
+		description?: string;
+		keywords?: string;
 		label: string;
 		flag: string;
 		currency: {
@@ -108,6 +123,48 @@ export type Locale = {
 		language_select: {
 			search: string;
 			select: string;
+		};
+		portfolio: {
+			filters: {
+				all: string;
+				commissions_only: string;
+			};
+			folder: {
+				items: string;
+			};
+			search_placeholder: string;
+		};
+		profile: {
+			tabs: {
+				commissions: string;
+				portfolio: string;
+				characters: string;
+				saved: string;
+				liked: string;
+			};
+			private_content: {
+				title: string;
+				description: string;
+			};
+			actions: {
+				follow: string;
+				unfollow: string;
+				edit_profile: string;
+				followers: string;
+				following: string;
+				work_queue: string;
+			};
+			info: {
+				local_time: string;
+				suspended: string;
+				about_me: string;
+			};
+			feeds: {
+				empty: {
+					title: string;
+					description: string;
+				};
+			};
 		};
 	};
 	footer: {

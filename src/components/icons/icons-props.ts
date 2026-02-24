@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils";
  * @interface
  * @exports
  * @property {string} className - Optional. A CSS class name that can be used to style the SVG icon component.
+ * @property {string} style - Optional. A style component
  * @property {number} size - Optional. A number that can be used to set the size of the SVG icon component. Defaults to 24.
  */
 export interface IconProps extends SVGProps<SVGSVGElement> {
 	className?: string;
 	size?: number;
+	style?: React.CSSProperties;
 }
 
 /**

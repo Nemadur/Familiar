@@ -2,7 +2,7 @@
 -- ============================================================
 -- Familiar (Supabase/Postgres)
 -- Schema: familiar
--- Version: v0.2.2
+-- Version: v0.2.7
 -- ============================================================
 
 -- -------------------------
@@ -83,6 +83,11 @@ do $$ begin
   create type familiar.follow_status as enum ('pending','accepted','rejected','blocked','cancelled');
 exception when duplicate_object then null; end $$;
 
+
+do $$ begin
+  create type familiar.folder_visibility as enum ('private','public','url_only');
+exception when duplicate_object then null; end $$;
+
 do $$ begin
   create type familiar.ban_type as enum ('temp','perm');
 exception when duplicate_object then null; end $$;
@@ -133,6 +138,8 @@ create table if not exists familiar.profiles (
   bio varchar(300),
   avatar_path text,
   cover_path text,
+  accent_color text, -- hex like #RRGGBB
+
 
   -- privacy
   is_private boolean not null default false,
@@ -156,6 +163,13 @@ create index if not exists profiles_username_idx on familiar.profiles(username);
 create index if not exists profiles_is_private_idx on familiar.profiles(is_private);
 create index if not exists profiles_is_verified_idx on familiar.profiles(is_verified);
 create index if not exists profiles_is_premium_idx on familiar.profiles(is_premium);
+do $$ begin
+  alter table familiar.profiles
+    add constraint profiles_accent_color_hex_chk check (
+      accent_color is null or accent_color ~ '^#[A-Fa-f0-9]{6}$'
+    );
+exception when duplicate_object then null; end $$;
+
 
 drop trigger if exists trg_profiles_updated_at on familiar.profiles;
 create trigger trg_profiles_updated_at
@@ -214,9 +228,17 @@ create index if not exists user_links_user_idx on familiar.user_links(user_id);
 create table if not exists familiar.badges (
   badge_id text primary key,
   label text not null,
+  description text,
+  color text, -- hex #RRGGBB
   icon_path text,
   created_at timestamptz not null default now()
 );
+
+do $$ begin
+  alter table familiar.badges
+    add constraint badges_color_hex_chk
+    check (color is null or color ~ '^#[A-Fa-f0-9]{6}$');
+exception when duplicate_object then null; end $$;
 
 -- system badges
 insert into familiar.badges(badge_id, label, icon_path) values
@@ -563,6 +585,7 @@ create index if not exists media_assets_type_idx on familiar.media_assets(type);
 -- -------------------------
 -- Posts (portfolio)
 -- -------------------------
+-- TODO: add slug (from title)
 create table if not exists familiar.posts (
   post_id uuid primary key default gen_random_uuid(),
   artist_id uuid not null references familiar.profiles(user_id) on delete cascade,
@@ -693,8 +716,8 @@ create table if not exists familiar.sonas (
   owner_id uuid not null references familiar.profiles(user_id) on delete cascade,
   slug citext not null unique,
   name text not null,
-  avatar_path text,
-  cover_path text,
+  avatar_asset_id uuid references familiar.media_assets(asset_id) on delete set null,
+  cover_asset_id uuid references familiar.media_assets(asset_id) on delete set null,
   about jsonb not null default '{}'::jsonb,
   privacy jsonb not null default '{}'::jsonb,
   is_private boolean not null default false,
@@ -704,6 +727,8 @@ create table if not exists familiar.sonas (
 
 create index if not exists sonas_owner_idx on familiar.sonas(owner_id);
 create index if not exists sonas_slug_idx on familiar.sonas(slug);
+create index if not exists sonas_avatar_asset_idx on familiar.sonas(avatar_asset_id);
+create index if not exists sonas_cover_asset_idx on familiar.sonas(cover_asset_id);
 create index if not exists sonas_is_private_idx on familiar.sonas(is_private);
 
 drop trigger if exists trg_sonas_updated_at on familiar.sonas;
@@ -827,31 +852,51 @@ create table if not exists familiar.commission_listing_licenses (
 
 create index if not exists commission_listing_licenses_listing_idx on familiar.commission_listing_licenses(listing_id, visible, sort_order);
 
+-- FIXME: fixed/percent -> included true (works) but included true -> false do not, it says it's need
 create or replace function familiar.commission_license_validate()
 returns trigger
 language plpgsql
 as $$
 begin
-  if new.included then
+  -- If included, force pricing_mode=included and clear add-ons
+  if new.included is true then
     new.pricing_mode := 'included';
     new.add_fixed_usd := null;
     new.add_percent := null;
-  else
-    if new.pricing_mode = 'fixed_usd' then
-      if new.add_fixed_usd is null then
-        raise exception 'add_fixed_usd required for fixed_usd pricing_mode';
-      end if;
-      new.add_percent := null;
-    elsif new.pricing_mode = 'percent' then
-      if new.add_percent is null then
-        raise exception 'add_percent required for percent pricing_mode';
-      end if;
-      new.add_fixed_usd := null;
+    return new;
+  end if;
+
+  -- included = false:
+  -- Supabase UI often updates a single column, so pricing_mode may still be 'included'.
+  -- Auto-switch to a sane non-included mode instead of throwing.
+  if new.pricing_mode = 'included' then
+    if new.add_percent is not null then
+      new.pricing_mode := 'percent';
     else
-      raise exception 'pricing_mode=included requires included=true';
+      new.pricing_mode := 'fixed_usd';
     end if;
   end if;
-  return new;
+
+  -- Normalize by pricing_mode
+  if new.pricing_mode = 'fixed_usd' then
+    -- allow stepwise editing: default to 0 instead of raising
+    if new.add_fixed_usd is null then
+      new.add_fixed_usd := 0;
+    end if;
+    new.add_percent := null;
+    return new;
+
+  elsif new.pricing_mode = 'percent' then
+    -- allow stepwise editing: default to 0 instead of raising
+    if new.add_percent is null then
+      new.add_percent := 0;
+    end if;
+    new.add_fixed_usd := null;
+    return new;
+
+  else
+    raise exception 'invalid pricing_mode: %', new.pricing_mode;
+  end if;
 end $$;
 
 drop trigger if exists trg_commission_license_validate on familiar.commission_listing_licenses;
@@ -1288,6 +1333,101 @@ create table if not exists familiar.saved_commission_listings (
   primary key (user_id, listing_id)
 );
 create index if not exists saved_commission_listings_user_idx on familiar.saved_commission_listings(user_id, created_at desc);
+
+-- -------------------------
+-- App Folders (Collections): posts / commission listings / shop items
+-- -------------------------
+-- TODO: add max 30 limit for non parents folder [root folders] (for subfolder, max 3)
+-- up to 60 for verified artists and up to 12 subfolders
+-- TODO: add color available only for premium users (default none)
+-- TODO: add icon available only for premium users (default none)
+create table if not exists familiar.folders (
+  folder_id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references familiar.profiles(user_id) on delete cascade,
+  parent_id uuid references familiar.folders(folder_id) on delete cascade,
+
+  name text not null,
+  description text,
+  sort_order int not null default 0,
+  is_archived boolean not null default false,
+
+  visibility familiar.folder_visibility not null default 'private',
+  share_token text,
+  share_expires_at timestamptz,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  unique (owner_id, parent_id, name)
+);
+
+create index if not exists folders_owner_idx on familiar.folders(owner_id, parent_id, sort_order);
+create index if not exists folders_visibility_idx on familiar.folders(visibility);
+create index if not exists folders_share_token_idx on familiar.folders(share_token);
+
+do $$ begin
+  alter table familiar.folders
+    add constraint folders_share_token_unique unique (share_token);
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter table familiar.folders
+    add constraint folders_share_token_chk check (
+      (visibility <> 'url_only' and share_token is null and share_expires_at is null)
+      or
+      (visibility = 'url_only' and share_token is not null)
+    );
+exception when duplicate_object then null; end $$;
+
+drop trigger if exists trg_folders_updated_at on familiar.folders;
+create trigger trg_folders_updated_at
+before update on familiar.folders
+for each row execute function familiar.set_updated_at();
+
+create or replace function familiar.folders_cleanup_share_token()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.visibility <> 'url_only' then
+    new.share_token := null;
+    new.share_expires_at := null;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists trg_folders_cleanup_share_token on familiar.folders;
+create trigger trg_folders_cleanup_share_token
+before insert or update of visibility on familiar.folders
+for each row execute function familiar.folders_cleanup_share_token();
+
+-- Typed join tables (strong FKs)
+
+create table if not exists familiar.folder_posts (
+  folder_id uuid not null references familiar.folders(folder_id) on delete cascade,
+  post_id uuid not null references familiar.posts(post_id) on delete cascade,
+  added_at timestamptz not null default now(),
+  primary key (folder_id, post_id)
+);
+create index if not exists folder_posts_post_idx on familiar.folder_posts(post_id);
+
+create table if not exists familiar.folder_commission_listings (
+  folder_id uuid not null references familiar.folders(folder_id) on delete cascade,
+  listing_id uuid not null references familiar.commission_listings(listing_id) on delete cascade,
+  added_at timestamptz not null default now(),
+  primary key (folder_id, listing_id)
+);
+create index if not exists folder_commission_listings_listing_idx on familiar.folder_commission_listings(listing_id);
+
+create table if not exists familiar.folder_shop_items (
+  folder_id uuid not null references familiar.folders(folder_id) on delete cascade,
+  item_id uuid not null references familiar.shop_items(item_id) on delete cascade,
+  added_at timestamptz not null default now(),
+  primary key (folder_id, item_id)
+);
+create index if not exists folder_shop_items_item_idx on familiar.folder_shop_items(item_id);
+
+
 
 -- -------------------------
 -- Notifications
@@ -2247,6 +2387,218 @@ create policy moderation_strikes_select_none on familiar.moderation_strikes for 
 alter table familiar.user_bans enable row level security;
 drop policy if exists user_bans_select_none on familiar.user_bans;
 create policy user_bans_select_none on familiar.user_bans for select using (false);
+
+
+
+-- ============================================================
+-- RLS: App folders
+-- ============================================================
+alter table familiar.folders enable row level security;
+
+drop policy if exists folders_select on familiar.folders;
+create policy folders_select
+on familiar.folders for select
+using (
+  auth.uid() = owner_id
+  or (
+    visibility = 'public'
+    and familiar.can_view_user(owner_id)   -- respects profile privacy + blocks
+  )
+);
+
+drop policy if exists folders_write_owner on familiar.folders;
+create policy folders_write_owner
+on familiar.folders for all
+using (auth.uid() = owner_id)
+with check (auth.uid() = owner_id);
+
+-- Folder -> posts
+alter table familiar.folder_posts enable row level security;
+
+drop policy if exists folder_posts_select on familiar.folder_posts;
+create policy folder_posts_select
+on familiar.folder_posts for select
+using (
+  -- owner can see their own
+  exists (select 1 from familiar.folders f where f.folder_id = folder_posts.folder_id and f.owner_id = auth.uid())
+  or
+  -- public folder viewers can only see posts that are themselves viewable
+  exists (
+    select 1
+    from familiar.folders f
+    join familiar.posts p on p.post_id = folder_posts.post_id
+    where f.folder_id = folder_posts.folder_id
+      and f.visibility = 'public'
+      and familiar.can_view_user(f.owner_id)
+      and p.visibility <> 'private'
+      and familiar.can_view_user(p.artist_id)
+  )
+);
+
+drop policy if exists folder_posts_write_owner on familiar.folder_posts;
+create policy folder_posts_write_owner
+on familiar.folder_posts for all
+using (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_posts.folder_id and f.owner_id = auth.uid())
+)
+with check (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_posts.folder_id and f.owner_id = auth.uid())
+  and exists (select 1 from familiar.posts p where p.post_id = folder_posts.post_id and p.artist_id = auth.uid())
+);
+
+-- Folder -> commission listings
+alter table familiar.folder_commission_listings enable row level security;
+
+drop policy if exists folder_commission_listings_select on familiar.folder_commission_listings;
+create policy folder_commission_listings_select
+on familiar.folder_commission_listings for select
+using (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_commission_listings.folder_id and f.owner_id = auth.uid())
+  or
+  exists (
+    select 1
+    from familiar.folders f
+    join familiar.commission_listings l on l.listing_id = folder_commission_listings.listing_id
+    where f.folder_id = folder_commission_listings.folder_id
+      and f.visibility = 'public'
+      and familiar.can_view_user(f.owner_id)
+      and l.status <> 'draft'
+      and familiar.can_view_user(l.artist_id)
+  )
+);
+
+drop policy if exists folder_commission_listings_write_owner on familiar.folder_commission_listings;
+create policy folder_commission_listings_write_owner
+on familiar.folder_commission_listings for all
+using (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_commission_listings.folder_id and f.owner_id = auth.uid())
+)
+with check (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_commission_listings.folder_id and f.owner_id = auth.uid())
+  and exists (select 1 from familiar.commission_listings l where l.listing_id = folder_commission_listings.listing_id and l.artist_id = auth.uid())
+);
+
+-- Folder -> shop items
+alter table familiar.folder_shop_items enable row level security;
+
+drop policy if exists folder_shop_items_select on familiar.folder_shop_items;
+create policy folder_shop_items_select
+on familiar.folder_shop_items for select
+using (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_shop_items.folder_id and f.owner_id = auth.uid())
+  or
+  exists (
+    select 1
+    from familiar.folders f
+    join familiar.shop_items i on i.item_id = folder_shop_items.item_id
+    where f.folder_id = folder_shop_items.folder_id
+      and f.visibility = 'public'
+      and familiar.can_view_user(f.owner_id)
+      and familiar.can_view_user(i.seller_id)
+  )
+);
+
+drop policy if exists folder_shop_items_write_owner on familiar.folder_shop_items;
+create policy folder_shop_items_write_owner
+on familiar.folder_shop_items for all
+using (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_shop_items.folder_id and f.owner_id = auth.uid())
+)
+with check (
+  exists (select 1 from familiar.folders f where f.folder_id = folder_shop_items.folder_id and f.owner_id = auth.uid())
+  and exists (select 1 from familiar.shop_items i where i.item_id = folder_shop_items.item_id and i.seller_id = auth.uid())
+);
+
+-- ============================================================
+-- URL-only sharing (RPC)
+-- ============================================================
+
+create or replace function familiar.get_folder_by_token(p_token text)
+returns table (
+  folder_id uuid,
+  owner_id uuid,
+  parent_id uuid,
+  name text,
+  description text,
+  created_at timestamptz
+)
+language sql
+security definer
+set search_path = familiar, public, auth, pg_temp
+as $$
+  select f.folder_id, f.owner_id, f.parent_id, f.name, f.description, f.created_at
+  from familiar.folders f
+  where f.visibility = 'url_only'
+    and f.share_token = p_token
+    and (f.share_expires_at is null or f.share_expires_at > now());
+$$;
+
+revoke all on function familiar.get_folder_by_token(text) from public;
+grant execute on function familiar.get_folder_by_token(text) to anon, authenticated;
+
+create or replace function familiar.get_folder_items_by_token(p_token text)
+returns table (
+  item_type text,
+  item_id uuid,
+  added_at timestamptz
+)
+language sql
+security definer
+set search_path = familiar, public, auth, pg_temp
+as $$
+  with f as (
+    select folder_id
+    from familiar.folders
+    where visibility = 'url_only'
+      and share_token = p_token
+      and (share_expires_at is null or share_expires_at > now())
+    limit 1
+  )
+  select 'post'::text, fp.post_id, fp.added_at
+  from f join familiar.folder_posts fp on fp.folder_id = f.folder_id
+  union all
+  select 'commission_listing'::text, fl.listing_id, fl.added_at
+  from f join familiar.folder_commission_listings fl on fl.folder_id = f.folder_id
+  union all
+  select 'shop_item'::text, fs.item_id, fs.added_at
+  from f join familiar.folder_shop_items fs on fs.folder_id = f.folder_id
+  order by added_at desc;
+$$;
+
+revoke all on function familiar.get_folder_items_by_token(text) from public;
+grant execute on function familiar.get_folder_items_by_token(text) to anon, authenticated;
+
+create or replace function familiar.rotate_folder_token(
+  p_folder_id uuid,
+  p_expires_at timestamptz default null
+)
+returns text
+language plpgsql
+security definer
+set search_path = familiar, public, auth, pg_temp
+as $$
+declare
+  v_token text;
+begin
+  if not exists (select 1 from familiar.folders f where f.folder_id = p_folder_id and f.owner_id = auth.uid()) then
+    raise exception 'Not allowed';
+  end if;
+
+  v_token := encode(gen_random_bytes(16), 'hex');
+
+  update familiar.folders
+  set visibility = 'url_only',
+      share_token = v_token,
+      share_expires_at = p_expires_at,
+      updated_at = now()
+  where folder_id = p_folder_id;
+
+  return v_token;
+end $$;
+
+revoke all on function familiar.rotate_folder_token(uuid,timestamptz) from public;
+grant execute on function familiar.rotate_folder_token(uuid,timestamptz) to authenticated;
+
 
 -- -------------------------
 -- Important Supabase note:

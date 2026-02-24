@@ -13,6 +13,7 @@ import Footer from "@/components/layout/footer";
 import TanStackQueryDevtools from "@/integrations/tanstack-query/devtools";
 import i18n, { setSSRLanguage } from "@/lib/i18n";
 import { seo } from "@/lib/seo";
+import { AbilityProvider } from "@/providers/ability";
 import { QueryClientProvider } from "@/providers/query-client";
 import { ThemeProvider } from "@/providers/theme";
 import Header from "../components/layout/header";
@@ -58,35 +59,37 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<AuthProvider>
-					<ThemeProvider>
-						<QueryClientProvider client={context.queryClient}>
-							<div className={"flex min-h-screen flex-col"}>
-								<Container>
-									<Header />
-									<main
-										className={
-											"flex min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5"
-										}
-									>
-										{children}
-									</main>
-									<Footer />
-								</Container>
-							</div>
-							<TanStackDevtools
-								config={{
-									position: "bottom-right",
-								}}
-								plugins={[
-									{
-										name: "Tanstack Router",
-										render: <TanStackRouterDevtoolsPanel />,
-									},
-									TanStackQueryDevtools,
-								]}
-							/>
-						</QueryClientProvider>
-					</ThemeProvider>
+					<AbilityProvider>
+						<ThemeProvider>
+							<QueryClientProvider client={context.queryClient}>
+								<div className={"flex min-h-screen flex-col"}>
+									<Container>
+										<Header />
+										<main
+											className={
+												"flex min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5"
+											}
+										>
+											{children}
+										</main>
+										<Footer />
+									</Container>
+								</div>
+								<TanStackDevtools
+									config={{
+										position: "bottom-right",
+									}}
+									plugins={[
+										{
+											name: "Tanstack Router",
+											render: <TanStackRouterDevtoolsPanel />,
+										},
+										TanStackQueryDevtools,
+									]}
+								/>
+							</QueryClientProvider>
+						</ThemeProvider>
+					</AbilityProvider>
 				</AuthProvider>
 				<Scripts />
 			</body>

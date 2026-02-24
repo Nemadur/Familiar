@@ -124,6 +124,85 @@ const en: Locale = {
 			search: "Search languages",
 			select: "Select language",
 		},
+		portfolio: {
+			filters: {
+				all: "All",
+				commissions_only: "Commissions only",
+			},
+			folder: {
+				items: "{{count}} items",
+			},
+			search_placeholder: "Search folders...",
+		},
+		profile: {
+			tabs: {
+				commissions: "Commissions",
+				portfolio: "Portfolio",
+				characters: "Characters",
+				saved: "Saved",
+				liked: "Liked",
+			},
+			private_content: {
+				title: "This content is private",
+				description: "You do not have permission to view this content.",
+			},
+			actions: {
+				follow: "Follow",
+				unfollow: "Unfollow",
+				edit_profile: "Edit Profile",
+				followers: "Followers",
+				following: "Following",
+				work_queue: "Work Queue",
+			},
+			info: {
+				local_time: "Local time",
+				suspended: "This account is suspended.",
+				about_me: "About me",
+			},
+			details: {
+				stats: {
+					followers: "Followers",
+					following: "Following",
+					works: "Works",
+				},
+				joined: "Joined",
+				local: "local",
+				bio: "Bio",
+				languages: "Languages",
+			},
+			languages: {
+				levels: {
+					native: "Native",
+					fluent: "Fluent",
+					communicative: "Communicative",
+					learning: "Learning",
+					basic: "Basic",
+				},
+			},
+			commissions: {
+				card: {
+					from: "From",
+					start_request: "Start Request",
+					join_waitlist: "Join Waitlist",
+					get_notified: "Get notified",
+					content_warning: "Content Warning",
+					sensitive_content: "Sensitive content",
+					contains_tags: "This media contains {{tags}}",
+					show_content: "Show Content",
+					hide_content: "Hide Content",
+				},
+				empty: {
+					title: "No commissions available",
+					description: "This user hasn't set up any commissions yet.",
+				},
+			},
+			feeds: {
+				empty: {
+					title: "No content yet",
+					description: "This user hasn't posted anything yet.",
+				},
+			},
+		},
 	},
 	footer: {
 		about: {

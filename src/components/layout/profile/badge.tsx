@@ -22,10 +22,10 @@ function ProfileBadge({ user }: { user: User }) {
 
 	return (
 		<Dialog>
-			<div className="flex items-center gap-1">
+			<div className="flex items-center gap-1 flex-1">
 				<TooltipProvider>
 					{displayBadges.map((badge) => (
-						<Tooltip key={badge.id}>
+						<Tooltip key={badge.uuid}>
 							<TooltipTrigger asChild>
 								<DialogTrigger className="outline-none">
 									<BadgeIcon badge={badge} className="size-[1.25em]" />

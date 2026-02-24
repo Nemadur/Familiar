@@ -1,19 +1,14 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
 	OutlineChat,
 	OutlineChevronRight,
+	OutlineClock03,
 	OutlineCrown,
-	OutlineDiscord,
-	OutlineDribbble,
 	OutlineGlobe,
-	OutlineInstagram,
 	OutlineLink,
-	OutlineLocation,
 	OutlineMore,
-	OutlineTwitter,
 	OutlineUser,
 } from "@/components/icons/icons";
 import { EmptyPage } from "@/components/layout/empty-page";
@@ -22,18 +17,21 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
-import { languages } from "@/lib/i18n";
 import { userLocalTime } from "@/lib/profile";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/auth";
 import type { User } from "@/types/user";
 import UserAvatar from "./avatar";
 import { ProfileBadge } from "./badge";
 import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
+import { ProfileCharacters } from "./feed/characters";
+import { ProfilePortfolio } from "./feed/portfolio";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
 import { ProfileDetailsContent } from "./profile-details";
-import { SpokenLanguageBadge } from "./spoken-language-badge";
+import { ProfileSocials } from "./socials";
+import { SpokenLanguageBadge } from "./spoken-languages";
+
+import { mapFolderToFolderType, mapPostToPostWithAuthor } from "./utils";
 
 // Temporary stubs for missing components
 const FollowButton = ({
@@ -44,22 +42,15 @@ const FollowButton = ({
 	showText,
 	className,
 }: any) => {
+	const { t } = useTranslation();
 	return (
 		<Button className={className} disabled={!canFollow} onClick={onToggle}>
-			{isFollowing ? "Unfollow" : "Follow"}
+			{isFollowing
+				? t("components.profile.actions.unfollow")
+				: t("components.profile.actions.follow")}
 		</Button>
 	);
 };
-
-const ProfileCommissions = ({ categories }: any) => (
-	<div>Commissions: {categories.length}</div>
-);
-const ProfilePortfolio = ({ posts }: any) => (
-	<div>Portfolio: {posts.length}</div>
-);
-const ProfileCharacters = ({ characters }: any) => (
-	<div>Characters: {characters.length}</div>
-);
 
 export function UserInfoSkeleton() {
 	return (
@@ -106,9 +97,9 @@ export function UserInfoSkeleton() {
 
 export function UserFeedsSkeleton() {
 	return (
-		<div className="flex flex-col gap-8 w-full">
+		<div className="flex flex-col w-full">
 			{/* Filter Bar Skeleton */}
-			<div className="mb-6 flex gap-2">
+			<div className="mb-6 flex gap-2 py-2">
 				<ProfileFeedTabsSkeleton />
 			</div>
 
@@ -167,7 +158,17 @@ export function UserProfileSkeleton() {
 	);
 }
 
-function UserProfile({ user }: { user: User }) {
+export default function UserProfile({
+	user,
+	children,
+	activeTab,
+	onTabChange,
+}: {
+	user: User;
+	children?: React.ReactNode;
+	activeTab?: string;
+	onTabChange?: (tab: string) => void;
+}) {
 	const { user: me, pending } = useAuth();
 	const isMe = me?.username === user.username;
 	const isSuspended = user.banned_until !== null;
@@ -194,14 +195,18 @@ function UserProfile({ user }: { user: User }) {
 						user={user}
 						isSuspended={isSuspended}
 						isMe={isMe}
-					/>
+						activeTab={activeTab}
+						onTabChange={onTabChange}
+					>
+						{children}
+					</UserProfileMainContent>
 				</div>
 			</div>
 		</>
 	);
 }
 
-function UserProfileSidebar({
+export function UserProfileSidebar({
 	user,
 	isMe,
 	isSuspended,
@@ -211,6 +216,7 @@ function UserProfileSidebar({
 	isSuspended: boolean;
 }) {
 	const onEditProfile = () => toast("open settings");
+	const { t } = useTranslation();
 
 	return (
 		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10">
@@ -223,7 +229,8 @@ function UserProfileSidebar({
 			<div className="space-y-4">
 				<div>
 					<h3 className="inline-flex items-center gap-2 font-bold text-2xl text-neutral-950 dark:text-neutral-50">
-						<span>{user.display_name}</span>
+						{/* TODO: make auto slide text if too more than 12 chracters */}
+						<span className="truncate flex-1">{user.display_name}</span>
 						<ProfileBadge user={user} />
 					</h3>
 					<p className="text-neutral-600 dark:text-neutral-400">
@@ -233,12 +240,26 @@ function UserProfileSidebar({
 
 				{/* Actions */}
 				<div className="flex flex-col gap-3">
-					<div className="flex items-center gap-2">
-						{isMe ? (
-							<Button className="flex-1" onClick={onEditProfile}>
-								Edit Profile
+					{isMe ? (
+						<>
+							<Button
+								variant="secondary"
+								className="w-full"
+								onClick={onEditProfile}
+							>
+								{t("components.profile.actions.edit_profile")}
 							</Button>
-						) : (
+							<div className="flex gap-2">
+								<Button variant="secondary" className="flex-1">
+									{t("components.profile.actions.followers")}
+								</Button>
+								<Button variant="secondary" className="flex-1">
+									{t("components.profile.actions.following")}
+								</Button>
+							</div>
+						</>
+					) : (
+						<div className="flex items-center gap-2">
 							<FollowButton
 								isFollowing={false} // TODO: Implement follow status
 								loading={false}
@@ -247,36 +268,46 @@ function UserProfileSidebar({
 								showText={true}
 								className="flex-1"
 							/>
-						)}
-						{/* disabled for now */}
-						<Button variant="secondary" disabled size="icon">
-							<OutlineChat />
-						</Button>
-						<Button variant="ghost" size="icon">
-							<OutlineMore />
-						</Button>
-					</div>
+							{/* disabled for now */}
+							<Button variant="secondary" disabled size="icon">
+								<OutlineChat />
+							</Button>
+							<Button variant="ghost" size="icon">
+								<OutlineMore />
+							</Button>
+						</div>
+					)}
 
 					{/* Work Queue Status */}
-					<Button variant="secondary">
-						<OutlineCrown className="fill-current" />
-						Work Queue
-					</Button>
+					{/* TODO: check if user is artist and has premium */}
+					{user.roles.includes("artist") && (
+						<Button variant="secondary">
+							<OutlineCrown className="fill-current" />
+							{t("components.profile.actions.work_queue")}
+						</Button>
+					)}
 				</div>
 
-				{/* Time/Lang */}
+				{/* Time/Lang/Pronounce */}
 				<div className="flex flex-col gap-1 text-neutral-500 text-xs">
 					{user.timezone && (
 						<div className="flex items-center gap-2">
-							<OutlineLocation size={16} />
+							<OutlineClock03 size={14} />
 							<span>
-								Local time {userLocalTime({ timeZone: user.timezone })}
+								{t("components.profile.info.local_time")}{" "}
+								{userLocalTime({ timeZone: user.timezone })}
 							</span>
+						</div>
+					)}
+					{user.pronouns && (
+						<div className="flex items-center gap-2">
+							<OutlineUser size={14} />
+							<span>{user.pronouns}</span>
 						</div>
 					)}
 					{user.spoken_languages && user.spoken_languages.length > 0 && (
 						<div className="flex items-center gap-2">
-							<OutlineGlobe size={16} />
+							<OutlineGlobe size={14} />
 							<TooltipProvider delayDuration={100}>
 								<div className="flex items-center gap-1.5 flex-wrap">
 									{user.spoken_languages.map((lang, index, array) => (
@@ -297,7 +328,7 @@ function UserProfileSidebar({
 				) : (
 					!isMe && (
 						<p className="text-muted-foreground text-sm">
-							This account is suspended.
+							{t("components.profile.info.suspended")}
 						</p>
 					)
 				)}
@@ -306,9 +337,10 @@ function UserProfileSidebar({
 					<DialogTrigger asChild>
 						<Button
 							variant={"link"}
-							className="h-auto p-0 text-muted-foreground hover:text-foreground text-xs"
+							size={"sm"}
+							className="h-auto text-muted-foreground hover:text-foreground text-xs"
 						>
-							About me
+							{t("components.profile.info.about_me")}
 							<OutlineChevronRight />
 						</Button>
 					</DialogTrigger>
@@ -317,83 +349,58 @@ function UserProfileSidebar({
 
 				{/* Social Links (Horizontal on mobile, Vertical on desktop) */}
 				{!isSuspended && user.social_links && user.social_links.length > 0 && (
-					<div className="w-full overflow-x-auto pb-1 md:pb-0 whitespace-nowrap md:whitespace-normal">
-						<div className="flex w-max flex-row items-center gap-5 pt-2 md:w-full md:flex-col md:items-start md:gap-2">
-							{user.social_links.map((link) => {
-								let Icon = OutlineLink;
-								const lowerUrl = link.url.toLowerCase();
-
-								if (
-									lowerUrl.includes("twitter.com") ||
-									lowerUrl.includes("x.com")
-								) {
-									Icon = OutlineTwitter;
-								} else if (lowerUrl.includes("instagram.com")) {
-									Icon = OutlineInstagram;
-								} else if (
-									lowerUrl.includes("discord.gg") ||
-									lowerUrl.includes("discord.com")
-								) {
-									Icon = OutlineDiscord;
-								} else if (lowerUrl.includes("dribbble.com")) {
-									Icon = OutlineDribbble;
-								}
-
-								return (
-									<a
-										key={link.url}
-										href={link.url}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
-									>
-										<Icon size={16} />
-										<span>{link.label}</span>
-									</a>
-								);
-							})}
-						</div>
-					</div>
+					<ProfileSocials links={user.social_links} />
 				)}
 			</div>
 		</aside>
 	);
 }
 
-function UserFeeds({ user, isMe }: { user: User; isMe: boolean }) {
+import { useAvailableFeeds } from "@/hooks/use-available-feeds";
+import { ProfileCommissions } from "./feed/commissions";
+
+function UserFeeds({
+	user,
+	isMe,
+	children,
+	activeTab,
+	onTabChange,
+}: {
+	user: User;
+	isMe: boolean;
+	children?: React.ReactNode;
+	activeTab?: string;
+	onTabChange?: (tab: string) => void;
+}) {
+	const { t } = useTranslation();
 	const { commissions, posts, characters, folders } = useSuspenseProfileContent(
 		user.uuid,
 	);
 
-	const availableFeeds = useMemo(() => {
-		const feeds = [];
-		if (isMe || commissions.length > 0)
-			feeds.push({
-				id: "commissions",
-				label: "Commissions",
-				icon: OutlineCrown,
-			});
-		if (isMe || posts.length > 0)
-			feeds.push({
-				id: "portfolio",
-				label: "Portfolio",
-				icon: OutlineDribbble,
-			});
-		if (isMe || characters.length > 0)
-			feeds.push({ id: "characters", label: "Characters", icon: OutlineUser });
-		if (isMe) feeds.push({ id: "saved", label: "Saved", icon: OutlineCrown });
-		return feeds;
-	}, [commissions, posts, characters, isMe]);
+	const availableFeeds = useAvailableFeeds(user, isMe);
 
-	const [currentFeed, setCurrentFeed] = useState(
+	// Temporary data mapping until API returns correct shapes
+	const portfolioPosts = useMemo(() => {
+		return posts.map((post: any) => mapPostToPostWithAuthor(post, user));
+	}, [posts, user]);
+
+	const portfolioFolders = useMemo(() => {
+		return folders.map((folder: any) => mapFolderToFolderType(folder));
+	}, [folders]);
+
+	const [internalTab, setInternalTab] = useState(
 		availableFeeds.length > 0 ? availableFeeds[0].id : "",
 	);
 
+	const currentFeed = activeTab ?? internalTab;
+	const handleTabChange = onTabChange ?? setInternalTab;
+
 	if (
 		availableFeeds.length > 0 &&
-		!availableFeeds.find((f) => f.id === currentFeed)
+		!availableFeeds.find((f) => f.id === currentFeed) &&
+		!activeTab
 	) {
-		setCurrentFeed(availableFeeds[0].id);
+		setInternalTab(availableFeeds[0].id);
 	}
 
 	if (availableFeeds.length === 0) {
@@ -401,8 +408,8 @@ function UserFeeds({ user, isMe }: { user: User; isMe: boolean }) {
 			<div className="flex h-full flex-1 flex-col items-center justify-center">
 				<EmptyPage
 					icon={OutlineUser}
-					title="No content yet"
-					description="This user hasn't posted anything yet."
+					title={t("components.profile.feeds.empty.title")}
+					description={t("components.profile.feeds.empty.description")}
 				/>
 			</div>
 		);
@@ -410,33 +417,44 @@ function UserFeeds({ user, isMe }: { user: User; isMe: boolean }) {
 
 	return (
 		<>
-			<div className="mb-6 flex justify-start border-border border-b py-2 transition-all">
-				<div className="w-fit rounded-full p-1">
+			<div className="mb-6 flex justify-start border-border border-b transition-all py-2">
+				<div className="w-fit rounded-full">
 					<ProfileFeedTabs
 						items={availableFeeds}
 						value={currentFeed}
-						onValueChange={setCurrentFeed}
+						onValueChange={handleTabChange}
 						size="lg"
 					/>
 				</div>
 			</div>
 
 			<div className="mt-0 flex-1 flex flex-col">
-				{currentFeed === "commissions" && (
-					<ProfileCommissions categories={commissions} artist={user} />
+				{children ? (
+					children
+				) : (
+					<>
+						{currentFeed === "commissions" && (
+							<ProfileCommissions categories={commissions} artist={user} />
+						)}
+						{currentFeed === "portfolio" && (
+							<ProfilePortfolio
+								posts={portfolioPosts}
+								folderId={undefined}
+								username={user.username}
+								folders={portfolioFolders}
+							/>
+						)}
+						{currentFeed === "characters" && (
+							<ProfileCharacters characters={characters} />
+						)}
+						{currentFeed === "saved" && (
+							<div>{t("components.profile.tabs.saved")}</div>
+						)}
+						{currentFeed === "liked" && (
+							<div>{t("components.profile.tabs.liked")}</div>
+						)}
+					</>
 				)}
-				{currentFeed === "portfolio" && (
-					<ProfilePortfolio
-						posts={posts}
-						folderId={null}
-						username={user.username}
-						folders={folders}
-					/>
-				)}
-				{currentFeed === "characters" && (
-					<ProfileCharacters characters={characters} />
-				)}
-				{currentFeed === "saved" && <div>Saved</div>}
 			</div>
 		</>
 	);
@@ -446,16 +464,29 @@ function UserProfileMainContent({
 	user,
 	isMe,
 	isSuspended,
+	children,
+	activeTab,
+	onTabChange,
 }: {
 	user: User;
 	isMe: boolean;
 	isSuspended: boolean;
+	children?: React.ReactNode;
+	activeTab?: string;
+	onTabChange?: (tab: string) => void;
 }) {
 	return (
 		<main className={"min-w-0 pt-0 flex flex-col flex-1 h-full"}>
-			{!isSuspended && <UserFeeds user={user} isMe={isMe} />}
+			{!isSuspended && (
+				<UserFeeds
+					user={user}
+					isMe={isMe}
+					activeTab={activeTab}
+					onTabChange={onTabChange}
+				>
+					{children}
+				</UserFeeds>
+			)}
 		</main>
 	);
 }
-
-export default UserProfile;

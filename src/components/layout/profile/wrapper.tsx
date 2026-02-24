@@ -9,7 +9,9 @@ function UserProfileWrapper({
 	username,
 	folderId,
 	initialTab,
+	activeTab,
 	onTabChange,
+	children,
 }: ProfileWrapperProps) {
 	const { data } = useSuspenseUser(username);
 
@@ -17,7 +19,11 @@ function UserProfileWrapper({
 		return <EmptyPage title={`User "${username}" not found`} />;
 	}
 
-	return <UserProfile user={data} />;
+	return (
+		<UserProfile user={data} activeTab={activeTab} onTabChange={onTabChange}>
+			{children}
+		</UserProfile>
+	);
 }
 
 export default UserProfileWrapper;
