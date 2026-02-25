@@ -229,7 +229,7 @@ export function UserProfileSidebar({
 			<div className="space-y-4">
 				<div>
 					<h3 className="inline-flex items-center gap-2 font-bold text-2xl text-neutral-950 dark:text-neutral-50">
-						{/* TODO: make auto slide text if too more than 12 chracters */}
+						{/* TODO: make auto slide text if too more than 12 characters */}
 						<span className="truncate flex-1">{user.display_name}</span>
 						<ProfileBadge user={user} />
 					</h3>

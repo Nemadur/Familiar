@@ -188,8 +188,8 @@ const pl: Locale = {
 					content_warning: "Treść wrażliwa",
 					sensitive_content: "Treść wrażliwa",
 					contains_tags: "Ten materiał zawiera {{tags}}",
-					show_content: "Pokaż treść",
-					hide_content: "Ukryj treść",
+					show_content: "Pokaż",
+					hide_content: "Ukryj",
 				},
 				empty: {
 					title: "Brak zleceń",

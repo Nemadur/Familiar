@@ -188,8 +188,8 @@ const en: Locale = {
 					content_warning: "Content Warning",
 					sensitive_content: "Sensitive content",
 					contains_tags: "This media contains {{tags}}",
-					show_content: "Show Content",
-					hide_content: "Hide Content",
+					show_content: "Show",
+					hide_content: "Hide",
 				},
 				empty: {
 					title: "No commissions available",

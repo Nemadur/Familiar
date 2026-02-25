@@ -1,4 +1,5 @@
 import { ScrollShadow } from "@heroui/react";
+import { ToolCase } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
@@ -22,6 +23,11 @@ import { EmptyPage } from "@/components/layout/empty-page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useBlurredImage } from "@/hooks/use-blurred-image";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
 import { cn } from "@/lib/utils";
@@ -85,7 +91,7 @@ function CommissionCard({
 		<>
 			<button
 				type="button"
-				className="group relative flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-border/50 bg-card p-2 transition-colors hover:border-foreground/10 hover:bg-accent/50 sm:flex-row"
+				className="group relative flex cursor-pointer flex-col overflow-hidden rounded-4xl border border-border/50 bg-card p-2 transition-colors hover:border-foreground/10 hover:bg-accent/50 sm:flex-row"
 				onMouseEnter={() => setIsPlaying(true)}
 				onMouseLeave={() => {
 					setIsPlaying(false);
@@ -101,7 +107,7 @@ function CommissionCard({
 				tabIndex={0}
 			>
 				{/* Image Section */}
-				<div className="relative aspect-video shrink-0 overflow-hidden rounded-2xl bg-muted sm:w-2/5">
+				<div className="relative aspect-video shrink-0 overflow-hidden rounded-3xl bg-muted sm:w-2/5">
 					{shouldBlur ? (
 						<div className="h-full w-full overflow-hidden bg-zinc-900">
 							{blurredImageSrc ? (
@@ -156,12 +162,12 @@ function CommissionCard({
 
 					{/* Sensitive Content Overlay */}
 					{shouldBlur && (
-						<div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 p-4 text-center backdrop-blur-sm">
-							<OutlineWarning size={40} />
-							<h4 className="mb-1 font-bold text-white text-xl">
+						<div className="absolute inset-0 z-10 flex flex-col justify-center bg-black/60 p-4 text-center backdrop-blur-sm">
+							<OutlineWarning className="text-white" size={40} />
+							<h4 className="mb-1 text-left font-bold text-white text-xl">
 								{t("components.profile.commissions.card.sensitive_content")}
 							</h4>
-							<p className="mb-4 text-sm text-white/70">
+							<p className="mb-4 text-left text-sm text-white/70">
 								{item.contentWarnings && item.contentWarnings.length > 0
 									? t("components.profile.commissions.card.contains_tags", {
 											tags: item.contentWarnings
@@ -172,15 +178,14 @@ function CommissionCard({
 							</p>
 
 							<Button
-								variant="secondary"
-								size="sm"
-								className="border-none bg-white/20 text-white backdrop-blur-md hover:bg-white/30"
+								size={"sm"}
+								className="border-none w-fit bg-background hover:bg-background/90 text-foreground"
 								onClick={(e) => {
 									e.stopPropagation();
 									setIsContentRevealed(true);
 								}}
 							>
-								<OutlineEye />
+								{/* <OutlineEye /> */}
 								{t("components.profile.commissions.card.show_content")}
 							</Button>
 						</div>
@@ -188,18 +193,24 @@ function CommissionCard({
 
 					{/* Hide Content Button (when revealed) */}
 					{hasContentWarnings && isContentRevealed && (
-						<Button
-							variant="ghost"
-							size="icon"
-							className="absolute right-2 top-2 z-20 size-8 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60"
-							onClick={(e) => {
-								e.stopPropagation();
-								setIsContentRevealed(false);
-							}}
-							title={t("components.profile.commissions.card.hide_content")}
-						>
-							<OutlineEyeOff className="size-4" />
-						</Button>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant={"ghost"}
+									size={"icon"}
+									className="absolute right-2 top-2 z-20 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 hover:text-white"
+									onClick={(e) => {
+										e.stopPropagation();
+										setIsContentRevealed(false);
+									}}
+								>
+									<OutlineEyeOff className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side={"left"}>
+								{t("components.profile.commissions.card.hide_content")}
+							</TooltipContent>
+						</Tooltip>
 					)}
 				</div>
 
