@@ -1,17 +1,22 @@
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
+import { routerWithQueryClient } from "@tanstack/react-router-with-query";
 import { getQueryClient } from "@/providers/query-client";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
-	const router = createTanStackRouter({
-		routeTree,
-		context: {
-			queryClient: getQueryClient(),
-		},
-		scrollRestoration: true,
-		defaultPreload: "intent",
-		defaultPreloadStaleTime: 0,
-	});
+	const queryClient = getQueryClient();
+	const router = routerWithQueryClient(
+		createTanStackRouter({
+			routeTree,
+			context: {
+				queryClient,
+			},
+			scrollRestoration: true,
+			defaultPreload: "intent",
+			defaultPreloadStaleTime: 0,
+		}),
+		queryClient,
+	);
 
 	return router;
 }

@@ -10,11 +10,11 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Container } from "@/components/layout/container";
 import Footer from "@/components/layout/footer";
+import { Toaster } from "@/components/ui/sonner";
 import TanStackQueryDevtools from "@/integrations/tanstack-query/devtools";
 import i18n, { setSSRLanguage } from "@/lib/i18n";
 import { seo } from "@/lib/seo";
 import { AbilityProvider } from "@/providers/ability";
-import { QueryClientProvider } from "@/providers/query-client";
 import { ThemeProvider } from "@/providers/theme";
 import Header from "../components/layout/header";
 import { AuthProvider } from "../providers/auth";
@@ -61,33 +61,32 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<AuthProvider>
 					<AbilityProvider>
 						<ThemeProvider>
-							<QueryClientProvider client={context.queryClient}>
-								<div className={"flex min-h-screen flex-col"}>
-									<Container>
-										<Header />
-										<main
-											className={
-												"flex min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5"
-											}
-										>
-											{children}
-										</main>
-										<Footer />
-									</Container>
-								</div>
-								<TanStackDevtools
-									config={{
-										position: "bottom-right",
-									}}
-									plugins={[
-										{
-											name: "Tanstack Router",
-											render: <TanStackRouterDevtoolsPanel />,
-										},
-										TanStackQueryDevtools,
-									]}
-								/>
-							</QueryClientProvider>
+							<Toaster />
+							<div className={"flex min-h-screen flex-col"}>
+								<Container>
+									<Header />
+									<main
+										className={
+											"flex min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5"
+										}
+									>
+										{children}
+									</main>
+									<Footer />
+								</Container>
+							</div>
+							<TanStackDevtools
+								config={{
+									position: "bottom-right",
+								}}
+								plugins={[
+									{
+										name: "Tanstack Router",
+										render: <TanStackRouterDevtoolsPanel />,
+									},
+									TanStackQueryDevtools,
+								]}
+							/>
 						</ThemeProvider>
 					</AbilityProvider>
 				</AuthProvider>

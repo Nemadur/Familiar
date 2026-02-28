@@ -45,18 +45,12 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 	const { handleSubmit, isPending, control } = form;
 
 	const onSubmit = async (data: LoginData) => {
-		const loginPromise = authLogin(data);
-
-		toast.promise(loginPromise, {
-			loading: "Signing you in...",
-			success: () => {
-				onSuccess();
-				return "You have successfully signed in!";
-			},
-			error: (error) => {
-				return error.message || "Unknown error";
-			},
-		});
+		try {
+			await authLogin(data);
+			onSuccess();
+		} catch (error) {
+			// Error is handled by authLogin toast
+		}
 	};
 
 	return (

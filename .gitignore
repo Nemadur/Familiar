@@ -12,3 +12,7 @@ dist-ssr
 __unconfig*
 todos.json
 /.trae
+# heroui-agents-md
+.heroui-docs/
+/.agents
+skills-lock.json

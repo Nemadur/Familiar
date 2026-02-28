@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-// import { createUser } from "@/data/user";
 import useFormValidation from "@/hooks/use-form-validation";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/providers/auth";
 import {
 	register,
 	registerStep0,
@@ -19,7 +18,13 @@ import { RegisterStepProfile } from "./step/profile";
 
 function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 	const [step, setStep] = useState<Step>(0);
+	const [isMounted, setIsMounted] = useState(false);
 	const { t } = useTranslation();
+	const { register: authRegister } = useAuth();
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	const emailRef = useRef<HTMLInputElement | null>(null);
 	const displayNameRef = useRef<HTMLInputElement | null>(null);
@@ -37,17 +42,7 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 		},
 	});
 
-	const {
-		// formData, // Not directly used in render anymore
-		// errors,
-		isPending,
-		// handleInputChange,
-		handleSubmit,
-		// setFormData,
-		control,
-		setValue,
-		watch,
-	} = form;
+	const { isPending, handleSubmit, control, setValue, watch } = form;
 
 	// Watch values for validation logic
 	const watchedAccountType = watch("account_type");
@@ -62,12 +57,14 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 		email: watchedEmail,
 	}).success;
 
-	const isStep1Valid = registerStep1.safeParse({
-		display_name: watchedDisplayName,
-		username: watchedUsername,
-		password: watchedPassword,
-		invite_key: watchedInviteKey,
-	}).success;
+	const isStep1Valid =
+		registerStep1.safeParse({
+			display_name: watchedDisplayName,
+			username: watchedUsername,
+			password: watchedPassword,
+			invite_key: watchedInviteKey,
+		}).success &&
+		(watchedAccountType !== "artist" || !!watchedInviteKey);
 
 	const resetToStep0 = useCallback(() => {
 		setStep(0);
@@ -95,51 +92,6 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 		}
 	};
 
-	const submit = async (data: RegisterData) => {
-		toast.error("Registration is currently disabled.");
-		/*
-		const registerPromise = (async () => {
-			// 1. Create user in Supabase
-			const { data: authData, error: authError } = await supabase.auth.signUp({
-				email: data.email,
-				password: data.password,
-			});
-
-			if (authError) throw new Error(authError.message);
-			if (!authData.user) throw new Error("No user returned from Supabase");
-
-			// 2. Create user in local DB
-			try {
-				await createUser({
-					data: {
-						uuid: authData.user.id,
-						username: data.username,
-						display_name: data.display_name,
-					},
-				});
-			} catch (dbError) {
-				console.error("Failed to create local user:", dbError);
-				// Optional: Rollback Supabase user creation?
-				// For now, we'll throw, but the user exists in Supabase.
-				throw new Error(
-					"Failed to create account profile. Please contact support.",
-				);
-			}
-
-			return "Account created successfully!";
-		})();
-
-		toast.promise(registerPromise, {
-			loading: "Creating account...",
-			success: () => {
-				onSuccess();
-				return "Account created successfully!";
-			},
-			error: (err) => err.message || "Unknown error",
-		});
-		*/
-	};
-
 	const goNext = () => {
 		if (step === 0 && isStep0Valid) setStep(1);
 	};
@@ -148,11 +100,18 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 		setStep((step) => (step === 0 ? 0 : ((step - 1) as Step)));
 	};
 
-	const onFormSubmit = async (data: RegisterData) => {
+	const onFormSubmit = async (data: any) => {
 		if (step === 0) {
-			if (isStep0Valid) goNext();
+			if (isStep0Valid) setStep(1);
 		} else if (step === 1) {
-			if (isStep1Valid) await submit(data);
+			if (isStep1Valid) {
+				try {
+					await authRegister(data);
+					onSuccess?.();
+				} catch (error) {
+					// Error handled by provider toast
+				}
+			}
 		}
 	};
 
@@ -163,7 +122,7 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 				{step === 0 && (
 					<RegisterStepAccount
 						control={control}
-						isStepValid={isStep0Valid}
+						isStepValid={isMounted && isStep0Valid}
 						onNext={goNext}
 						onAccountTypeChange={handleAccountTypeChange}
 						emailRef={emailRef}

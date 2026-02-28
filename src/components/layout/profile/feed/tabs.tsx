@@ -28,7 +28,7 @@ function ProfileFeedTabs<T extends string>({
 			onValueChange={(value) => onValueChange?.(value as T)}
 			className={cn("w-fit", className)}
 		>
-			<TabsList className="h-auto gap-2 bg-transparent p-1">
+			<TabsList className="h-auto bg-transparent p-1">
 				{items.map((item) => {
 					const isActive = value === item.id;
 					const IconComponent =

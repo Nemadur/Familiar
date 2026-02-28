@@ -1,39 +1,46 @@
-import { useQuery } from "@tanstack/react-query";
+import { ScrollShadow } from "@heroui/react";
 import {
 	Check,
 	Info,
+	Maximize2,
 	MessageCircle,
+	PartyPopper,
+	RefreshCw,
 	Sparkles,
 	ThumbsUp,
 	X,
+	Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
-import { OutlineChat, SolidStar } from "@/components/icons/icons";
+import {
+	OutlineChat,
+	OutlineQestionMarkCrFr,
+	SolidStar,
+} from "@/components/icons/icons";
 import { ProfileBadge } from "@/components/layout/profile/badge";
 import {
 	type TabItem,
 	TabSelector,
 } from "@/components/layout/profile/feed/selector";
+import { ReviewsPanel } from "@/components/layout/profile/reviews-panel";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-} from "@/components/ui/pagination";
-import { StarsRating } from "@/components/ui/stars-rating";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getCommission } from "@/data/commissions";
 import {
 	calculateCommissionPricing,
 	calculateReviewStats,
@@ -42,28 +49,39 @@ import { cn } from "@/lib/utils";
 import type { CommissionItem } from "@/types/commission";
 import type { User } from "@/types/user";
 import { CommissionRequestModal } from "./commission-request-modal";
+import { type InfoOption, InfoSelectionModal } from "./info-selection-modal";
 import { LicenseInfoModal } from "./license-info-modal";
+import { TermsModal } from "./terms-modal";
 import { UniversalModalLayout } from "./universal-modal-layout";
 
 interface CommissionModalProps {
-	item: CommissionItem;
+	item?: CommissionItem;
+	commissionId?: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	artist?: User;
 	artistName?: string;
 	artistHandle?: string;
 	artistAvatar?: string;
+	isLoading?: boolean;
+	isDetailsLoading?: boolean;
+	isError?: boolean;
+	error?: unknown;
 }
 
 export function CommissionModal({
-	item: initialItem,
+	item: itemData,
+	commissionId: propCommissionId,
 	open,
 	onOpenChange,
 	artist: propArtist,
-	artistName: propArtistName,
-	artistHandle: propArtistHandle,
 	artistAvatar: propArtistAvatar,
+	isLoading,
+	isDetailsLoading,
+	isError,
+	error,
 }: CommissionModalProps) {
+	const { t } = useTranslation();
 	const [licenseModalOpen, setLicenseModalOpen] = useState(false);
 	const [requestModalOpen, setRequestModalOpen] = useState(false);
 	const [termsAccepted, setTermsAccepted] = useState(false);
@@ -71,46 +89,71 @@ export function CommissionModal({
 	const [reviewsPage, setReviewsPage] = useState(1);
 	const REVIEWS_PER_PAGE = 3;
 
-	const { data: fetchedItem } = useQuery({
-		queryKey: ["commission", initialItem.id],
-		queryFn: () => getCommission({ id: initialItem.id }),
+	// Info Modals State
+	const [infoModalState, setInfoModalState] = useState<{
+		open: boolean;
+		type: "service" | "communication" | "process" | null;
+	}>({ open: false, type: null });
+
+	const [termsModalOpen, setTermsModalOpen] = useState(false);
+
+	useEffect(() => {
+		if (isError) {
+			console.error(`[CommissionModal] Error fetching commission:`, error);
+		}
+	}, [isError, error]);
+
+	const artistData = itemData?.artist || propArtist;
+
+	// User data should be available from props or fetched item
+	const userData: User | undefined = artistData;
+
+	const licenseOptions = itemData?.licenseOptions || [];
+
+	const SYSTEM_LICENSE_KEYS = ["personal", "monetized", "commercial"] as const;
+
+	const systemLicenses = SYSTEM_LICENSE_KEYS.map((key) => {
+		const option = licenseOptions.find((l) => l.id === key);
+		return {
+			key,
+			option,
+			isAvailable: !!option,
+		};
 	});
 
-	const itemData = fetchedItem || initialItem;
-	const artistData = propArtist || (fetchedItem as any)?.artist;
+	const customLicenses = licenseOptions.filter(
+		(l) => !SYSTEM_LICENSE_KEYS.includes(l.id as any),
+	);
 
-	// Fallback user object if data is missing
-	const userData: User = artistData || {
-		display_name: propArtistName || "Unknown Artist",
-		username: (propArtistHandle || "@unknown").replace("@", ""),
-		media: { avatar: propArtistAvatar || null },
-		roles: [],
-		created_at: new Date(),
-		uuid: "unknown",
-		accent_color: "#000000",
-		is_premium: false,
-		is_verified: false,
-	};
+	const [selectedLicenses, setSelectedLicenses] = useState<string[]>(() =>
+		licenseOptions.filter((l) => l.included === true).map((l) => l.id),
+	);
 
-	const artistName = userData.display_name;
-	const artistHandle = `@${userData.username}`;
-	const artistAvatar = userData.media?.avatar || propArtistAvatar;
+	// Update selected licenses when fetched data arrives
+	useEffect(() => {
+		if (itemData?.licenseOptions) {
+			setSelectedLicenses(
+				itemData.licenseOptions
+					.filter((l) => l.included === true)
+					.map((l) => l.id),
+			);
+		}
+	}, [itemData]);
 
-	const reviewStats = calculateReviewStats(itemData.reviews);
-	const totalReviews = itemData.reviews?.length || 0;
-	const totalPages = Math.ceil(totalReviews / REVIEWS_PER_PAGE);
+	if (!itemData && !isLoading) {
+		return null;
+	}
 
-	const paginatedReviews = itemData.reviews
-		? itemData.reviews.slice(
-				(reviewsPage - 1) * REVIEWS_PER_PAGE,
-				reviewsPage * REVIEWS_PER_PAGE,
-			)
-		: [];
+	const artistName = userData?.display_name;
+	const artistHandle = userData?.username ? `@${userData.username}` : "";
+	const artistAvatar = userData?.media?.avatar || propArtistAvatar;
+
+	const reviewStats = calculateReviewStats(itemData?.reviews);
 
 	const tabs: TabItem<string>[] = [
 		{
 			id: "description",
-			label: "Description",
+			label: t("components.profile.commissions.modal.tabs.description"),
 		},
 		{
 			id: "reviews",
@@ -119,33 +162,9 @@ export function CommissionModal({
 		},
 	];
 
-	const { basePrice, originalPrice } = calculateCommissionPricing(
-		itemData.price,
-		itemData.discountRate,
-	);
-
-	const licenseOptions = itemData.licenseOptions || [
-		{ id: "personal", label: "Personal", price: 0, included: true },
-		{ id: "monetized", label: "Monetized content", price: 50 },
-		{ id: "commercial", label: "Commercial", price: 150 },
-	];
-
-	const [selectedLicenses, setSelectedLicenses] = useState<string[]>(() =>
-		licenseOptions.filter((l) => l.included === true).map((l) => l.id),
-	);
-
-	const handleLicenseToggle = (licenseId: string) => {
-		const license = licenseOptions.find((l) => l.id === licenseId);
-		if (license?.included !== undefined) return; // Cannot toggle included (true) or unavailable (false)
-
-		setSelectedLicenses((prev) => {
-			if (prev.includes(licenseId)) {
-				return prev.filter((id) => id !== licenseId);
-			} else {
-				return [...prev, licenseId];
-			}
-		});
-	};
+	const { basePrice, originalPrice } = itemData
+		? calculateCommissionPricing(itemData.price, itemData.discountRate)
+		: { basePrice: 0, originalPrice: 0 };
 
 	const getLicensePrice = (license: (typeof licenseOptions)[0]) => {
 		if (license.price !== undefined) return license.price;
@@ -154,12 +173,16 @@ export function CommissionModal({
 		return 0;
 	};
 
-	// Calculate total price based on selected licenses
-	const licensesCost = licenseOptions
-		.filter((l) => selectedLicenses.includes(l.id) && !l.included)
-		.reduce((acc, l) => acc + getLicensePrice(l), 0);
-
-	const currentPrice = basePrice + licensesCost;
+	const totalPrice = useMemo(() => {
+		const licensesPrice = selectedLicenses.reduce((acc, licenseId) => {
+			const license = licenseOptions.find((l) => l.id === licenseId);
+			if (license && !license.included) {
+				return acc + getLicensePrice(license);
+			}
+			return acc;
+		}, 0);
+		return basePrice + licensesPrice;
+	}, [basePrice, selectedLicenses, licenseOptions]);
 
 	const handleRequestOpen = () => {
 		onOpenChange(false);
@@ -176,22 +199,29 @@ export function CommissionModal({
 			<UniversalModalLayout
 				open={open}
 				onOpenChange={onOpenChange}
-				title="Commission Details"
+				title={t("components.profile.commissions.modal.title")}
 				mediaContent={
 					<div className="flex flex-col gap-4 p-4">
-						{initialItem.imageUrls && initialItem.imageUrls.length > 0 ? (
-							initialItem.imageUrls.map((url, index) => (
-								<div key={index} className="w-full">
+						{itemData?.imageUrls && itemData.imageUrls.length > 0 ? (
+							itemData.imageUrls.map((url, index) => (
+								<div
+									key={url}
+									className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg bg-secondary/5"
+								>
 									<img
 										src={url}
-										alt={`${initialItem.title} - ${index + 1}`}
-										className="block h-auto w-full rounded-lg object-contain shadow-sm"
+										alt={`${itemData.title} - ${index + 1}`}
+										className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain shadow-sm"
 									/>
 								</div>
 							))
+						) : isLoading ? (
+							<div className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg bg-secondary/5">
+								<Skeleton className="h-full w-full rounded-lg" />
+							</div>
 						) : (
 							<div className="flex min-h-[40vh] items-center justify-center p-8 text-muted-foreground">
-								No media available
+								{t("components.profile.commissions.modal.no_media")}
 							</div>
 						)}
 					</div>
@@ -203,93 +233,217 @@ export function CommissionModal({
 							<div className="space-y-2">
 								<div className="flex items-center gap-2 font-medium text-muted-foreground text-sm uppercase tracking-wide">
 									{/* Could be category or tag */}
-									Commission
+									{t("components.profile.commissions.modal.category_label")}
 								</div>
 								{/* TODO: replace USD to dynamic exchange */}
-								<h1 className="text-3xl font-bold leading-tight">
-									{initialItem.title}
-								</h1>
+								{itemData ? (
+									<h1 className="text-3xl font-bold leading-tight">
+										{itemData.title}
+									</h1>
+								) : (
+									<Skeleton className="h-10 w-3/4" />
+								)}
 								<div className="flex items-baseline gap-2">
-									<div className="font-semibold text-2xl text-primary">
-										From USD {basePrice.toFixed(2)}
-									</div>
-									<div className="text-lg text-muted-foreground line-through opacity-70">
-										USD {originalPrice.toFixed(2)}
-									</div>
+									{itemData ? (
+										<>
+											<div className="font-semibold text-2xl text-primary">
+												{t("components.profile.commissions.card.from")} USD{" "}
+												{totalPrice.toFixed(2)}
+											</div>
+											<div className="text-lg text-muted-foreground line-through opacity-70">
+												USD {originalPrice.toFixed(2)}
+											</div>
+										</>
+									) : (
+										<Skeleton className="h-8 w-1/2" />
+									)}
 								</div>
 							</div>
 
-							{/* TODO: use real db licence types commission_listing_licenses */}
 							{/* License Selector */}
 							<div className="space-y-3 rounded-xl bg-secondary/20 p-4 border">
 								<div className="flex items-center justify-between">
-									<h3 className="font-semibold text-sm">License Type</h3>
+									<h4 className="font-semibold text-sm">
+										{t(
+											"components.profile.commissions.modal.license.title",
+											"License Options",
+										)}
+									</h4>
 									<Button
-										variant="ghost"
-										size="sm"
-										className="h-6 gap-1 px-2 text-muted-foreground text-xs hover:text-foreground"
+										variant={"ghost"}
+										size={"icon-sm"}
+										className="text-muted-foreground"
 										onClick={() => setLicenseModalOpen(true)}
 									>
-										<Info className="h-3 w-3" />
-										License Info
+										<OutlineQestionMarkCrFr />
 									</Button>
 								</div>
 
-								<div className="space-y-2">
-									{licenseOptions.map((license) => {
-										const price = getLicensePrice(license);
-										const isSelected = selectedLicenses.includes(license.id);
-										const isUnavailable = license.included === false;
-										const isIncluded = license.included === true;
-
-										return (
-											<button
-												key={license.id}
-												type="button"
-												className={cn(
-													"flex w-full items-center justify-between rounded-lg border p-3 transition-all",
-													isSelected
-														? "border-primary bg-secondary ring-1 ring-primary"
-														: "border-transparent bg-background",
-													!isIncluded &&
-														!isUnavailable &&
-														"cursor-pointer hover:border-primary/50",
-													(isIncluded || isUnavailable) &&
-														"cursor-default opacity-80",
-													isUnavailable && "opacity-50",
-												)}
-												onClick={() => handleLicenseToggle(license.id)}
-											>
-												<div className="flex items-center gap-3">
-													<div
-														className={cn(
-															"flex size-4 items-center justify-center rounded-sm border transition-colors",
-															isSelected
-																? "border-primary bg-primary text-primary-foreground"
-																: "border-muted-foreground",
-															isUnavailable &&
-																"border-destructive/50 bg-destructive/10 text-destructive",
+								<div className="grid gap-2">
+									{/* System Licenses */}
+									{systemLicenses.map(({ key, option, isAvailable }) => {
+										if (isAvailable && option) {
+											return (
+												<div
+													key={key}
+													className={cn(
+														"flex items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors",
+														(option.included ||
+															selectedLicenses.includes(key)) &&
+															"border-primary/50 bg-primary/5",
+													)}
+												>
+													{option.included ? (
+														<div className="flex h-4 w-4 shrink-0 items-center justify-center">
+															<Check className="h-4 w-4 text-primary" />
+														</div>
+													) : (
+														<Checkbox
+															id={key}
+															checked={selectedLicenses.includes(key)}
+															onCheckedChange={(checked) => {
+																if (checked) {
+																	setSelectedLicenses((prev) => [...prev, key]);
+																} else {
+																	setSelectedLicenses((prev) =>
+																		prev.filter((id) => id !== key),
+																	);
+																}
+															}}
+														/>
+													)}
+													<div className="flex flex-1 items-center justify-between gap-2">
+														<div className="flex items-center gap-2">
+															<label
+																htmlFor={key}
+																className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+															>
+																{t(
+																	`components.profile.commissions.modal.license.${key}`,
+																	option.label,
+																)}
+															</label>
+														</div>
+														{option.included ? (
+															<span className="font-medium text-primary text-xs">
+																{t(
+																	"components.profile.commissions.modal.license.included",
+																)}
+															</span>
+														) : (
+															<span className="font-medium text-primary text-xs">
+																{option.pricePercentage !== undefined
+																	? `+ ${option.pricePercentage}%`
+																	: `+ USD ${getLicensePrice(option).toFixed(2)}`}
+															</span>
 														)}
-													>
-														{isSelected && <Check className="h-3 w-3" />}
-														{isUnavailable && <X className="h-3 w-3" />}
 													</div>
-													<span
-														className={cn(
-															"font-medium text-sm",
-															isUnavailable && "line-through",
-														)}
-													>
-														{license.label}
-													</span>
 												</div>
-												{/* TODO: replace USD to dynamic exchange */}
-												<span className="text-muted-foreground text-sm">
-													{isIncluded ? "Included" : `+USD ${price.toFixed(2)}`}
-												</span>
-											</button>
+											);
+										}
+
+										// Unavailable System License
+										return (
+											<div
+												key={key}
+												className="flex items-start gap-3 rounded-lg border border-dashed bg-muted/20 p-3 opacity-60"
+											>
+												<div className="flex h-4 w-4 shrink-0 items-center justify-center">
+													<X className="h-4 w-4 text-muted-foreground" />
+												</div>
+												<div className="grid gap-1">
+													<div className="flex items-center gap-2">
+														<span className="font-medium text-muted-foreground text-sm leading-none line-through">
+															{t(
+																`components.profile.commissions.modal.license.${key}`,
+															)}
+														</span>
+													</div>
+												</div>
+											</div>
 										);
 									})}
+
+									{/* Custom Licenses Accordion */}
+									{customLicenses.length > 0 && (
+										<Accordion type="single" collapsible className="w-full">
+											<AccordionItem
+												value="custom-licenses"
+												className="border-none"
+											>
+												<AccordionTrigger className="py-2 text-sm text-muted-foreground hover:no-underline">
+													{t(
+														"components.profile.commissions.modal.license.other_licenses_count",
+														{ count: customLicenses.length },
+													)}
+												</AccordionTrigger>
+												<AccordionContent>
+													<div className="grid gap-2 pt-2">
+														{customLicenses.map((license) => (
+															<div
+																key={license.id}
+																className={cn(
+																	"flex items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors",
+																	selectedLicenses.includes(license.id) &&
+																		"border-primary/50 bg-primary/5",
+																)}
+															>
+																<Checkbox
+																	id={license.id}
+																	checked={selectedLicenses.includes(
+																		license.id,
+																	)}
+																	disabled={license.included}
+																	onCheckedChange={(checked) => {
+																		if (checked) {
+																			setSelectedLicenses((prev) => [
+																				...prev,
+																				license.id,
+																			]);
+																		} else {
+																			setSelectedLicenses((prev) =>
+																				prev.filter((id) => id !== license.id),
+																			);
+																		}
+																	}}
+																/>
+																<div className="flex flex-1 items-center justify-between gap-2">
+																	<div className="flex items-center gap-2">
+																		<label
+																			htmlFor={license.id}
+																			className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+																		>
+																			{license.label}
+																		</label>
+																	</div>
+																	{license.included ? (
+																		<span className="font-medium text-primary text-xs">
+																			{t(
+																				"components.profile.commissions.modal.license.included",
+																			)}
+																		</span>
+																	) : (
+																		<span className="font-medium text-primary text-xs">
+																			{license.pricePercentage !== undefined
+																				? `+ ${license.pricePercentage}%`
+																				: `+ USD ${getLicensePrice(license).toFixed(2)}`}
+																		</span>
+																	)}
+																</div>
+															</div>
+														))}
+													</div>
+												</AccordionContent>
+											</AccordionItem>
+										</Accordion>
+									)}
+
+									{isDetailsLoading && (
+										<div className="space-y-2">
+											<Skeleton className="h-12 w-full" />
+											<Skeleton className="h-12 w-full" />
+										</div>
+									)}
 								</div>
 							</div>
 
@@ -303,23 +457,33 @@ export function CommissionModal({
 												`https://api.dicebear.com/7.x/avataaars/svg?seed=${artistHandle}`
 											}
 										/>
-										<AvatarFallback>{artistName[0]}</AvatarFallback>
+										<AvatarFallback>
+											{artistName ? artistName[0] : "?"}
+										</AvatarFallback>
 									</Avatar>
 									<div className="flex flex-col">
 										<div className="flex items-center gap-1">
-											<span className="font-semibold text-sm">
-												{artistName}
-											</span>
-											<ProfileBadge user={userData} />
+											{artistName ? (
+												<span className="font-semibold text-sm">
+													{artistName}
+												</span>
+											) : (
+												<Skeleton className="h-4 w-24" />
+											)}
+											{userData && <ProfileBadge user={userData} />}
 										</div>
-										<span className="text-muted-foreground text-xs">
-											{artistHandle}
-										</span>
+										{artistHandle ? (
+											<span className="text-muted-foreground text-xs">
+												{artistHandle}
+											</span>
+										) : (
+											<Skeleton className="h-3 w-16" />
+										)}
 									</div>
 								</div>
 
 								{/* Artist note */}
-								{itemData.artistNote && (
+								{itemData?.artistNote && (
 									<div className="rounded-xl bg-secondary/30 p-4 text-muted-foreground text-sm">
 										{itemData.artistNote}
 									</div>
@@ -339,230 +503,208 @@ export function CommissionModal({
 								<div className="min-h-[400px]">
 									{activeTab === "description" && (
 										<div className="space-y-6">
-											<div className="space-y-4">
-												{/* Service Type */}
-												<div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
-													<div className="mt-1 rounded-full bg-primary/10 p-2 text-primary">
-														<Sparkles className="h-5 w-5" />
-													</div>
-													<div className="flex-1 space-y-1">
-														<div className="flex items-center justify-between">
-															<h4 className="font-semibold text-base">
-																Custom service
-															</h4>
-															<TooltipProvider>
-																<Tooltip>
-																	<TooltipTrigger>
-																		<Info className="size-4 text-muted-foreground" />
-																	</TooltipTrigger>
-																	<TooltipContent>
-																		Made from scratch based on your requirements
-																	</TooltipContent>
-																</Tooltip>
-															</TooltipProvider>
+											{itemData ? (
+												<div className="space-y-4">
+													{/* Service Type */}
+													<div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
+														<div className="mt-1 rounded-full bg-primary/10 p-2 text-primary">
+															<Sparkles className="h-5 w-5" />
 														</div>
-														<p className="text-muted-foreground text-sm">
-															Made from scratch
-														</p>
+														<div className="flex-1 space-y-1">
+															<div className="flex items-center justify-between">
+																<h4 className="font-semibold text-base">
+																	{t(
+																		`components.profile.commissions.modal.service.${
+																			itemData.serviceType ===
+																			"personalized_ych"
+																				? "ych"
+																				: "custom"
+																		}.title`,
+																	)}
+																</h4>
+																<Button
+																	variant="ghost"
+																	size="icon"
+																	className="h-6 w-6 text-muted-foreground"
+																	onClick={() =>
+																		setInfoModalState({
+																			open: true,
+																			type: "service",
+																		})
+																	}
+																>
+																	<Info className="size-4" />
+																</Button>
+															</div>
+															<p className="text-muted-foreground text-sm">
+																{t(
+																	`components.profile.commissions.modal.service.${
+																		itemData.serviceType === "personalized_ych"
+																			? "ych"
+																			: "custom"
+																	}.description`,
+																)}
+															</p>
+														</div>
 													</div>
-												</div>
 
-												{/* Communication Style */}
-												<div className="rounded-2xl border bg-card p-4 flex items-start gap-4">
-													<div className="mt-1 rounded-full bg-orange-500/10 p-2 text-orange-500">
-														<MessageCircle className="h-5 w-5" />
-													</div>
-													<div className="flex-1 space-y-1">
-														<div className="flex items-center justify-between">
-															<h4 className="font-semibold text-base">
-																Open communication
-															</h4>
-															<TooltipProvider>
-																<Tooltip>
-																	<TooltipTrigger>
-																		<Info className="h-4 w-4 text-muted-foreground" />
-																	</TooltipTrigger>
-																	<TooltipContent>
-																		Regular updates and feedback loops
-																	</TooltipContent>
-																</Tooltip>
-															</TooltipProvider>
+													{/* Communication Style */}
+													<div className="rounded-2xl border bg-card p-4 flex items-start gap-4">
+														<div className="mt-1 rounded-full bg-orange-500/10 p-2 text-orange-500">
+															<MessageCircle className="h-5 w-5" />
 														</div>
-														<p className="text-muted-foreground text-sm">
-															WIP updates + revisions available
-														</p>
+														<div className="flex-1 space-y-1">
+															<div className="flex items-center justify-between">
+																<h4 className="font-semibold text-base">
+																	{t(
+																		`components.profile.commissions.modal.service.${
+																			itemData.communicationType ===
+																			"surprise_me"
+																				? "surprise"
+																				: "communication"
+																		}.title`,
+																	)}
+																</h4>
+																<Button
+																	variant="ghost"
+																	size="icon"
+																	className="h-6 w-6 text-muted-foreground"
+																	onClick={() =>
+																		setInfoModalState({
+																			open: true,
+																			type: "communication",
+																		})
+																	}
+																>
+																	<Info className="size-4" />
+																</Button>
+															</div>
+															<p className="text-muted-foreground text-sm">
+																{t(
+																	`components.profile.commissions.modal.service.${
+																		itemData.communicationType === "surprise_me"
+																			? "surprise"
+																			: "communication"
+																	}.description`,
+																)}
+															</p>
+														</div>
 													</div>
-												</div>
 
-												{/* Process */}
-												<div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
-													<div className="mt-1 rounded-full bg-blue-500/10 p-2 text-blue-500">
-														<ThumbsUp className="h-5 w-5" />
-													</div>
-													<div className="flex-1 space-y-1">
-														<div className="flex items-center justify-between">
-															<h4 className="font-semibold text-base">
-																Custom proposal
-															</h4>
-															<TooltipProvider>
-																<Tooltip>
-																	<TooltipTrigger>
-																		<Info className="h-4 w-4 text-muted-foreground" />
-																	</TooltipTrigger>
-																	<TooltipContent>
-																		Standard commission workflow
-																	</TooltipContent>
-																</Tooltip>
-															</TooltipProvider>
+													{/* Process */}
+													<div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
+														<div className="mt-1 rounded-full bg-blue-500/10 p-2 text-blue-500">
+															<ThumbsUp className="h-5 w-5" />
 														</div>
-														<p className="text-muted-foreground text-sm">
-															Request → proposal → commit (pay)
-														</p>
+														<div className="flex-1 space-y-1">
+															<div className="flex items-center justify-between">
+																<h4 className="font-semibold text-base">
+																	{t(
+																		`components.profile.commissions.modal.service.${
+																			itemData.requestingProcess ===
+																			"instant_order"
+																				? "instant"
+																				: "proposal"
+																		}.title`,
+																	)}
+																</h4>
+																<Button
+																	variant="ghost"
+																	size="icon"
+																	className="h-6 w-6 text-muted-foreground"
+																	onClick={() =>
+																		setInfoModalState({
+																			open: true,
+																			type: "process",
+																		})
+																	}
+																>
+																	<Info className="size-4" />
+																</Button>
+															</div>
+															<p className="text-muted-foreground text-sm">
+																{t(
+																	`components.profile.commissions.modal.service.${
+																		itemData.requestingProcess ===
+																		"instant_order"
+																			? "instant"
+																			: "proposal"
+																	}.description`,
+																)}
+															</p>
+														</div>
 													</div>
 												</div>
-											</div>
+											) : (
+												<div className="space-y-4">
+													<Skeleton className="h-24 w-full rounded-2xl" />
+													<Skeleton className="h-24 w-full rounded-2xl" />
+													<Skeleton className="h-24 w-full rounded-2xl" />
+												</div>
+											)}
 
 											{/* Details Section */}
 											<div className="text-muted-foreground leading-relaxed">
-												<MarkdownDisplay content={itemData.description} />
+												{itemData?.description ? (
+													<MarkdownDisplay content={itemData.description} />
+												) : (
+													<div className="space-y-2">
+														<Skeleton className="h-4 w-full" />
+														<Skeleton className="h-4 w-full" />
+														<Skeleton className="h-4 w-3/4" />
+													</div>
+												)}
 											</div>
 
 											{/* Artist TOS Section */}
-											<div className="space-y-3 border-t pt-4">
-												<h3 className="font-bold text-lg">Terms of Service</h3>
-												<div className="rounded-xl bg-muted/30 p-4 text-muted-foreground text-sm">
-													<p className="mb-2 font-medium text-foreground">
-														By commissioning me, you agree to:
-													</p>
-													{userData.tos ? (
-														<div className="prose prose-sm dark:prose-invert max-w-none">
-															<p>{userData.tos.summary}</p>
-														</div>
-													) : (
-														// TODO: return nothing or "artist do not have TOS, please ask them, maybe they forget to add."
-														<ul className="ml-1 list-inside list-disc space-y-1">
-															<li>No refunds after sketches are approved</li>
-															<li>
-																Personal use only unless commercial license
-																purchased
-															</li>
-															<li>Credit must be given when posting</li>
-															<li>
-																I retain the right to use the artwork for
-																portfolio
-															</li>
-														</ul>
-													)}
-													<Button
-														variant="link"
-														className="mt-3 h-auto p-0 text-primary text-xs"
-													>
-														Read full Terms of Service
-													</Button>
+											{itemData?.artistTerms?.tosMd ? (
+												<div className="space-y-3 border-t pt-4">
+													<div className="flex items-center justify-between">
+														<h4 className="font-semibold text-sm">
+															{t(
+																"components.profile.commissions.modal.tos.title",
+															)}{" "}
+															{artistName && `(${artistName})`}
+														</h4>
+														<Button
+															variant={"ghost"}
+															size={"icon-sm"}
+															onClick={() => setTermsModalOpen(true)}
+														>
+															<Maximize2 />
+														</Button>
+													</div>
+													<div className="text-sm">
+														<ScrollShadow className="max-h-48">
+															<MarkdownDisplay
+																content={itemData.artistTerms.tosMd}
+																className="text-sm"
+															/>
+														</ScrollShadow>
+													</div>
 												</div>
-											</div>
+											) : isDetailsLoading ? (
+												<div className="space-y-3 border-t pt-4">
+													<Skeleton className="h-4 w-32" />
+													<Skeleton className="h-32 w-full rounded-xl" />
+												</div>
+											) : (
+												<div className="border-t pt-4 text-muted-foreground text-xs italic">
+													Terms of service not available.
+												</div>
+											)}
 										</div>
 									)}
 
 									{activeTab === "reviews" && (
-										<div className="space-y-4">
-											{paginatedReviews.length > 0 ? (
-												paginatedReviews.map((review) => (
-													<div
-														key={review.id}
-														className="rounded-xl border bg-card p-4 space-y-2"
-													>
-														<div className="flex items-center justify-between">
-															<div className="flex items-center gap-2">
-																<Avatar className="h-8 w-8">
-																	<AvatarFallback>
-																		{review.authorName[0]}
-																	</AvatarFallback>
-																</Avatar>
-																<div className="flex flex-col">
-																	<span className="font-semibold text-sm">
-																		{review.authorName}
-																	</span>
-																	<span className="text-muted-foreground text-xs">
-																		{new Date(
-																			review.createdAt,
-																		).toLocaleDateString()}
-																	</span>
-																</div>
-															</div>
-															<StarsRating rating={review.rating} size={14} />
-														</div>
-														{review.comment && (
-															<p className="text-sm text-foreground/90">
-																{review.comment}
-															</p>
-														)}
-													</div>
-												))
-											) : (
-												<div className="py-8 text-center text-muted-foreground text-sm">
-													No reviews yet.
-												</div>
-											)}
-
-											{totalPages > 1 && (
-												<Pagination className="mt-4">
-													<PaginationContent>
-														<PaginationItem>
-															<PaginationPrevious
-																href="#"
-																onClick={(e) => {
-																	e.preventDefault();
-																	setReviewsPage((p) => Math.max(1, p - 1));
-																}}
-																aria-disabled={reviewsPage === 1}
-																className={
-																	reviewsPage === 1
-																		? "pointer-events-none opacity-50"
-																		: ""
-																}
-															/>
-														</PaginationItem>
-
-														{Array.from({ length: totalPages }).map((_, i) => {
-															const page = i + 1;
-															return (
-																<PaginationItem key={page}>
-																	<PaginationLink
-																		href="#"
-																		isActive={reviewsPage === page}
-																		onClick={(e) => {
-																			e.preventDefault();
-																			setReviewsPage(page);
-																		}}
-																	>
-																		{page}
-																	</PaginationLink>
-																</PaginationItem>
-															);
-														})}
-
-														<PaginationItem>
-															<PaginationNext
-																href="#"
-																onClick={(e) => {
-																	e.preventDefault();
-																	setReviewsPage((p) =>
-																		Math.min(totalPages, p + 1),
-																	);
-																}}
-																aria-disabled={reviewsPage === totalPages}
-																className={
-																	reviewsPage === totalPages
-																		? "pointer-events-none opacity-50"
-																		: ""
-																}
-															/>
-														</PaginationItem>
-													</PaginationContent>
-												</Pagination>
-											)}
-										</div>
+										<ReviewsPanel
+											reviews={itemData?.reviews || []}
+											isLoading={isDetailsLoading}
+											itemsPerPage={3}
+											showSummary={true}
+											showAverageScore={false}
+											variant="clean"
+										/>
 									)}
 								</div>
 							</div>
@@ -582,10 +724,15 @@ export function CommissionModal({
 										htmlFor="terms"
 										className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 									>
-										I accept {userData.display_name}'s Terms of Service
+										{t(
+											"components.profile.commissions.modal.footer.accept_tos_label",
+											{ artist: userData?.display_name },
+										)}
 									</label>
 									<p className="text-muted-foreground text-xs">
-										By checking this box, you agree to the artist's terms.
+										{t(
+											"components.profile.commissions.modal.footer.tos_disclaimer",
+										)}
 									</p>
 								</div>
 								<TooltipProvider>
@@ -600,9 +747,23 @@ export function CommissionModal({
 											</Button>
 										</TooltipTrigger>
 										<TooltipContent className="max-w-xs">
-											<p className="mb-1 font-semibold">Terms Summary:</p>
+											<p className="mb-1 font-semibold">
+												{t(
+													"components.profile.commissions.modal.footer.terms_summary",
+												)}
+											</p>
 											<p className="text-xs">
-												{userData.tos?.summary || "No terms available"}
+												{itemData.artistTerms?.tosMd ? (
+													<MarkdownDisplay
+														content={itemData.artistTerms.tosMd}
+														isShort
+														className="text-xs"
+													/>
+												) : (
+													t(
+														"components.profile.commissions.modal.footer.no_terms",
+													)
+												)}
 											</p>
 										</TooltipContent>
 									</Tooltip>
@@ -616,7 +777,9 @@ export function CommissionModal({
 									disabled={!termsAccepted}
 									onClick={handleRequestOpen}
 								>
-									Accept terms to start request
+									{t(
+										"components.profile.commissions.modal.footer.accept_start",
+									)}
 								</Button>
 								<Tooltip>
 									<TooltipTrigger asChild>
@@ -629,7 +792,11 @@ export function CommissionModal({
 											<OutlineChat />
 										</Button>
 									</TooltipTrigger>
-									<TooltipContent>Feature is temporary disabled</TooltipContent>
+									<TooltipContent>
+										{t(
+											"components.profile.commissions.modal.footer.feature_disabled",
+										)}
+									</TooltipContent>
 								</Tooltip>
 							</div>
 						</div>
@@ -641,6 +808,7 @@ export function CommissionModal({
 			<LicenseInfoModal
 				open={licenseModalOpen}
 				onOpenChange={setLicenseModalOpen}
+				customLicenses={customLicenses}
 			/>
 			<CommissionRequestModal
 				open={requestModalOpen}
@@ -650,6 +818,108 @@ export function CommissionModal({
 				artist={userData}
 				initialLicenses={selectedLicenses}
 			/>
+
+			{infoModalState.type && (
+				<InfoSelectionModal
+					open={infoModalState.open}
+					onOpenChange={(open) =>
+						setInfoModalState((prev) => ({ ...prev, open }))
+					}
+					title={t(
+						`components.profile.commissions.modal.info_selection_modal.${infoModalState.type}.title`,
+					)}
+					description={t(
+						`components.profile.commissions.modal.info_selection_modal.${infoModalState.type}.description`,
+					)}
+					selectedId={
+						infoModalState.type === "service"
+							? itemData?.serviceType || ""
+							: infoModalState.type === "communication"
+								? itemData?.communicationType || ""
+								: itemData?.requestingProcess || ""
+					}
+					options={
+						infoModalState.type === "service"
+							? [
+									{
+										id: "custom_service",
+										label: t(
+											"components.profile.commissions.modal.service.custom.title",
+										),
+										description: t(
+											"components.profile.commissions.modal.service.custom.description",
+										),
+										icon: Sparkles,
+									},
+									{
+										id: "personalized_ych",
+										label: t(
+											"components.profile.commissions.modal.service.ych.title",
+										),
+										description: t(
+											"components.profile.commissions.modal.service.ych.description",
+										),
+										icon: RefreshCw,
+									},
+								]
+							: infoModalState.type === "communication"
+								? [
+										{
+											id: "open_communication",
+											label: t(
+												"components.profile.commissions.modal.service.communication.title",
+											),
+											description: t(
+												"components.profile.commissions.modal.service.communication.description",
+											),
+											icon: MessageCircle,
+										},
+										{
+											id: "surprise_me",
+											label: t(
+												"components.profile.commissions.modal.service.surprise.title",
+											),
+											description: t(
+												"components.profile.commissions.modal.service.surprise.description",
+											),
+											icon: PartyPopper,
+										},
+									]
+								: [
+										{
+											id: "custom_proposal",
+											label: t(
+												"components.profile.commissions.modal.service.proposal.title",
+											),
+											description: t(
+												"components.profile.commissions.modal.service.proposal.description",
+											),
+											icon: ThumbsUp,
+										},
+										{
+											id: "instant_order",
+											label: t(
+												"components.profile.commissions.modal.service.instant.title",
+											),
+											description: t(
+												"components.profile.commissions.modal.service.instant.description",
+											),
+											icon: Zap,
+										},
+									]
+					}
+				/>
+			)}
+
+			{itemData?.artistTerms?.tosMd && (
+				<TermsModal
+					open={termsModalOpen}
+					onOpenChange={setTermsModalOpen}
+					artistName={artistName || ""}
+					tosMd={itemData.artistTerms.tosMd}
+					date={itemData.artistTerms.createdAt}
+				/>
+			)}
 		</>
 	);
 }

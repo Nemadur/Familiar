@@ -2,7 +2,7 @@
 -- ============================================================
 -- Familiar (Supabase/Postgres)
 -- Schema: familiar
--- Version: v0.2.7
+-- Version: v0.2.8
 -- ============================================================
 
 -- -------------------------
@@ -64,7 +64,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type familiar.report_target_type as enum ('user','post','shop_item','commission_listing','sona','message');
+  create type familiar.report_target_type as enum ('user','post','shop_item','commission_listing','character','message');
 exception when duplicate_object then null; end $$;
 
 do $$ begin
@@ -585,7 +585,6 @@ create index if not exists media_assets_type_idx on familiar.media_assets(type);
 -- -------------------------
 -- Posts (portfolio)
 -- -------------------------
--- TODO: add slug (from title)
 create table if not exists familiar.posts (
   post_id uuid primary key default gen_random_uuid(),
   artist_id uuid not null references familiar.profiles(user_id) on delete cascade,
@@ -709,10 +708,10 @@ create table if not exists familiar.artist_similarity (
 create index if not exists artist_similarity_artist_idx on familiar.artist_similarity(artist_id, score desc);
 
 -- -------------------------
--- Sonas (OC / characters)
+-- Characters (OC / characters)
 -- -------------------------
-create table if not exists familiar.sonas (
-  sona_id uuid primary key default gen_random_uuid(),
+create table if not exists familiar.characters (
+  character_id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references familiar.profiles(user_id) on delete cascade,
   slug citext not null unique,
   name text not null,
@@ -725,35 +724,35 @@ create table if not exists familiar.sonas (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists sonas_owner_idx on familiar.sonas(owner_id);
-create index if not exists sonas_slug_idx on familiar.sonas(slug);
-create index if not exists sonas_avatar_asset_idx on familiar.sonas(avatar_asset_id);
-create index if not exists sonas_cover_asset_idx on familiar.sonas(cover_asset_id);
-create index if not exists sonas_is_private_idx on familiar.sonas(is_private);
+create index if not exists characters_owner_idx on familiar.characters(owner_id);
+create index if not exists characters_slug_idx on familiar.characters(slug);
+create index if not exists characters_avatar_asset_idx on familiar.characters(avatar_asset_id);
+create index if not exists characters_cover_asset_idx on familiar.characters(cover_asset_id);
+create index if not exists characters_is_private_idx on familiar.characters(is_private);
 
-drop trigger if exists trg_sonas_updated_at on familiar.sonas;
-create trigger trg_sonas_updated_at
-before update on familiar.sonas
+drop trigger if exists trg_characters_updated_at on familiar.characters;
+create trigger trg_characters_updated_at
+before update on familiar.characters
 for each row execute function familiar.set_updated_at();
 
-create table if not exists familiar.sona_reference_sheets (
+create table if not exists familiar.character_reference_sheets (
   id uuid primary key default gen_random_uuid(),
-  sona_id uuid not null references familiar.sonas(sona_id) on delete cascade,
+  character_id uuid not null references familiar.characters(character_id) on delete cascade,
   asset_id uuid not null references familiar.media_assets(asset_id) on delete restrict,
   label text,
   sort_order int not null default 0
 );
 
-create index if not exists sona_reference_sheets_sona_idx on familiar.sona_reference_sheets(sona_id, sort_order);
+create index if not exists character_reference_sheets_character_idx on familiar.character_reference_sheets(character_id, sort_order);
 
-create table if not exists familiar.post_sona_refs (
+create table if not exists familiar.post_character_refs (
   post_id uuid not null references familiar.posts(post_id) on delete cascade,
-  sona_id uuid not null references familiar.sonas(sona_id) on delete cascade,
+  character_id uuid not null references familiar.characters(character_id) on delete cascade,
   added_at timestamptz not null default now(),
-  primary key (post_id, sona_id)
+  primary key (post_id, character_id)
 );
 
-create index if not exists post_sona_refs_sona_idx on familiar.post_sona_refs(sona_id);
+create index if not exists post_character_refs_character_idx on familiar.post_character_refs(character_id);
 
 -- -------------------------
 -- Commissions
@@ -814,6 +813,7 @@ create table if not exists familiar.commission_listing_media (
 );
 
 create index if not exists commission_listing_media_idx on familiar.commission_listing_media(listing_id, sort_order);
+create index if not exists commission_listing_media_asset_idx on familiar.commission_listing_media(asset_id);
 
 create table if not exists familiar.license_definitions (
   license_id uuid primary key default gen_random_uuid(),
@@ -844,6 +844,8 @@ create table if not exists familiar.commission_listing_licenses (
 
   sort_order int not null default 0,
 
+  updated_at timestamptz not null default now(),
+
   primary key (listing_id, license_id),
 
   constraint commission_license_percent_chk check (add_percent is null or (add_percent >= 0 and add_percent <= 10)),
@@ -851,8 +853,8 @@ create table if not exists familiar.commission_listing_licenses (
 );
 
 create index if not exists commission_listing_licenses_listing_idx on familiar.commission_listing_licenses(listing_id, visible, sort_order);
+create index if not exists commission_listing_licenses_license_idx on familiar.commission_listing_licenses(license_id);
 
--- FIXME: fixed/percent -> included true (works) but included true -> false do not, it says it's need
 create or replace function familiar.commission_license_validate()
 returns trigger
 language plpgsql
@@ -867,8 +869,8 @@ begin
   end if;
 
   -- included = false:
-  -- Supabase UI often updates a single column, so pricing_mode may still be 'included'.
-  -- Auto-switch to a sane non-included mode instead of throwing.
+  -- UI often updates one column at a time; pricing_mode may still be 'included'.
+  -- Auto-switch to a non-included mode instead of throwing.
   if new.pricing_mode = 'included' then
     if new.add_percent is not null then
       new.pricing_mode := 'percent';
@@ -879,7 +881,6 @@ begin
 
   -- Normalize by pricing_mode
   if new.pricing_mode = 'fixed_usd' then
-    -- allow stepwise editing: default to 0 instead of raising
     if new.add_fixed_usd is null then
       new.add_fixed_usd := 0;
     end if;
@@ -887,7 +888,6 @@ begin
     return new;
 
   elsif new.pricing_mode = 'percent' then
-    -- allow stepwise editing: default to 0 instead of raising
     if new.add_percent is null then
       new.add_percent := 0;
     end if;
@@ -903,6 +903,11 @@ drop trigger if exists trg_commission_license_validate on familiar.commission_li
 create trigger trg_commission_license_validate
 before insert or update on familiar.commission_listing_licenses
 for each row execute function familiar.commission_license_validate();
+
+drop trigger if exists trg_commission_license_updated_at on familiar.commission_listing_licenses;
+create trigger trg_commission_license_updated_at
+before update on familiar.commission_listing_licenses
+for each row execute function familiar.set_updated_at();
 
 create table if not exists familiar.artist_terms (
   terms_id uuid primary key default gen_random_uuid(),
@@ -958,7 +963,7 @@ create table if not exists familiar.commission_orders (
   client_id uuid not null references familiar.profiles(user_id) on delete cascade,
   artist_id uuid not null references familiar.profiles(user_id) on delete cascade,
   listing_id uuid not null references familiar.commission_listings(listing_id) on delete restrict,
-  sona_id uuid references familiar.sonas(sona_id) on delete set null,
+  character_id uuid references familiar.characters(character_id) on delete set null,
 
   status familiar.commission_order_status not null default 'draft',
 
@@ -1012,6 +1017,7 @@ create table if not exists familiar.reviews (
 );
 
 create index if not exists reviews_listing_idx on familiar.reviews(listing_id, created_at desc);
+create index if not exists reviews_client_idx on familiar.reviews(client_id);
 create index if not exists reviews_artist_idx on familiar.reviews(artist_id, created_at desc);
 
 create table if not exists familiar.post_featured_review (
@@ -1337,10 +1343,6 @@ create index if not exists saved_commission_listings_user_idx on familiar.saved_
 -- -------------------------
 -- App Folders (Collections): posts / commission listings / shop items
 -- -------------------------
--- TODO: add max 30 limit for non parents folder [root folders] (for subfolder, max 3)
--- up to 60 for verified artists and up to 12 subfolders
--- TODO: add color available only for premium users (default none)
--- TODO: add icon available only for premium users (default none)
 create table if not exists familiar.folders (
   folder_id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references familiar.profiles(user_id) on delete cascade,
@@ -1852,7 +1854,29 @@ alter table familiar.profiles enable row level security;
 drop policy if exists profiles_select_public on familiar.profiles;
 create policy profiles_select_public
 on familiar.profiles for select
-using (familiar.can_view_user(user_id));
+using (
+  -- Inline logic to avoid recursion with can_view_user -> profiles -> can_view_user
+  not exists (
+    select 1 from familiar.user_blocks b
+    where (b.blocker_id = auth.uid() and b.blocked_user_id = user_id)
+       or (b.blocker_id = user_id and b.blocked_user_id = auth.uid())
+  )
+  and (
+    -- Owner
+    auth.uid() = user_id
+    or
+    -- Public profile
+    is_private = false
+    or
+    -- Accepted follower
+    exists (
+      select 1 from familiar.follows f
+      where f.follower_id = auth.uid()
+        and f.followed_user_id = user_id
+        and f.status = 'accepted'
+    )
+  )
+);
 
 drop policy if exists profiles_insert_self on familiar.profiles;
 create policy profiles_insert_self
@@ -1996,11 +2020,11 @@ create policy post_views_insert_anyone on familiar.post_views for insert with ch
 drop policy if exists post_views_select_none on familiar.post_views;
 create policy post_views_select_none on familiar.post_views for select using (false);
 
--- Sonas: public if owner viewable AND sona not private; accepted followers can view private sonas
-alter table familiar.sonas enable row level security;
-drop policy if exists sonas_select_viewable on familiar.sonas;
-create policy sonas_select_viewable
-on familiar.sonas for select
+-- Characters: public if owner viewable AND character not private; accepted followers can view private characters
+alter table familiar.characters enable row level security;
+drop policy if exists characters_select_viewable on familiar.characters;
+create policy characters_select_viewable
+on familiar.characters for select
 using (
   auth.uid() = owner_id
   or (
@@ -2017,32 +2041,32 @@ using (
   )
 );
 
-drop policy if exists sonas_write_owner on familiar.sonas;
-create policy sonas_write_owner on familiar.sonas for all
+drop policy if exists characters_write_owner on familiar.characters;
+create policy characters_write_owner on familiar.characters for all
 using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
 
--- Sona reference sheets: readable/writable by sona owner
-alter table familiar.sona_reference_sheets enable row level security;
-drop policy if exists sona_ref_select_owner on familiar.sona_reference_sheets;
-create policy sona_ref_select_owner
-on familiar.sona_reference_sheets for select
-using (exists (select 1 from familiar.sonas s where s.sona_id = sona_reference_sheets.sona_id and s.owner_id = auth.uid()));
+-- Character reference sheets: readable/writable by character owner
+alter table familiar.character_reference_sheets enable row level security;
+drop policy if exists character_ref_select_owner on familiar.character_reference_sheets;
+create policy character_ref_select_owner
+on familiar.character_reference_sheets for select
+using (exists (select 1 from familiar.characters s where s.character_id = character_reference_sheets.character_id and s.owner_id = auth.uid()));
 
-drop policy if exists sona_ref_write_owner on familiar.sona_reference_sheets;
-create policy sona_ref_write_owner
-on familiar.sona_reference_sheets for all
-using (exists (select 1 from familiar.sonas s where s.sona_id = sona_reference_sheets.sona_id and s.owner_id = auth.uid()))
-with check (exists (select 1 from familiar.sonas s where s.sona_id = sona_reference_sheets.sona_id and s.owner_id = auth.uid()));
+drop policy if exists character_ref_write_owner on familiar.character_reference_sheets;
+create policy character_ref_write_owner
+on familiar.character_reference_sheets for all
+using (exists (select 1 from familiar.characters s where s.character_id = character_reference_sheets.character_id and s.owner_id = auth.uid()))
+with check (exists (select 1 from familiar.characters s where s.character_id = character_reference_sheets.character_id and s.owner_id = auth.uid()));
 
--- Post <-> Sona refs: readable if both are viewable; artist write for their post
-alter table familiar.post_sona_refs enable row level security;
-drop policy if exists post_sona_refs_select_viewable on familiar.post_sona_refs;
-create policy post_sona_refs_select_viewable
-on familiar.post_sona_refs for select
+-- Post <-> Character refs: readable if both are viewable; artist write for their post
+alter table familiar.post_character_refs enable row level security;
+drop policy if exists post_character_refs_select_viewable on familiar.post_character_refs;
+create policy post_character_refs_select_viewable
+on familiar.post_character_refs for select
 using (
   exists (
-    select 1 from familiar.sonas s
-    where s.sona_id = post_sona_refs.sona_id
+    select 1 from familiar.characters s
+    where s.character_id = post_character_refs.character_id
       and (
         auth.uid() = s.owner_id
         or (familiar.can_view_user(s.owner_id) and s.is_private = false)
@@ -2056,17 +2080,17 @@ using (
   )
   and exists (
     select 1 from familiar.posts p
-    where p.post_id = post_sona_refs.post_id
+    where p.post_id = post_character_refs.post_id
       and p.visibility <> 'private'
       and familiar.can_view_user(p.artist_id)
   )
 );
 
-drop policy if exists post_sona_refs_write_artist on familiar.post_sona_refs;
-create policy post_sona_refs_write_artist
-on familiar.post_sona_refs for all
-using (exists (select 1 from familiar.posts p where p.post_id = post_sona_refs.post_id and p.artist_id = auth.uid()))
-with check (exists (select 1 from familiar.posts p where p.post_id = post_sona_refs.post_id and p.artist_id = auth.uid()));
+drop policy if exists post_character_refs_write_artist on familiar.post_character_refs;
+create policy post_character_refs_write_artist
+on familiar.post_character_refs for all
+using (exists (select 1 from familiar.posts p where p.post_id = post_character_refs.post_id and p.artist_id = auth.uid()))
+with check (exists (select 1 from familiar.posts p where p.post_id = post_character_refs.post_id and p.artist_id = auth.uid()));
 
 -- Commission listings: public if status != draft and artist viewable; artist write
 alter table familiar.commission_listings enable row level security;
@@ -2111,13 +2135,26 @@ using (auth.uid() = created_by_artist_id) with check (auth.uid() = created_by_ar
 
 alter table familiar.commission_listing_licenses enable row level security;
 drop policy if exists commission_listing_licenses_select_public on familiar.commission_listing_licenses;
-create policy commission_listing_licenses_select_public on familiar.commission_listing_licenses for select using (true);
+create policy commission_listing_licenses_select_public
+on familiar.commission_listing_licenses for select
+using (true);
+
+-- Explicitly ensure public access (sometimes policies get dropped/recreated)
+grant select on familiar.commission_listing_licenses to anon, authenticated;
 
 drop policy if exists commission_listing_licenses_write_artist on familiar.commission_listing_licenses;
 create policy commission_listing_licenses_write_artist
-on familiar.commission_listing_licenses for all
-using (exists (select 1 from familiar.commission_listings l where l.listing_id = commission_listing_licenses.listing_id and l.artist_id = auth.uid()))
-with check (exists (select 1 from familiar.commission_listings l where l.listing_id = commission_listing_licenses.listing_id and l.artist_id = auth.uid()));
+on familiar.commission_listing_licenses for insert
+with check (exists (select 1 from familiar.commission_listings l where l.listing_id = listing_id and l.artist_id = auth.uid()));
+
+create policy commission_listing_licenses_update_artist
+on familiar.commission_listing_licenses for update
+using (exists (select 1 from familiar.commission_listings l where l.listing_id = listing_id and l.artist_id = auth.uid()))
+with check (exists (select 1 from familiar.commission_listings l where l.listing_id = listing_id and l.artist_id = auth.uid()));
+
+create policy commission_listing_licenses_delete_artist
+on familiar.commission_listing_licenses for delete
+using (exists (select 1 from familiar.commission_listings l where l.listing_id = listing_id and l.artist_id = auth.uid()));
 
 -- Artist terms: public read, artist write
 alter table familiar.artist_terms enable row level security;

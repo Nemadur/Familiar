@@ -26,6 +26,7 @@ export function UserFeedContent({
 	);
 
 	const commissionCategories = useMemo<CommissionCategory[]>(() => {
+		console.log(`[UserFeedContent] Mapping categories: ${categories?.length || 0}`);
 		// Map backend categories to frontend structure
 		return (categories || []).map((cat: any) => ({
 			id: cat.id,

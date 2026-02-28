@@ -53,6 +53,8 @@ export type User = {
 	followers_count: number;
 	following_count: number;
 	works_count: number;
+	commissions_count: number;
+	characters_count: number;
 
 	social_links: SocialLink[];
 	spoken_languages: SpokenLanguage[];

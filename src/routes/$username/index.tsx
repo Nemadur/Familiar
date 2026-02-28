@@ -14,9 +14,18 @@ function RouteComponent() {
 	const { username } = Route.useParams();
 	const { data: user } = useSuspenseUser(username);
 	const { user: me } = useAuth();
-	const isMe = me?.username === user?.username;
 
-	const availableFeeds = useAvailableFeeds(user!, isMe);
+	if (!user) {
+		return (
+			<div className="flex h-full flex-1 flex-col items-center justify-center">
+				<EmptyPage icon={OutlineUser} title="User not found" />
+			</div>
+		);
+	}
+
+	const isMe = me?.username === user.username;
+
+	const availableFeeds = useAvailableFeeds(user, isMe);
 
 	if (availableFeeds.length === 0) {
 		return (

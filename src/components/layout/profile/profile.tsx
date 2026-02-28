@@ -27,10 +27,10 @@ import { ProfileCover, ProfileCoverSkeleton } from "./cover";
 import { ProfileCharacters } from "./feed/characters";
 import { ProfilePortfolio } from "./feed/portfolio";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
+import { UserFeedContent } from "./feed-content";
 import { ProfileDetailsContent } from "./profile-details";
 import { ProfileSocials } from "./socials";
 import { SpokenLanguageBadge } from "./spoken-languages";
-
 import { mapFolderToFolderType, mapPostToPostWithAuthor } from "./utils";
 
 // Temporary stubs for missing components
@@ -228,9 +228,9 @@ export function UserProfileSidebar({
 			{/* Profile Info */}
 			<div className="space-y-4">
 				<div>
-					<h3 className="inline-flex items-center gap-2 font-bold text-2xl text-neutral-950 dark:text-neutral-50">
+					<h3 className="inline-flex w-full items-center gap-2 font-bold text-2xl text-neutral-950 dark:text-neutral-50">
 						{/* TODO: make auto slide text if too more than 12 characters */}
-						<span className="truncate flex-1">{user.display_name}</span>
+						<span className="truncate">{user.display_name}</span>
 						<ProfileBadge user={user} />
 					</h3>
 					<p className="text-neutral-600 dark:text-neutral-400">
@@ -373,20 +373,7 @@ function UserFeeds({
 	onTabChange?: (tab: string) => void;
 }) {
 	const { t } = useTranslation();
-	const { commissions, posts, characters, folders } = useSuspenseProfileContent(
-		user.uuid,
-	);
-
 	const availableFeeds = useAvailableFeeds(user, isMe);
-
-	// Temporary data mapping until API returns correct shapes
-	const portfolioPosts = useMemo(() => {
-		return posts.map((post: any) => mapPostToPostWithAuthor(post, user));
-	}, [posts, user]);
-
-	const portfolioFolders = useMemo(() => {
-		return folders.map((folder: any) => mapFolderToFolderType(folder));
-	}, [folders]);
 
 	const [internalTab, setInternalTab] = useState(
 		availableFeeds.length > 0 ? availableFeeds[0].id : "",
@@ -428,34 +415,7 @@ function UserFeeds({
 				</div>
 			</div>
 
-			<div className="mt-0 flex-1 flex flex-col">
-				{children ? (
-					children
-				) : (
-					<>
-						{currentFeed === "commissions" && (
-							<ProfileCommissions categories={commissions} artist={user} />
-						)}
-						{currentFeed === "portfolio" && (
-							<ProfilePortfolio
-								posts={portfolioPosts}
-								folderId={undefined}
-								username={user.username}
-								folders={portfolioFolders}
-							/>
-						)}
-						{currentFeed === "characters" && (
-							<ProfileCharacters characters={characters} />
-						)}
-						{currentFeed === "saved" && (
-							<div>{t("components.profile.tabs.saved")}</div>
-						)}
-						{currentFeed === "liked" && (
-							<div>{t("components.profile.tabs.liked")}</div>
-						)}
-					</>
-				)}
-			</div>
+			<div className="mt-0 flex-1 flex flex-col">{children}</div>
 		</>
 	);
 }

@@ -159,12 +159,128 @@ export type Locale = {
 				suspended: string;
 				about_me: string;
 			};
+			details: {
+				stats: {
+					followers: string;
+					following: string;
+					works: string;
+				};
+				joined: string;
+				local: string;
+				bio: string;
+				languages: string;
+			};
+			languages: {
+				levels: {
+					native: string;
+					fluent: string;
+					communicative: string;
+					learning: string;
+					basic: string;
+				};
+			};
+			commissions: {
+				card: {
+					from: string;
+					start_request: string;
+					join_waitlist: string;
+					get_notified: string;
+					content_warning: string;
+					sensitive_content: string;
+					contains_tags: string;
+					show_content: string;
+					hide_content: string;
+					show_details_18_plus: string;
+					license: {
+						title: string;
+						info: string;
+						included: string;
+						personal: string;
+						personal_desc: string;
+						monetized: string;
+						monetized_desc: string;
+						commercial: string;
+						commercial_desc: string;
+						unavailable: string;
+						other_licenses_count: string;
+					};
+				};
+				empty: {
+					title: string;
+					description: string;
+				};
+			};
 			feeds: {
 				empty: {
 					title: string;
 					description: string;
 				};
 			};
+		};
+	};
+	info_selection_modal: {
+		service: {
+			title: string;
+			description: string;
+		};
+		communication: {
+			title: string;
+			description: string;
+		};
+		process: {
+			title: string;
+			description: string;
+		};
+	};
+	license_info_modal: {
+		title: string;
+		subtitle: string;
+		personal: {
+			title: string;
+			description: string;
+			allowed: {
+				personal_use: string;
+			};
+			forbidden: {
+				monetized: string;
+				commercial: string;
+			};
+		};
+		monetized: {
+			title: string;
+			description: string;
+			allowed: {
+				personal_use: string;
+				monetized_content: string;
+			};
+			forbidden: {
+				commercial: string;
+			};
+		};
+		commercial: {
+			title: string;
+			description: string;
+			licensee: {
+				label: string;
+				value: string;
+			};
+			commercial_use: {
+				label: string;
+				allowed: {
+					creation: string;
+					distribution: string;
+				};
+				forbidden: {
+					reselling: string;
+				};
+			};
+			credit: {
+				label: string;
+				value: string;
+			};
+		};
+		custom_licenses: {
+			title: string;
 		};
 	};
 	footer: {

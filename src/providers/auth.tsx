@@ -1,14 +1,21 @@
 import * as React from "react";
-import { getUserById } from "@/data/user";
+import { toast } from "sonner";
+import { ensureUserProfile, getUserById } from "@/data/user";
+import i18n from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import type { LoginData } from "@/types/auth/schema/login";
+import type { RegisterData } from "@/types/auth/schema/register";
 import type { User } from "@/types/user";
 
 interface AuthContext {
 	user: User | null;
 	pending: boolean;
-	refreshSession: () => Promise<void>;
+	refreshSession: (metadata?: {
+		username?: string;
+		display_name?: string;
+	}) => Promise<void>;
 	login: (data: LoginData) => Promise<void>;
+	register: (data: RegisterData) => Promise<void>;
 	logout: () => Promise<void>;
 	onAuthStateChange: (callback: (user: User | null) => void) => () => void;
 }
@@ -26,70 +33,164 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		});
 	}, []);
 
-	const refreshSession = React.useCallback(async () => {
-		setPending(true);
-		try {
-			const {
-				data: { user },
-				error,
-			} = await supabase.auth.getUser();
+	const refreshSession = React.useCallback(
+		async (metadata?: { username?: string; display_name?: string }) => {
+			setPending(true);
+			try {
+				const {
+					data: { user },
+					error,
+				} = await supabase.auth.getUser();
 
-			if (error) {
-				// Only log unexpected errors. "Auth session missing!" is expected when not logged in.
-				if (error.message !== "Auth session missing!") {
-					console.error("Failed to get user:", error);
+				if (error) {
+					// Only log unexpected errors. "Auth session missing!" is expected when not logged in.
+					if (error.message !== "Auth session missing!") {
+						console.error("Failed to get user:", error);
+					}
+					setUser(null);
+					notifyListeners(null);
+					return;
 				}
-				setUser(null);
-				notifyListeners(null);
-				return;
-			}
 
-			if (user) {
-				// Fetch user details from database using Supabase User ID
-				const fetchedUser = await getUserById({
-					data: { uuid: user.id },
-				});
+				if (user) {
+					// Fetch user details from database using Supabase User ID
+					const fetchedUser = await getUserById({
+						data: { uuid: user.id },
+					});
 
-				if (fetchedUser) {
-					setUser(fetchedUser);
-					notifyListeners(fetchedUser);
+					console.log(fetchedUser);
+
+					if (fetchedUser) {
+						setUser(fetchedUser);
+						notifyListeners(fetchedUser);
+					} else {
+						// Attempt to create profile if metadata exists (fix for missing trigger)
+						const { username, display_name } = user.user_metadata || {};
+						if (username && display_name) {
+							try {
+								await ensureUserProfile({
+									data: { uuid: user.id, username, display_name },
+								});
+								// Retry fetch
+								const retriedUser = await getUserById({
+									data: { uuid: user.id },
+								});
+								if (retriedUser) {
+									setUser(retriedUser);
+									notifyListeners(retriedUser);
+									return;
+								}
+							} catch (e) {
+								console.error(
+									i18n.t("auth.errors.failed_auto_create_profile", {
+										error: (e as Error).message,
+									}),
+									e,
+								);
+							}
+						}
+
+						console.warn(i18n.t("auth.errors.user_authenticated_not_found"));
+						setUser(null);
+						notifyListeners(null);
+					}
 				} else {
-					console.warn(
-						"User authenticated in Supabase but not found in database.",
-					);
 					setUser(null);
 					notifyListeners(null);
 				}
-			} else {
+			} catch (error) {
+				console.error(
+					i18n.t("auth.errors.failed_refresh_session", {
+						error: (error as Error).message,
+					}),
+					error,
+				);
 				setUser(null);
 				notifyListeners(null);
+			} finally {
+				setPending(false);
 			}
+		},
+		[notifyListeners],
+	);
+
+	const login = React.useCallback(async (data: LoginData) => {
+		setPending(true);
+		const promise = (async () => {
+			const { error } = await supabase.auth.signInWithPassword({
+				email: data.email.trim(),
+				password: data.password,
+			});
+
+			if (error) {
+				// Prevent user enumeration
+				throw new Error(i18n.t("auth.errors.invalid_credentials"));
+			}
+			// refreshSession will be triggered by onAuthStateChange if successful
+		})();
+
+		toast.promise(promise, {
+			loading: i18n.t("auth.login.pending"),
+			success: i18n.t("auth.login.success"),
+			error: (err) => err.message,
+		});
+
+		try {
+			await promise;
 		} catch (error) {
-			console.error("Failed to refresh session:", error);
-			setUser(null);
-			notifyListeners(null);
+			console.error(
+				i18n.t("auth.errors.login_failed", { error: (error as Error).message }),
+				error,
+			);
+			throw error;
 		} finally {
 			setPending(false);
 		}
-	}, [notifyListeners]);
+	}, []);
 
-	const login = React.useCallback(
-		async (data: LoginData) => {
+	const register = React.useCallback(
+		async (data: RegisterData) => {
 			setPending(true);
-			try {
-				const { error } = await supabase.auth.signInWithPassword({
-					email: data.email,
+
+			const promise = (async () => {
+				const { error } = await supabase.auth.signUp({
+					email: data.email.trim().toLowerCase(),
 					password: data.password,
+					options: {
+						data: {
+							display_name: data.display_name,
+							username: data.username,
+							account_type: data.account_type,
+							invite_key: data.invite_key,
+						},
+					},
 				});
 
 				if (error) {
-					throw new Error(error.message);
+					if (error.message?.includes("rate limit")) {
+						throw new Error(i18n.t("auth.errors.rate_limit"));
+					}
+					throw new Error(
+						i18n.t("auth.errors.registration_failed", { error: error.message }),
+					);
 				}
 
-				await refreshSession();
-			} catch (error) {
-				console.error("Login failed:", error);
-				throw error;
+				// Manually refresh session to ensure profile creation logic runs
+				// The onAuthStateChange might fire before profile is created, so we need the retry logic in refreshSession
+				await refreshSession({
+					username: data.username,
+					display_name: data.display_name,
+				});
+			})();
+
+			toast.promise(promise, {
+				loading: i18n.t("auth.register.pending"),
+				success: i18n.t("auth.register.success"),
+				error: (err) => err.message,
+			});
+
+			try {
+				await promise;
 			} finally {
 				setPending(false);
 			}
@@ -104,7 +205,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setUser(null);
 			notifyListeners(null);
 		} catch (error) {
-			console.error("Logout failed:", error);
+			console.error(
+				i18n.t("auth.errors.logout_failed", {
+					error: (error as Error).message,
+				}),
+				error,
+			);
 		} finally {
 			setPending(false);
 		}
@@ -130,12 +236,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		} = supabase.auth.onAuthStateChange(async (event, session) => {
 			if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
 				if (session?.user) {
-					const fetchedUser = await getUserById({
-						data: { uuid: session.user.id },
-					});
-					if (fetchedUser) {
-						setUser(fetchedUser);
-						notifyListeners(fetchedUser);
+					try {
+						const fetchedUser = await getUserById({
+							data: { uuid: session.user.id },
+						});
+						if (fetchedUser) {
+							setUser(fetchedUser);
+							notifyListeners(fetchedUser);
+						}
+					} catch (error) {
+						console.error(
+							i18n.t("auth.errors.failed_fetch_user_auth_change", {
+								error: (error as Error).message,
+							}),
+							error,
+						);
 					}
 				}
 			} else if (event === "SIGNED_OUT") {
@@ -155,10 +270,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			pending,
 			refreshSession,
 			login,
+			register,
 			logout,
 			onAuthStateChange,
 		}),
-		[user, pending, refreshSession, login, logout, onAuthStateChange],
+		[user, pending, refreshSession, login, register, logout, onAuthStateChange],
 	);
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -167,7 +283,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
 	const context = React.useContext(AuthContext);
 	if (context === undefined) {
-		throw new Error("useAuth must be used within an AuthProvider");
+		throw new Error(i18n.t("auth.errors.use_auth_provider"));
 	}
 	return context;
 }

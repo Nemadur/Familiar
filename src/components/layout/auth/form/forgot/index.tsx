@@ -17,6 +17,7 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import useFormValidation from "@/hooks/use-form-validation";
+import { supabase } from "@/lib/supabase";
 import { forgotPassword } from "@/schemas/auth/forgot-password";
 import type { ForgotFormProps } from "@/types/auth/form/forgot";
 import type { ForgotPasswordData } from "@/types/auth/schema/forgot-password";
@@ -33,28 +34,25 @@ function ForgotForm({ onSuccess: _onSuccess, onModeChange }: ForgotFormProps) {
 	const { handleSubmit } = form;
 	const { t } = useTranslation();
 
-	const onSubmit = async (_data: ForgotPasswordData) => {
-		// TODO: make real backend submit
-		const forgotPasswordPromise = new Promise<{
-			success: boolean;
-			error?: string;
-		}>((resolve) => {
-			setTimeout(() => {
-				resolve({ success: true });
-			}, 1000);
-		});
+	const onSubmit = async (data: ForgotPasswordData) => {
+		const forgotPasswordPromise = (async () => {
+			// Always return success to prevent user enumeration
+			await supabase.auth.resetPasswordForEmail(data.email, {
+				redirectTo: `${window.location.origin}/auth/reset-password`,
+			});
+			return { success: true };
+		})();
 
 		toast.promise(forgotPasswordPromise, {
 			loading: "Sending reset email...",
-			success: (result) => {
-				if (result.success) {
-					setIsSubmitted(true);
-					return "Password reset email sent! Check your inbox.";
-				}
-				throw new Error(result.error || "Password reset failed");
+			success: () => {
+				setIsSubmitted(true);
+				return "If an account exists with this email, you will receive a password reset link shortly.";
 			},
-			error: (error) => {
-				return error.message || "Failed to send reset email. Please try again.";
+			error: () => {
+				// Even on error, show the same success message to avoid leaking info
+				// Unless it's a rate limit or network error which might be worth showing generically
+				return "If an account exists with this email, you will receive a password reset link shortly.";
 			},
 		});
 	};

@@ -12,8 +12,8 @@ export function mapCommissionToCommissionItem(commission: any): CommissionItem {
 			commission.descriptionMd ||
 			commission.content ||
 			"",
-		price: commission.basePrice || commission.basePriceUsd || 0,
-		discountRate: commission.discountRate || 0,
+		price: Number(commission.price ?? commission.basePrice ?? commission.basePriceUsd ?? 0),
+		discountRate: Number(commission.discountRate || 0),
 		imageUrls: (commission.imageUrls || []).map((url: string) => url),
 		status: commission.status || "open",
 		artistNote: commission.artistNote,

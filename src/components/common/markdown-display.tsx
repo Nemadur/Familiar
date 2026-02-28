@@ -27,7 +27,7 @@ export function MarkdownDisplay({
 		<div
 			className={cn(
 				isShort && "line-clamp-3",
-				"text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none",
+				"text-sm prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-secondary prose-pre:text-secondary-foreground",
 				className,
 			)}
 		>

@@ -3,26 +3,41 @@ import {
 	createMongoAbility,
 	type MongoAbility,
 } from "@casl/ability";
-import type { InferSelectModel } from "drizzle-orm";
-import {
-	commissionListings,
-	folders,
-	posts,
-	profiles,
-	shopItems,
-	sonas,
-	userBans,
-} from "@/db/schema";
 import type { User } from "@/types/user";
 
-// Define subjects using Drizzle schema types
-type ProfileSubject = InferSelectModel<typeof profiles> | "Profile";
-type PostSubject = InferSelectModel<typeof posts> | "Post";
-type ListingSubject = InferSelectModel<typeof commissionListings> | "Listing";
-type ShopItemSubject = InferSelectModel<typeof shopItems> | "ShopItem";
-type FolderSubject = InferSelectModel<typeof folders> | "Folder";
-type SonaSubject = InferSelectModel<typeof sonas> | "Sona"; // Character
-type BanSubject = InferSelectModel<typeof userBans> | "Ban";
+// Define subjects using local interfaces to avoid Drizzle dependency
+interface ProfileSubject {
+	userId: string;
+	isPrivate: boolean;
+}
+
+interface PostSubject {
+	artistId: string;
+	visibility: "public" | "unlisted" | "private";
+}
+
+interface ListingSubject {
+	artistId: string;
+	status: "open" | "closed" | "waitlist" | "draft";
+}
+
+interface ShopItemSubject {
+	sellerId: string;
+}
+
+interface FolderSubject {
+	ownerId: string;
+}
+
+interface SonaSubject {
+	ownerId: string;
+	isPrivate: boolean;
+}
+
+interface BanSubject {
+	userId: string;
+}
+
 type UserSubject = "User"; // Generic user management subject
 
 export type AppSubjects =
@@ -34,7 +49,14 @@ export type AppSubjects =
 	| SonaSubject
 	| BanSubject
 	| UserSubject
-	| "all";
+	| "all"
+	| "Profile"
+	| "Post"
+	| "Listing"
+	| "ShopItem"
+	| "Folder"
+	| "Sona"
+	| "Ban";
 
 export type AppActions = "create" | "read" | "update" | "delete" | "manage";
 
@@ -101,12 +123,7 @@ export function getUserPermissions(user: User | null | undefined) {
 	// ─── Moderator ───────────────────────────────────────────────────────
 	if (hasRole(user.roles, "moderator")) {
 		can("read", "all");
-		can("update", "Post"); // Edit any post (e.g. for moderation)
-		can("delete", "Post");
-		can("update", "Listing");
-		can("delete", "Listing");
-		can("read", "Ban");
-		can("create", "Ban"); // Suspend users
+		can("manage", "Ban");
 	}
 
 	// ─── Admin ───────────────────────────────────────────────────────────

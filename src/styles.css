@@ -1,6 +1,9 @@
 @import 'tailwindcss';
-
+@plugin "@tailwindcss/typography";
 @import 'tw-animate-css';
+
+@import "@heroui/styles";
+
 
 @custom-variant dark (&:is(.dark *));
 

@@ -38,6 +38,7 @@ function RouteComponent() {
 	const params = useParams({ strict: false });
 	// Use the tab param if available, otherwise undefined
 	const activeTab = (params as any).tab;
+	const isModalOpen = !!(params as any).commisionId;
 
 	return (
 		<Suspense fallback={<UserProfileSkeleton />}>
@@ -45,7 +46,10 @@ function RouteComponent() {
 				username={username}
 				activeTab={activeTab}
 				onTabChange={(tab) => {
-					navigate({ to: `/${username}/${tab}` });
+					navigate({
+						to: `/${username}/${tab}`,
+						replace: isModalOpen,
+					});
 				}}
 			>
 				<Outlet />

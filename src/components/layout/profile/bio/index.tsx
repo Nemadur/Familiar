@@ -33,7 +33,7 @@ export function ProfileBio({
 		<div
 			className={cn(
 				isShort && "line-clamp-3",
-				"text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none",
+				"text-sm whitespace-pre-wrap prose-p:m-0 prose prose-sm dark:prose-invert max-w-none",
 				className,
 			)}
 		>

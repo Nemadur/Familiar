@@ -22,7 +22,7 @@ function ProfileBadge({ user }: { user: User }) {
 
 	return (
 		<Dialog>
-			<div className="flex items-center gap-1 flex-1">
+			<div className="flex items-center gap-1">
 				<TooltipProvider>
 					{displayBadges.map((badge) => (
 						<Tooltip key={badge.uuid}>

@@ -7,30 +7,27 @@ import {
 	OutlineHeart,
 	OutlineUser,
 } from "@/components/icons/icons";
-import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
 import type { User } from "@/types/user";
 
 export function useAvailableFeeds(user: User, isMe: boolean) {
 	const { t } = useTranslation();
-	const { commissions, posts, characters } = useSuspenseProfileContent(
-		user.uuid,
-	);
 
 	const availableFeeds = useMemo(() => {
 		const feeds = [];
-		if (isMe || commissions.length > 0)
+		// Use counts from user object instead of fetching content
+		if (isMe || user.commissions_count > 0)
 			feeds.push({
 				id: "commissions",
 				label: t("components.profile.tabs.commissions"),
 				icon: OutlineCrown,
 			});
-		if (isMe || posts.length > 0)
+		if (isMe || user.works_count > 0)
 			feeds.push({
 				id: "portfolio",
 				label: t("components.profile.tabs.portfolio"),
 				icon: OutlineDribbble,
 			});
-		if (isMe || characters.length > 0)
+		if (isMe || user.characters_count > 0)
 			feeds.push({
 				id: "characters",
 				label: t("components.profile.tabs.characters"),
@@ -49,7 +46,7 @@ export function useAvailableFeeds(user: User, isMe: boolean) {
 			});
 		}
 		return feeds;
-	}, [commissions, posts, characters, isMe, t]);
+	}, [user, isMe, t]);
 
 	return availableFeeds;
 }
