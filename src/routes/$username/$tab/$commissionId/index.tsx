@@ -5,8 +5,15 @@ import {
 	useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { CommissionModal } from "@/components/layout/profile/modals/commission-modal";
+import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
+import {
+	mapCommissionToPostWithAuthor,
+	mapPostToPostWithAuthor,
+} from "@/components/layout/profile/utils";
 import { getCommission } from "@/data/commissions";
+import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
 import { useSuspenseUser } from "@/hooks/use-user";
 import type { CommissionItem } from "@/types/commission";
 
@@ -21,6 +28,76 @@ function RouteComponent() {
 	const location = useLocation();
 	const { data: user } = useSuspenseUser(username);
 
+	// Portfolio Logic
+	const isPortfolio = tab === "portfolio";
+
+	if (isPortfolio) {
+		return (
+			<PortfolioPostRoute
+				username={username}
+				tab={tab}
+				postId={commissionId}
+				user={user}
+				navigate={navigate}
+			/>
+		);
+	}
+
+	return (
+		<CommissionRoute
+			username={username}
+			tab={tab}
+			commissionId={commissionId}
+			user={user}
+			navigate={navigate}
+			location={location}
+		/>
+	);
+}
+
+function PortfolioPostRoute({ username, tab, postId, user, navigate }: any) {
+	const { posts, categories } = useSuspenseProfileContent(user?.uuid || "");
+
+	const portfolioPosts = useMemo(
+		() => [
+			...posts.map((post: any) => mapPostToPostWithAuthor(post, user)),
+			...(categories || [])
+				.flatMap((cat: any) => cat.items || [])
+				.map((comm: any) => mapCommissionToPostWithAuthor(comm, user)),
+		],
+		[posts, categories, user],
+	);
+
+	const post = portfolioPosts.find((p) => p.id === postId);
+
+	if (!post) return null; // Or 404
+
+	return (
+		<PortfolioPostModal
+			post={post}
+			open={true}
+			onOpenChange={(open) => {
+				if (!open) {
+					navigate({
+						to: `/${username}/${tab}`,
+						replace: true,
+						resetScroll: false,
+						search: (old: any) => old,
+					});
+				}
+			}}
+		/>
+	);
+}
+
+function CommissionRoute({
+	username,
+	tab,
+	commissionId,
+	user,
+	navigate,
+	location,
+}: any) {
 	// Try to get item from state (optimistic UI)
 	const stateItem = (location.state as any)?.item as CommissionItem | undefined;
 
@@ -50,19 +127,12 @@ function RouteComponent() {
 			error={error}
 			onOpenChange={(open) => {
 				if (!open) {
-					// Use history.back() if possible to effectively close the modal
-					// and remove it from history stack
-					// if (window.history.length > 1) {
-					// 	window.history.back();
-					// } else {
-					// Fallback for direct links
 					navigate({
 						to: `/${username}/${tab}`,
 						replace: true,
 						resetScroll: false,
-						search: (old) => old,
+						search: (old: any) => old,
 					});
-					// }
 				}
 			}}
 		/>

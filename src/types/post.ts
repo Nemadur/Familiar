@@ -58,6 +58,21 @@ export interface Post {
 	isCommented?: boolean;
 
 	folderIds?: string[];
+
+	// Featured content
+	linkedCharacters?: {
+		id: string;
+		name: string;
+		slug: string;
+		avatarUrl?: string;
+	}[];
+	featuredReview?: {
+		id: string;
+		rating: number;
+		comment?: string;
+		createdAt: Date | string;
+		highlights?: string[];
+	};
 }
 
 export interface PostWithAuthor extends Post {

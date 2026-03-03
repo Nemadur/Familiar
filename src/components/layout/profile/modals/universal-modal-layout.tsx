@@ -1,6 +1,13 @@
 import { MoreHorizontal, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { OutlineBookmark, OutlineClose } from "@/components/icons/icons";
+import { useCallback } from "react";
+import {
+	OutlineBookmark,
+	OutlineClose,
+	OutlineMore,
+	SolidBookmark,
+} from "@/components/icons/icons";
+import { useLocalAction } from "@/components/layout/feed/ctas";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -28,6 +35,8 @@ interface UniversalModalLayoutProps {
 	detailsContent: ReactNode;
 	title?: string; // For screen readers
 	showBookmark?: boolean;
+	isBookmarked?: boolean;
+	onBookmark?: (e: React.MouseEvent) => void;
 	mediaClassName?: string;
 }
 
@@ -38,9 +47,24 @@ export function UniversalModalLayout({
 	detailsContent,
 	title = "Details",
 	showBookmark = true,
+	isBookmarked = false,
+	onBookmark,
 	mediaClassName,
 }: UniversalModalLayoutProps) {
 	const isMobile = useIsMobile();
+	const { active: bookmarked, handleAction } = useLocalAction({
+		initialActive: isBookmarked,
+		initialCount: 0,
+	});
+
+	const handleBookmarkClick = useCallback(
+		(e: React.MouseEvent) => {
+			e.stopPropagation();
+			handleAction();
+			onBookmark?.(e);
+		},
+		[handleAction, onBookmark],
+	);
 
 	if (isMobile) {
 		return (
@@ -73,13 +97,10 @@ export function UniversalModalLayout({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				showCloseButton={false}
-				className="flex h-[85vh] w-full max-w-[90vw] md:max-w-xl lg:max-w-[90vw] flex-col overflow-hidden border-none bg-background p-0 sm:rounded-3xl"
+				className="flex h-[85vh] w-full max-w-[90vw] md:max-w-6xl flex-col overflow-hidden border-none bg-background p-0 sm:rounded-3xl"
 			>
 				<DialogTitle className="sr-only">{title}</DialogTitle>
 				<DialogDescription className="sr-only">View details</DialogDescription>
-				<DialogClose className="absolute top-4 right-4 z-50 rounded-full bg-background/50 p-2 transition-colors hover:bg-background md:hidden">
-					<OutlineClose />
-				</DialogClose>
 
 				<div className="flex flex-col lg:flex-row h-full w-full lg:overflow-hidden overflow-y-auto">
 					{/* Left Column: Media */}
@@ -91,6 +112,9 @@ export function UniversalModalLayout({
 							mediaClassName,
 						)}
 					>
+						<DialogClose className="absolute top-4 left-4 z-50 rounded-full bg-background/50 p-2 transition-colors hover:bg-background lg:hidden">
+							<OutlineClose />
+						</DialogClose>
 						{mediaContent}
 					</div>
 
@@ -102,10 +126,10 @@ export function UniversalModalLayout({
 								<Button
 									variant="ghost"
 									size="icon"
-									className="h-8 w-8"
+									className="hidden lg:flex"
 									onClick={() => onOpenChange(false)}
 								>
-									<X className="h-4 w-4" />
+									<OutlineClose />
 								</Button>
 							</div>
 							{showBookmark && (
@@ -113,9 +137,19 @@ export function UniversalModalLayout({
 									{/* Desktop Bookmark (Fancy) */}
 									<Button
 										size={"icon"}
-										className="absolute right-16 top-3.5 z-0 hidden shrink-0 bg-transparent text-primary shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:bg-primary/6 before:transition-all hover:bg-transparent hover:before:translate-y-1.5 hover:before:bg-primary/10 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5"
+										className={cn(
+											"absolute right-16 top-3.5 z-0 hidden shrink-0 bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
+											bookmarked
+												? "text-yellow-500 drop-shadow-[0_1px_10px_rgba(234,179,8,0.75)] hover:bg-yellow-500/12 before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
+												: "text-primary hover:before:bg-primary/10 before:bg-primary/6",
+										)}
+										onClick={handleBookmarkClick}
 									>
-										<OutlineBookmark />
+										{bookmarked ? (
+											<SolidBookmark className="text-yellow-500" />
+										) : (
+											<OutlineBookmark />
+										)}
 									</Button>
 								</>
 							)}
@@ -125,13 +159,18 @@ export function UniversalModalLayout({
 									<Button
 										variant="ghost"
 										size="icon"
-										className="h-8 w-8 lg:hidden"
+										className="lg:hidden"
+										onClick={handleBookmarkClick}
 									>
-										<OutlineBookmark className="h-4 w-4" />
+										{bookmarked ? (
+											<SolidBookmark className="text-yellow-500" />
+										) : (
+											<OutlineBookmark />
+										)}
 									</Button>
 								)}
-								<Button variant="ghost" size="icon" className="h-8 w-8">
-									<MoreHorizontal className="h-4 w-4" />
+								<Button variant="ghost" size="icon">
+									<OutlineMore />
 								</Button>
 							</div>
 						</div>

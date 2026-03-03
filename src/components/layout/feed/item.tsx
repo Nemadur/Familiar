@@ -1,4 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { OutlineEyeOff } from "@/components/icons/icons";
 import {
 	Reel,
 	ReelContent,
@@ -6,6 +8,14 @@ import {
 	type ReelItem,
 	ReelProgress,
 } from "@/components/kibo-ui/reel";
+import { Button } from "@/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useBlurredImage } from "@/hooks/use-blurred-image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import type { PostWithAuthor, Tile } from "@/types/post";
 import { CTAs } from "./ctas";
@@ -36,6 +46,13 @@ export const FeedItem = memo(function FeedItem({
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
 	const isLgOrLower = useMediaQuery("(max-width: 1279px)");
+	const { t } = useTranslation();
+	const [isContentRevealed, setIsContentRevealed] = useState(false);
+
+	const hasContentWarnings =
+		post.contentWarnings && post.contentWarnings.length > 0;
+	const shouldBlur = hasContentWarnings && !isContentRevealed;
+	const blurredImageSrc = useBlurredImage(post.images?.[0]?.path, shouldBlur);
 
 	useEffect(() => {
 		if (isLgOrLower) {
@@ -213,38 +230,102 @@ export const FeedItem = memo(function FeedItem({
 
 			{/* Media content */}
 			<div className="absolute inset-0">
-				<Reel
-					className="h-full w-full"
-					data={reelItems}
-					index={currentImageIndex}
-					onIndexChange={setCurrentImageIndex}
-					playing={isPlaying}
-					onPlayingChange={setIsPlaying}
-					autoPlay={false}
-					muted={true}
-					resetOnPause={true}
-				>
-					{hasMultipleImages && (
-						<ReelProgress className="top-auto right-auto bottom-1 left-1/2 z-20 w-1/2 -translate-x-1/2 px-1" />
-					)}
+				{shouldBlur ? (
+					<div className="relative h-full w-full">
+						{/* Blurred Background Image */}
+						<div
+							className="h-full w-full bg-cover bg-center opacity-50 blur-3xl filter transition-all duration-500 hover:scale-110 hover:opacity-70"
+							style={{
+								backgroundImage: `url(${blurredImageSrc || post.images?.[0]?.path})`,
+							}}
+						/>
 
-					<ReelContent>
-						{(reelItem) => (
-							<ReelImage
-								alt={reelItem.alt || ""}
-								duration={reelItem.duration}
-								src={reelItem.src}
-								className="h-full w-full object-cover"
-							/>
+						{/* Sensitive Content Overlay */}
+						<div className="absolute inset-0 z-10 flex flex-col justify-center bg-black/60 p-4 text-center backdrop-blur-sm">
+							<OutlineEyeOff className="text-white mb-4 mx-auto" size={32} />
+							<h4 className="mb-1 font-bold text-white text-xl">
+								{t("components.profile.commissions.card.sensitive_content")}
+							</h4>
+							<p className="mb-4 text-sm text-white/70">
+								{post.contentWarnings && post.contentWarnings.length > 0
+									? t("components.profile.commissions.card.contains_tags", {
+											tags: post.contentWarnings
+												.map((w) => w.replace(/_/g, " ").toLowerCase())
+												.join(", "),
+										})
+									: t("components.profile.commissions.card.content_warning")}
+							</p>
+
+							<Button
+								size={"sm"}
+								className="border-none w-fit mx-auto bg-background hover:bg-background/90 text-foreground"
+								onClick={(e) => {
+									e.stopPropagation();
+									setIsContentRevealed(true);
+								}}
+							>
+								{t("components.profile.commissions.card.show_content")}
+							</Button>
+						</div>
+					</div>
+				) : (
+					<Reel
+						className="h-full w-full"
+						data={reelItems}
+						index={currentImageIndex}
+						onIndexChange={setCurrentImageIndex}
+						playing={isPlaying}
+						onPlayingChange={setIsPlaying}
+						autoPlay={false}
+						muted={true}
+						resetOnPause={true}
+					>
+						{hasMultipleImages && (
+							<ReelProgress className="top-auto right-auto bottom-1 left-1/2 z-20 w-1/2 -translate-x-1/2 px-1" />
 						)}
-					</ReelContent>
 
-					{/* Top gradient */}
-					<div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-linear-to-b from-black/60 via-black/30 to-transparent" />
+						<ReelContent>
+							{(reelItem) => (
+								<ReelImage
+									alt={reelItem.alt || ""}
+									duration={reelItem.duration}
+									src={reelItem.src}
+									className="h-full w-full object-cover"
+								/>
+							)}
+						</ReelContent>
 
-					{/* Bottom gradient */}
-					<div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-linear-to-t from-black/60 via-black/30 to-transparent" />
-				</Reel>
+						{/* Top gradient */}
+						<div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-linear-to-b from-black/60 via-black/30 to-transparent" />
+
+						{/* Bottom gradient */}
+						<div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-linear-to-t from-black/60 via-black/30 to-transparent" />
+
+						{/* Hide Content Button (when revealed) */}
+						{hasContentWarnings && isContentRevealed && (
+							<TooltipProvider delayDuration={0}>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											variant={"ghost"}
+											size={"icon"}
+											className="absolute right-2 top-2 z-20 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 hover:text-white"
+											onClick={(e) => {
+												e.stopPropagation();
+												setIsContentRevealed(false);
+											}}
+										>
+											<OutlineEyeOff className="size-4" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent side={"left"}>
+										{t("components.profile.commissions.card.hide_content")}
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						)}
+					</Reel>
+				)}
 			</div>
 
 			{/* Actions row */}

@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { OutlineFolderAddOuLc } from "@/components/icons/icons";
+import { EmptyPage } from "@/components/layout/empty-page";
 import { useBento } from "@/hooks/use-bento";
 import { bucketFromDimensions, type Tile, toPixels } from "@/lib/bento";
 import { cn } from "@/lib/utils";
@@ -18,6 +21,7 @@ export function ProfileFeed({
 	onPostClick,
 	variant = "feed",
 }: ProfileFeedProps) {
+	const { t } = useTranslation();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [width, setWidth] = useState(0);
 	const [animateGate, setAnimateGate] = useState(false);
@@ -81,8 +85,15 @@ export function ProfileFeed({
 
 	if (!posts.length) {
 		return (
-			<div className="py-12 text-center text-muted-foreground">
-				No posts yet.
+			<div className="flex flex-1 flex-col items-center justify-center py-12">
+				<EmptyPage
+					icon={OutlineFolderAddOuLc}
+					title={t("components.profile.portfolio.empty.title", "No posts yet.")}
+					description={t(
+						"components.profile.portfolio.empty.description",
+						"This user hasn't posted anything to their portfolio yet.",
+					)}
+				/>
 			</div>
 		);
 	}

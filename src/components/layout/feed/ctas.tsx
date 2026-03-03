@@ -24,7 +24,8 @@ export const ViewIndicator = memo(function ViewIndicator({
 			<Button
 				variant="ghost"
 				size={"icon"}
-				className="cursor-default text-white drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] hover:bg-transparent dark:text-white"
+				disabled
+				className="cursor-default text-white drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] hover:bg-transparent disabled:opacity-50 dark:text-white"
 				style={{ transition: "none" }}
 			>
 				<OutlineEye />
@@ -46,7 +47,7 @@ export const ViewIndicator = memo(function ViewIndicator({
 });
 
 // Helper hook for optimistic updates
-function useLocalAction({
+export function useLocalAction({
 	initialActive,
 	initialCount,
 	onSuccess,
@@ -199,7 +200,10 @@ interface CTAsProps {
 	onBookmark: (e: MouseEvent) => void;
 	showLikesCount?: boolean;
 	showBookmarksCount?: boolean;
+	views?: number;
 	animateGate?: boolean;
+	showBookmarkButton?: boolean;
+	rightElement?: React.ReactNode;
 }
 
 export const CTAs = memo(function CTAs({
@@ -210,7 +214,10 @@ export const CTAs = memo(function CTAs({
 	onLike,
 	onBookmark,
 	showLikesCount = true,
+	views,
 	animateGate = false,
+	showBookmarkButton = true,
+	rightElement,
 }: CTAsProps) {
 	// Enable animations only when component is visible in viewport
 	const [shouldAnimate, setShouldAnimate] = useState(false);
@@ -253,9 +260,16 @@ export const CTAs = memo(function CTAs({
 					showLikesCount={showLikesCount}
 					shouldAnimate={shouldAnimate}
 				/>
+				{views !== undefined && (
+					<ViewIndicator views={views} shouldAnimate={shouldAnimate} />
+				)}
 			</div>
 			<div>
-				<BookmarkButton isBookmarked={isBookmarked} onBookmark={onBookmark} />
+				{showBookmarkButton ? (
+					<BookmarkButton isBookmarked={isBookmarked} onBookmark={onBookmark} />
+				) : (
+					rightElement
+				)}
 			</div>
 		</div>
 	);

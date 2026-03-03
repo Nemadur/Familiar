@@ -1,23 +1,15 @@
 import { ScrollShadow } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { OutlineFolderAddOuLc, OutlineSearch } from "@/components/icons/icons";
-import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { Folder as FolderType } from "@/data/folders";
 import type { PostWithAuthor } from "@/types/post";
 import { FolderCard } from "./folder-card";
@@ -38,9 +30,9 @@ export function ProfilePortfolio({
 	folders,
 	currentFolder: propCurrentFolder,
 }: ProfilePortfolioProps) {
+	const navigate = useNavigate();
 	const [activeType, setActiveType] = useState("ALL");
 	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedPost, setSelectedPost] = useState<PostWithAuthor | null>(null);
 
 	const { t } = useTranslation();
 
@@ -159,18 +151,40 @@ export function ProfilePortfolio({
 				<div className="space-y-2">
 					<ProfileFeed
 						posts={folderPosts}
-						onPostClick={setSelectedPost}
+						onPostClick={(post) => {
+							if (currentFolder.parentId) {
+								// Subfolder
+								const parentFolder = folders.find(
+									(f) => f.id === currentFolder.parentId,
+								);
+								if (parentFolder) {
+									navigate({
+										to: "/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId",
+										params: {
+											username: username || "",
+											tab: "portfolio",
+											folderSlug: parentFolder.slug || parentFolder.id,
+											subfolderSlug: currentFolder.slug || currentFolder.id,
+											postId: post.id,
+										},
+									});
+								}
+							} else {
+								// Folder
+								navigate({
+									to: "/$username/$tab/folder/$folderSlug/$postId",
+									params: {
+										username: username || "",
+										tab: "portfolio",
+										folderSlug: currentFolder.slug || currentFolder.id,
+										postId: post.id,
+									},
+								});
+							}
+						}}
 						variant="portfolio"
 					/>
 				</div>
-
-				{selectedPost && (
-					<PortfolioPostModal
-						post={selectedPost}
-						open={!!selectedPost}
-						onOpenChange={(open) => !open && setSelectedPost(null)}
-					/>
-				)}
 			</div>
 		);
 	}
@@ -260,16 +274,17 @@ export function ProfilePortfolio({
 			{(!folderId || !currentFolder) && (
 				<ProfileFeed
 					posts={filteredPosts}
-					onPostClick={setSelectedPost}
+					onPostClick={(post) => {
+						navigate({
+							to: "/$username/$tab/$commissionId",
+							params: {
+								username: username || "",
+								tab: "portfolio",
+								commissionId: post.id,
+							},
+						});
+					}}
 					variant="portfolio"
-				/>
-			)}
-
-			{selectedPost && (
-				<PortfolioPostModal
-					post={selectedPost}
-					open={!!selectedPost}
-					onOpenChange={(open) => !open && setSelectedPost(null)}
 				/>
 			)}
 		</div>

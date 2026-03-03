@@ -102,6 +102,10 @@ export function mapPostToPostWithAuthor(post: any, user: User): PostWithAuthor {
 
 		folderIds: (post.folders || []).map((f: any) => f.folderId),
 
+		// Linked Content (Mock for now, should map from DB)
+		linkedCharacters: post.linkedCharacters || post.characters || [],
+		featuredReview: post.featuredReview || post.review || undefined,
+
 		isCommission: false,
 		author: user,
 	};
