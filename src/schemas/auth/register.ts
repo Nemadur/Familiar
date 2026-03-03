@@ -1,5 +1,5 @@
-import { accountTypes } from "@/types/auth/schema/accounts";
 import z from "zod";
+import { accountTypes } from "@/types/auth/schema/accounts";
 import { email } from ".";
 
 const password = z
@@ -29,7 +29,7 @@ const username = z
 
 const inviteKey = z
 	.string()
-	.regex(/^FAM-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{3}$/, "Invalid invite key.")
+	.regex(/^FAM-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{3}$/, "Invalid invite key.")
 	.or(z.literal(""));
 
 const registerBase = z.object({

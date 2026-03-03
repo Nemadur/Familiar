@@ -51,7 +51,14 @@ function LanguageSelect() {
 				</Button>
 			</PopoverTrigger>
 			{/* CONTENT */}
-			<PopoverContent className={"w-[200px] p-0"}>
+			<PopoverContent
+				className={"w-[200px] p-0 rounded-(--command-content-radius) overflow-hidden"}
+				style={
+					{
+						"--command-content-radius": "1.25rem",
+					} as React.CSSProperties
+				}
+			>
 				<Command>
 					<CommandInput placeholder={t("components.language_select.search")} />
 					<CommandList>

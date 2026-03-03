@@ -6,7 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
-export function numberFormat(num: number) {
+export function numberFormat(num: number | undefined | null) {
+	if (num === undefined || num === null) return "0";
 	return num.toLocaleString("en-US");
 }
 

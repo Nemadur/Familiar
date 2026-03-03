@@ -56,6 +56,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 		<html lang={i18n.language || "en"} suppressHydrationWarning>
 			<head>
 				<HeadContent />
+				<script
+					crossOrigin="anonymous"
+					src="//unpkg.com/react-scan/dist/auto.global.js"
+				></script>
 			</head>
 			<body>
 				<AuthProvider>

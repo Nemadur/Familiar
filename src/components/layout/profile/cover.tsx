@@ -41,7 +41,9 @@ function ProfileCover({ user }: { user: User }) {
 
 	return (
 		<div
-			className={"relative w-full rounded-3xl ring-1 ring-ring/30 h-48 md:h-72"}
+			className={
+				"relative w-full md:rounded-3xl ring-1 ring-ring/30 h-48 md:h-72"
+			}
 			style={coverBgStyle}
 		>
 			{/* TODO: add webm (animated) support */}

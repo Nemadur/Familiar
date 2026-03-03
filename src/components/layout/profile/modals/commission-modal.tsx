@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
+import { UserComment } from "@/components/common/user-comment";
 import {
 	OutlineChat,
 	OutlineQestionMarkCrFr,
@@ -41,6 +42,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
 	calculateCommissionPricing,
 	calculateReviewStats,
@@ -194,41 +196,77 @@ export function CommissionModal({
 		onOpenChange(true);
 	};
 
+	const isMobile = useIsMobile();
+
 	return (
 		<>
 			<UniversalModalLayout
 				open={open}
 				onOpenChange={onOpenChange}
 				title={t("components.profile.commissions.modal.title")}
+				mediaClassName="bg-transparent"
 				mediaContent={
-					<div className="flex flex-col gap-4 p-4">
-						{itemData?.imageUrls && itemData.imageUrls.length > 0 ? (
-							itemData.imageUrls.map((url, index) => (
-								<div
-									key={url}
-									className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg bg-secondary/5"
-								>
-									<img
-										src={url}
-										alt={`${itemData.title} - ${index + 1}`}
-										className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain shadow-sm"
-									/>
+					<>
+						{/* Mobile & Tablet View (< lg) */}
+						<ScrollShadow
+							orientation="horizontal"
+							className="flex w-full gap-4 p-4 lg:hidden"
+							hideScrollBar
+						>
+							{itemData?.imageUrls && itemData.imageUrls.length > 0 ? (
+								itemData.imageUrls.map((url, index) => (
+									<div
+										key={url}
+										className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg"
+									>
+										<img
+											src={url}
+											alt={`${itemData.title} - ${index + 1}`}
+											className="h-full w-full rounded-lg object-cover shadow-sm"
+										/>
+									</div>
+								))
+							) : isLoading ? (
+								<div className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg bg-secondary/5">
+									<Skeleton className="h-full w-full rounded-lg" />
 								</div>
-							))
-						) : isLoading ? (
-							<div className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg bg-secondary/5">
-								<Skeleton className="h-full w-full rounded-lg" />
-							</div>
-						) : (
-							<div className="flex min-h-[40vh] items-center justify-center p-8 text-muted-foreground">
-								{t("components.profile.commissions.modal.no_media")}
-							</div>
-						)}
-					</div>
+							) : (
+								<div className="flex h-[250px] w-full items-center justify-center p-8 text-muted-foreground">
+									{t("components.profile.commissions.modal.no_media")}
+								</div>
+							)}
+						</ScrollShadow>
+
+						{/* Desktop View (>= lg) */}
+						<div className="hidden flex-col gap-4 p-4 lg:flex">
+							{itemData?.imageUrls && itemData.imageUrls.length > 0 ? (
+								itemData.imageUrls.map((url, index) => (
+									<div
+										key={url}
+										className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg"
+									>
+										<img
+											src={url}
+											alt={`${itemData.title} - ${index + 1}`}
+											className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain shadow-sm"
+										/>
+									</div>
+								))
+							) : isLoading ? (
+								<div className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg bg-secondary/5">
+									<Skeleton className="h-full w-full rounded-lg" />
+								</div>
+							) : (
+								<div className="flex min-h-[40vh] items-center justify-center p-8 text-muted-foreground">
+									{t("components.profile.commissions.modal.no_media")}
+								</div>
+							)}
+						</div>
+					</>
 				}
 				detailsContent={
 					<>
-						<div className="space-y-6 p-6">
+						<div className="space-y-6 p-4">
 							{/* Title & Price */}
 							<div className="space-y-2">
 								<div className="flex items-center gap-2 font-medium text-muted-foreground text-sm uppercase tracking-wide">
@@ -448,47 +486,9 @@ export function CommissionModal({
 							</div>
 
 							{/* Artist Info */}
-							<div className="flex flex-col gap-1">
-								<div className="flex items-center gap-3 py-2">
-									<Avatar className="h-10 w-10 border">
-										<AvatarImage
-											src={
-												artistAvatar ||
-												`https://api.dicebear.com/7.x/avataaars/svg?seed=${artistHandle}`
-											}
-										/>
-										<AvatarFallback>
-											{artistName ? artistName[0] : "?"}
-										</AvatarFallback>
-									</Avatar>
-									<div className="flex flex-col">
-										<div className="flex items-center gap-1">
-											{artistName ? (
-												<span className="font-semibold text-sm">
-													{artistName}
-												</span>
-											) : (
-												<Skeleton className="h-4 w-24" />
-											)}
-											{userData && <ProfileBadge user={userData} />}
-										</div>
-										{artistHandle ? (
-											<span className="text-muted-foreground text-xs">
-												{artistHandle}
-											</span>
-										) : (
-											<Skeleton className="h-3 w-16" />
-										)}
-									</div>
-								</div>
-
-								{/* Artist note */}
-								{itemData?.artistNote && (
-									<div className="rounded-xl bg-secondary/30 p-4 text-muted-foreground text-sm">
-										{itemData.artistNote}
-									</div>
-								)}
-							</div>
+							<UserComment author={userData}>
+								{itemData?.artistNote}
+							</UserComment>
 
 							{/* Description & Tabs */}
 							<div className="w-full">
@@ -711,75 +711,40 @@ export function CommissionModal({
 						</div>
 
 						{/* Footer Actions */}
-						<div className="sticky bottom-0 z-20 space-y-4 border-t bg-background p-6">
+						<div className="sticky bottom-0 z-20 space-y-4 border-t bg-background p-6 pb-8 md:pb-6">
 							{/* TOS Checkbox */}
-							<div className="flex items-center space-x-2 rounded-lg border bg-secondary/10 p-3">
+							<div className="flex items-start space-x-2 rounded-lg border p-2">
 								<Checkbox
 									id="terms"
 									checked={termsAccepted}
 									onCheckedChange={(c) => setTermsAccepted(c === true)}
+									className="mt-0.5"
 								/>
-								<div className="grid gap-1.5 leading-none">
+								<div className="flex-1 grid gap-1.5">
 									<label
 										htmlFor="terms"
-										className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+										className="font-medium text-sm leading-snug peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 									>
 										{t(
 											"components.profile.commissions.modal.footer.accept_tos_label",
 											{ artist: userData?.display_name },
 										)}
 									</label>
-									<p className="text-muted-foreground text-xs">
-										{t(
-											"components.profile.commissions.modal.footer.tos_disclaimer",
-										)}
-									</p>
 								</div>
-								<TooltipProvider>
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Button
-												variant="ghost"
-												size="icon"
-												className="ml-auto h-6 w-6 text-muted-foreground"
-											>
-												<Info className="h-3 w-3" />
-											</Button>
-										</TooltipTrigger>
-										<TooltipContent className="max-w-xs">
-											<p className="mb-1 font-semibold">
-												{t(
-													"components.profile.commissions.modal.footer.terms_summary",
-												)}
-											</p>
-											<p className="text-xs">
-												{itemData.artistTerms?.tosMd ? (
-													<MarkdownDisplay
-														content={itemData.artistTerms.tosMd}
-														isShort
-														className="text-xs"
-													/>
-												) : (
-													t(
-														"components.profile.commissions.modal.footer.no_terms",
-													)
-												)}
-											</p>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
 							</div>
 
-							<div className="flex gap-3">
+							<div className="flex gap-3 min-w-0">
 								<Button
-									className="flex-1"
+									className="flex-1 min-w-0"
 									size={"xl"}
 									disabled={!termsAccepted}
 									onClick={handleRequestOpen}
 								>
-									{t(
-										"components.profile.commissions.modal.footer.accept_start",
-									)}
+									<span className="truncate px-2">
+										{t(
+											"components.profile.commissions.modal.footer.accept_start",
+										)}
+									</span>
 								</Button>
 								<Tooltip>
 									<TooltipTrigger asChild>

@@ -1,11 +1,17 @@
+import { ScrollShadow } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineFolderAddOuLc } from "@/components/icons/icons";
+import { OutlineFolderAddOuLc, OutlineSearch } from "@/components/icons/icons";
 import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
 import {
 	Tooltip,
 	TooltipContent,
@@ -151,7 +157,11 @@ export function ProfilePortfolio({
 
 				{/* Folder Content */}
 				<div className="space-y-2">
-					<ProfileFeed posts={folderPosts} onPostClick={setSelectedPost} />
+					<ProfileFeed
+						posts={folderPosts}
+						onPostClick={setSelectedPost}
+						variant="portfolio"
+					/>
 				</div>
 
 				{selectedPost && (
@@ -172,8 +182,11 @@ export function ProfilePortfolio({
 	return (
 		<div className="space-y-6">
 			{/* Search and Filter Bar */}
-			<div className="flex flex-col gap-6 md:flex-row md:items-center pb-3">
-				<div className="relative w-full min-w-0 flex-1 overflow-x-auto whitespace-nowrap">
+			<div className="flex flex-col gap-2 md:flex-row md:items-center pb-3">
+				<ScrollShadow
+					orientation={"horizontal"}
+					className="relative w-full min-w-0 flex-1 whitespace-nowrap"
+				>
 					<div className="flex w-max items-center space-x-2">
 						{/* System Filters Group */}
 
@@ -201,19 +214,23 @@ export function ProfilePortfolio({
 							);
 						})}
 					</div>
-				</div>
+				</ScrollShadow>
 
 				<div className="flex w-full items-center gap-2 md:w-auto">
-					<div className="relative w-full md:w-64">
-						<Input
-							placeholder={t("components.portfolio.search_placeholder")}
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="pl-8"
-						/>
-						{/* <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /> */}
+					<div className="relative w-full">
+						<InputGroup className="h-9 w-40">
+							<InputGroupAddon>
+								<OutlineSearch />
+							</InputGroupAddon>
+							<InputGroupInput
+								placeholder={t("components.portfolio.search_placeholder")}
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="text-sm w-fit"
+							/>
+						</InputGroup>
 					</div>
-					<Button variant="outline" size="icon">
+					<Button variant={"outline"} size={"icon"}>
 						<OutlineFolderAddOuLc className="h-4 w-4" />
 					</Button>
 				</div>
@@ -241,7 +258,11 @@ export function ProfilePortfolio({
 
 			{/* Posts Grid */}
 			{(!folderId || !currentFolder) && (
-				<ProfileFeed posts={filteredPosts} onPostClick={setSelectedPost} />
+				<ProfileFeed
+					posts={filteredPosts}
+					onPostClick={setSelectedPost}
+					variant="portfolio"
+				/>
 			)}
 
 			{selectedPost && (

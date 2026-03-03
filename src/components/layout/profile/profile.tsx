@@ -142,7 +142,7 @@ export function UserProfileSkeleton() {
 	return (
 		<>
 			<ProfileCoverSkeleton />
-			<div className={"container mx-auto flex flex-col flex-1 px-4"}>
+			<div className={"container mx-auto flex flex-col flex-1 md:px-4"}>
 				<div
 					className={
 						"relative flex-1 h-full grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
@@ -176,33 +176,36 @@ export default function UserProfile({
 	if (pending) return <UserProfileSkeleton />;
 
 	return (
-		<>
+		<div className={"md:px-6"}>
 			<ProfileCover user={user} />
-			<div className={"container mx-auto flex flex-col flex-1 px-4"}>
+			<div className={"container mx-auto flex flex-col flex-1 md:px-4"}>
 				<div
 					className={
-						"relative flex-1 h-full grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
+						"relative flex-1 h-full"
 					}
 				>
-					{/* Sidebar */}
-					<UserProfileSidebar
-						user={user}
-						isMe={isMe}
-						isSuspended={isSuspended}
-					/>
-					{/* Main Content */}
-					<UserProfileMainContent
-						user={user}
-						isSuspended={isSuspended}
-						isMe={isMe}
-						activeTab={activeTab}
-						onTabChange={onTabChange}
-					>
-						{children}
-					</UserProfileMainContent>
+					<div className={"max-sm:px-5 grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"}>
+						{/* Sidebar */}
+						<UserProfileSidebar
+							user={user}
+							isMe={isMe}
+							isSuspended={isSuspended}
+						/>
+
+						{/* Main Content */}
+						<UserProfileMainContent
+							user={user}
+							isSuspended={isSuspended}
+							isMe={isMe}
+							activeTab={activeTab}
+							onTabChange={onTabChange}
+						>
+							{children}
+						</UserProfileMainContent>
+					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
 
@@ -356,6 +359,7 @@ export function UserProfileSidebar({
 	);
 }
 
+import { ScrollShadow } from "@heroui/react";
 import { useAvailableFeeds } from "@/hooks/use-available-feeds";
 import { ProfileCommissions } from "./feed/commissions";
 
@@ -404,18 +408,24 @@ function UserFeeds({
 
 	return (
 		<>
-			<div className="mb-6 flex justify-start border-border border-b transition-all py-2">
-				<div className="w-fit rounded-full">
-					<ProfileFeedTabs
-						items={availableFeeds}
-						value={currentFeed}
-						onValueChange={handleTabChange}
-						size="lg"
-					/>
-				</div>
+			<div className="mb-6 flex justify-start border-border border-b transition-all pt-2 pb-0">
+				<ScrollShadow
+					orientation="horizontal"
+					className="w-full h-full"
+					hideScrollBar
+				>
+					<div className="w-fit rounded-full pb-2">
+						<ProfileFeedTabs
+							items={availableFeeds}
+							value={currentFeed}
+							onValueChange={handleTabChange}
+							size="lg"
+						/>
+					</div>
+				</ScrollShadow>
 			</div>
 
-			<div className="mt-0 flex-1 flex flex-col">{children}</div>
+			<div className="mt-0 flex-1 flex flex-col pb-24">{children}</div>
 		</>
 	);
 }

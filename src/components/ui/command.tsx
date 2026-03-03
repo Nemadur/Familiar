@@ -2,7 +2,7 @@
 
 import { Command as CommandPrimitive } from "cmdk";
 import { SearchIcon } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -14,15 +14,23 @@ import { cn } from "@/lib/utils";
 
 function Command({
 	className,
+	style,
 	...props
 }: React.ComponentProps<typeof CommandPrimitive>) {
 	return (
 		<CommandPrimitive
 			data-slot="command"
 			className={cn(
-				"bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
+				"bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-(--command-content-radius)",
 				className,
 			)}
+			style={
+				{
+					"--command-content-radius": "1.25rem",
+					"--command-content-padding": "0.25rem",
+					...style,
+				} as React.CSSProperties
+			}
 			{...props}
 		/>
 	);
@@ -51,7 +59,7 @@ function CommandDialog({
 				className={cn("overflow-hidden p-0", className)}
 				showCloseButton={showCloseButton}
 			>
-				<Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+				<Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5 [&_[cmdk-list]_[cmdk-item]:first-child]:rounded-t-sm">
 					{children}
 				</Command>
 			</DialogContent>
@@ -72,7 +80,7 @@ function CommandInput({
 			<CommandPrimitive.Input
 				data-slot="command-input"
 				className={cn(
-					"placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+					"placeholder:text-muted-foreground flex h-10 w-full rounded-lg bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
 					className,
 				)}
 				{...props}
@@ -89,7 +97,14 @@ function CommandList({
 		<CommandPrimitive.List
 			data-slot="command-list"
 			className={cn(
-				"max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
+				"max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto p-(--command-content-padding)",
+				"[&_[cmdk-group]:not([hidden]):last-child_[cmdk-group-items]>[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]",
+				"[&_[cmdk-group]:not([hidden]):first-child_[cmdk-group-items]>[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]",
+				"[&_>_[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]",
+				"[&_>_[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]",
+				// Reset top rounding if there's an element preceding the list (like input)
+				"[&:not(:first-child)_[cmdk-group]:not([hidden]):first-child_[cmdk-group-items]>[data-slot=command-item]:first-child]:rounded-t-sm",
+				"[&:not(:first-child)_>_[data-slot=command-item]:first-child]:rounded-t-sm",
 				className,
 			)}
 			{...props}
@@ -117,7 +132,7 @@ function CommandGroup({
 		<CommandPrimitive.Group
 			data-slot="command-group"
 			className={cn(
-				"text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
+				"text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
 				className,
 			)}
 			{...props}

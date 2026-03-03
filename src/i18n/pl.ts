@@ -85,7 +85,7 @@ const pl: Locale = {
 		continue: "Kontynuuj",
 		invite_key: {
 			label: "Klucz zaproszeniowy",
-			placeholder: "FAM-xxxx-xxxx-xxx",
+			placeholder: "FAM-XXXX-XXXX-XXX",
 			prefix: "FAM-",
 		},
 		display_name: {
@@ -109,13 +109,17 @@ const pl: Locale = {
 			registration_failed: "Rejestracja nie powiodła się: {{error}}",
 			login_failed: "Logowanie nie powiodło się: {{error}}",
 			logout_failed: "Wylogowanie nie powiodło się: {{error}}",
-			create_profile_failed: "Nie udało się utworzyć profilu użytkownika: {{error}}",
+			create_profile_failed:
+				"Nie udało się utworzyć profilu użytkownika: {{error}}",
 			auth_session_missing: "Brak sesji uwierzytelniania!",
-			user_authenticated_not_found: "Użytkownik uwierzytelniony w Supabase, ale nie znaleziony w bazie danych.",
+			user_authenticated_not_found:
+				"Użytkownik uwierzytelniony w Supabase, ale nie znaleziony w bazie danych.",
 			failed_refresh_session: "Nie udało się odświeżyć sesji: {{error}}",
 			failed_get_user: "Nie udało się pobrać użytkownika: {{error}}",
-			failed_auto_create_profile: "Nie udało się automatycznie utworzyć profilu: {{error}}",
-			failed_fetch_user_auth_change: "Nie udało się pobrać użytkownika przy zmianie statusu uwierzytelniania: {{error}}",
+			failed_auto_create_profile:
+				"Nie udało się automatycznie utworzyć profilu: {{error}}",
+			failed_fetch_user_auth_change:
+				"Nie udało się pobrać użytkownika przy zmianie statusu uwierzytelniania: {{error}}",
 			use_auth_provider: "useAuth musi być używany wewnątrz AuthProvider",
 		},
 		account_type: {

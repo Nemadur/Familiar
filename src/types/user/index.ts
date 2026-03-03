@@ -74,6 +74,7 @@ export type UserSummary = Pick<
 	| "is_verified"
 	| "is_premium"
 	| "accent_color"
+	| "badges"
 >;
 
 export type UserPublicProfile = Pick<

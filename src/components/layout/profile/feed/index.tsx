@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useBento } from "@/hooks/use-bento";
-import { toPixels, bucketFromDimensions, type Tile } from "@/lib/bento";
+import { bucketFromDimensions, type Tile, toPixels } from "@/lib/bento";
 import { cn } from "@/lib/utils";
 import type { PostWithAuthor } from "@/types/post";
 import { FeedItem } from "../../feed/item";
@@ -9,12 +9,14 @@ interface ProfileFeedProps {
 	posts: PostWithAuthor[];
 	className?: string;
 	onPostClick?: (post: PostWithAuthor) => void;
+	variant?: "feed" | "portfolio";
 }
 
 export function ProfileFeed({
 	posts,
 	className,
 	onPostClick,
+	variant = "feed",
 }: ProfileFeedProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [width, setWidth] = useState(0);
@@ -108,6 +110,7 @@ export function ProfileFeed({
 						animateGate={animateGate}
 						handlePostClick={handlePostClick}
 						style={node.style}
+						variant={variant}
 					/>
 				);
 			})}

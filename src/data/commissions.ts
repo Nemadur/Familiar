@@ -18,9 +18,14 @@ interface DbReviewAuthor {
 	display_name?: string;
 	username: string;
 	avatar_path?: string;
+	is_verified: boolean;
+	is_premium: boolean;
+	accent_color?: string;
+	badges?: DbUserBadge[];
 }
 
 interface DbReview {
+	title?: string;
 	review_id: string;
 	rating: number;
 	body?: string;
@@ -159,7 +164,13 @@ export const getCommission = createServerFn({
 					),
 					reviews:reviews(
 						*,
-						author:profiles!reviews_client_id_fkey(*)
+						author:profiles!reviews_client_id_fkey(
+							*,
+							badges:user_badges(
+								*,
+								badge:badges(*)
+							)
+						)
 					)
 				`)
 				.eq("listing_id", data.id)
@@ -310,7 +321,39 @@ export const getCommission = createServerFn({
 
 			const reviews: Review[] = (commission.reviews || []).map((r) => ({
 				id: r.review_id,
+				title: r.title,
 				authorName: r.author?.display_name || r.author?.username || "Unknown",
+				author: r.author
+					? {
+							uuid: r.author.username, // Using username as uuid placeholder if real uuid not available in this join
+							username: r.author.username,
+							display_name: r.author.display_name || r.author.username,
+							media: {
+								avatar: r.author.avatar_path || null,
+								cover: null,
+							},
+							is_verified: r.author.is_verified,
+							is_premium: r.author.is_premium,
+							accent_color: r.author.accent_color || null,
+							badges: (r.author.badges || []).map((b) => ({
+								uuid: b.badge.badge_id,
+								label: b.badge.label,
+								description: b.badge.description || null,
+								color: b.badge.color || null,
+								icon: b.badge.icon_path || null,
+								awarded_at: new Date(b.awarded_at),
+							})),
+						}
+					: {
+							uuid: "unknown",
+							username: "unknown",
+							display_name: "Unknown",
+							media: { avatar: null, cover: null },
+							is_verified: false,
+							is_premium: false,
+							accent_color: null,
+							badges: [],
+						},
 				authorAvatar: r.author?.avatar_path || undefined,
 				rating: r.rating,
 				comment: r.body || undefined,
@@ -372,7 +415,7 @@ export const getCommission = createServerFn({
 				id: commission.listing_id,
 				title: commission.title,
 				description: commission.description_md || undefined,
-					price: Number(commission.base_price_usd ?? 0),
+				price: Number(commission.base_price_usd ?? 0),
 				discountRate: Number(commission.discount_rate ?? 0),
 				status: commission.status as CommissionItem["status"],
 				artistNote: commission.artist_note || undefined,

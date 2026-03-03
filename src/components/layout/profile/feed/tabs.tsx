@@ -39,7 +39,7 @@ function ProfileFeedTabs<T extends string>({
 							key={item.id}
 							value={item.id}
 							size={size}
-							className="gap-2 font-semibold"
+							className="gap-2 font-semibold px-5"
 						>
 							{/* {IconComponent && <IconComponent className={iconSize} />} */}
 							{item.label}

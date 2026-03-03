@@ -29,7 +29,7 @@ export default function Footer() {
 	];
 
 	return (
-		<footer className={"mt-auto"}>
+		<footer className={"mt-auto px-5"}>
 			{/* Main Footer Content */}
 			<div className={"rounded-3xl bg-primary/6 p-6"}>
 				<div

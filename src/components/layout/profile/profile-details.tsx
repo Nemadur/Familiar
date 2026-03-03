@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import { userJoinDate, userLocalTime } from "@/lib/profile";
 import { cn, numberFormat } from "@/lib/utils";
-import type { User } from "@/types/user";
+import type { User, UserSummary } from "@/types/user";
 import type { UserBadge } from "@/types/user/badge";
 import { ProfileBio } from "./bio";
 import { getSocialIcon } from "./socials";
@@ -44,7 +44,7 @@ export const BADGE_ICONS: Record<string, React.ElementType> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-export function getUserBadges(user: User): UserBadge[] {
+export function getUserBadges(user: User | UserSummary): UserBadge[] {
 	return (user.badges ?? []).map((badge) => ({
 		uuid: badge.uuid,
 		label: badge.label,
@@ -96,24 +96,24 @@ export function BadgeTooltipContent({ badge }: { badge: UserBadge }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ProfileDetailsContent({ user }: { user: User }) {
+export function ProfileDetailsContent({ user }: { user: User | UserSummary }) {
 	const badges = getUserBadges(user);
-	const joinDate = userJoinDate({ createdAt: user.created_at });
-	const localTime = userLocalTime({ timeZone: user.timezone });
+	const joinDate = userJoinDate({ createdAt: (user as User).created_at });
+	const localTime = userLocalTime({ timeZone: (user as User).timezone });
 	const { t } = useTranslation();
 
 	const stats = [
 		{
 			label: t("components.profile.details.stats.followers"),
-			value: user.followers_count,
+			value: (user as User).followers_count,
 		},
 		{
 			label: t("components.profile.details.stats.following"),
-			value: user.following_count,
+			value: (user as User).following_count,
 		},
 		{
 			label: t("components.profile.details.stats.works"),
-			value: user.works_count,
+			value: (user as User).works_count,
 		},
 	];
 
@@ -125,10 +125,10 @@ export function ProfileDetailsContent({ user }: { user: User }) {
 				</DialogTitle>
 				<div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
 					<span>@{user.username}</span>
-					{user.pronouns && (
+					{(user as User).pronouns && (
 						<>
 							<span>·</span>
-							<span>{user.pronouns}</span>
+							<span>{(user as User).pronouns}</span>
 						</>
 					)}
 				</div>
@@ -193,11 +193,11 @@ export function ProfileDetailsContent({ user }: { user: User }) {
 			</div>
 
 			{/* Bio */}
-			{user.bio && (
+			{(user as User).bio && (
 				<div className="mb-4">
 					<SectionLabel>{t("components.profile.details.bio")}</SectionLabel>
 					<div className="line-clamp-10 text-primary/80 leading-relaxed">
-						<ProfileBio user={user} className="text-xs" />
+						<ProfileBio user={user as User} className="text-xs" />
 					</div>
 				</div>
 			)}

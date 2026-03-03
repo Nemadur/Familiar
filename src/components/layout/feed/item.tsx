@@ -6,6 +6,7 @@ import {
 	type ReelItem,
 	ReelProgress,
 } from "@/components/kibo-ui/reel";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import type { PostWithAuthor, Tile } from "@/types/post";
 import { CTAs } from "./ctas";
 import { Header } from "./header";
@@ -18,6 +19,7 @@ interface FeedItemProps {
 	animateGate: boolean;
 	handlePostClick: (postId: string) => void;
 	style: React.CSSProperties;
+	variant?: "feed" | "portfolio";
 }
 
 export const FeedItem = memo(function FeedItem({
@@ -26,11 +28,22 @@ export const FeedItem = memo(function FeedItem({
 	animateGate: _animateGate,
 	handlePostClick,
 	style: nodeStyle,
+	variant = "feed",
 }: FeedItemProps) {
 	const [isHovered, setIsHovered] = useState(false);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const articleRef = useRef<HTMLElement>(null);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+	const isLgOrLower = useMediaQuery("(max-width: 1279px)");
+
+	useEffect(() => {
+		if (isLgOrLower) {
+			setIsPlaying(true);
+		} else {
+			setIsPlaying(false);
+		}
+	}, [isLgOrLower]);
 
 	// Memoized date values to prevent re-renders
 	const dateLabel = useMemo(
@@ -60,22 +73,24 @@ export const FeedItem = memo(function FeedItem({
 				type: "image",
 				src: img.path,
 				duration: 1,
-				alt: img.alt || `Post by ${post.author.displayName}`,
+				alt: img.alt || `Post by ${post.author.display_name}`,
 			})),
-		[medias, post.id, post.author.displayName],
+		[medias, post.id, post.author.display_name],
 	);
 
 	// Hover handlers
 	const handleMouseEnter = useCallback(() => {
+		if (isLgOrLower) return;
 		setIsHovered(true);
 		if (hasMultipleImages) setIsPlaying(true);
-	}, [hasMultipleImages]);
+	}, [hasMultipleImages, isLgOrLower]);
 
 	const handleMouseLeave = useCallback(() => {
+		if (isLgOrLower) return;
 		setIsHovered(false);
 		setIsPlaying(false);
 		setCurrentImageIndex(0);
-	}, []);
+	}, [isLgOrLower]);
 
 	// Memoized callbacks to prevent unnecessary re-renders
 	const handleLike = useCallback((e: React.MouseEvent) => {
@@ -187,12 +202,14 @@ export const FeedItem = memo(function FeedItem({
 			style={articleStyle}
 		>
 			{/* Header with User, Date and Views */}
-			<Header
-				user={userData}
-				dateLabel={dateLabel}
-				fullDateString={fullDateString}
-				animateGate={_animateGate}
-			/>
+			{variant !== "portfolio" && (
+				<Header
+					user={userData}
+					dateLabel={dateLabel}
+					fullDateString={fullDateString}
+					animateGate={_animateGate}
+				/>
+			)}
 
 			{/* Media content */}
 			<div className="absolute inset-0">
@@ -259,7 +276,23 @@ export const FeedItem = memo(function FeedItem({
 
 				{/* CTAs */}
 				<div className="pointer-events-auto">
-					<CTAs {...ctaProps} />
+					{variant === "portfolio" ? (
+						<CTAs
+							{...ctaProps}
+							onComment={() => {}}
+							onRepost={() => {}}
+							isCommented={false}
+							isReposted={false}
+							comments={0}
+							reposts={0}
+							showCommentsCount={false}
+							showRepostsCount={false}
+							showCommentButton={false}
+							showRepostButton={false}
+						/>
+					) : (
+						<CTAs {...ctaProps} />
+					)}
 				</div>
 			</div>
 		</article>

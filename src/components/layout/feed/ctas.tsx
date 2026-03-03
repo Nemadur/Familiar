@@ -3,14 +3,10 @@ import type { MouseEvent } from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
 	OutlineBookmark,
-	OutlineChat,
 	OutlineEye,
 	OutlineHeart,
-	OutlineRepeat02,
 	SolidBookmark,
-	SolidChat,
 	SolidHeart,
-	SolidRepeat02,
 } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -150,128 +146,6 @@ export const LikeButton = memo(function LikeButton({
 	);
 });
 
-// Memoized CommentButton component
-export const CommentButton = memo(function CommentButton({
-	comments,
-	isCommented,
-	onComment,
-	showCommentsCount = true,
-	shouldAnimate,
-}: {
-	comments: number;
-	isCommented: boolean;
-	onComment: (e: MouseEvent) => void;
-	showCommentsCount?: boolean;
-	shouldAnimate: boolean;
-}) {
-	// Comments usually don't toggle like likes, but we might want optimistic update if we added a comment immediately
-	// For now, let's just assume it's a button that opens a modal or navigates
-
-	return (
-		<div className="flex items-center">
-			<Button
-				variant="ghost"
-				size={"icon"}
-				className="text-accent drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] hover:bg-white/12 hover:text-white dark:text-white"
-				onClick={(e) => {
-					e.stopPropagation();
-					onComment(e);
-				}}
-				style={{ transition: "none" }}
-			>
-				{isCommented ? <SolidChat /> : <OutlineChat />}
-			</Button>
-			{showCommentsCount && (
-				<div
-					className={cn(
-						"text-sm text-white transition-opacity",
-						comments === 0
-							? "opacity-0"
-							: shouldAnimate
-								? "opacity-100"
-								: "opacity-0",
-					)}
-				>
-					<NumberFlow value={comments} />
-				</div>
-			)}
-		</div>
-	);
-});
-
-// Memoized RepostButton component
-export const RepostButton = memo(function RepostButton({
-	reposts,
-	isReposted,
-	onRepost,
-	showRepostsCount = true,
-	shouldAnimate,
-}: {
-	reposts: number;
-	isReposted: boolean;
-	onRepost: (e: MouseEvent) => void;
-	showRepostsCount?: boolean;
-	shouldAnimate: boolean;
-}) {
-	const {
-		active: reposted,
-		count: repostsCount,
-		handleAction,
-	} = useLocalAction({
-		initialActive: isReposted,
-		initialCount: reposts,
-	});
-
-	const handleRepostClick = useCallback(
-		(e: MouseEvent) => {
-			e.stopPropagation();
-			handleAction();
-			onRepost(e);
-		},
-		[handleAction, onRepost],
-	);
-
-	return (
-		<div className="flex items-center">
-			<Button
-				variant="ghost"
-				size={"icon"}
-				className={cn(
-					"hover:bg-white/12 hover:text-white dark:text-white",
-					reposted
-						? "text-green-500 drop-shadow-[0_1px_10px_rgba(34,197,94,0.75)] hover:bg-green-500/12"
-						: "text-accent drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]",
-				)}
-				onClick={handleRepostClick}
-				style={{ transition: "none" }}
-			>
-				{reposted ? (
-					<SolidRepeat02 className="text-green-500" />
-				) : (
-					<OutlineRepeat02 />
-				)}
-			</Button>
-			{showRepostsCount && (
-				<div
-					className={cn(
-						"text-sm transition-opacity",
-						reposted
-							? "text-green-500 drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]"
-							: "text-white",
-						repostsCount === 0
-							? "opacity-0"
-							: shouldAnimate
-								? "opacity-100"
-								: "opacity-0",
-					)}
-				>
-					<NumberFlow value={repostsCount} />
-				</div>
-			)}
-		</div>
-	);
-});
-
 // Memoized BookmarkButton component
 export const BookmarkButton = memo(function BookmarkButton({
 	isBookmarked,
@@ -320,38 +194,22 @@ interface CTAsProps {
 	postId: string; // required so the component can call the API
 	likes: number;
 	isLiked: boolean;
-	comments?: number;
-	isCommented?: boolean;
-	reposts?: number;
-	isReposted: boolean;
 	isBookmarked: boolean;
 	onLike: (e: MouseEvent) => void;
-	onComment: (e: MouseEvent) => void;
-	onRepost: (e: MouseEvent) => void;
 	onBookmark: (e: MouseEvent) => void;
 	showLikesCount?: boolean;
-	showCommentsCount?: boolean;
-	showRepostsCount?: boolean;
 	showBookmarksCount?: boolean;
-	animateGate?: boolean; // bramka z Feed
+	animateGate?: boolean;
 }
 
 export const CTAs = memo(function CTAs({
 	postId,
 	likes,
 	isLiked,
-	comments = 0,
-	isCommented = false,
-	reposts = 0,
-	isReposted,
 	isBookmarked,
 	onLike,
-	onComment,
-	onRepost,
 	onBookmark,
 	showLikesCount = true,
-	showCommentsCount = true,
-	showRepostsCount = true,
 	animateGate = false,
 }: CTAsProps) {
 	// Enable animations only when component is visible in viewport
@@ -384,7 +242,7 @@ export const CTAs = memo(function CTAs({
 	return (
 		<div
 			ref={containerRef}
-			className="relative z-20 flex w-full items-center justify-between px-2"
+			className="relative z-20 flex w-full items-center justify-between"
 		>
 			<div className="flex items-center gap-1 sm:gap-4">
 				<LikeButton
@@ -393,20 +251,6 @@ export const CTAs = memo(function CTAs({
 					isLiked={isLiked}
 					onLike={onLike}
 					showLikesCount={showLikesCount}
-					shouldAnimate={shouldAnimate}
-				/>
-				<CommentButton
-					comments={comments}
-					isCommented={isCommented}
-					onComment={onComment}
-					showCommentsCount={showCommentsCount}
-					shouldAnimate={shouldAnimate}
-				/>
-				<RepostButton
-					reposts={reposts}
-					isReposted={isReposted}
-					onRepost={onRepost}
-					showRepostsCount={showRepostsCount}
 					shouldAnimate={shouldAnimate}
 				/>
 			</div>

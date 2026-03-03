@@ -10,12 +10,12 @@ import { getCommission } from "@/data/commissions";
 import { useSuspenseUser } from "@/hooks/use-user";
 import type { CommissionItem } from "@/types/commission";
 
-export const Route = createFileRoute("/$username/$tab/$commisionId/")({
+export const Route = createFileRoute("/$username/$tab/$commissionId/")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const { username, tab, commisionId } = Route.useParams();
+	const { username, tab, commissionId } = Route.useParams();
 	const navigate = useNavigate();
 	const router = useRouter();
 	const location = useLocation();
@@ -30,9 +30,9 @@ function RouteComponent() {
 		isError,
 		error,
 	} = useQuery({
-		queryKey: ["commission", commisionId],
-		queryFn: () => getCommission({ data: { id: commisionId } }),
-		enabled: !!commisionId,
+		queryKey: ["commission", commissionId],
+		queryFn: () => getCommission({ data: { id: commissionId } }),
+		enabled: !!commissionId,
 	});
 
 	const itemToPass = fetchedItem || stateItem;
@@ -40,9 +40,9 @@ function RouteComponent() {
 
 	return (
 		<CommissionModal
-			commissionId={commisionId}
+			commissionId={commissionId}
 			item={itemToPass}
-			artist={user!}
+			artist={user ?? undefined}
 			open={true}
 			isLoading={isLoading}
 			isDetailsLoading={isDetailsLoading}
@@ -52,17 +52,17 @@ function RouteComponent() {
 				if (!open) {
 					// Use history.back() if possible to effectively close the modal
 					// and remove it from history stack
-					if (window.history.length > 1) {
-						window.history.back();
-					} else {
-						// Fallback for direct links
-						navigate({
-							to: `/${username}/${tab}`,
-							replace: true,
-							resetScroll: false,
-							search: (old) => old,
-						});
-					}
+					// if (window.history.length > 1) {
+					// 	window.history.back();
+					// } else {
+					// Fallback for direct links
+					navigate({
+						to: `/${username}/${tab}`,
+						replace: true,
+						resetScroll: false,
+						search: (old) => old,
+					});
+					// }
 				}
 			}}
 		/>

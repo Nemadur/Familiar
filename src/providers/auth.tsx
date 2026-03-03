@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { ensureUserProfile, getUserById } from "@/data/user";
 import i18n from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { getQueryClient } from "@/providers/query-client";
 import type { LoginData } from "@/types/auth/schema/login";
 import type { RegisterData } from "@/types/auth/schema/register";
 import type { User } from "@/types/user";
@@ -54,8 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 				if (user) {
 					// Fetch user details from database using Supabase User ID
-					const fetchedUser = await getUserById({
-						data: { uuid: user.id },
+					const queryClient = getQueryClient();
+					const fetchedUser = await queryClient.fetchQuery({
+						queryKey: ["user", user.id],
+						queryFn: () => getUserById({ data: { uuid: user.id } }),
+						staleTime: 60 * 1000,
 					});
 
 					console.log(fetchedUser);
@@ -72,8 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 									data: { uuid: user.id, username, display_name },
 								});
 								// Retry fetch
-								const retriedUser = await getUserById({
-									data: { uuid: user.id },
+								await queryClient.invalidateQueries({
+									queryKey: ["user", user.id],
+								});
+								const retriedUser = await queryClient.fetchQuery({
+									queryKey: ["user", user.id],
+									queryFn: () => getUserById({ data: { uuid: user.id } }),
 								});
 								if (retriedUser) {
 									setUser(retriedUser);
@@ -237,8 +245,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
 				if (session?.user) {
 					try {
-						const fetchedUser = await getUserById({
-							data: { uuid: session.user.id },
+						const queryClient = getQueryClient();
+						const fetchedUser = await queryClient.fetchQuery({
+							queryKey: ["user", session.user.id],
+							queryFn: () => getUserById({ data: { uuid: session.user.id } }),
+							staleTime: 60 * 1000,
 						});
 						if (fetchedUser) {
 							setUser(fetchedUser);

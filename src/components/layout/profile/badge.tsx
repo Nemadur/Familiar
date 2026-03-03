@@ -5,7 +5,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { User } from "@/types/user";
+import type { User, UserSummary } from "@/types/user";
 import {
 	BadgeIcon,
 	BadgeTooltipContent,
@@ -13,7 +13,7 @@ import {
 	ProfileDetailsContent,
 } from "./profile-details";
 
-function ProfileBadge({ user }: { user: User }) {
+function ProfileBadge({ user }: { user: User | UserSummary }) {
 	const badges = getUserBadges(user);
 
 	if (badges.length === 0) return null;

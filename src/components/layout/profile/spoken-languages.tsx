@@ -1,4 +1,4 @@
-import * as countries from "i18n-iso-countries";
+import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";

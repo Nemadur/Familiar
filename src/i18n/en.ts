@@ -85,7 +85,7 @@ const en: Locale = {
 		continue: "Continue",
 		invite_key: {
 			label: "Invite Key",
-			placeholder: "FAM-xxxx-xxxx-xxx",
+			placeholder: "FAM-XXXX-XXXX-XXX",
 			prefix: "FAM-",
 		},
 		display_name: {
@@ -111,11 +111,13 @@ const en: Locale = {
 			logout_failed: "Logout failed: {{error}}",
 			create_profile_failed: "Failed to create user profile: {{error}}",
 			auth_session_missing: "Auth session missing!",
-			user_authenticated_not_found: "User authenticated in Supabase but not found in database.",
+			user_authenticated_not_found:
+				"User authenticated in Supabase but not found in database.",
 			failed_refresh_session: "Failed to refresh session: {{error}}",
 			failed_get_user: "Failed to get user: {{error}}",
 			failed_auto_create_profile: "Failed to auto-create profile: {{error}}",
-			failed_fetch_user_auth_change: "Failed to fetch user in onAuthStateChange: {{error}}",
+			failed_fetch_user_auth_change:
+				"Failed to fetch user in onAuthStateChange: {{error}}",
 			use_auth_provider: "useAuth must be used within an AuthProvider",
 		},
 		account_type: {

@@ -16,7 +16,12 @@ const config = defineConfig({
 		viteReact(),
 	],
 	optimizeDeps: {
-		exclude: ["@tanstack/start-server-core", "@tanstack/react-start"],
+		exclude: [
+			"@tanstack/start-server-core",
+			"@tanstack/react-start",
+			"@tanstack/react-router",
+			"@tanstack/router-core",
+		],
 	},
 });
 

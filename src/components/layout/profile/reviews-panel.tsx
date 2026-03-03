@@ -1,7 +1,8 @@
 import { ScrollShadow } from "@heroui/react";
-import { Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { UserComment } from "@/components/common/user-comment";
+import { OutlineStar, SolidStar } from "@/components/icons/icons";
 import UserAvatar from "@/components/layout/profile/avatar";
 import {
 	Pagination,
@@ -11,9 +12,11 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StarsRating } from "@/components/ui/stars-rating";
 import { calculateReviewStats } from "@/lib/commission-utils";
+import { cn } from "@/lib/utils";
 import type { Review } from "@/types/commission";
 
 interface ReviewsPanelProps {
@@ -113,11 +116,10 @@ export function ReviewsPanel({
 				{/* Rating Distribution */}
 				{showSummary && (
 					<div
-						className={
-							variant === "clean"
-								? "rounded-xl bg-secondary/5 p-6 px-0 space-y-4"
-								: "rounded-xl border bg-card p-6 space-y-4"
-						}
+						className={cn(
+							"rounded-xl p-6 space-y-4",
+							variant === "clean" ? "px-0" : "border bg-card",
+						)}
 					>
 						<div className="flex items-center gap-4">
 							{showAverageScore && (
@@ -144,23 +146,27 @@ export function ReviewsPanel({
 								{ratingDistribution.map(({ stars, percentage }) => (
 									<div key={stars} className="flex items-center gap-3 text-xs">
 										<div className="flex gap-0.5 w-24">
-											{Array.from({ length: 5 }).map((_, i) => (
-												<Star
-													key={i}
-													size={16}
-													className={
-														i < stars
-															? "fill-amber-400 text-amber-400"
-															: "text-secondary"
-													}
-												/>
-											))}
+											{Array.from({ length: 5 }).map((_, i) => {
+												const isFilled = i < stars;
+												return isFilled ? (
+													<SolidStar
+														key={`star-filled-${stars}`}
+														size={16}
+														className="text-amber-400"
+													/>
+												) : (
+													<OutlineStar
+														key={`star-empty-${stars}`}
+														size={16}
+														className="text-muted-foreground/40"
+													/>
+												);
+											})}
 										</div>
-										{/* Custom Progress Bar */}
 										<div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-											<div
-												className="h-full bg-amber-400 transition-all duration-500 ease-in-out"
-												style={{ width: `${percentage}%` }}
+											<Progress
+												value={percentage}
+												className={"[&>div]:bg-amber-400"}
 											/>
 										</div>
 										<span className="w-8 text-right text-muted-foreground tabular-nums">
@@ -177,33 +183,25 @@ export function ReviewsPanel({
 				<div className="space-y-4">
 					{paginatedReviews.map((review) =>
 						variant === "clean" ? (
-							<div key={review.id} className="flex gap-4">
-								<UserAvatar
-									user={review.author}
-									className="h-10 w-10 shrink-0"
-								/>
-								<div className="flex-1 space-y-1">
-									<div className="flex items-center justify-between">
-										<div className="flex items-center gap-2">
-											<span className="font-semibold text-sm">
-												{review.author.display_name}
-											</span>
-											<span className="text-muted-foreground text-xs">
-												{new Date(review.createdAt).toLocaleDateString()}
-											</span>
-										</div>
+							<UserComment
+								key={review.id}
+								author={review.author}
+								rightSideContent={
+									<div className="flex items-center gap-2">
+										<span className="text-muted-foreground text-xs">
+											{new Date(review.createdAt).toLocaleDateString()}
+										</span>
 										<StarsRating rating={review.rating} size={14} />
 									</div>
-									<div className="rounded-2xl rounded-tl-none bg-secondary/30 px-4 py-3 text-sm">
-										{review.title && (
-											<h5 className="mb-1 font-semibold">{review.title}</h5>
-										)}
-										{review.comment && (
-											<p className="text-foreground/90">{review.comment}</p>
-										)}
-									</div>
-								</div>
-							</div>
+								}
+							>
+								{review.title && (
+									<h5 className="mb-1 font-semibold">{review.title}</h5>
+								)}
+								{review.comment && (
+									<p className="text-foreground/90">{review.comment}</p>
+								)}
+							</UserComment>
 						) : (
 							<div
 								key={review.id}

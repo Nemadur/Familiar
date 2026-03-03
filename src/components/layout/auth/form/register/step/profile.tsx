@@ -159,11 +159,14 @@ export function RegisterStepProfile({
 										onChange={(e) => {
 											let input = e.target.value.toUpperCase();
 
-											// Handle copy-paste with prefix
-											input = input.replace(/^FAM-?/, "");
+											// Remove any whitespace
+											input = input.replace(/\s/g, "");
 
-											// Keep only Hex characters
-											input = input.replace(/[^0-9A-F]/g, "");
+											// Handle copy-paste with prefix
+											input = input.replace(/FAM-?/g, "");
+
+											// Keep only Alphanumeric characters
+											input = input.replace(/[^0-9A-Z]/g, "");
 
 											// Format with dashes: XXXX-XXXX-XXX
 											let formatted = "";
@@ -178,7 +181,7 @@ export function RegisterStepProfile({
 												input.length === 0 ? "" : `FAM-${formatted}`,
 											);
 										}}
-										maxLength={17} // Allow pasting full FAM- code (17 chars) but logic truncates to 13 visible
+										maxLength={32} // Allow pasting full FAM- code (17 chars) + extra space
 									/>
 								</InputGroup>
 							</FormControl>

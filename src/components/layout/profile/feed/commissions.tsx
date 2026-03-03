@@ -1,6 +1,6 @@
 import { ScrollShadow } from "@heroui/react";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
 import {
@@ -26,6 +26,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBlurredImage } from "@/hooks/use-blurred-image";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
 import type { CommissionCategory, CommissionItem } from "@/types/commission";
 import type { User } from "@/types/user";
@@ -53,6 +54,16 @@ function CommissionCard({
 	const [isPlaying, setIsPlaying] = useState(false);
 	const navigate = useNavigate();
 	const [isContentRevealed, setIsContentRevealed] = useState(false);
+
+	const isLgOrLower = useMediaQuery("(max-width: 1279px)");
+
+	useEffect(() => {
+		if (isLgOrLower) {
+			setIsPlaying(true);
+		} else {
+			setIsPlaying(false);
+		}
+	}, [isLgOrLower]);
 
 	// Use item status if available, otherwise fallback to category status
 	const status = item.status || categoryStatus;
@@ -87,9 +98,13 @@ function CommissionCard({
 		// biome-ignore lint/a11y/useSemanticElements: <explanation>
 		<article
 			role="button"
-			className="group relative flex cursor-pointer flex-col overflow-hidden rounded-4xl border border-border/50 bg-card p-2 transition-colors hover:border-foreground/10 hover:bg-accent/50 sm:flex-row"
-			onMouseEnter={() => setIsPlaying(true)}
+			className="group relative flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-border/50 bg-card p-2 transition-colors hover:border-foreground/10 hover:bg-accent/50 xl:flex-row sm:rounded-4xl"
+			onMouseEnter={() => {
+				if (isLgOrLower) return;
+				setIsPlaying(true);
+			}}
 			onMouseLeave={() => {
+				if (isLgOrLower) return;
 				setIsPlaying(false);
 				setCurrentImageIndex(0);
 			}}
@@ -97,7 +112,7 @@ function CommissionCard({
 				navigate({
 					to: `/${artist.username}/commissions/${item.id}`,
 					state: { item },
-					// No replace here, we want it in history so back button works to close it
+					replace: true,
 				})
 			}
 			onKeyDown={(e) => {
@@ -106,13 +121,14 @@ function CommissionCard({
 					navigate({
 						to: `/${artist.username}/commissions/${item.id}`,
 						state: { item },
+						replace: true,
 					});
 				}
 			}}
 			tabIndex={0}
 		>
 			{/* Image Section */}
-			<div className="relative aspect-video shrink-0 overflow-hidden rounded-3xl bg-muted sm:w-2/5">
+			<div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl bg-muted xl:w-2/5 sm:rounded-3xl">
 				{shouldBlur ? (
 					<div className="h-full w-full overflow-hidden bg-zinc-900">
 						{blurredImageSrc ? (
@@ -220,15 +236,15 @@ function CommissionCard({
 			</div>
 
 			{/* Content Section */}
-			<div className="flex flex-1 flex-col gap-4 p-1 pr-2 sm:pl-6">
-				<div className="space-y-2">
+			<div className="flex flex-1 flex-col gap-3 p-2 sm:gap-4 sm:p-1 xl:pl-6 xl:pr-2">
+				<div className="space-y-1 sm:space-y-2">
 					<div className="relative flex gap-10">
-						<h3 className="line-clamp-2 text-start min-w-0 font-bold text-foreground text-lg leading-tight transition-colors group-hover:text-primary pr-14">
+						<h3 className="line-clamp-2 text-start min-w-0 font-bold text-foreground text-lg leading-tight transition-colors group-hover:text-primary md:pr-14">
 							{item.title}
 						</h3>
 						<Button
 							size={"icon"}
-							className="absolute top-0 right-0 z-0 shrink-0 bg-transparent text-primary shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:bg-primary/6 before:transition-all hover:bg-transparent hover:before:translate-y-1.5 hover:before:bg-primary/10 [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5"
+							className="absolute hidden xl:flex top-0 right-0 z-0 shrink-0 bg-transparent text-primary shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:bg-primary/6 before:transition-all hover:bg-transparent hover:before:translate-y-1.5 hover:before:bg-primary/10 [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5"
 						>
 							<OutlineBookmark />
 						</Button>
@@ -256,10 +272,10 @@ function CommissionCard({
 						</div>
 						<ScrollShadow
 							hideScrollBar
-							className="mt-3 max-h-16 text-left overflow-hidden"
+							className="mt-2 max-h-16 text-left overflow-hidden sm:mt-3"
 						>
 							<MarkdownDisplay
-								className="[--tw-prose-body:var(--muted-foreground)] [--tw-prose-headings:var(--muted-foreground)] [--tw-prose-bold:var(--muted-foreground)] [--tw-prose-bullets:var(--muted-foreground)] [--tw-prose-counters:var(--muted-foreground)]"
+								className="[--tw-prose-body:var(--muted-foreground)] [--tw-prose-headings:var(--muted-foreground)] [--tw-prose-bold:var(--muted-foreground)] [--tw-prose-bullets:var(--muted-foreground)] [--tw-prose-counters:var(--muted-foreground)] text-sm"
 								content={item.description}
 							/>
 						</ScrollShadow>
@@ -296,6 +312,14 @@ function CommissionCard({
 							>
 								<OutlineChat />
 							</Button>
+							<Button
+								variant="secondary"
+								size="icon"
+								className="xl:hidden"
+								onClick={(e) => e.stopPropagation()}
+							>
+								<OutlineBookmark />
+							</Button>
 						</>
 					)}
 					{status === "waitlist" && (
@@ -314,17 +338,41 @@ function CommissionCard({
 							>
 								<OutlineChat />
 							</Button>
+							<Button
+								variant="secondary"
+								size="icon"
+								className="xl:hidden"
+								onClick={(e) => e.stopPropagation()}
+							>
+								<OutlineBookmark />
+							</Button>
 						</>
 					)}
 					{status === "closed" && (
-						<Button
-							variant="secondary"
-							className="w-full"
-							onClick={(e) => e.stopPropagation()}
-						>
-							<OutlineBell />
-							{t("components.profile.commissions.card.get_notified")}
-						</Button>
+						<>
+							<Button
+								variant="secondary"
+								className="flex-1"
+								onClick={(e) => e.stopPropagation()}
+							>
+								{t("components.profile.commissions.card.get_notified")}
+							</Button>
+							<Button
+								variant="secondary"
+								size="icon"
+								onClick={(e) => e.stopPropagation()}
+							>
+								<OutlineChat />
+							</Button>
+							<Button
+								variant="secondary"
+								size="icon"
+								className="xl:hidden"
+								onClick={(e) => e.stopPropagation()}
+							>
+								<OutlineBookmark />
+							</Button>
+						</>
 					)}
 				</div>
 			</div>
