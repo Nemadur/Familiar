@@ -129,15 +129,21 @@ export function BentoSkeleton({
 				className="relative"
 				style={{ height: containerHeight, minHeight: Math.max(240, cell) }}
 			>
-				{placed.map((p) => {
-					const top = p.y * (cell + gap);
-					const left = p.x * (cell + gap);
-					const width = Math.max(1, p.w * cell + (p.w - 1) * gap);
-					const height = Math.max(1, p.h * cell + (p.h - 1) * gap);
+				{placed.map((placedTile) => {
+					const top = placedTile.y * (cell + gap);
+					const left = placedTile.x * (cell + gap);
+					const width = Math.max(
+						1,
+						placedTile.w * cell + (placedTile.w - 1) * gap,
+					);
+					const height = Math.max(
+						1,
+						placedTile.h * cell + (placedTile.h - 1) * gap,
+					);
 
 					return (
 						<div
-							key={p.tile.id}
+							key={`skeleton-${placedTile.tile.id}`}
 							className="absolute bg-muted rounded-xl animate-pulse"
 							style={{
 								top: `${top}px`,

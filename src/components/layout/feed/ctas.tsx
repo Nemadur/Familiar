@@ -15,24 +15,31 @@ import { cn } from "@/lib/utils";
 export const ViewIndicator = memo(function ViewIndicator({
 	views,
 	shouldAnimate = true,
+	variant = "overlay",
 }: {
 	views: number;
 	shouldAnimate?: boolean;
+	variant?: "overlay" | "default";
 }) {
+	const isOverlay = variant === "overlay";
 	return (
 		<div className="flex items-center">
 			<Button
 				variant="ghost"
 				size={"icon"}
 				disabled
-				className="cursor-default text-white drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] hover:bg-transparent disabled:opacity-50 dark:text-white"
+				className={cn(
+					"cursor-default drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] hover:bg-transparent disabled:opacity-50",
+					isOverlay ? "text-white dark:text-white" : "text-primary",
+				)}
 				style={{ transition: "none" }}
 			>
 				<OutlineEye />
 			</Button>
 			<div
 				className={cn(
-					"text-sm text-white transition-opacity dark:text-white",
+					"text-sm transition-opacity",
+					isOverlay ? "text-white dark:text-white" : "text-primary",
 					views === 0
 						? "opacity-0"
 						: shouldAnimate
@@ -81,6 +88,7 @@ export const LikeButton = memo(function LikeButton({
 	onLike,
 	showLikesCount = true,
 	shouldAnimate,
+	variant = "overlay",
 }: {
 	postId: string;
 	likes: number;
@@ -88,6 +96,7 @@ export const LikeButton = memo(function LikeButton({
 	onLike: (e: MouseEvent) => void;
 	showLikesCount?: boolean;
 	shouldAnimate: boolean;
+	variant?: "overlay" | "default";
 }) {
 	const {
 		active: liked,
@@ -110,16 +119,22 @@ export const LikeButton = memo(function LikeButton({
 		[handleAction, onLike],
 	);
 
+	const isOverlay = variant === "overlay";
+
 	return (
 		<div className="flex items-center">
 			<Button
 				variant="ghost"
 				size={"icon"}
 				className={cn(
-					"hover:bg-white/12 hover:text-white dark:text-white",
+					isOverlay
+						? "hover:bg-white/12 hover:text-white dark:text-white"
+						: "hover:bg-primary/10 hover:text-primary",
 					liked
 						? "text-[#f4393e] drop-shadow-[0_1px_10px_#f4393e] hover:bg-[#f4393e]/12"
-						: "text-accent drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]",
+						: isOverlay
+							? "text-accent drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]"
+							: "text-primary",
 				)}
 				onClick={handleLikeClick}
 				style={{ transition: "none" }}
@@ -132,7 +147,9 @@ export const LikeButton = memo(function LikeButton({
 						"text-sm transition-opacity",
 						liked
 							? "text-[#f4393e] drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]"
-							: "text-white",
+							: isOverlay
+								? "text-white"
+								: "text-muted-foreground",
 						likesCount === 0
 							? "opacity-0"
 							: shouldAnimate
@@ -151,9 +168,11 @@ export const LikeButton = memo(function LikeButton({
 export const BookmarkButton = memo(function BookmarkButton({
 	isBookmarked,
 	onBookmark,
+	variant = "overlay",
 }: {
 	isBookmarked: boolean;
 	onBookmark: (e: MouseEvent) => void;
+	variant?: "overlay" | "default";
 }) {
 	const { active: bookmarked, handleAction } = useLocalAction({
 		initialActive: isBookmarked,
@@ -169,15 +188,21 @@ export const BookmarkButton = memo(function BookmarkButton({
 		[handleAction, onBookmark],
 	);
 
+	const isOverlay = variant === "overlay";
+
 	return (
 		<Button
 			variant="ghost"
 			size={"icon"}
 			className={cn(
-				"hover:bg-white/12 hover:text-white dark:text-white",
+				isOverlay
+					? "hover:bg-white/12 hover:text-white dark:text-white"
+					: "hover:bg-primary/10 hover:text-primary",
 				bookmarked
 					? "text-yellow-500 drop-shadow-[0_1px_10px_rgba(234,179,8,0.75)] hover:bg-yellow-500/12"
-					: "text-accent drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]",
+					: isOverlay
+						? "text-accent drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]"
+						: "text-muted-foreground",
 			)}
 			onClick={handleBookmarkClick}
 			style={{ transition: "none" }}
@@ -203,7 +228,9 @@ interface CTAsProps {
 	views?: number;
 	animateGate?: boolean;
 	showBookmarkButton?: boolean;
+	showLikeButton?: boolean;
 	rightElement?: React.ReactNode;
+	variant?: "overlay" | "default";
 }
 
 export const CTAs = memo(function CTAs({
@@ -217,7 +244,9 @@ export const CTAs = memo(function CTAs({
 	views,
 	animateGate = false,
 	showBookmarkButton = true,
+	showLikeButton = true,
 	rightElement,
+	variant = "overlay",
 }: CTAsProps) {
 	// Enable animations only when component is visible in viewport
 	const [shouldAnimate, setShouldAnimate] = useState(false);
@@ -252,21 +281,32 @@ export const CTAs = memo(function CTAs({
 			className="relative z-20 flex w-full items-center justify-between"
 		>
 			<div className="flex items-center gap-1 sm:gap-4">
-				<LikeButton
-					postId={postId}
-					likes={likes}
-					isLiked={isLiked}
-					onLike={onLike}
-					showLikesCount={showLikesCount}
-					shouldAnimate={shouldAnimate}
-				/>
+				{showLikeButton && (
+					<LikeButton
+						postId={postId}
+						likes={likes}
+						isLiked={isLiked}
+						onLike={onLike}
+						showLikesCount={showLikesCount}
+						shouldAnimate={shouldAnimate}
+						variant={variant}
+					/>
+				)}
 				{views !== undefined && (
-					<ViewIndicator views={views} shouldAnimate={shouldAnimate} />
+					<ViewIndicator
+						views={views}
+						shouldAnimate={shouldAnimate}
+						variant={variant}
+					/>
 				)}
 			</div>
 			<div>
 				{showBookmarkButton ? (
-					<BookmarkButton isBookmarked={isBookmarked} onBookmark={onBookmark} />
+					<BookmarkButton
+						isBookmarked={isBookmarked}
+						onBookmark={onBookmark}
+						variant={variant}
+					/>
 				) : (
 					rightElement
 				)}

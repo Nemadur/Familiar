@@ -8,6 +8,7 @@ import {
 } from "@/components/layout/profile/utils";
 import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
 import { useSuspenseUser } from "@/hooks/use-user";
+import type { User } from "@/types/user";
 
 export const Route = createFileRoute("/$username/$tab/folder/$folderSlug/")({
 	component: RouteComponent,
@@ -21,7 +22,22 @@ function RouteComponent() {
 		return <div>User not found</div>;
 	}
 
-	const { posts, categories, folders } = useSuspenseProfileContent(user.uuid);
+	return <FolderContent user={user} tab={tab} folderSlug={folderSlug} />;
+}
+
+function FolderContent({
+	user,
+	tab,
+	folderSlug,
+}: {
+	user: User;
+	tab: string;
+	folderSlug: string;
+}) {
+	const { posts, categories, folders } = useSuspenseProfileContent(
+		user.uuid,
+		"portfolio",
+	);
 
 	const portfolioPosts = useMemo(
 		() => [

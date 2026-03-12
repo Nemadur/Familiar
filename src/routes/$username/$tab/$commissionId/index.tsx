@@ -56,7 +56,10 @@ function RouteComponent() {
 }
 
 function PortfolioPostRoute({ username, tab, postId, user, navigate }: any) {
-	const { posts, categories } = useSuspenseProfileContent(user?.uuid || "");
+	const { posts, categories } = useSuspenseProfileContent(
+		user?.uuid || "",
+		tab as "portfolio" | "commissions" | "characters" | "saved" | "liked",
+	);
 
 	const portfolioPosts = useMemo(
 		() => [
@@ -117,6 +120,7 @@ function CommissionRoute({
 
 	return (
 		<CommissionModal
+			key={commissionId}
 			commissionId={commissionId}
 			item={itemToPass}
 			artist={user ?? undefined}

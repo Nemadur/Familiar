@@ -1,6 +1,6 @@
+import { EyeOff } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineEyeOff } from "@/components/icons/icons";
 import {
 	Reel,
 	ReelContent,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useBlurredImage } from "@/hooks/use-blurred-image";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { cn } from "@/lib/utils";
 import type { PostWithAuthor, Tile } from "@/types/post";
 import { CTAs } from "./ctas";
 import { Header } from "./header";
@@ -182,6 +183,7 @@ export const FeedItem = memo(function FeedItem({
 			isReposted: post.isReposted || false,
 			isBookmarked: post.isBookmarked || false,
 			showBookmarksCount: false,
+			showLikeButton: !shouldBlur,
 			onLike: handleLike,
 			onComment: handleComment,
 			onRepost: handleRepost,
@@ -190,12 +192,14 @@ export const FeedItem = memo(function FeedItem({
 		}),
 		[
 			p.id,
-			post,
+			post.likeCount,
+			post.isLiked,
 			handleLike,
 			handleComment,
 			handleRepost,
 			handleBookmark,
 			_animateGate,
+			shouldBlur,
 		],
 	);
 
@@ -205,17 +209,26 @@ export const FeedItem = memo(function FeedItem({
 		<article
 			ref={articleRef}
 			key={p.id}
-			className="group absolute cursor-pointer overflow-hidden rounded-3xl bg-neutral-100 ring-1 ring-ring/30 transition-opacity duration-300 ease-out dark:bg-neutral-900"
-			onClick={() => handlePostClick(p.id)}
+			className={cn(
+				"group absolute overflow-hidden rounded-3xl bg-neutral-100 ring-1 ring-ring/30 transition-opacity duration-300 ease-out dark:bg-neutral-900",
+				!shouldBlur && "cursor-pointer",
+			)}
+			onClick={() => {
+				if (!shouldBlur) {
+					handlePostClick(p.id);
+				}
+			}}
 			onMouseEnter={handleMouseEnter}
 			onMouseLeave={handleMouseLeave}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
-					handlePostClick(p.id);
+					if (!shouldBlur) {
+						handlePostClick(p.id);
+					}
 				}
 			}}
-			aria-label={`View post by ${post.author.displayName}`}
+			aria-label={`View post by ${post.author.display_name}`}
 			style={articleStyle}
 		>
 			{/* Header with User, Date and Views */}
@@ -242,7 +255,7 @@ export const FeedItem = memo(function FeedItem({
 
 						{/* Sensitive Content Overlay */}
 						<div className="absolute inset-0 z-10 flex flex-col justify-center bg-black/60 p-4 text-center backdrop-blur-sm">
-							<OutlineEyeOff className="text-white mb-4 mx-auto" size={32} />
+							<EyeOff className="text-white mb-4 mx-auto" size={32} />
 							<h4 className="mb-1 font-bold text-white text-xl">
 								{t("components.profile.commissions.card.sensitive_content")}
 							</h4>
@@ -258,7 +271,7 @@ export const FeedItem = memo(function FeedItem({
 
 							<Button
 								size={"sm"}
-								className="border-none w-fit mx-auto bg-background hover:bg-background/90 text-foreground"
+								className="border-none w-fit mx-auto bg-white hover:bg-white/90 text-black"
 								onClick={(e) => {
 									e.stopPropagation();
 									setIsContentRevealed(true);
@@ -274,7 +287,7 @@ export const FeedItem = memo(function FeedItem({
 						data={reelItems}
 						index={currentImageIndex}
 						onIndexChange={setCurrentImageIndex}
-						playing={isPlaying}
+						playing={false}
 						onPlayingChange={setIsPlaying}
 						autoPlay={false}
 						muted={true}
@@ -315,7 +328,7 @@ export const FeedItem = memo(function FeedItem({
 												setIsContentRevealed(false);
 											}}
 										>
-											<OutlineEyeOff className="size-4" />
+											<EyeOff className="size-4" />
 										</Button>
 									</TooltipTrigger>
 									<TooltipContent side={"left"}>
@@ -331,12 +344,13 @@ export const FeedItem = memo(function FeedItem({
 			{/* Actions row */}
 			<div className="absolute inset-x-0 bottom-0 z-20 flex flex-col gap-2 p-2 sm:p-3">
 				{/* Post preview: bottom-anchored, max 3 lines */}
-				{post?.text && (
+				{post?.title && !shouldBlur && (
 					<div
 						className="w-full transform-gpu transition-all duration-300 ease-out will-change-[opacity,transform,filter]"
 						style={{
-							opacity: isHovered ? 1 : 0,
-							transform: isHovered ? "translateY(0)" : "translateY(8px)",
+							opacity: isHovered || isLgOrLower ? 1 : 0,
+							transform:
+								isHovered || isLgOrLower ? "translateY(0)" : "translateY(8px)",
 						}}
 					>
 						{/* 3 lines */}
@@ -344,11 +358,11 @@ export const FeedItem = memo(function FeedItem({
 							<div
 								className="transition-all duration-300 ease-out will-change-[filter]"
 								style={{
-									filter: isHovered ? "blur(0px)" : "blur(8px)",
+									filter: isHovered || isLgOrLower ? "blur(0px)" : "blur(8px)",
 								}}
 							>
-								<p className="line-clamp-3 text-left text-white text-xs leading-5 [-webkit-box-orient:vertical] [-webkit-line-clamp:3] [display:-webkit-box]">
-									{post.text}
+								<p className="line-clamp-3 text-left text-white text-xs leading-5 [-webkit-box-orient:vertical] [-webkit-line-clamp:3] [display:-webkit-box] font-semibold drop-shadow-md">
+									{post.title}
 								</p>
 							</div>
 						</div>
@@ -357,23 +371,7 @@ export const FeedItem = memo(function FeedItem({
 
 				{/* CTAs */}
 				<div className="pointer-events-auto">
-					{variant === "portfolio" ? (
-						<CTAs
-							{...ctaProps}
-							onComment={() => {}}
-							onRepost={() => {}}
-							isCommented={false}
-							isReposted={false}
-							comments={0}
-							reposts={0}
-							showCommentsCount={false}
-							showRepostsCount={false}
-							showCommentButton={false}
-							showRepostButton={false}
-						/>
-					) : (
-						<CTAs {...ctaProps} />
-					)}
+					<CTAs {...ctaProps} />
 				</div>
 			</div>
 		</article>

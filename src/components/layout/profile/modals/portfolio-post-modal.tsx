@@ -1,35 +1,29 @@
 import { ScrollShadow } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
-import {
-	ArrowUpRight,
-	Check,
-	ChevronDown,
-	ChevronUp,
-	ShieldAlert,
-} from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
 import {
 	OutlineArrowRight,
 	OutlineCheckmarkSeal,
 	OutlineChevronDown,
-	OutlineChevronUp,
 	OutlineStar,
 	SolidStar,
 } from "@/components/icons/icons";
 import { CTAs } from "@/components/layout/feed/ctas";
+import UserAvatar from "@/components/layout/profile/avatar";
 import { ProfileBadge } from "@/components/layout/profile/badge";
+import { AnimateChangeInHeight } from "@/components/ui/animate-change-in-height";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { getAllOrders } from "@/data/orders";
 import { getPostDetails } from "@/data/posts";
+import { cn } from "@/lib/utils";
 import type { PostWithAuthor } from "@/types/post";
+import type { User } from "@/types/user";
+import { EmptyPage } from "../../empty-page";
 import { UniversalModalLayout } from "./universal-modal-layout";
 
 interface PortfolioPostModalProps {
@@ -43,6 +37,7 @@ export function PortfolioPostModal({
 	open,
 	onOpenChange,
 }: PortfolioPostModalProps) {
+	const { t } = useTranslation();
 	const { data: orders } = useQuery({
 		queryKey: ["orders"],
 		queryFn: () => getAllOrders(),
@@ -61,21 +56,24 @@ export function PortfolioPostModal({
 	const rating = review?.rating || 0;
 	const comment = review?.comment;
 	const highlights = review?.highlights || [
-		"On time delivery",
-		"Very responsive",
-		"Proactive updates",
+		t("components.profile.commissions.post_modal.default_highlights.delivery"),
+		t(
+			"components.profile.commissions.post_modal.default_highlights.responsive",
+		),
+		t("components.profile.commissions.post_modal.default_highlights.updates"),
 	];
 
 	const linkedCharacters =
 		postDetails?.linkedCharacters || post.linkedCharacters || [];
 
 	const [isReviewOpen, setIsReviewOpen] = useState(true);
+	const [isWarningOpen, setIsWarningOpen] = useState(true);
 
 	return (
 		<UniversalModalLayout
 			open={open}
 			onOpenChange={onOpenChange}
-			title="Post Details"
+			title={t("components.profile.commissions.post_modal.title")}
 			showBookmark={true}
 			isBookmarked={post.isBookmarked || false}
 			onBookmark={(e) => {
@@ -104,7 +102,7 @@ export function PortfolioPostModal({
 							))
 						) : (
 							<div className="flex h-[250px] w-full items-center justify-center p-8 text-muted-foreground">
-								No media available
+								<EmptyPage title="no media" />
 							</div>
 						)}
 					</ScrollShadow>
@@ -126,7 +124,7 @@ export function PortfolioPostModal({
 							))
 						) : (
 							<div className="flex min-h-[40vh] items-center justify-center p-8 text-muted-foreground">
-								No media available
+								{t("components.profile.commissions.post_modal.no_media")}
 							</div>
 						)}
 					</div>
@@ -137,7 +135,7 @@ export function PortfolioPostModal({
 					<div className="flex-1 space-y-6 p-6">
 						{/* Author Info */}
 						<div className="flex items-center gap-3">
-							<Avatar className="h-10 w-10 border">
+							<Avatar>
 								<AvatarImage src={post.author.media.avatar || undefined} />
 								<AvatarFallback>{post.author.display_name}</AvatarFallback>
 							</Avatar>
@@ -159,89 +157,131 @@ export function PortfolioPostModal({
 							<h1 className="font-bold text-2xl leading-tight">{post.title}</h1>
 
 							<div className="flex flex-col gap-2">
-								<CTAs
-									postId={post.id}
-									likes={post.likeCount || 0}
-									isLiked={post.isLiked || false}
-									isBookmarked={post.isBookmarked || false}
-									onLike={(e) => {
-										e.stopPropagation();
-									}}
-									onBookmark={(e) => {
-										e.stopPropagation();
-									}}
-									views={post.viewCount || 0}
-									showBookmarksCount={false}
-									animateGate
-									showBookmarkButton={false}
-									rightElement={
-										<span className="text-xs text-muted-foreground">
-											{new Date(post.createdAt).toLocaleDateString(undefined, {
-												month: "short",
-												day: "numeric",
-												year: "numeric",
-											})}
-										</span>
-									}
-								/>
+								{/* Description */}
+								{post.description && (
+									<div className="text-muted-foreground leading-relaxed text-sm">
+										<MarkdownDisplay content={post.description} />
+									</div>
+								)}
 							</div>
 						</div>
 
 						{/* Content Warnings */}
-						{post.contentWarnings && post.contentWarnings.length > 0 && (
-							<div className="rounded-2xl border border-yellow-900/20 bg-yellow-950/10 p-4">
-								<div className="flex items-center gap-2 mb-2">
-									<ShieldAlert className="size-5 text-yellow-500" />
-									<span className="text-sm text-yellow-500">
-										Content Warning
-									</span>
-								</div>
-								<div className="flex flex-wrap gap-2 mb-2">
-									{post.contentWarnings.map((cw) => (
-										<Badge
-											key={cw}
-											className=" bg-yellow-900/20 text-yellow-500"
-										>
-											{cw}
-										</Badge>
-									))}
-								</div>
-								<p className="text-xs text-yellow-400/50">
-									This artwork contains content that some viewers may find
-									sensitive
-								</p>
+						{/* {post.contentWarnings && post.contentWarnings.length > 0 && (
+							<div className="rounded-2xl text-yellow-950 dark:text-yellow-500 border border-yellow-600/40 bg-yellow-50/12 dark:bg-yellow-950/12 p-2">
+								<button
+									type="button"
+									className="flex w-full items-center justify-between cursor-pointer select-none"
+									onClick={() => setIsWarningOpen(!isWarningOpen)}
+								>
+									<div className="flex items-center gap-2">
+										<ShieldAlert className="size-5" />
+										<span className="text-sm">
+											{t(
+												"components.profile.commissions.post_modal.content_warning",
+											)}
+										</span>
+									</div>
+									<div
+										className={cn(
+											buttonVariants({ variant: "ghost", size: "icon-sm" }),
+											"text-yellow-950 dark:text-yellow-500 hover:bg-yellow-200/50 dark:hover:bg-yellow-900/50 pointer-events-none rounded-lg",
+										)}
+									>
+										<OutlineChevronDown
+											className={cn(
+												"transition-transform duration-200",
+												isWarningOpen && "rotate-180",
+											)}
+										/>
+									</div>
+								</button>
+								<AnimateChangeInHeight>
+									{isWarningOpen && (
+										<div className="pt-4 space-y-2">
+											<div className="flex flex-wrap gap-2">
+												{post.contentWarnings.map((cw) => (
+													<Badge
+														key={cw}
+														className="bg-yellow-200 text-yellow-800 dark:bg-yellow-500/12 dark:text-yellow-500"
+													>
+														{cw}
+													</Badge>
+												))}
+											</div>
+											<p className="text-xs text-yellow-800/50 dark:text-yellow-400/50">
+												{t(
+													"components.profile.commissions.post_modal.sensitive_content_desc",
+												)}
+											</p>
+										</div>
+									)}
+								</AnimateChangeInHeight>
 							</div>
-						)}
+						)} */}
 
 						{/* Commissioned Badge / Review */}
 						{isCommissioned && (
-							<div className="rounded-2xl bg-border/30 p-4 space-y-4">
-								<div className="flex items-center gap-2 text-emerald-500">
-									<OutlineCheckmarkSeal size={20} />
-									<span className="text-sm">Commissioned by client</span>
-								</div>
+							<div className="rounded-2xl bg-primary-foreground border border-border p-2">
+								{review ? (
+									<button
+										type="button"
+										className="flex w-full items-center justify-between cursor-pointer select-none"
+										onClick={() => setIsReviewOpen(!isReviewOpen)}
+									>
+										<div className="flex items-center gap-2">
+											<OutlineCheckmarkSeal size={20} />
+											<span className="text-sm">
+												{t(
+													"components.profile.commissions.post_modal.commissioned_by",
+												)}
+											</span>
+										</div>
+										<div
+											className={cn(
+												buttonVariants({ variant: "ghost", size: "icon-sm" }),
+												"pointer-events-none rounded-lg",
+											)}
+										>
+											<OutlineChevronDown
+												className={cn(
+													"transition-transform duration-200",
+													isReviewOpen && "rotate-180",
+												)}
+											/>
+										</div>
+									</button>
+								) : (
+									<div className="flex items-center justify-between">
+										<div className="flex items-center gap-2">
+											<OutlineCheckmarkSeal size={20} />
+											<span className="text-sm">
+												{t(
+													"components.profile.commissions.post_modal.commissioned_by",
+												)}
+											</span>
+										</div>
+									</div>
+								)}
 
 								{review && (
-									<Collapsible
-										open={isReviewOpen}
-										onOpenChange={setIsReviewOpen}
-									>
-										<div className="flex items-center justify-between">
-											<div className="space-y-1">
-												<div className="flex items-center gap-3">
+									<AnimateChangeInHeight>
+										{isReviewOpen && (
+											<div className="pt-1">
+												<div className="flex items-center gap-3 mb-1">
 													<div className="flex gap-0.5">
 														{[1, 2, 3, 4, 5].map((i) =>
 															i <= rating ? (
 																<SolidStar
 																	key={i}
 																	size={16}
-																	className="text-amber-500"
+																	className="text-amber-600 dark:text-amber-200"
 																/>
 															) : (
 																<OutlineStar
 																	key={i}
 																	size={16}
-																	className="text-muted-foreground/40"
+																	className="text-muted-foreground/30"
 																/>
 															),
 														)}
@@ -256,31 +296,19 @@ export function PortfolioPostModal({
 														)}
 													</span>
 												</div>
-												{/* TODO: add title */}
+
 												{comment && (
-													<p className="text-sm text-foreground/90 leading-relaxed">
+													<p className="text-sm text-emerald-950 dark:text-emerald-50 leading-relaxed">
 														{comment}
 													</p>
 												)}
-											</div>
-											{highlights && highlights.length > 0 && (
-												<CollapsibleTrigger asChild>
-													<Button variant="ghost" size="icon">
-														{isReviewOpen ? (
-															<OutlineChevronUp className="text-muted-foreground" />
-														) : (
-															<OutlineChevronDown className="text-muted-foreground" />
-														)}
-													</Button>
-												</CollapsibleTrigger>
-											)}
-										</div>
-										{highlights && highlights.length > 0 && (
-											<CollapsibleContent>
-												<div className="space-y-4 pt-1">
+
+												{highlights && highlights.length > 0 && (
 													<div className="space-y-2">
 														<span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-															Highlights
+															{t(
+																"components.profile.commissions.post_modal.highlights",
+															)}
 														</span>
 														<div className="flex flex-wrap gap-2">
 															{highlights.map((tag) => (
@@ -294,10 +322,10 @@ export function PortfolioPostModal({
 															))}
 														</div>
 													</div>
-												</div>
-											</CollapsibleContent>
+												)}
+											</div>
 										)}
-									</Collapsible>
+									</AnimateChangeInHeight>
 								)}
 							</div>
 						)}
@@ -306,36 +334,42 @@ export function PortfolioPostModal({
 						{linkedCharacters && linkedCharacters.length > 0 && (
 							<div className="space-y-3">
 								<h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-									Featured
+									{t("components.profile.commissions.post_modal.featured")}
 								</h4>
-								<div className="flex items-center justify-between rounded-xl border bg-card/50 p-3 pr-4 hover:bg-accent/50 transition-colors cursor-pointer group">
-									<div className="flex items-center gap-3">
-										<Avatar className="h-10 w-10 border bg-background">
-											<AvatarImage
-												src={linkedCharacters[0].avatarUrl}
-												className="object-cover"
-											/>
-											<AvatarFallback>
-												{linkedCharacters[0].name[0]}
-											</AvatarFallback>
-										</Avatar>
-										<div className="flex flex-col">
-											<span className="font-bold text-sm group-hover:text-primary transition-colors">
-												{linkedCharacters[0].name}
-											</span>
-											<span className="text-xs text-muted-foreground">
-												Character
-											</span>
+								<div className="grid gap-2">
+									{linkedCharacters.map((character) => (
+										<div
+											key={character.id}
+											className="flex items-center justify-between rounded-full border bg-card/50 p-1 hover:bg-accent/50 transition-colors cursor-pointer group"
+										>
+											<div className="flex items-center gap-3">
+												<UserAvatar
+													user={
+														{
+															display_name: character.name,
+															media: { avatar: character.avatarUrl },
+															accent_color: character.accent_color,
+														} as User
+													}
+												/>
+												<div className="flex flex-col">
+													<span className="font-bold text-sm group-hover:text-primary transition-colors">
+														{character.name}
+													</span>
+													<span className="text-xs text-muted-foreground">
+														{t(
+															"components.profile.commissions.post_modal.character",
+														)}
+													</span>
+												</div>
+											</div>
+											<Button variant="secondary">
+												{t(
+													"components.profile.commissions.post_modal.view_in_gallery",
+												)}
+											</Button>
 										</div>
-									</div>
-									<Button
-										variant="secondary"
-										size="sm"
-										className="gap-1.5 text-xs font-medium h-8 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white border border-zinc-700/50 rounded-full px-4"
-									>
-										View in gallery
-										<ArrowUpRight className="h-3.5 w-3.5" />
-									</Button>
+									))}
 								</div>
 							</div>
 						)}
@@ -343,35 +377,95 @@ export function PortfolioPostModal({
 						{/* Commission CTA */}
 						<Button
 							size={"xl"}
-							className="w-full justify-between bg-blue-500/12 text-blue-500 hover:bg-blue-500/20 hover:text-blue-400 group"
+							className="w-full border border-blue-600/30 justify-between bg-blue-100/12 dark:bg-blue-950/12 text-blue-500 hover:bg-blue-100/20 hover:dark:bg-blue-950/20 hover:text-blue-400 group"
 						>
-							Commission me for something similar
+							{t(
+								"components.profile.commissions.post_modal.commission_similar",
+							)}
 							<OutlineArrowRight className="transition-transform group-hover:translate-x-1" />
 						</Button>
 
-						{/* Description / Bio Content */}
-						{post.description && (
-							<div className="text-muted-foreground leading-relaxed text-sm">
-								<MarkdownDisplay content={post.description} />
-							</div>
-						)}
-
 						{/* Tags */}
-						<div className="flex flex-wrap gap-2 pt-2">
-							{post.tags && post.tags.length > 0 ? (
-								post.tags.map((tag) => (
-									<Badge
-										key={tag}
-										variant="secondary"
-										className="rounded-full px-3 py-1.5 text-xs font-medium bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground"
-									>
-										{tag}
-									</Badge>
-								))
-							) : (
-								<p>No tags</p>
-							)}
+						<div className="flex flex-col gap-2 pt-2">
+							<div className="space-y-1">
+								<p className="uppercase text-xs text-muted-foreground">
+									{t("components.profile.commissions.post_modal.tags_label")}
+								</p>
+								<div className="flex flex-wrap gap-2">
+									{post.tags && post.tags.length > 0 ? (
+										post.tags.map((tag) => (
+											<Badge
+												key={tag}
+												variant="secondary"
+												className="rounded-full px-3 py-1.5 text-xs font-medium bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground"
+											>
+												{tag}
+											</Badge>
+										))
+									) : (
+										<p>
+											{t("components.profile.commissions.post_modal.no_tags")}
+										</p>
+									)}
+								</div>
+							</div>
+							{/* CW tags */}
+							<div className="space-y-1">
+								<p className="uppercase text-xs text-muted-foreground">
+									{t(
+										"components.profile.commissions.post_modal.content_warnings_label",
+									)}
+								</p>
+								<div className="flex flex-wrap gap-2">
+									{post.contentWarnings && post.contentWarnings.length > 0 ? (
+										post.contentWarnings.map((tag) => (
+											<Badge
+												key={tag}
+												variant="destructive"
+												className="px-3 py-1.5 bg-danger/50 hover:bg-danger/70 text-danger-foreground"
+											>
+												{tag}
+											</Badge>
+										))
+									) : (
+										<p>
+											{t(
+												"components.profile.commissions.post_modal.no_cw_tags",
+											)}
+										</p>
+									)}
+								</div>
+							</div>
 						</div>
+					</div>
+
+					<div className="sticky bottom-0 z-20 bg-background border-t p-4">
+						<CTAs
+							postId={post.id}
+							likes={post.likeCount || 0}
+							isLiked={post.isLiked || false}
+							isBookmarked={post.isBookmarked || false}
+							onLike={(e) => {
+								e.stopPropagation();
+							}}
+							onBookmark={(e) => {
+								e.stopPropagation();
+							}}
+							views={post.viewCount || 0}
+							showBookmarksCount={false}
+							animateGate
+							showBookmarkButton={false}
+							variant="default"
+							rightElement={
+								<span className="text-xs text-muted-foreground">
+									{new Date(post.createdAt).toLocaleDateString(undefined, {
+										month: "short",
+										day: "numeric",
+										year: "numeric",
+									})}
+								</span>
+							}
+						/>
 					</div>
 				</div>
 			}

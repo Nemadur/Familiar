@@ -290,7 +290,15 @@ export const getUsers = createServerFn({ method: "GET" }).handler(async () => {
  */
 export const ensureUserProfile = createServerFn({ method: "POST" })
 	.inputValidator(
-		(data: { uuid: string; username: string; display_name: string }) => data,
+		(data: {
+			uuid: string;
+			username: string;
+			display_name: string;
+			bio?: string;
+			avatar_url?: string;
+			cover_url?: string;
+			socials?: { platform: string; url: string }[];
+		}) => data,
 	)
 	.handler(async ({ data }) => {
 		try {
@@ -303,7 +311,38 @@ export const ensureUserProfile = createServerFn({ method: "POST" })
 				.eq("user_id", data.uuid)
 				.single();
 
-			if (existing) return;
+			if (existing) {
+				// Update existing profile with new data if provided
+				if (data.bio || data.avatar_url || data.cover_url) {
+					await client
+						.schema("familiar")
+						.from("profiles")
+						.update({
+							bio: data.bio,
+							avatar_path: data.avatar_url, // Assuming schema uses avatar_path
+							cover_path: data.cover_url, // Assuming schema uses cover_path
+						})
+						.eq("user_id", data.uuid);
+				}
+
+				// Handle socials if provided (delete old, insert new for simplicity, or upsert)
+				if (data.socials && data.socials.length > 0) {
+					// First delete existing links for this user? Or just add?
+					// For registration, we assume no existing links, so just insert.
+					const linksToInsert = data.socials.map((s) => ({
+						user_id: data.uuid,
+						platform: s.platform,
+						url: s.url,
+						label: s.platform, // Use platform as label for now
+					}));
+
+					await client
+						.schema("familiar")
+						.from("user_links")
+						.insert(linksToInsert);
+				}
+				return;
+			}
 
 			// Create
 			const { error } = await client
@@ -313,11 +352,34 @@ export const ensureUserProfile = createServerFn({ method: "POST" })
 					user_id: data.uuid,
 					username: data.username,
 					display_name: data.display_name,
+					bio: data.bio,
+					avatar_path: data.avatar_url,
+					cover_path: data.cover_url,
 				});
 
 			if (error) {
 				console.error("Failed to create user profile:", error);
 				throw error;
+			}
+
+			// Insert socials
+			if (data.socials && data.socials.length > 0) {
+				const linksToInsert = data.socials.map((s) => ({
+					user_id: data.uuid,
+					platform: s.platform,
+					url: s.url,
+					label: s.platform,
+				}));
+
+				const { error: linksError } = await client
+					.schema("familiar")
+					.from("user_links")
+					.insert(linksToInsert);
+
+				if (linksError) {
+					console.error("Failed to create user links:", linksError);
+					// Don't throw here to avoid blocking registration if links fail
+				}
 			}
 		} catch (error) {
 			console.error("Error ensuring user profile:", error);

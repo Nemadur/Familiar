@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import * as React from "react";
+import { useState } from "react";
 import {
 	OutlineLogout,
 	OutlineReceipt,
@@ -17,8 +17,8 @@ import {
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -28,47 +28,6 @@ import { useAuth } from "@/providers/auth";
 import type { User } from "@/types/user";
 import UserAvatar from "./avatar";
 
-const UserMenuTrigger = React.forwardRef<
-	HTMLButtonElement,
-	React.ButtonHTMLAttributes<HTMLButtonElement> & {
-		user: User;
-		showInfo?: boolean;
-	}
->(({ user, showInfo, className, ...props }, ref) =>
-	showInfo ? (
-		<Button
-			ref={ref}
-			variant="ghost"
-			className={cn(
-				"flex items-center gap-2 p-2 pr-4 w-full justify-start rounded-xl h-auto hover:bg-secondary/80",
-				className,
-			)}
-			{...props}
-		>
-			<UserAvatar user={user} />
-			<div className="flex flex-col items-start text-left">
-				<span className="font-medium text-sm leading-none">
-					{user.display_name}
-				</span>
-				<span className="text-xs text-muted-foreground leading-none mt-1">
-					@{user.username}
-				</span>
-			</div>
-		</Button>
-	) : (
-		<Button
-			ref={ref}
-			variant="ghost"
-			size="icon"
-			className={className}
-			{...props}
-		>
-			<UserAvatar user={user} />
-		</Button>
-	),
-);
-UserMenuTrigger.displayName = "UserMenuTrigger";
-
 export default function UserDropDown({
 	user,
 	showInfo = false,
@@ -76,17 +35,174 @@ export default function UserDropDown({
 	user: User;
 	showInfo?: boolean;
 }) {
+	const { logout } = useAuth();
 	const isDesktop = useMediaQuery("(min-width: 768px)");
-	const [open, setOpen] = React.useState(false);
+	const [open, setOpen] = useState(false);
+
+	const TriggerButton = (
+		<Button
+			variant="ghost"
+			className={cn(
+				"flex items-center gap-2 rounded-xl hover:bg-secondary/80",
+				showInfo
+					? "w-full justify-start p-2 pr-4 h-auto"
+					: "h-10 w-10 rounded-full p-0 justify-center",
+			)}
+		>
+			<UserAvatar user={user} />
+			{showInfo && (
+				<div className="flex flex-col items-start text-left">
+					<span className="font-medium text-sm leading-none">
+						{user.display_name}
+					</span>
+					<span className="text-xs text-muted-foreground leading-none mt-1">
+						@{user.username}
+					</span>
+				</div>
+			)}
+		</Button>
+	);
+
+	const MenuItems = [
+		{
+			label: "Profile",
+			icon: <OutlineUser className="mr-2 h-4 w-4" />,
+			to: "/$username",
+			params: { username: user.username },
+		},
+		{
+			label: "Requests",
+			icon: <OutlineReceipt className="mr-2 h-4 w-4" />,
+			to: "/requests" as any,
+		},
+		{
+			label: "Orders",
+			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			to: "/orders" as any,
+		},
+		{
+			label: "Characters",
+			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			to: "/$username/$tab",
+			params: { username: user.username, tab: "characters" },
+		},
+	];
+
+	const SecondaryMenuItems = [
+		{
+			label: "Settings",
+			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			to: "/settings" as any,
+		},
+		{
+			label: "Help",
+			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			to: "https://help.familiar.art" as any,
+			target: "_blank",
+		},
+	];
+
+	const MenuItemsContent = (
+		<>
+			<div className="flex flex-col gap-1 p-1">
+				{MenuItems.map((item) => (
+					<Button
+						key={item.label}
+						variant="ghost"
+						className="w-full justify-start cursor-pointer h-9 px-2"
+						asChild
+					>
+						<Link
+							to={item.to}
+							params={item.params}
+							preload={false}
+							onClick={() => setOpen(false)}
+						>
+							{item.icon}
+							<span>{item.label}</span>
+						</Link>
+					</Button>
+				))}
+			</div>
+			<DropdownMenuSeparator />
+			<div className="flex flex-col gap-1 p-1">
+				{SecondaryMenuItems.map((item) => (
+					<Button
+						key={item.label}
+						variant="ghost"
+						className="w-full justify-start cursor-pointer h-9 px-2"
+						asChild
+					>
+						<Link
+							to={item.to}
+							target={item.target}
+							preload={false}
+							onClick={() => setOpen(false)}
+						>
+							{item.icon}
+							<span>{item.label}</span>
+						</Link>
+					</Button>
+				))}
+			</div>
+			<DropdownMenuSeparator />
+			<div className="p-1">
+				<Button
+					variant="destructive-ghost"
+					className="w-full justify-start cursor-pointer h-9 px-2"
+					onClick={() => {
+						logout();
+						setOpen(false);
+					}}
+				>
+					<OutlineLogout className="mr-2 h-4 w-4" />
+					<span>Logout</span>
+				</Button>
+			</div>
+		</>
+	);
 
 	if (isDesktop) {
 		return (
 			<DropdownMenu open={open} onOpenChange={setOpen}>
-				<DropdownMenuTrigger asChild>
-					<UserMenuTrigger user={user} showInfo={showInfo} />
-				</DropdownMenuTrigger>
-				<DropdownMenuContent className={"w-56"} align={"end"} forceMount>
-					<DropDownMenuItems user={user} />
+				<DropdownMenuTrigger asChild>{TriggerButton}</DropdownMenuTrigger>
+				<DropdownMenuContent className="w-56" align="end">
+					<DropdownMenuGroup>
+						{MenuItems.map((item) => (
+							<DropdownMenuItem key={item.label} asChild>
+								<Link
+									to={item.to}
+									params={item.params}
+									preload={false}
+									className="cursor-pointer w-full"
+								>
+									{item.icon}
+									{item.label}
+								</Link>
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuGroup>
+					<DropdownMenuSeparator />
+					<DropdownMenuGroup>
+						{SecondaryMenuItems.map((item) => (
+							<DropdownMenuItem key={item.label} asChild>
+								<Link
+									to={item.to}
+									target={item.target}
+									preload={false}
+									className="cursor-pointer w-full"
+								>
+									{item.icon}
+									{item.label}
+								</Link>
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuGroup>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem variant={"destructive"} onClick={() => logout()}>
+						<OutlineLogout />
+						Logout
+					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
 		);
@@ -94,151 +210,13 @@ export default function UserDropDown({
 
 	return (
 		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger asChild>
-				<UserMenuTrigger user={user} showInfo={showInfo} />
-			</DrawerTrigger>
+			<DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
 			<DrawerContent>
 				<DrawerHeader className="text-left">
 					<DrawerTitle>User Menu</DrawerTitle>
 				</DrawerHeader>
-				<div className="px-4 pb-4">
-					<DrawerMenuItems user={user} onSelect={() => setOpen(false)} />
-				</div>
+				<div className="pb-4">{MenuItemsContent}</div>
 			</DrawerContent>
 		</Drawer>
 	);
 }
-
-type MenuItem =
-	| {
-			type: "link";
-			label: string;
-			path: string;
-			icon: React.ReactNode;
-			callback?: () => Promise<void>;
-	  }
-	| {
-			type: "separator";
-	  };
-
-function useMenuItems(user: User) {
-	const { logout } = useAuth();
-
-	const MenuItems: MenuItem[] = [
-		{
-			type: "link",
-			label: "Profile",
-			path: `/${user.username}`,
-			icon: <OutlineUser />,
-		},
-		{
-			type: "link",
-			label: "Requests",
-			path: "/requests",
-			icon: <OutlineReceipt />,
-		},
-		{
-			type: "link",
-			label: "Orders",
-			path: "/orders",
-			icon: <OutlineSettings />,
-		},
-		{
-			type: "link",
-			label: "Characters",
-			path: `/${user.username}/characters`,
-			icon: <OutlineSettings />,
-		},
-		{ type: "separator" },
-		{
-			type: "link",
-			label: "Settings",
-			path: "/settings",
-			icon: <OutlineSettings />,
-		},
-		{
-			type: "link",
-			label: "Help",
-			path: "https://help.familiar.art",
-			icon: <OutlineSettings />,
-		},
-		{ type: "separator" },
-		{
-			type: "link",
-			label: "Logout",
-			path: "/logout",
-			icon: <OutlineLogout />,
-			callback: () => logout(),
-		},
-	];
-
-	return MenuItems;
-}
-
-const DropDownMenuItems = ({ user }: { user: User }) => {
-	const items = useMenuItems(user);
-	return (
-		<>
-			{items.map((item, index) => {
-				if (item.type === "separator") {
-					return <DropdownMenuSeparator key={`sep-${index}`} />;
-				}
-				return (
-					<DropdownMenuItem
-						key={item.label}
-						asChild
-						onClick={async () => {
-							if (!item.callback) return;
-							await item.callback();
-						}}
-					>
-						<Link to={item.path}>
-							{item.icon}
-							{item.label}
-						</Link>
-					</DropdownMenuItem>
-				);
-			})}
-		</>
-	);
-};
-
-const DrawerMenuItems = ({
-	user,
-	onSelect,
-}: {
-	user: User;
-	onSelect?: () => void;
-}) => {
-	const items = useMenuItems(user);
-	return (
-		<div className="flex flex-col gap-2">
-			{items.map((item, index) => {
-				if (item.type === "separator") {
-					return <div key={`sep-${index}`} className="h-px bg-border my-2" />;
-				}
-				return (
-					<Button
-						key={item.label}
-						variant="ghost"
-						className={cn(
-							"justify-start gap-2 h-12 text-base",
-							item.label === "Logout" &&
-								"text-destructive bg-destructive/12 hover:bg-destructive/20 hover:text-destructive",
-						)}
-						asChild
-						onClick={async () => {
-							if (item.callback) await item.callback();
-							onSelect?.();
-						}}
-					>
-						<Link to={item.path}>
-							{item.icon}
-							{item.label}
-						</Link>
-					</Button>
-				);
-			})}
-		</div>
-	);
-};

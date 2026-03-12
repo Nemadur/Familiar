@@ -132,18 +132,16 @@ export function CommissionModal({
 	);
 
 	// Update selected licenses when fetched data arrives
-	useEffect(() => {
-		if (itemData?.licenseOptions) {
-			setSelectedLicenses(
-				itemData.licenseOptions
-					.filter((l) => l.included === true)
-					.map((l) => l.id),
-			);
-		}
-	}, [itemData]);
-
-	if (!itemData && !isLoading) {
-		return null;
+	const [prevLicenseOptions, setPrevLicenseOptions] = useState(
+		itemData?.licenseOptions,
+	);
+	if (itemData?.licenseOptions !== prevLicenseOptions) {
+		setPrevLicenseOptions(itemData?.licenseOptions);
+		setSelectedLicenses(
+			itemData?.licenseOptions
+				?.filter((l) => l.included === true)
+				.map((l) => l.id) || [],
+		);
 	}
 
 	const artistName = userData?.display_name;
@@ -197,6 +195,10 @@ export function CommissionModal({
 	};
 
 	const isMobile = useIsMobile();
+
+	if (!itemData && !isLoading) {
+		return null;
+	}
 
 	return (
 		<>

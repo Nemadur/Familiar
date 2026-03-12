@@ -189,6 +189,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 					username: data.username,
 					display_name: data.display_name,
 				});
+
+				// Update profile with additional data
+				if (
+					data.avatar_url ||
+					data.cover_url ||
+					data.bio ||
+					(data.socials && data.socials.length > 0)
+				) {
+					try {
+						// Wait for user to be available (refreshSession should have set it or handled it)
+						const {
+							data: { user },
+						} = await supabase.auth.getUser();
+
+						if (user) {
+							await ensureUserProfile({
+								data: {
+									uuid: user.id,
+									username: data.username,
+									display_name: data.display_name,
+									bio: data.bio,
+									avatar_url: data.avatar_url,
+									cover_url: data.cover_url,
+									socials: data.socials,
+								},
+							});
+						}
+					} catch (e) {
+						console.error("Failed to update profile with extra details:", e);
+						// Don't throw, registration was successful
+					}
+				}
 			})();
 
 			toast.promise(promise, {

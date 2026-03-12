@@ -1,9 +1,33 @@
+import { createClient } from "@supabase/supabase-js";
 import { createServerFn } from "@tanstack/react-start";
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import {
+	supabase,
+	supabaseAdmin,
+	supabaseAnonKey,
+	supabaseUrl,
+} from "@/lib/supabase";
+import { slugify } from "@/lib/utils";
 import type { Folder } from "@/types/folder";
 
-// Helper to choose the right client (prefer admin if available for RLS bypass)
-const getClient = () => supabaseAdmin || supabase;
+// Helper to create an authenticated client if token is present, or fallback
+const getAuthenticatedClient = (token?: string) => {
+	// If we have admin, use it (bypasses RLS)
+	if (supabaseAdmin) return supabaseAdmin;
+
+	// If we have a user token, create a scoped client
+	if (token && supabaseUrl && supabaseAnonKey) {
+		return createClient(supabaseUrl, supabaseAnonKey, {
+			global: {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			},
+		});
+	}
+
+	// Fallback to anon client
+	return supabase;
+};
 
 export const getProfileContent = createServerFn({
 	method: "GET",
@@ -11,7 +35,8 @@ export const getProfileContent = createServerFn({
 	.inputValidator(
 		(data: {
 			userId: string;
-			type?: "commissions" | "portfolio" | "characters";
+			type?: "commissions" | "portfolio" | "characters" | "saved" | "liked";
+			token?: string;
 		}) => data,
 	)
 	.handler(async ({ data }) => {
@@ -26,18 +51,26 @@ export const getProfileContent = createServerFn({
 				};
 			}
 
-			const client = getClient();
+			const client = getAuthenticatedClient(data.token);
+			console.log(
+				`[getProfileContent] Admin available: ${!!supabaseAdmin}, Token provided: ${!!data.token}`,
+			);
 			const type = data.type;
 
 			// Fetch data in parallel based on type
-			const [listingsResult, postsResult, sonasResult, foldersResult] =
-				await Promise.all([
-					// 1. Listings (to group into categories)
-					!type || type === "commissions"
-						? client
-								.schema("familiar")
-								.from("commission_listings")
-								.select(`
+			const [
+				listingsResult,
+				postsResult,
+				sonasResult,
+				foldersResult,
+				simpleFoldersResult,
+			] = await Promise.all([
+				// 1. Listings (to group into categories)
+				type === "commissions"
+					? client
+							.schema("familiar")
+							.from("commission_listings")
+							.select(`
 							*,
 							media:commission_listing_media(
 								*,
@@ -49,47 +82,47 @@ export const getProfileContent = createServerFn({
 							),
 							category:commission_categories(*)
 						`)
-								.eq("artist_id", data.userId)
-								// Removed status filter as requested
-								.order("created_at", { ascending: false })
-						: Promise.resolve({ data: [] }),
+							.eq("artist_id", data.userId)
+							// Removed status filter as requested
+							.order("created_at", { ascending: false })
+					: Promise.resolve({ data: [] }),
 
-					// 2. Posts
-					!type || type === "portfolio"
-						? client
-								.schema("familiar")
-								.from("posts")
-								.select(`
+				// 2. Posts
+				type === "portfolio"
+					? client
+							.schema("familiar")
+							.from("posts")
+							.select(`
 							*,
 							media:post_media(
 								*,
 								asset:media_assets(*)
 							)
 						`)
-								.eq("artist_id", data.userId)
-								.order("created_at", { ascending: false })
-						: Promise.resolve({ data: [] }),
+							.eq("artist_id", data.userId)
+							.order("created_at", { ascending: false })
+					: Promise.resolve({ data: [] }),
 
-					// 3. Sonas (Characters)
-					!type || type === "characters"
-						? client
-								.schema("familiar")
-								.from("sonas")
-								.select(`
+				// 3. Sonas (Characters)
+				type === "characters"
+					? client
+							.schema("familiar")
+							.from("sonas")
+							.select(`
 							*,
 							avatar:media_assets!avatar_asset_id(*),
 							cover:media_assets!cover_asset_id(*)
 						`)
-								.eq("owner_id", data.userId)
-								.order("created_at", { ascending: false })
-						: Promise.resolve({ data: [] }),
+							.eq("owner_id", data.userId)
+							.order("created_at", { ascending: false })
+					: Promise.resolve({ data: [] }),
 
-					// 4. Folders
-					!type || type === "portfolio"
-						? client
-								.schema("familiar")
-								.from("folders")
-								.select(`
+				// 4. Folders
+				type === "portfolio"
+					? client
+							.schema("familiar")
+							.from("folders")
+							.select(`
 							*,
 							posts:folder_posts(
 								*,
@@ -102,15 +135,34 @@ export const getProfileContent = createServerFn({
 								)
 							)
 						`)
-								.eq("owner_id", data.userId)
-								.order("created_at", { ascending: false })
-						: Promise.resolve({ data: [] }),
-				]);
+							.eq("owner_id", data.userId)
+							.order("created_at", { ascending: false })
+					: Promise.resolve({ data: [], error: null }),
+
+				// 5. Simple Folders (Debug)
+				type === "portfolio"
+					? client
+							.schema("familiar")
+							.from("folders")
+							.select("*")
+							.eq("owner_id", data.userId)
+					: Promise.resolve({ data: [], error: null }),
+			]);
 
 			const listings = listingsResult.data || [];
 			const userPosts = postsResult.data || [];
 			const userCharacters = sonasResult.data || [];
-			const userFolders = foldersResult.data || [];
+			// 4. Folders
+			const userFolders =
+				foldersResult.data ||
+				(foldersResult.error
+					? (console.error(
+							"Error fetching folders with posts:",
+							foldersResult.error,
+						) as any) ||
+						simpleFoldersResult.data ||
+						[]
+					: []);
 
 			// Group listings by category
 			const categoryMap = new Map<string, any>();
@@ -129,7 +181,7 @@ export const getProfileContent = createServerFn({
 						id: cat.category_id,
 						title: cat.label,
 						sortOrder: cat.sort_order,
-						status: "open",
+						status: cat.status, // Use category status from DB
 						items: [],
 					});
 				}
@@ -181,7 +233,19 @@ export const getProfileContent = createServerFn({
 
 			const mappedCategories = Array.from(categoryMap.values())
 				.sort((a, b) => a.sortOrder - b.sortOrder)
-				.map(({ sortOrder, ...cat }) => cat); // Remove internal sortOrder
+				.map(({ sortOrder, ...cat }) => {
+					// Calculate status from items if not present on category
+					// If category has no status in DB, derive it from items
+					if (!cat.status) {
+						const hasOpen = cat.items.some((i: any) => i.status === "open");
+						const hasWaitlist = cat.items.some(
+							(i: any) => i.status === "waitlist",
+						);
+						// Priority: Open > Waitlist > Closed
+						cat.status = hasOpen ? "open" : hasWaitlist ? "waitlist" : "closed";
+					}
+					return cat;
+				});
 
 			// Map posts
 			const mappedPosts = userPosts.map((post: any) => ({
@@ -242,24 +306,19 @@ export const getProfileContent = createServerFn({
 					.filter(Boolean)
 					.slice(0, 4); // limit 4
 
+				// Calculate subfolders count
+				const subfoldersCount = userFolders.filter(
+					(f: any) => f.parent_id === folder.folder_id,
+				).length;
+
 				return {
 					id: folder.folder_id,
 					parentId: folder.parent_id,
-					slug: folder.slug || folder.folder_id, // folders might not have slug? Schema has 'name', no 'slug'?
-					// Schema `folders`: folder_id, owner_id, parent_id, name, description, sort_order, is_archived, visibility, share_token.
-					// NO SLUG.
-					// But `src/data/folders.ts` interface has `slug`.
-					// Maybe it uses `folder_id` as slug or name?
+					slug: folder.slug || slugify(folder.name || ""),
 					name: folder.name,
-					count: folder.posts?.length || 0, // This is count of posts fetched, not total count.
-					// To get total count, we'd need aggregation.
-					// But original code: `with: { posts: { limit: 4 } }`.
-					// So original count was also just length of fetched (max 4)?
-					// No, Drizzle `findMany` returns array.
-					// If we want real count, we need separate query or aggregation.
-					// For now, use length.
+					count: folder.posts?.length || 0,
 					images: images,
-					hasSubfolders: false, // Drizzle didn't fetch subfolders
+					hasSubfolders: subfoldersCount > 0,
 				};
 			});
 
@@ -268,6 +327,13 @@ export const getProfileContent = createServerFn({
 				posts: mappedPosts,
 				characters: mappedCharacters,
 				folders: mappedFolders,
+				_debug: {
+					adminAvailable: !!supabaseAdmin,
+					simpleFolders: simpleFoldersResult.data,
+					simpleFoldersError: simpleFoldersResult.error,
+					foldersError: foldersResult.error,
+					userId: data.userId,
+				},
 			};
 		} catch (error) {
 			console.error("Error fetching profile content:", error);

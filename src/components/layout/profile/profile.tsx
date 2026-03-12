@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -16,7 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useBento } from "@/hooks/use-bento";
 import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
+import { type Tile, toPixels } from "@/lib/bento";
 import { userLocalTime } from "@/lib/profile";
 import { useAuth } from "@/providers/auth";
 import type { User } from "@/types/user";
@@ -95,6 +97,145 @@ export function UserInfoSkeleton() {
 	);
 }
 
+export function CommissionsContentSkeleton() {
+	return (
+		<div className="space-y-4">
+			<Skeleton className="h-6 w-32 rounded-md" />
+			<div className="grid gap-4">
+				{[1, 2].map((i) => (
+					<div
+						key={`skeleton-feed-${i}`}
+						className="flex flex-col rounded-3xl border border-border/50 p-2 sm:flex-row h-[320px] sm:h-[200px]"
+					>
+						<Skeleton className="h-[180px] sm:h-full w-full sm:w-2/5 rounded-2xl" />
+						<div className="flex-1 p-3 sm:pl-6 flex flex-col justify-between gap-4">
+							<div className="space-y-3">
+								<div className="flex justify-between">
+									<Skeleton className="h-6 w-3/4" />
+									<Skeleton className="size-9 rounded-full" />
+								</div>
+								<div className="space-y-2">
+									<Skeleton className="h-4 w-1/4" />
+									<Skeleton className="h-4 w-full" />
+									<Skeleton className="h-4 w-2/3" />
+								</div>
+							</div>
+							<div className="flex gap-2">
+								<Skeleton className="h-9 flex-1 rounded-full" />
+								<Skeleton className="size-9 rounded-full" />
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+export function PortfolioContentSkeleton() {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [width, setWidth] = useState(0);
+
+	// Generate deterministic mock tiles for skeleton
+	const tiles = useMemo<Tile[]>(() => {
+		return Array.from({ length: 5 }).map((_, i) => {
+			// Pattern: 2x2, 1x1, 1x1, 1x2, 2x1, ...
+			// 0: 2x2 (Big feature)
+			// 1,2: 1x1
+			// 3: 1x2 (Tall)
+			// 4: 2x1 (Wide)
+			// 5-11: Mix
+			let widthUnit: 1 | 2 = 1;
+			let heightUnit: 1 | 2 = 1;
+
+			if (i === 0) {
+				widthUnit = 2;
+				heightUnit = 2;
+			} else if (i === 4) {
+				widthUnit = 2;
+			}
+
+			return {
+				id: `skeleton-${i}`,
+				widthUnit,
+				heightUnit,
+				cover: {
+					path: "",
+					width: 100,
+					height: 100,
+					alt: "",
+				},
+			};
+		});
+	}, []);
+
+	const { cols, placed } = useBento(tiles);
+
+	useEffect(() => {
+		if (!containerRef.current) return;
+		const observer = new ResizeObserver((entries) => {
+			if (entries[0].contentRect.width > 0) {
+				setWidth(entries[0].contentRect.width);
+			}
+		});
+		observer.observe(containerRef.current);
+		return () => observer.disconnect();
+	}, []);
+
+	const gap = 16;
+	const cell = width ? (width - (cols - 1) * gap) / cols : 0;
+	const { nodes, containerHeight } = toPixels(placed, cell, gap);
+
+	return (
+		<div className="space-y-6">
+			<div className="flex flex-col gap-2 md:flex-row md:items-center pb-3">
+				<div className="flex gap-2 overflow-hidden">
+					<Skeleton className="h-9 w-20 rounded-full" />
+					<Skeleton className="h-9 w-24 rounded-full" />
+					<Skeleton className="h-9 w-16 rounded-full" />
+				</div>
+				<div className="flex w-full items-center gap-2 md:w-auto md:ml-auto">
+					<Skeleton className="h-9 w-40 rounded-full" />
+					<Skeleton className="size-9 rounded-full" />
+				</div>
+			</div>
+
+			<div
+				ref={containerRef}
+				className="relative w-full transition-all duration-300 ease-in-out"
+				style={{ height: containerHeight, opacity: width === 0 ? 0 : 1 }}
+			>
+				{nodes.map((node) => (
+					<Skeleton
+						key={node.key}
+						className="absolute rounded-3xl"
+						style={node.style}
+					/>
+				))}
+			</div>
+		</div>
+	);
+}
+
+export function CharactersContentSkeleton() {
+	return (
+		<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+			{Array.from({ length: 10 }).map((_, i) => (
+				<div key={i} className="flex flex-col gap-2">
+					<Skeleton className="aspect-[3/4] w-full rounded-xl" />
+					<Skeleton className="h-4 w-3/4" />
+				</div>
+			))}
+		</div>
+	);
+}
+
+export function TabContentSkeleton({ tab }: { tab?: string }) {
+	if (tab === "portfolio") return <PortfolioContentSkeleton />;
+	if (tab === "characters") return <CharactersContentSkeleton />;
+	return <CommissionsContentSkeleton />;
+}
+
 export function UserFeedsSkeleton() {
 	return (
 		<div className="flex flex-col w-full">
@@ -104,43 +245,14 @@ export function UserFeedsSkeleton() {
 			</div>
 
 			{/* Content Skeletons */}
-			<div className="space-y-4">
-				<Skeleton className="h-6 w-32 rounded-md" />
-				<div className="grid gap-4">
-					{[1, 2].map((i) => (
-						<div
-							key={i}
-							className="flex flex-col rounded-3xl border border-border/50 p-2 sm:flex-row h-[320px] sm:h-[200px]"
-						>
-							<Skeleton className="h-[180px] sm:h-full w-full sm:w-2/5 rounded-2xl" />
-							<div className="flex-1 p-3 sm:pl-6 flex flex-col justify-between gap-4">
-								<div className="space-y-3">
-									<div className="flex justify-between">
-										<Skeleton className="h-6 w-3/4" />
-										<Skeleton className="size-9 rounded-full" />
-									</div>
-									<div className="space-y-2">
-										<Skeleton className="h-4 w-1/4" />
-										<Skeleton className="h-4 w-full" />
-										<Skeleton className="h-4 w-2/3" />
-									</div>
-								</div>
-								<div className="flex gap-2">
-									<Skeleton className="h-9 flex-1 rounded-full" />
-									<Skeleton className="size-9 rounded-full" />
-								</div>
-							</div>
-						</div>
-					))}
-				</div>
-			</div>
+			<CommissionsContentSkeleton />
 		</div>
 	);
 }
 
 export function UserProfileSkeleton() {
 	return (
-		<>
+		<div className={"md:px-6"}>
 			<ProfileCoverSkeleton />
 			<div className={"container mx-auto flex flex-col flex-1 md:px-4"}>
 				<div
@@ -154,7 +266,7 @@ export function UserProfileSkeleton() {
 					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
 
@@ -176,15 +288,15 @@ export default function UserProfile({
 	if (pending) return <UserProfileSkeleton />;
 
 	return (
-		<div className={"md:px-6"}>
+		<div className={"md:px-6 h-full flex-1"}>
 			<ProfileCover user={user} />
-			<div className={"container mx-auto flex flex-col flex-1 md:px-4"}>
-				<div
-					className={
-						"relative flex-1 h-full"
-					}
-				>
-					<div className={"max-sm:px-5 grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"}>
+			<div className={"flex-1 min-h-0 md:px-4"}>
+				<div className={"flex-1 h-full"}>
+					<div
+						className={
+							"max-lg:px-5 grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
+						}
+					>
 						{/* Sidebar */}
 						<UserProfileSidebar
 							user={user}
@@ -341,7 +453,7 @@ export function UserProfileSidebar({
 						<Button
 							variant={"link"}
 							size={"sm"}
-							className="h-auto text-muted-foreground hover:text-foreground text-xs"
+							className="h-auto link text-muted-foreground hover:text-foreground text-xs"
 						>
 							{t("components.profile.info.about_me")}
 							<OutlineChevronRight />

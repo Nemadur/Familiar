@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as UsernameRouteImport } from './routes/$username'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UsernameIndexRouteImport } from './routes/$username/index'
@@ -21,6 +22,11 @@ import { Route as UsernameTabFolderFolderSlugIndexRouteImport } from './routes/$
 import { Route as UsernameTabFolderFolderSlugPostIdRouteImport } from './routes/$username/$tab/folder/$folderSlug/$postId'
 import { Route as UsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport } from './routes/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
 
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsernameRoute = UsernameRouteImport.update({
   id: '/$username',
   path: '/$username',
@@ -84,6 +90,7 @@ const UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$username': typeof UsernameRouteWithChildren
+  '/logout': typeof LogoutRoute
   '/$username/$tab': typeof UsernameTabRouteWithChildren
   '/$username/': typeof UsernameIndexRoute
   '/auth/forgot/': typeof AuthForgotIndexRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/logout': typeof LogoutRoute
   '/$username/$tab': typeof UsernameTabRouteWithChildren
   '/$username': typeof UsernameIndexRoute
   '/auth/forgot': typeof AuthForgotIndexRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$username': typeof UsernameRouteWithChildren
+  '/logout': typeof LogoutRoute
   '/$username/$tab': typeof UsernameTabRouteWithChildren
   '/$username/': typeof UsernameIndexRoute
   '/auth/forgot/': typeof AuthForgotIndexRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$username'
+    | '/logout'
     | '/$username/$tab'
     | '/$username/'
     | '/auth/forgot/'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/logout'
     | '/$username/$tab'
     | '/$username'
     | '/auth/forgot'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$username'
+    | '/logout'
     | '/$username/$tab'
     | '/$username/'
     | '/auth/forgot/'
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   UsernameRoute: typeof UsernameRouteWithChildren
+  LogoutRoute: typeof LogoutRoute
   AuthForgotIndexRoute: typeof AuthForgotIndexRoute
   AuthLoginIndexRoute: typeof AuthLoginIndexRoute
   AuthRegisterIndexRoute: typeof AuthRegisterIndexRoute
@@ -171,6 +184,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$username': {
       id: '/$username'
       path: '/$username'
@@ -288,6 +308,7 @@ const UsernameRouteWithChildren = UsernameRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   UsernameRoute: UsernameRouteWithChildren,
+  LogoutRoute: LogoutRoute,
   AuthForgotIndexRoute: AuthForgotIndexRoute,
   AuthLoginIndexRoute: AuthLoginIndexRoute,
   AuthRegisterIndexRoute: AuthRegisterIndexRoute,

@@ -25,7 +25,7 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 } from "@/components/ui/drawer";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface UniversalModalLayoutProps {
@@ -51,7 +51,7 @@ export function UniversalModalLayout({
 	onBookmark,
 	mediaClassName,
 }: UniversalModalLayoutProps) {
-	const isMobile = useIsMobile();
+	const isTablet = useIsTablet();
 	const { active: bookmarked, handleAction } = useLocalAction({
 		initialActive: isBookmarked,
 		initialCount: 0,
@@ -66,7 +66,7 @@ export function UniversalModalLayout({
 		[handleAction, onBookmark],
 	);
 
-	if (isMobile) {
+	if (isTablet) {
 		return (
 			<Drawer open={open} onOpenChange={onOpenChange}>
 				<DrawerContent className="flex flex-col">
@@ -76,17 +76,49 @@ export function UniversalModalLayout({
 					</DrawerDescription>
 
 					<div className="flex flex-col flex-1 overflow-hidden rounded-t-xl min-h-0">
+						{/* Mobile Header (Above Images) */}
+						<div className="sticky top-0 z-50 flex shrink-0 items-center justify-between border-b bg-background px-4 py-2">
+							<div className="flex items-center gap-2">
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => onOpenChange(false)}
+								>
+									<OutlineClose />
+								</Button>
+							</div>
+							<div className="flex items-center gap-2">
+								{showBookmark && (
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={handleBookmarkClick}
+										className={cn(
+											"bg-transparent shadow-none",
+											bookmarked &&
+												"drop-shadow-[0_0px_10px_rgba(137,75,0)] dark:drop-shadow-[0_0px_10px_rgba(255,240,133)]",
+										)}
+									>
+										{bookmarked ? (
+											<SolidBookmark className="text-yellow-700 dark:text-yellow-200" />
+										) : (
+											<OutlineBookmark />
+										)}
+									</Button>
+								)}
+								<Button variant="ghost" size="icon">
+									<OutlineMore />
+								</Button>
+							</div>
+						</div>
+
 						{/* Media Section */}
-						<div
-							className={cn("shrink-0 bg-background w-full", mediaClassName)}
-						>
+						<div className={cn("shrink-0 w-full", mediaClassName)}>
 							{mediaContent}
 						</div>
 
 						{/* Details Section */}
-						<div className="flex-1 overflow-y-auto bg-background">
-							{detailsContent}
-						</div>
+						<div className="flex-1 overflow-y-auto">{detailsContent}</div>
 					</div>
 				</DrawerContent>
 			</Drawer>
@@ -97,31 +129,65 @@ export function UniversalModalLayout({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				showCloseButton={false}
-				className="flex h-[85vh] w-full max-w-[90vw] md:max-w-6xl flex-col overflow-hidden border-none bg-background p-0 sm:rounded-3xl"
+				className="flex h-[85vh] md:min-w-2xl lg:min-w-4xl xl:max-w-6xl flex-col overflow-hidden border-none bg-background p-0 sm:rounded-3xl"
 			>
 				<DialogTitle className="sr-only">{title}</DialogTitle>
 				<DialogDescription className="sr-only">View details</DialogDescription>
 
 				<div className="flex flex-col lg:flex-row h-full w-full lg:overflow-hidden overflow-y-auto">
+					{/* Mobile/Tablet Header (Above Images) */}
+					{/* <div className="sticky top-0 z-50 flex shrink-0 items-center justify-between border-b bg-background px-4 py-2 lg:hidden">
+						<div className="flex items-center gap-2">
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => onOpenChange(false)}
+							>
+								<OutlineClose />
+							</Button>
+						</div>
+						<div className="flex items-center gap-2">
+							{showBookmark && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={handleBookmarkClick}
+									className={cn(
+										"relative bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
+										bookmarked
+											? "text-yellow-500 drop-shadow-[0_1px_10px_rgba(234,179,8,0.75)] bg-yellow-500/20 before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
+											: "text-primary hover:before:bg-primary/10 before:bg-primary/6",
+									)}
+								>
+									{bookmarked ? (
+										<SolidBookmark className="text-yellow-500" />
+									) : (
+										<OutlineBookmark />
+									)}
+								</Button>
+							)}
+							<Button variant="ghost" size="icon">
+								<OutlineMore />
+							</Button>
+						</div>
+					</div> */}
+
 					{/* Left Column: Media */}
 					<div
 						className={cn(
-							"group relative w-full lg:w-[60%] bg-zinc-950 lg:h-full lg:overflow-y-auto shrink-0 flex flex-col min-h-[300px] lg:min-h-0",
+							"group relative w-full lg:w-[60%] lg:h-full lg:overflow-y-auto shrink-0 flex flex-col min-h-[300px] lg:min-h-0",
 							// Use justify-center only if no scroll needed, but safe way is m-auto on child.
 							// Removing justify-center to prevent top clipping on overflow.
 							mediaClassName,
 						)}
 					>
-						<DialogClose className="absolute top-4 left-4 z-50 rounded-full bg-background/50 p-2 transition-colors hover:bg-background lg:hidden">
-							<OutlineClose />
-						</DialogClose>
 						{mediaContent}
 					</div>
 
 					{/* Right Column: Details */}
-					<div className="w-full lg:w-[40%] flex flex-col bg-background border-l lg:h-full shrink-0">
+					<div className="w-full lg:w-[40%] flex flex-col bg-background lg:border-l lg:h-full shrink-0">
 						{/* Header Actions */}
-						<div className="sticky top-0 z-20 flex shrink-0 items-center justify-between border-b bg-background px-6 py-4">
+						<div className="sticky top-0 z-20 hidden lg:flex shrink-0 items-center justify-between border-b bg-background px-6 py-4">
 							<div className="flex items-center gap-2 text-muted-foreground text-sm">
 								<Button
 									variant="ghost"
@@ -138,15 +204,15 @@ export function UniversalModalLayout({
 									<Button
 										size={"icon"}
 										className={cn(
-											"absolute right-16 top-3.5 z-0 hidden shrink-0 bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
+											"absolute right-16 top-4 z-0 hidden shrink-0 bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
 											bookmarked
-												? "text-yellow-500 drop-shadow-[0_1px_10px_rgba(234,179,8,0.75)] hover:bg-yellow-500/12 before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
+												? "text-yellow-500 drop-shadow-[0_0px_10px_rgba(137,75,0)] dark:drop-shadow-[0_0px_10px_rgba(255,240,133)] before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
 												: "text-primary hover:before:bg-primary/10 before:bg-primary/6",
 										)}
 										onClick={handleBookmarkClick}
 									>
 										{bookmarked ? (
-											<SolidBookmark className="text-yellow-500" />
+											<SolidBookmark className=" text-yellow-800 dark:text-yellow-200" />
 										) : (
 											<OutlineBookmark />
 										)}

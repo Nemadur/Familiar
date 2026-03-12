@@ -8,7 +8,6 @@ import { ProfilePortfolio } from "./feed/portfolio";
 import { PrivateContent } from "./private-content";
 import {
 	mapCommissionToCommissionItem,
-	mapFolderToFolderType,
 	mapPostToPostWithAuthor,
 } from "./utils";
 
@@ -23,10 +22,13 @@ export function UserFeedContent({
 }) {
 	const { categories, posts, characters, folders } = useSuspenseProfileContent(
 		user.uuid,
+		tab as "commissions" | "portfolio" | "characters" | "saved" | "liked",
 	);
 
 	const commissionCategories = useMemo<CommissionCategory[]>(() => {
-		console.log(`[UserFeedContent] Mapping categories: ${categories?.length || 0}`);
+		console.log(
+			`[UserFeedContent] Mapping categories: ${categories?.length || 0}`,
+		);
 		// Map backend categories to frontend structure
 		return (categories || []).map((cat: any) => ({
 			id: cat.id,
@@ -44,18 +46,17 @@ export function UserFeedContent({
 	const portfolioFolders = useMemo(
 		() =>
 			folders.map((folder: any) => {
-				const mappedFolder = mapFolderToFolderType(folder, posts);
 				// Calculate subfolders count
 				const subfoldersCount = folders.filter(
-					(f: any) => f.parentId === mappedFolder.id,
+					(f: any) => f.parentId === folder.id,
 				).length;
 				return {
-					...mappedFolder,
-					count: mappedFolder.count + subfoldersCount,
+					...folder,
+					count: folder.count + subfoldersCount,
 					hasSubfolders: subfoldersCount > 0,
 				};
 			}),
-		[folders, posts],
+		[folders],
 	);
 
 	// Permission check for private tabs

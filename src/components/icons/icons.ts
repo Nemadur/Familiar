@@ -194,6 +194,11 @@ export {
 } from "./assets/navigation_and_travel/location";
 // Shopping and Ecommerce
 export {
+	DuotoneFilter,
+	OutlineFilter,
+	SolidFilter,
+} from "./assets/shopping_and_ecommerce/filter";
+export {
 	DuotoneReceipt,
 	OutlineReceipt,
 	SolidReceipt,

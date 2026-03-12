@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useRef } from "react";
 import type { Control } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
-	OutlineArrowLeft,
 	OutlineAt,
-	OutlineEye,
-	OutlineEyeOff,
-	OutlineLock,
-	OutlineLockOpen,
+	OutlineEdit,
+	OutlineTrash,
 	OutlineUser,
 } from "@/components/icons/icons";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	FormControl,
 	FormField,
@@ -21,167 +20,147 @@ import {
 import {
 	InputGroup,
 	InputGroupAddon,
-	InputGroupButton,
 	InputGroupInput,
 } from "@/components/ui/input-group";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import type { RegisterData } from "@/types/auth/schema/register";
 
-interface RegisterStepProfileProps {
+interface RegisterStepIdentityProps {
 	control: Control<RegisterData>;
-	isStepValid: boolean;
-	isPending: boolean;
-	onBack: () => void;
-	showInviteKey: boolean;
 	displayNameRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export function RegisterStepProfile({
 	control,
-	isStepValid,
-	isPending,
-	onBack,
-	showInviteKey,
 	displayNameRef,
-}: RegisterStepProfileProps) {
-	const [showPassword, setShowPassword] = useState(false);
+}: RegisterStepIdentityProps) {
 	const { t } = useTranslation();
+	const { watch, setValue } = useFormContext<RegisterData>();
+
+	const watchedAvatar = watch("avatar_url");
+	const watchedCover = watch("cover_url");
+	const watchedDisplayName = watch("display_name");
+
+	const handleFileChange = (
+		event: React.ChangeEvent<HTMLInputElement>,
+		field: "avatar_url" | "cover_url",
+	) => {
+		const file = event.target.files?.[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				setValue(field, reader.result as string);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
 
 	return (
-		<div className="space-y-2">
-			<FormField
-				control={control}
-				name={"display_name"}
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>{t("auth.display_name.label")}</FormLabel>
-						<FormControl>
-							<InputGroup>
-								<InputGroupAddon>
-									<OutlineUser />
-								</InputGroupAddon>
-								<InputGroupInput
-									placeholder={t("auth.display_name.placeholder")}
-									{...field}
-									ref={(e) => {
-										field.ref(e);
-										if (displayNameRef)
-											(
-												displayNameRef as { current: HTMLInputElement | null }
-											).current = e;
-									}}
-								/>
-							</InputGroup>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
+		<div className="space-y-6">
+			{/* Visual Profile Preview */}
+			<div className="relative w-full overflow-hidden">
+				{/* Cover */}
+				<div className="relative h-32 w-full bg-muted/50 rounded-3xl overflow-hidden">
+					{watchedCover ? (
+						<img
+							src={watchedCover}
+							alt="Cover"
+							className="h-full w-full object-cover "
+						/>
+					) : (
+						<div className="h-full w-full flex items-center justify-center text-muted-foreground/30 text-xs">
+							No Cover
+						</div>
+					)}
+					<div className="absolute flex gap-2 top-2 right-2">
+						<label
+							htmlFor="cover-upload"
+							className={cn(
+								buttonVariants({ variant: "secondary", size: "icon-sm" }),
+							)}
+						>
+							<OutlineEdit />
+							<input
+								id="cover-upload"
+								type="file"
+								accept="image/*"
+								className="hidden"
+								onChange={(e) => handleFileChange(e, "cover_url")}
+							/>
+						</label>
+						<Button
+							type="button"
+							variant={"destructive"}
+							size={"icon-sm"}
+							className={"bg-danger-soft-hover text-danger hover:bg-danger/30"}
+							onClick={() => setValue("cover_url", "")}
+						>
+							<OutlineTrash />
+						</Button>
+					</div>
+				</div>
 
-			<FormField
-				control={control}
-				name={"username"}
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>{t("auth.username.label")}</FormLabel>
-						<FormControl>
-							<InputGroup>
-								<InputGroupAddon>
-									<OutlineAt />
-								</InputGroupAddon>
-								<InputGroupInput
-									placeholder={t("auth.username.placeholder")}
-									{...field}
-								/>
-							</InputGroup>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
+				{/* Avatar */}
+				<div className="absolute top-20 left-4">
+					<div className="relative">
+						<Avatar className="size-20 ring-4 ring-background">
+							<AvatarImage src={watchedAvatar} alt={watchedDisplayName} />
+							<AvatarFallback className="text-xl">
+								{watchedDisplayName?.slice(0, 2).toUpperCase() || "??"}
+							</AvatarFallback>
+						</Avatar>
+						<label
+							htmlFor="avatar-upload"
+							className={cn(
+								buttonVariants({ size: "icon-sm", variant: "secondary" }),
+								"absolute -bottom-1.5 -right-1.5 border-3 border-background bg-secondary hover:bg-secondary/90",
+							)}
+						>
+							<OutlineEdit className="size-3.5" />
+							<input
+								id="avatar-upload"
+								type="file"
+								accept="image/*"
+								className="hidden"
+								onChange={(e) => handleFileChange(e, "avatar_url")}
+							/>
+						</label>
+					</div>
+				</div>
 
-			<FormField
-				control={control}
-				name={"password"}
-				render={({ field }) => (
-					<FormItem>
-						<FormLabel>{t("auth.password.label")}</FormLabel>
-						<FormControl>
-							<InputGroup>
-								<InputGroupAddon>
-									<OutlineLock />
-								</InputGroupAddon>
-								<InputGroupInput
-									placeholder={t("auth.password.placeholder")}
-									type={showPassword ? "text" : "password"}
-									{...field}
-								/>
-								<InputGroupAddon align="inline-end" className={"pr-3"}>
-									<InputGroupButton
-										type={"button"}
-										variant={"ghost"}
-										size={"icon-xs"}
-										onClick={() => setShowPassword(!showPassword)}
-									>
-										{showPassword ? (
-											<OutlineEyeOff className={"text-muted-foreground"} />
-										) : (
-											<OutlineEye className={"text-muted-foreground"} />
-										)}
-									</InputGroupButton>
-								</InputGroupAddon>
-							</InputGroup>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
+				<div className="pt-10 pb-4 px-4">
+					<div className="text-sm font-medium">
+						{watchedDisplayName || "Display Name"}
+					</div>
+					<div className="text-xs text-muted-foreground">
+						@{watch("username") || "username"}
+					</div>
+				</div>
+			</div>
 
-			{showInviteKey && (
+			<div className="space-y-4">
 				<FormField
 					control={control}
-					name={"invite_key"}
+					name={"display_name"}
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("auth.invite_key.label")}</FormLabel>
+							<FormLabel>{t("auth.display_name.label")}</FormLabel>
 							<FormControl>
 								<InputGroup>
 									<InputGroupAddon>
-										{t("auth.invite_key.prefix")}
+										<OutlineUser />
 									</InputGroupAddon>
 									<InputGroupInput
-										className={"-ml-2"}
-										placeholder={t("auth.invite_key.placeholder").replace(
-											t("auth.invite_key.prefix"),
-											"",
-										)}
+										placeholder={t("auth.display_name.placeholder")}
 										{...field}
-										value={field.value?.replace(/^FAM-/, "") || ""}
-										onChange={(e) => {
-											let input = e.target.value.toUpperCase();
-
-											// Remove any whitespace
-											input = input.replace(/\s/g, "");
-
-											// Handle copy-paste with prefix
-											input = input.replace(/FAM-?/g, "");
-
-											// Keep only Alphanumeric characters
-											input = input.replace(/[^0-9A-Z]/g, "");
-
-											// Format with dashes: XXXX-XXXX-XXX
-											let formatted = "";
-											if (input.length > 0) formatted += input.slice(0, 4);
-											if (input.length > 4)
-												formatted += `-${input.slice(4, 8)}`;
-											if (input.length > 8)
-												formatted += `-${input.slice(8, 11)}`;
-
-											// Update form value with full FAM- prefix
-											field.onChange(
-												input.length === 0 ? "" : `FAM-${formatted}`,
-											);
+										ref={(e) => {
+											field.ref(e);
+											if (displayNameRef)
+												(
+													displayNameRef as { current: HTMLInputElement | null }
+												).current = e;
 										}}
-										maxLength={32} // Allow pasting full FAM- code (17 chars) + extra space
 									/>
 								</InputGroup>
 							</FormControl>
@@ -189,23 +168,54 @@ export function RegisterStepProfile({
 						</FormItem>
 					)}
 				/>
-			)}
 
-			<div className={"flex items-center gap-2"}>
-				<Button type={"button"} variant={"ghost"} size={"lg"} onClick={onBack}>
-					<OutlineArrowLeft />
-					{t("auth.back")}
-				</Button>
-				<Button
-					type="submit"
-					disabled={isPending || !isStepValid}
-					className={"flex-1"}
-					size={"lg"}
-				>
-					{isPending
-						? t("auth.create_account.pending")
-						: t("auth.create_account.cta")}
-				</Button>
+				<FormField
+					control={control}
+					name={"username"}
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>{t("auth.username.label")}</FormLabel>
+							<FormControl>
+								<InputGroup>
+									<InputGroupAddon>
+										<OutlineAt />
+									</InputGroupAddon>
+									<InputGroupInput
+										placeholder={t("auth.username.placeholder")}
+										{...field}
+									/>
+								</InputGroup>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<FormField
+					control={control}
+					name={"bio"}
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>{t("auth.bio.label", "Bio")}</FormLabel>
+							<FormControl>
+								{/* TODO: use same BioEditor component like in user profile settings */}
+								<Textarea
+									placeholder={t(
+										"auth.bio.placeholder",
+										"Tell us about yourself...",
+									)}
+									className="min-h-[100px] resize-none rounded-2xl"
+									maxLength={160}
+									{...field}
+								/>
+							</FormControl>
+							<div className="flex justify-end text-[10px] text-muted-foreground uppercase tracking-wider">
+								{field.value?.length || 0} / 160
+							</div>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 			</div>
 		</div>
 	);

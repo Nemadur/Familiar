@@ -39,22 +39,20 @@ export const getPostDetails = createServerFn({
 				const characterIds = charactersResult.data.map(
 					(r: any) => r.character_id,
 				);
-				// Fetch character details from 'sonas' table
+				// Fetch character details from 'characters' table
 				const sonasResult = await client
 					.schema("familiar")
-					.from("sonas")
-					.select(`
-            *,
-            avatar:media_assets!avatar_asset_id(*)
-          `)
-					.in("sona_id", characterIds);
+					.from("characters")
+					.select("*, avatar:media_assets!avatar_asset_id(*)")
+					.in("character_id", characterIds);
 
 				if (sonasResult.data) {
 					linkedCharacters = sonasResult.data.map((char: any) => ({
-						id: char.sona_id,
+						id: char.character_id,
 						name: char.name,
 						slug: char.slug,
 						avatarUrl: char.avatar?.path,
+						accent_color: null, // Characters don't have accent color
 					}));
 				}
 			}

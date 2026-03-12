@@ -5,6 +5,7 @@ import { UserFeedContent } from "@/components/layout/profile/feed-content";
 import { useAvailableFeeds } from "@/hooks/use-available-feeds";
 import { useSuspenseUser } from "@/hooks/use-user";
 import { useAuth } from "@/providers/auth";
+import type { User } from "@/types/user";
 
 export const Route = createFileRoute("/$username/")({
 	component: RouteComponent,
@@ -23,6 +24,10 @@ function RouteComponent() {
 		);
 	}
 
+	return <UserFeedWrapper user={user} me={me} />;
+}
+
+function UserFeedWrapper({ user, me }: { user: User; me: User | null }) {
 	const isMe = me?.username === user.username;
 
 	const availableFeeds = useAvailableFeeds(user, isMe);
@@ -41,5 +46,5 @@ function RouteComponent() {
 
 	const defaultTab = availableFeeds[0].id;
 
-	return <UserFeedContent user={user!} tab={defaultTab} isMe={isMe} />;
+	return <UserFeedContent user={user} tab={defaultTab} isMe={isMe} />;
 }

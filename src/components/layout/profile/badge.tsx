@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
 	Tooltip,
@@ -13,7 +14,11 @@ import {
 	ProfileDetailsContent,
 } from "./profile-details";
 
-function ProfileBadge({ user }: { user: User | UserSummary }) {
+const ProfileBadge = memo(function ProfileBadge({
+	user,
+}: {
+	user: User | UserSummary;
+}) {
 	const badges = getUserBadges(user);
 
 	if (badges.length === 0) return null;
@@ -41,6 +46,6 @@ function ProfileBadge({ user }: { user: User | UserSummary }) {
 			<ProfileDetailsContent user={user} />
 		</Dialog>
 	);
-}
+});
 
 export { ProfileBadge };

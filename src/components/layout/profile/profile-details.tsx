@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type * as React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -96,7 +97,11 @@ export function BadgeTooltipContent({ badge }: { badge: UserBadge }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ProfileDetailsContent({ user }: { user: User | UserSummary }) {
+export const ProfileDetailsContent = memo(function ProfileDetailsContent({
+	user,
+}: {
+	user: User | UserSummary;
+}) {
 	const badges = getUserBadges(user);
 	const joinDate = userJoinDate({ createdAt: (user as User).created_at });
 	const localTime = userLocalTime({ timeZone: (user as User).timezone });
@@ -243,4 +248,4 @@ export function ProfileDetailsContent({ user }: { user: User | UserSummary }) {
 			)}
 		</DialogContent>
 	);
-}
+});

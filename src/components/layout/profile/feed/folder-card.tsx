@@ -27,32 +27,17 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 	const middleItem = displayItems[1];
 	const backItem = displayItems[2];
 
-	const renderItemContent = (
-		item: string | "folder_placeholder" | undefined,
-		opacity = 1,
-	) => {
-		if (!item) return null;
-		if (item === "folder_placeholder") {
-			// TODO: prepare for premium custom folder color and icon
-			return (
-				<div className="flex h-full w-full items-start pt-2 justify-center">
-					<OutlineFolder className="size-8 text-muted-foreground" />
-				</div>
-			);
-		}
-		return (
-			<img
-				src={item}
-				alt=""
-				className="h-full w-full object-cover"
-				style={{ opacity }}
-			/>
-		);
-	};
-
 	return (
 		<div
 			onClick={onClick}
+			onKeyDown={(e) => {
+				if (onClick && (e.key === "Enter" || e.key === " ")) {
+					e.preventDefault();
+					onClick();
+				}
+			}}
+			role="button"
+			tabIndex={0}
 			className={cn(
 				"group perspective-1000 relative aspect-4/3 w-full cursor-pointer text-left",
 				className,
@@ -71,21 +56,21 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 				{/* Card 3 (Back) - Slot 2 */}
 				{backItem && (
 					<div className="h-[90%] w-[90%] translate-x-[-10%] -rotate-6 transition-transform duration-300 group-hover:translate-x-[-15%] group-hover:-translate-y-2 group-hover:-rotate-12 bg-neutral-100 dark:bg-neutral-800">
-						{renderItemContent(backItem, 0.8)}
+						<FolderItemContent item={backItem} opacity={0.8} />
 					</div>
 				)}
 
 				{/* Card 2 (Middle) - Slot 1 */}
 				{middleItem && (
 					<div className="h-[90%] w-[90%] translate-x-[5%] rotate-3 bg-blue-500 transition-transform duration-300 group-hover:translate-x-[10%] group-hover:-translate-y-3 group-hover:rotate-6 dark:bg-neutral-800">
-						{renderItemContent(middleItem, 0.9)}
+						<FolderItemContent item={middleItem} opacity={0.9} />
 					</div>
 				)}
 
 				{/* Card 1 (Front) - Slot 0 */}
 				{frontItem && (
 					<div className="flex h-[90%] w-[90%] items-center justify-center bg-neutral-200 dark:bg-neutral-700">
-						{renderItemContent(frontItem)}
+						<FolderItemContent item={frontItem} />
 					</div>
 				)}
 			</div>
@@ -106,5 +91,31 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+function FolderItemContent({
+	item,
+	opacity = 1,
+}: {
+	item: string | "folder_placeholder" | undefined;
+	opacity?: number;
+}) {
+	if (!item) return null;
+	if (item === "folder_placeholder") {
+		// TODO: prepare for premium custom folder color and icon
+		return (
+			<div className="flex h-full w-full items-start pt-2 justify-center">
+				<OutlineFolder className="size-8 text-muted-foreground" />
+			</div>
+		);
+	}
+	return (
+		<img
+			src={item}
+			alt=""
+			className="h-full w-full object-cover"
+			style={{ opacity }}
+		/>
 	);
 }

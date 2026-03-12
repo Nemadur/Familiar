@@ -51,7 +51,7 @@ export function ProfileBio({
 											to={href}
 											target="_blank"
 											rel="noopener noreferrer"
-											className=" link font-medium"
+											className="link font-medium"
 										>
 											{children}
 										</Link>

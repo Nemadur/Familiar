@@ -7,6 +7,7 @@ import {
 } from "@/components/layout/profile/utils";
 import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
 import { useSuspenseUser } from "@/hooks/use-user";
+import type { User } from "@/types/user";
 
 export const Route = createFileRoute(
 	"/$username/$tab/folder/$folderSlug/$postId",
@@ -23,7 +24,34 @@ function RouteComponent() {
 		return <div>User not found</div>;
 	}
 
-	const { posts, categories } = useSuspenseProfileContent(user.uuid);
+	return (
+		<PostContent
+			user={user}
+			tab={tab}
+			folderSlug={folderSlug}
+			postId={postId}
+			navigate={navigate}
+		/>
+	);
+}
+
+function PostContent({
+	user,
+	tab,
+	folderSlug,
+	postId,
+	navigate,
+}: {
+	user: User;
+	tab: string;
+	folderSlug: string;
+	postId: string;
+	navigate: ReturnType<typeof useNavigate>;
+}) {
+	const { posts, categories } = useSuspenseProfileContent(
+		user.uuid,
+		"portfolio",
+	);
 
 	const portfolioPosts = useMemo(
 		() => [
@@ -49,7 +77,7 @@ function RouteComponent() {
 				if (!open) {
 					navigate({
 						to: "/$username/$tab/folder/$folderSlug",
-						params: { username, tab, folderSlug },
+						params: { username: user.username, tab, folderSlug },
 						replace: true,
 					});
 				}

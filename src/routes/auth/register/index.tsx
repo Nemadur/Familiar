@@ -13,15 +13,15 @@ function SignupPage() {
 	const { t } = useTranslation();
 
 	return (
-		<div className="grid h-[calc(100vh-6rem)] mt-2 lg:grid-cols-2">
+		<div className="grid sm:w-full lg:w-full md:w-xl md:mx-auto h-full min-h-[calc(100dvh-6rem)] lg:grid-cols-2">
 			<div className="flex flex-col gap-4 p-6 md:p-10">
-				<div className="flex flex-1 items-center justify-center">
-					<div className="w-full max-w-md">
+				<div className="flex flex-1 lg:items-center lg:justify-center">
+					<div className="w-full h-full lg:max-w-md">
 						<RegisterForm
 							onSuccess={() => navigate({ to: "/" })}
 							onModeChange={() => navigate({ to: "/auth/login" })}
 						/>
-						<p className="px-8 text-center text-sm text-muted-foreground mt-4">
+						{/* <p className="px-8 text-center text-sm text-muted-foreground mt-4">
 							{t("auth.terms_agree.label")}{" "}
 							<Button asChild variant={"link"}>
 								<Link to="/terms">{t("auth.terms_agree.terms")}</Link>
@@ -31,7 +31,7 @@ function SignupPage() {
 								<Link to="/privacy">{t("auth.terms_agree.privacy")}</Link>
 							</Button>
 							.
-						</p>
+						</p> */}
 					</div>
 				</div>
 			</div>

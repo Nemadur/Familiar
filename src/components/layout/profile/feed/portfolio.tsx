@@ -23,6 +23,8 @@ interface ProfilePortfolioProps {
 	currentFolder?: FolderType;
 }
 
+import { FilterBarV4, type FilterGroup } from "./filter-bar";
+
 export function ProfilePortfolio({
 	posts,
 	folderId,
@@ -31,41 +33,91 @@ export function ProfilePortfolio({
 	currentFolder: propCurrentFolder,
 }: ProfilePortfolioProps) {
 	const navigate = useNavigate();
-	const [activeType, setActiveType] = useState("ALL");
-	const [searchQuery, setSearchQuery] = useState("");
-
 	const { t } = useTranslation();
 
-	// Dynamically generate filters from posts
-	// 1. Fixed: All, Commissions
-	// 2. Custom: Tags from posts
-	const availableTags = Array.from(new Set(posts.flatMap((p) => p.tags || [])));
+	// Initialize filter state
+	const [filters, setFilters] = useState<Record<string, string[] | boolean>>({
+		commissionsOnly: false,
+		tags: [],
+	});
+	const [searchQuery, setSearchQuery] = useState("");
 
-	const systemFilters = [
-		{
-			id: "ALL",
-			label: t("components.portfolio.filters.all"),
-			type: "system",
-		},
-		{
-			id: "COMMISSIONS_ONLY",
-			label: t("components.portfolio.filters.commissions_only"),
-			type: "system",
-		},
-	];
+	// Extract options
+	const availableTags = useMemo(
+		() => Array.from(new Set(posts.flatMap((p) => p.tags || []))).sort(),
+		[posts],
+	);
 
-	const customFilters = availableTags.map((tag) => ({
-		id: tag,
-		label: tag,
-		type: "custom",
-	}));
+	// Define filter groups
+	const filterGroups = useMemo<FilterGroup[]>(
+		() => [
+			{
+				id: "commissionsOnly",
+				label: t("components.portfolio.filters.commissions_only"),
+				type: "select", // Actually a boolean toggle, but using select/checkbox logic in FilterBarV2 for now
+				// But wait, FilterBarV2 'select' renders checkboxes.
+				// Let's treat it as a single option "Show only commissions"
+				options: [
+					{
+						id: "true",
+						label: t("components.portfolio.filters.commissions_only"),
+					},
+				],
+			},
+			...(availableTags.length > 0
+				? [
+						{
+							id: "tags",
+							label: "Tags",
+							type: "multiselect" as const,
+							options: availableTags.map((tag) => ({
+								id: tag,
+								label: tag,
+							})),
+						},
+					]
+				: []),
+		],
+		[availableTags, t],
+	);
 
 	const filteredPosts = useMemo(() => {
-		if (activeType === "ALL") return posts;
-		if (activeType === "COMMISSIONS_ONLY")
-			return posts.filter((p) => p.isCommission);
-		return posts.filter((p) => p.tags?.includes(activeType));
-	}, [activeType, posts]);
+		let result = posts;
+
+		// 1. Commissions Only
+		if (
+			filters.commissionsOnly === true ||
+			(Array.isArray(filters.commissionsOnly) &&
+				filters.commissionsOnly.includes("true"))
+		) {
+			result = result.filter((p) => p.isCommission);
+		}
+
+		// 2. Tags
+		const selectedTags = filters.tags as string[];
+		if (selectedTags?.length > 0) {
+			result = result.filter((p) =>
+				selectedTags.some((tag) => p.tags?.includes(tag)),
+			);
+		}
+
+		return result;
+	}, [filters, posts]);
+
+	const handleFilterChange = (groupId: string, value: string[] | boolean) => {
+		setFilters((prev) => ({
+			...prev,
+			[groupId]: value,
+		}));
+	};
+
+	const handleClearAll = () => {
+		setFilters({
+			commissionsOnly: [],
+			tags: [],
+		});
+		setSearchQuery("");
+	};
 
 	const currentFolder =
 		propCurrentFolder ||
@@ -193,65 +245,37 @@ export function ProfilePortfolio({
 		.filter((f) => !f.parentId) // Only show root folders
 		.filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
+	// Show folders only when no filters are active (except search)
+	// Or maybe show folders always when not in a folder?
+	// Original logic: activeType === "ALL" && !folderId
+	// New logic: no specific filters selected
+	const hasActiveFilters =
+		(Array.isArray(filters.commissionsOnly) &&
+			filters.commissionsOnly.length > 0) ||
+		(Array.isArray(filters.tags) && filters.tags.length > 0);
+
+	const showFolders = !hasActiveFilters && !folderId;
+
 	return (
 		<div className="space-y-6">
 			{/* Search and Filter Bar */}
-			<div className="flex flex-col gap-2 md:flex-row md:items-center pb-3">
-				<ScrollShadow
-					orientation={"horizontal"}
-					className="relative w-full min-w-0 flex-1 whitespace-nowrap"
-				>
-					<div className="flex w-max items-center space-x-2">
-						{/* System Filters Group */}
-
-						{systemFilters.map((f) => (
-							<Button
-								key={f.id}
-								variant={activeType === f.id ? "default" : "outline"}
-								onClick={() => setActiveType(f.id)}
-							>
-								{f.label}
-							</Button>
-						))}
-
-						{/* Custom Filters */}
-						{customFilters.map((f) => {
-							return (
-								<Button
-									key={f.id}
-									variant={activeType === f.id ? "default" : "outline"}
-									onClick={() => setActiveType(f.id)}
-									className="gap-2 rounded-full"
-								>
-									{f.label}
-								</Button>
-							);
-						})}
-					</div>
-				</ScrollShadow>
-
-				<div className="flex w-full items-center gap-2 md:w-auto">
-					<div className="relative w-full">
-						<InputGroup className="h-9 w-40">
-							<InputGroupAddon>
-								<OutlineSearch />
-							</InputGroupAddon>
-							<InputGroupInput
-								placeholder={t("components.portfolio.search_placeholder")}
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								className="text-sm w-fit"
-							/>
-						</InputGroup>
-					</div>
-					<Button variant={"outline"} size={"icon"}>
-						<OutlineFolderAddOuLc className="h-4 w-4" />
+			<FilterBarV4
+				groups={filterGroups}
+				values={filters}
+				onFilterChange={handleFilterChange}
+				searchQuery={searchQuery}
+				onSearchChange={setSearchQuery}
+				onClearAll={handleClearAll}
+				extraActions={
+					<Button variant={"outline"} size={"lg"}>
+						<OutlineFolderAddOuLc />
+						Add Folder
 					</Button>
-				</div>
-			</div>
+				}
+			/>
 
 			{/* Folders Grid */}
-			{filteredFolders.length > 0 && (
+			{showFolders && filteredFolders.length > 0 && (
 				<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 					{filteredFolders.map((folder) => (
 						<Link

@@ -67,9 +67,9 @@ function ProfileFeedTabs<T extends string>({
 function ProfileFeedTabsSkeleton({ className }: { className?: string }) {
 	return (
 		<div className={cn("flex w-fit gap-2", className)}>
-			{[1, 2, 3, 4].map((i) => (
+			{[1, 2, 3].map((i) => (
 				<div
-					key={i}
+					key={`skeleton-tab-${i}`}
 					className="inline-flex items-center justify-center whitespace-nowrap rounded-md py-4 text-sm font-medium gap-2"
 				>
 					<Skeleton className="size-10 rounded-full" />

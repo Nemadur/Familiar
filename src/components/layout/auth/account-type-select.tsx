@@ -30,10 +30,6 @@ export function AccountTypeSelector({
 	];
 	return (
 		<div className={"space-y-3"}>
-			<Label className={"font-medium text-sm"}>
-				{t("auth.account_type.label")}
-			</Label>
-
 			{/* radiogroup container */}
 			<div
 				role="radiogroup"

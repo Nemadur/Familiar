@@ -65,6 +65,7 @@ export interface Post {
 		name: string;
 		slug: string;
 		avatarUrl?: string;
+		accent_color?: string | null;
 	}[];
 	featuredReview?: {
 		id: string;

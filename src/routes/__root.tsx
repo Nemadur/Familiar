@@ -71,7 +71,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 									<Header />
 									<main
 										className={
-											"flex min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5"
+											"flex min-h-[calc(100dvh-4rem)] h-full flex-1 flex-col sm:pb-5 lg:px-5"
 										}
 									>
 										{children}

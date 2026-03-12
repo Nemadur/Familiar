@@ -32,6 +32,18 @@ const inviteKey = z
 	.regex(/^FAM-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{3}$/, "Invalid invite key.")
 	.or(z.literal(""));
 
+const bio = z
+	.string()
+	.max(160, "Bio must be less than 160 characters.")
+	.optional();
+
+const socialLink = z.object({
+	platform: z.string(),
+	url: z.union([z.literal(""), z.string().trim().url("Invalid URL")]),
+});
+
+const socials = z.array(socialLink).optional();
+
 const registerBase = z.object({
 	account_type: accountTypes,
 	email: email,
@@ -39,6 +51,10 @@ const registerBase = z.object({
 	display_name: displayName,
 	username: username,
 	invite_key: inviteKey,
+	avatar_url: z.string().optional(),
+	cover_url: z.string().optional(),
+	bio: bio,
+	socials: socials,
 });
 
 const register = registerBase.superRefine((data, ctx) => {
@@ -57,10 +73,30 @@ const registerStep0 = z.object({
 });
 
 const registerStep1 = z.object({
-	display_name: displayName,
-	username: username,
 	password: password,
 	invite_key: inviteKey,
 });
 
-export { register, registerStep0, registerStep1 };
+const registerStep2 = z.object({
+	username: username,
+	display_name: displayName,
+	avatar_url: z.string().optional(),
+	cover_url: z.string().optional(),
+});
+
+const registerStep3 = z.object({
+	bio: bio,
+});
+
+const registerStep4 = z.object({
+	socials: socials,
+});
+
+export {
+	register,
+	registerStep0,
+	registerStep1,
+	registerStep2,
+	registerStep3,
+	registerStep4,
+};

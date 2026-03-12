@@ -1,20 +1,19 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/providers/auth";
-import { useTheme } from "@/providers/theme";
 import {
-	OutlineClearNight,
 	OutlineFileText,
 	OutlineHome,
 	OutlineMenu,
 	OutlineReceipt,
-	OutlineSunny,
 	SolidFileText,
 	SolidHome,
+	SolidLogoText,
 	SolidReceipt,
-} from "../icons/icons";
+} from "@/components/icons/icons";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth";
+import { useTheme } from "@/providers/theme";
 import { Button } from "../ui/button";
 import {
 	Sheet,
@@ -131,7 +130,7 @@ const MobileNav = () => {
 	);
 };
 
-const NavLinks = ({ size = "default" }: { size?: "sm" | "default" }) => {
+const NavLinks = memo(({ size = "default" }: { size?: "sm" | "default" }) => {
 	const { t } = useTranslation();
 	const location = useLocation();
 	const pathname = location.pathname;
@@ -191,7 +190,7 @@ const NavLinks = ({ size = "default" }: { size?: "sm" | "default" }) => {
 			})}
 		</>
 	);
-};
+});
 
 const NavWrapper = ({
 	children,

@@ -38,8 +38,8 @@ export function QuickMath({
 
       {items.length > 0 && (
         <div className="space-y-2 border-t pt-4">
-          {items.map((item, index) => (
-            <div key={index} className="flex justify-between text-sm">
+          {items.map((item) => (
+            <div key={item.label} className="flex justify-between text-sm">
               <span className="text-muted-foreground">{item.label}</span>
               <span className="font-medium">+${item.value.toFixed(2)}</span>
             </div>

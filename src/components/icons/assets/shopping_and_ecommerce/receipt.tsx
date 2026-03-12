@@ -40,7 +40,11 @@ export const OutlineReceipt: React.FC<IconProps> = ({
 	</svg>
 );
 
-export const SolidReceipt: React.FC<IconProps> = ({ className, size = 24 }) => (
+export const SolidReceipt: React.FC<IconProps> = ({
+	className,
+	size = 24,
+	style,
+}) => (
 	<svg
 		width={size}
 		height={size}

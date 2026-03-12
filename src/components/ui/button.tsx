@@ -14,14 +14,17 @@ const buttonVariants = cva(
 				outline:
 					"bg-transparent hover:bg-primary/10 hover:text-accent-foreground dark:bg-border/30 border-broder ",
 				secondary: "bg-primary/6 text-secondary-foreground hover:bg-primary/10",
-				ghost: "hover:bg-primary/10 hover:text-accent-foreground",
-				link: "text-blue-600 underline-offset-4 hover:underline p-0!",
+				ghost: "text-primary hover:bg-primary/10 hover:text-accent-foreground",
+				link: "text-blue-600 dark:text-blue-400 underline-offset-4 hover:underline p-0!",
+				"destructive-ghost":
+					"text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20",
 			},
 			size: {
-				default: "h-9 px-4 py-2 has-[>svg]:px-3",
-				sm: "h-8 gap-1 px-3 has-[>svg]:px-2",
-				lg: "h-10 px-6 has-[>svg]:px-4",
-				xl: "h-12 px-8 has-[>svg]:px-6 [&_svg:not([class*='size-'])]:size-5",
+				default:
+					"h-9 px-4 py-2 has-[>svg:first-child]:pl-3 has-[>svg:last-child]:pr-3 has-[>span:not(.group\\/avatar):last-child]:pr-2",
+				sm: "h-8 gap-1.5 px-3 text-xs has-[>svg:first-child]:pl-2.5 has-[>svg:last-child]:pr-2.5 [&_svg:not([class*='size-'])]:size-3.5",
+				lg: "h-10 px-6 has-[>svg:first-child]:pl-3 has-[>svg:last-child]:pr-4 has-[>span:not(.group\\/avatar):last-child]:pr-3",
+				xl: "h-12 px-8 has-[>svg:first-child]:pl-6 has-[>svg:last-child]:pr-6",
 				icon: "size-9",
 				"icon-sm": "size-8",
 				"icon-lg": "size-10",

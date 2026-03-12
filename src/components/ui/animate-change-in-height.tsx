@@ -1,5 +1,5 @@
 import { domAnimation, LazyMotion, m, useReducedMotion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 function AnimateChangeInHeight(
@@ -8,7 +8,23 @@ function AnimateChangeInHeight(
 	},
 ) {
 	const [height, setHeight] = useState<number | "auto">("auto");
+	const containerRef = useRef<HTMLDivElement>(null);
 	const shouldReduceMotion = useReducedMotion();
+
+	useEffect(() => {
+		if (!containerRef.current) return;
+
+		const resizeObserver = new ResizeObserver(([entry]) => {
+			const observedHeight = entry.contentRect.height;
+			setHeight(observedHeight);
+		});
+
+		resizeObserver.observe(containerRef.current);
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	}, []);
 
 	return (
 		<LazyMotion features={domAnimation}>
@@ -19,24 +35,7 @@ function AnimateChangeInHeight(
 				{...props}
 				className={cn(props.className, "overflow-hidden")}
 			>
-				<div
-					ref={(ref) => {
-						if (!ref) return;
-
-						const resizeObserver = new ResizeObserver(([entry]) => {
-							const observedHeight = entry.contentRect.height;
-							setHeight(observedHeight);
-						});
-
-						resizeObserver.observe(ref);
-
-						return () => {
-							resizeObserver.disconnect();
-						};
-					}}
-				>
-					{props.children}
-				</div>
+				<div ref={containerRef}>{props.children}</div>
 			</m.div>
 		</LazyMotion>
 	);
