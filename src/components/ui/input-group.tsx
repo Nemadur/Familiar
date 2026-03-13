@@ -1,10 +1,7 @@
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
 import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
@@ -60,20 +57,36 @@ function InputGroupAddon({
 	align = "inline-start",
 	...props
 }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+	const ref = React.useRef<HTMLDivElement>(null);
+
+	React.useEffect(() => {
+		const element = ref.current;
+		if (!element) return;
+
+		const handleMouseDown = (e: MouseEvent) => {
+			if ((e.target as HTMLElement).closest("button")) {
+				return;
+			}
+			const input = element.parentElement?.querySelector(
+				"input,textarea",
+			) as HTMLElement;
+			// Prevent the div from stealing focus
+			e.preventDefault();
+			input?.focus();
+		};
+
+		element.addEventListener("mousedown", handleMouseDown);
+		return () => {
+			element.removeEventListener("mousedown", handleMouseDown);
+		};
+	}, []);
+
 	return (
 		<div
+			ref={ref}
 			data-slot="input-group-addon"
 			data-align={align}
 			className={cn(inputGroupAddonVariants({ align }), className)}
-			onClick={(e) => {
-				if ((e.target as HTMLElement).closest("button")) {
-					return;
-				}
-				const input = e.currentTarget.parentElement?.querySelector(
-					"input,textarea",
-				) as HTMLElement;
-				input?.focus();
-			}}
 			{...props}
 		/>
 	);

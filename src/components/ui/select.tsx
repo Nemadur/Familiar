@@ -1,5 +1,3 @@
-"use client";
-
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Select as SelectPrimitive } from "radix-ui";
 import type * as React from "react";
@@ -81,7 +79,7 @@ function SelectContent({
 				<SelectPrimitive.Viewport
 					className={cn(
 						position === "popper" &&
-							"h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1",
+							"h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width) scroll-my-1",
 					)}
 				>
 					{children}

@@ -1,4 +1,3 @@
-import { Star, StarHalf } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OutlineStar, SolidStar } from "../icons/icons";
 

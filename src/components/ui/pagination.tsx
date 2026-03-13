@@ -1,12 +1,11 @@
-import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	MoreHorizontalIcon,
-} from "lucide-react";
 import type * as React from "react";
 import { type Button, buttonVariants } from "src/components/ui/button";
 import { cn } from "@/lib/utils";
-import { OutlineChevronRight, OutlineMore } from "../icons/icons";
+import {
+	OutlineChevronLeft,
+	OutlineChevronRight,
+	OutlineMore,
+} from "../icons/icons";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
 	return (
@@ -75,7 +74,7 @@ function PaginationPrevious({
 			className={cn(buttonVariants({ variant: "ghost" }), className)}
 			{...props}
 		>
-			<ChevronLeftIcon />
+			<OutlineChevronLeft />
 			<span className="hidden sm:block">Previous</span>
 		</PaginationLink>
 	);

@@ -1,5 +1,6 @@
 import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
+import Cookies from "js-cookie";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,4 +20,12 @@ export function slugify(text: string) {
 		.replace(/\s+/g, "-") // Replace spaces with -
 		.replace(/[^\w\-]+/g, "") // Remove all non-word chars
 		.replace(/\-\-+/g, "-"); // Replace multiple - with single -
+}
+
+export function setCookie(name: string, value: string, maxAge: number) {
+	if (typeof document === "undefined") return;
+	Cookies.set(name, value, {
+		expires: maxAge / (60 * 60 * 24), // Convert seconds to days
+		path: "/",
+	});
 }

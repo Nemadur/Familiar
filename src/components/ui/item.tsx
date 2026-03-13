@@ -1,13 +1,12 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
-import * as React from "react";
+import type * as React from "react";
 import { Separator } from "src/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
+function ItemGroup({ className, ...props }: React.ComponentProps<"ul">) {
 	return (
-		<div
-			role="list"
+		<ul
 			data-slot="item-group"
 			className={cn("group/item-group flex flex-col", className)}
 			{...props}
@@ -56,9 +55,9 @@ function Item({
 	size = "default",
 	asChild = false,
 	...props
-}: React.ComponentProps<"div"> &
+}: React.ComponentProps<"li"> &
 	VariantProps<typeof itemVariants> & { asChild?: boolean }) {
-	const Comp = asChild ? Slot.Root : "div";
+	const Comp = asChild ? Slot.Root : "li";
 	return (
 		<Comp
 			data-slot="item"
