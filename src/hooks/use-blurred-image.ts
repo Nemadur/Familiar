@@ -1,10 +1,34 @@
 import { useEffect, useState } from "react";
+import { getBlurredImage } from "@/data/media";
 
-export function useBlurredImage(src: string | undefined, shouldBlur: boolean) {
+export function useBlurredImage(
+	src: string | undefined,
+	shouldBlur: boolean,
+	assetId?: string,
+) {
 	const [blurredSrc, setBlurredSrc] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (!src || !shouldBlur) {
+		if (!shouldBlur) {
+			setBlurredSrc(null);
+			return;
+		}
+
+		// Use server-side proxy if assetId is available to hide the real URL
+		if (assetId) {
+			getBlurredImage({ data: { assetId } })
+				.then((res) => {
+					if (res?.data) {
+						setBlurredSrc(res.data);
+					}
+				})
+				.catch((err) => {
+					console.error("Failed to load blurred image", err);
+				});
+			return;
+		}
+
+		if (!src) {
 			setBlurredSrc(null);
 			return;
 		}
@@ -49,7 +73,7 @@ export function useBlurredImage(src: string | undefined, shouldBlur: boolean) {
 			// after unmount, but React handles state updates on unmounted components gracefully (warns).
 			// Ideally we track the url in a ref to revoke it.
 		};
-	}, [src, shouldBlur]);
+	}, [src, shouldBlur, assetId]);
 
 	// Separate effect to cleanup blobs
 	useEffect(() => {

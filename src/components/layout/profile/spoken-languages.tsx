@@ -30,10 +30,10 @@ try {
 }
 
 export const levelColors: Record<string, string> = {
-	native: "bg-emerald-500/12 text-emerald-600",
-	fluent: "bg-blue-500/12 text-blue-600",
-	communicative: "bg-amber-500/12 text-amber-600",
-	learning: "bg-orange-500/12 text-orange-600",
+	native: "bg-success/12 text-success",
+	fluent: "bg-accent/12 text-accent",
+	communicative: "bg-warning/12 text-warning",
+	learning: "bg-danger/12 text-danger",
 };
 
 const getTwemojiUrl = (emoji: string) => {

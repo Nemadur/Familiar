@@ -34,7 +34,7 @@ function UserFeedWrapper({ user, me }: { user: User; me: User | null }) {
 
 	if (availableFeeds.length === 0) {
 		return (
-			<div className="flex h-full flex-1 flex-col items-center justify-center">
+			<div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center">
 				<EmptyPage
 					icon={OutlineUser}
 					title="No content yet"
@@ -46,5 +46,9 @@ function UserFeedWrapper({ user, me }: { user: User; me: User | null }) {
 
 	const defaultTab = availableFeeds[0].id;
 
-	return <UserFeedContent user={user} tab={defaultTab} isMe={isMe} />;
+	return (
+		<div className="flex flex-1 flex-col h-full">
+			<UserFeedContent user={user} tab={defaultTab} isMe={isMe} />
+		</div>
+	);
 }

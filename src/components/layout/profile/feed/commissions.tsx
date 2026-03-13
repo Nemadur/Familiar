@@ -91,7 +91,7 @@ function CommissionCard({
 
 	return (
 		<article
-			className="group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-border/50 bg-card p-2 text-left transition-colors hover:border-foreground/10 hover:bg-accent/50 xl:flex-row sm:rounded-4xl"
+			className="group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-border/50 bg-card p-2 text-left transition-colors hover:border-foreground/10 hover:bg-primary/6 xl:flex-row sm:rounded-4xl"
 			onMouseEnter={() => {
 				if (isLgOrLower) return;
 				setHoverPlaying(true);
@@ -156,7 +156,15 @@ function CommissionCard({
 						>
 							{hasMultipleImages && (
 								<>
-									<div className="pointer-events-none absolute right-0 bottom-0 left-0 z-0 h-16 bg-linear-to-t from-black/60 to-transparent" />
+									<div
+										className="absolute bottom-0 left-0 w-full h-1/3 pointer-events-none z-10 backdrop-blur-md"
+										style={{
+											maskImage:
+												"linear-gradient(to top, black 0%, black 30%, transparent 100%)",
+											WebkitMaskImage:
+												"linear-gradient(to top, black 0%, black 30%, transparent 100%)",
+										}}
+									/>
 									<ReelProgress className="top-auto right-auto bottom-2 left-1/2 z-10 w-1/2 -translate-x-1/2 px-1" />
 								</>
 							)}

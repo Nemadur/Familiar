@@ -1,4 +1,4 @@
-import { ScrollShadow } from "@heroui/react";
+import { ScrollShadow, Surface } from "@heroui/react";
 import { useQuery } from "@tanstack/react-query";
 import { ShieldAlert } from "lucide-react";
 import { useState } from "react";
@@ -222,7 +222,10 @@ export function PortfolioPostModal({
 
 						{/* Commissioned Badge / Review */}
 						{isCommissioned && (
-							<div className="rounded-2xl bg-primary-foreground border border-border p-2">
+							<Surface
+								variant={"default"}
+								className="rounded-2xl border border-border p-2"
+							>
 								{review ? (
 									<button
 										type="button"
@@ -327,7 +330,7 @@ export function PortfolioPostModal({
 										)}
 									</AnimateChangeInHeight>
 								)}
-							</div>
+							</Surface>
 						)}
 
 						{/* Featured Character */}
@@ -338,9 +341,10 @@ export function PortfolioPostModal({
 								</h4>
 								<div className="grid gap-2">
 									{linkedCharacters.map((character) => (
-										<div
+										<Surface
+											variant={"default"}
 											key={character.id}
-											className="flex items-center justify-between rounded-full border bg-card/50 p-1 hover:bg-accent/50 transition-colors cursor-pointer group"
+											className="flex items-center justify-between rounded-full border p-1 cursor-pointer group"
 										>
 											<div className="flex items-center gap-3">
 												<UserAvatar
@@ -368,7 +372,7 @@ export function PortfolioPostModal({
 													"components.profile.commissions.post_modal.view_in_gallery",
 												)}
 											</Button>
-										</div>
+										</Surface>
 									))}
 								</div>
 							</div>
@@ -377,7 +381,7 @@ export function PortfolioPostModal({
 						{/* Commission CTA */}
 						<Button
 							size={"xl"}
-							className="w-full border border-blue-600/30 justify-between bg-blue-100/12 dark:bg-blue-950/12 text-blue-500 hover:bg-blue-100/20 hover:dark:bg-blue-950/20 hover:text-blue-400 group"
+							className="w-full border border-accent/30 justify-between bg-accent/12 dark:bg-accent/12 text-accent hover:bg-accent-soft-hover hover:text-accent-soft-foreground group"
 						>
 							{t(
 								"components.profile.commissions.post_modal.commission_similar",
@@ -397,7 +401,7 @@ export function PortfolioPostModal({
 											<Badge
 												key={tag}
 												variant="secondary"
-												className="rounded-full px-3 py-1.5 text-xs font-medium bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground"
+												className="px-3 py-1.5"
 											>
 												{tag}
 											</Badge>
@@ -422,7 +426,7 @@ export function PortfolioPostModal({
 											<Badge
 												key={tag}
 												variant="destructive"
-												className="px-3 py-1.5 bg-danger/50 hover:bg-danger/70 text-danger-foreground"
+												className="px-3 py-1.5"
 											>
 												{tag}
 											</Badge>

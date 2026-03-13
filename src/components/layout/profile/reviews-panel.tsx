@@ -275,11 +275,10 @@ export function ReviewsPanel({
 										setCurrentPage((p) => Math.min(totalPages, p + 1));
 									}}
 									aria-disabled={currentPage === totalPages}
-									className={
-										currentPage === totalPages
-											? "pointer-events-none opacity-50"
-											: ""
-									}
+									className={cn(
+										currentPage === totalPages &&
+											"pointer-events-none opacity-50",
+									)}
 								/>
 							</PaginationItem>
 						</PaginationContent>

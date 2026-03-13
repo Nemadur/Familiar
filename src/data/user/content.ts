@@ -12,7 +12,7 @@ import type { Folder } from "@/types/folder";
 // Helper to create an authenticated client if token is present, or fallback
 const getAuthenticatedClient = (token?: string) => {
 	// If we have admin, use it (bypasses RLS)
-	if (supabaseAdmin) return supabaseAdmin;
+	// if (supabaseAdmin) return supabaseAdmin;
 
 	// If we have a user token, create a scoped client
 	if (token && supabaseUrl && supabaseAnonKey) {
@@ -319,8 +319,33 @@ export const getProfileContent = createServerFn({
 					count: folder.posts?.length || 0,
 					images: images,
 					hasSubfolders: subfoldersCount > 0,
+					color: undefined, // Ensure type consistency for fake data
 				};
 			});
+
+			// Fake data for testing premium features
+			if (type === "portfolio") {
+				mappedFolders.push({
+					id: "fake-premium-1",
+					parentId: null,
+					slug: "premium-showcase",
+					name: "Premium Showcase",
+					count: 12,
+					images: [],
+					hasSubfolders: true,
+					color: "#f43f5e", // Rose
+				});
+				mappedFolders.push({
+					id: "fake-featured-1",
+					parentId: null,
+					slug: "featured",
+					name: "Featured Works",
+					count: 5,
+					images: [],
+					hasSubfolders: true,
+					color: "#8b5cf6", // Violet
+				});
+			}
 
 			return {
 				categories: mappedCategories,

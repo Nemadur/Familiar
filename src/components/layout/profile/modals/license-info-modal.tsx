@@ -1,3 +1,4 @@
+import { ScrollShadow, Surface } from "@heroui/react";
 import { Check, Maximize2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
@@ -7,6 +8,7 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -43,7 +45,7 @@ export function LicenseInfoModal({
 					</p>
 				</DialogHeader>
 
-				<div className="flex-1 overflow-y-auto pr-2">
+				<ScrollShadow className="flex-1 overflow-y-auto pr-2">
 					<h3 className="text-lg font-semibold mb-4 text-center text-muted-foreground">
 						{t(
 							"components.profile.commissions.modal.license_info_modal.system_licenses.title",
@@ -55,186 +57,183 @@ export function LicenseInfoModal({
 						className="w-full"
 						defaultValue="personal"
 					>
-						<AccordionItem
-							value="personal"
-							className="border-b-0 mb-4 rounded-xl bg-secondary/30 px-4"
-						>
-							<AccordionTrigger className="hover:no-underline py-4">
-								<div className="flex flex-col items-start text-left">
-									<span className="font-semibold text-lg">
-										{t(
-											"components.profile.commissions.modal.license_info_modal.personal.title",
-										)}
-									</span>
-									<span className="text-sm text-muted-foreground font-normal">
-										{t(
-											"components.profile.commissions.modal.license_info_modal.personal.description",
-										)}
-									</span>
-								</div>
-							</AccordionTrigger>
-							<AccordionContent className="pb-4">
-								<div className="space-y-4 pt-2">
-									<div className="flex items-start gap-3">
-										<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-										<span className="text-sm">
+						<AccordionItem value="personal" className="border-b-0 mb-4">
+							<Surface variant="secondary" className="rounded-2xl px-4">
+								<AccordionTrigger className="hover:no-underline py-4">
+									<div className="flex flex-col items-start text-left">
+										<span className="font-semibold text-lg">
 											{t(
-												"components.profile.commissions.modal.license_info_modal.personal.allowed.personal_use",
+												"components.profile.commissions.modal.license_info_modal.personal.title",
+											)}
+										</span>
+										<span className="text-sm text-muted-foreground font-normal">
+											{t(
+												"components.profile.commissions.modal.license_info_modal.personal.description",
 											)}
 										</span>
 									</div>
-									<div className="flex items-start gap-3">
-										<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-										<span className="text-sm text-muted-foreground">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.personal.forbidden.monetized",
-											)}
-										</span>
-									</div>
-									<div className="flex items-start gap-3">
-										<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-										<span className="text-sm text-muted-foreground">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.personal.forbidden.commercial",
-											)}
-										</span>
-									</div>
-								</div>
-							</AccordionContent>
-						</AccordionItem>
-
-						<AccordionItem
-							value="monetized"
-							className="border-b-0 mb-4 rounded-xl bg-secondary/30 px-4"
-						>
-							<AccordionTrigger className="hover:no-underline py-4">
-								<div className="flex flex-col items-start text-left">
-									<span className="font-semibold text-lg">
-										{t(
-											"components.profile.commissions.modal.license_info_modal.monetized.title",
-										)}
-									</span>
-									<span className="text-sm text-muted-foreground font-normal">
-										{t(
-											"components.profile.commissions.modal.license_info_modal.monetized.description",
-										)}
-									</span>
-								</div>
-							</AccordionTrigger>
-							<AccordionContent className="pb-4">
-								<div className="space-y-4 pt-2">
-									<div className="flex items-start gap-3">
-										<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-										<span className="text-sm">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.monetized.allowed.personal_use",
-											)}
-										</span>
-									</div>
-									<div className="flex items-start gap-3">
-										<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-										<span className="text-sm">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.monetized.allowed.monetized_content",
-											)}
-										</span>
-									</div>
-									<div className="flex items-start gap-3">
-										<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-										<span className="text-sm text-muted-foreground">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.monetized.forbidden.commercial",
-											)}
-										</span>
-									</div>
-								</div>
-							</AccordionContent>
-						</AccordionItem>
-
-						<AccordionItem
-							value="commercial"
-							className="border-b-0 rounded-xl bg-secondary/30 px-4"
-						>
-							<AccordionTrigger className="hover:no-underline py-4">
-								<div className="flex flex-col items-start text-left">
-									<span className="font-semibold text-lg">
-										{t(
-											"components.profile.commissions.modal.license_info_modal.commercial.title",
-										)}
-									</span>
-									<span className="text-sm text-muted-foreground font-normal">
-										{t(
-											"components.profile.commissions.modal.license_info_modal.commercial.description",
-										)}
-									</span>
-								</div>
-							</AccordionTrigger>
-							<AccordionContent className="pb-4">
-								<div className="space-y-4 pt-2">
-									<div className="flex items-start gap-3">
-										<div className="min-w-24 text-sm font-medium">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.commercial.licensee.label",
-											)}
-										</div>
-										<div className="text-sm text-muted-foreground">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.commercial.licensee.value",
-											)}
-										</div>
-									</div>
-									<div className="h-px bg-border my-2" />
-									<div className="flex items-start gap-3">
-										<div className="min-w-24 text-sm font-medium">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.label",
-											)}
-										</div>
-										<div className="space-y-3 flex-1">
-											<div className="flex items-start gap-2">
-												<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-												<span className="text-sm">
-													{t(
-														"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.allowed.creation",
-													)}
-												</span>
-											</div>
-											<div className="flex items-start gap-2">
-												<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-												<span className="text-sm">
-													{t(
-														"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.allowed.distribution",
-													)}
-												</span>
-											</div>
-											<div className="flex items-start gap-2">
-												<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-												<span className="text-sm text-muted-foreground">
-													{t(
-														"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.forbidden.reselling",
-													)}
-												</span>
-											</div>
-										</div>
-									</div>
-									<div className="h-px bg-border my-2" />
-									<div className="flex items-start gap-3">
-										<div className="min-w-24 text-sm font-medium">
-											{t(
-												"components.profile.commissions.modal.license_info_modal.commercial.credit.label",
-											)}
-										</div>
-										<div className="flex items-start gap-2 flex-1">
+								</AccordionTrigger>
+								<AccordionContent className="pb-4">
+									<div className="space-y-4 pt-2">
+										<div className="flex items-start gap-3">
 											<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
 											<span className="text-sm">
 												{t(
-													"components.profile.commissions.modal.license_info_modal.commercial.credit.value",
+													"components.profile.commissions.modal.license_info_modal.personal.allowed.personal_use",
+												)}
+											</span>
+										</div>
+										<div className="flex items-start gap-3">
+											<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+											<span className="text-sm text-muted-foreground">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.personal.forbidden.monetized",
+												)}
+											</span>
+										</div>
+										<div className="flex items-start gap-3">
+											<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+											<span className="text-sm text-muted-foreground">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.personal.forbidden.commercial",
 												)}
 											</span>
 										</div>
 									</div>
-								</div>
-							</AccordionContent>
+								</AccordionContent>
+							</Surface>
+						</AccordionItem>
+
+						<AccordionItem value="monetized" className="border-b-0 mb-4">
+							<Surface variant="secondary" className="rounded-2xl px-4">
+								<AccordionTrigger className="hover:no-underline py-4">
+									<div className="flex flex-col items-start text-left">
+										<span className="font-semibold text-lg">
+											{t(
+												"components.profile.commissions.modal.license_info_modal.monetized.title",
+											)}
+										</span>
+										<span className="text-sm text-muted-foreground font-normal">
+											{t(
+												"components.profile.commissions.modal.license_info_modal.monetized.description",
+											)}
+										</span>
+									</div>
+								</AccordionTrigger>
+								<AccordionContent className="pb-4">
+									<div className="space-y-4 pt-2">
+										<div className="flex items-start gap-3">
+											<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+											<span className="text-sm">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.monetized.allowed.personal_use",
+												)}
+											</span>
+										</div>
+										<div className="flex items-start gap-3">
+											<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+											<span className="text-sm">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.monetized.allowed.monetized_content",
+												)}
+											</span>
+										</div>
+										<div className="flex items-start gap-3">
+											<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+											<span className="text-sm text-muted-foreground">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.monetized.forbidden.commercial",
+												)}
+											</span>
+										</div>
+									</div>
+								</AccordionContent>
+							</Surface>
+						</AccordionItem>
+
+						<AccordionItem value="commercial" className="border-b-0">
+							<Surface variant="secondary" className="rounded-2xl px-4">
+								<AccordionTrigger className="hover:no-underline py-4">
+									<div className="flex flex-col items-start text-left">
+										<span className="font-semibold text-lg">
+											{t(
+												"components.profile.commissions.modal.license_info_modal.commercial.title",
+											)}
+										</span>
+										<span className="text-sm text-muted-foreground font-normal">
+											{t(
+												"components.profile.commissions.modal.license_info_modal.commercial.description",
+											)}
+										</span>
+									</div>
+								</AccordionTrigger>
+								<AccordionContent className="pb-4">
+									<div className="space-y-4 pt-2">
+										<div className="flex items-start gap-3">
+											<div className="min-w-24 text-sm font-medium">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.commercial.licensee.label",
+												)}
+											</div>
+											<div className="text-sm text-muted-foreground">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.commercial.licensee.value",
+												)}
+											</div>
+										</div>
+										<div className="h-px bg-border my-2" />
+										<div className="flex items-start gap-3">
+											<div className="min-w-24 text-sm font-medium">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.label",
+												)}
+											</div>
+											<div className="space-y-3 flex-1">
+												<div className="flex items-start gap-2">
+													<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+													<span className="text-sm">
+														{t(
+															"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.allowed.creation",
+														)}
+													</span>
+												</div>
+												<div className="flex items-start gap-2">
+													<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+													<span className="text-sm">
+														{t(
+															"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.allowed.distribution",
+														)}
+													</span>
+												</div>
+												<div className="flex items-start gap-2">
+													<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+													<span className="text-sm text-muted-foreground">
+														{t(
+															"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.forbidden.reselling",
+														)}
+													</span>
+												</div>
+											</div>
+										</div>
+										<div className="h-px bg-border my-2" />
+										<div className="flex items-start gap-3">
+											<div className="min-w-24 text-sm font-medium">
+												{t(
+													"components.profile.commissions.modal.license_info_modal.commercial.credit.label",
+												)}
+											</div>
+											<div className="flex items-start gap-2 flex-1">
+												<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+												<span className="text-sm">
+													{t(
+														"components.profile.commissions.modal.license_info_modal.commercial.credit.value",
+													)}
+												</span>
+											</div>
+										</div>
+									</div>
+								</AccordionContent>
+							</Surface>
 						</AccordionItem>
 					</Accordion>
 
@@ -248,13 +247,18 @@ export function LicenseInfoModal({
 							</h3>
 							<div className="space-y-4">
 								{customLicenses.map((license) => (
-									<div
+									<Surface
+										variant="secondary"
 										key={license.id}
-										className="rounded-xl border bg-secondary/30 p-6 shadow-sm relative"
+										className="rounded-2xl p-4 relative"
 									>
-										<div className="absolute top-4 right-4 text-muted-foreground">
-											<Maximize2 className="w-4 h-4" />
-										</div>
+										<Button
+											size={"icon-sm"}
+											variant={"ghost"}
+											className="absolute top-4 right-4"
+										>
+											<Maximize2 className="size-4" />
+										</Button>
 										<div className="flex items-center gap-2 mb-2">
 											<h4 className="font-bold text-lg">{license.label}</h4>
 										</div>
@@ -281,12 +285,12 @@ export function LicenseInfoModal({
 												variant="restricted"
 											/>
 										</div>
-									</div>
+									</Surface>
 								))}
 							</div>
 						</div>
 					)}
-				</div>
+				</ScrollShadow>
 			</DialogContent>
 		</Dialog>
 	);

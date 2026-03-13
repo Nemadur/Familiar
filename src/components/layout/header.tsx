@@ -31,7 +31,7 @@ export default function Header() {
 	const { user } = useAuth();
 
 	return (
-		<header className="sticky top-0 z-50 px-5">
+		<header className="sticky top-0 z-50 px-4">
 			<div className="flex h-16 items-center justify-between gap-4">
 				{/* NAVIGATION */}
 				<div className="flex items-center gap-2">
@@ -82,7 +82,6 @@ export default function Header() {
 const MobileNav = () => {
 	const { t } = useTranslation();
 	const { user } = useAuth();
-	const { setTheme, userTheme } = useTheme();
 
 	return (
 		<Sheet>

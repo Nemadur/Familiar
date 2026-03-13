@@ -6,4 +6,7 @@ export interface Folder {
 	count: number;
 	images: string[];
 	hasSubfolders?: boolean;
+	// Premium customization
+	color?: string;
+	icon?: React.ElementType;
 }

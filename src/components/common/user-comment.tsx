@@ -1,3 +1,4 @@
+import { Surface } from "@heroui/react";
 import { AuthError } from "@supabase/supabase-js";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -26,12 +27,18 @@ export function UserComment({
 	return (
 		<div className={cn("flex flex-col gap-1", className)}>
 			<div className="flex items-start gap-3 py-2">
-				<Link to={author?.username}>
+				<Link
+					to="/$username"
+					params={{ username: author?.username || "unknown" }}
+				>
 					<UserAvatar user={author ?? undefined} />
 				</Link>
 				<div className="flex-1 min-w-0">
 					<div className="flex items-center justify-between">
-						<Link to={author?.username}>
+						<Link
+							to="/$username"
+							params={{ username: author?.username || "unknown" }}
+						>
 							<div className="flex flex-col">
 								<div className="flex items-center gap-1">
 									<span className="font-semibold text-sm">
@@ -53,13 +60,12 @@ export function UserComment({
 				</div>
 			</div>
 			{children && (
-				<div
-					className={
-						"ml-12 md:ml-13 rounded-2xl rounded-tl-sm bg-secondary p-4 text-secondary-foreground text-sm"
-					}
+				<Surface
+					variant="secondary"
+					className={"ml-12 md:ml-13 rounded-2xl rounded-tl-sm p-4 text-sm"}
 				>
 					{children}
-				</div>
+				</Surface>
 			)}
 		</div>
 	);

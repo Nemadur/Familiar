@@ -1,6 +1,7 @@
 import { EyeOff } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { OutlineEyeOff } from "@/components/icons/icons";
 import {
 	Reel,
 	ReelContent,
@@ -53,7 +54,11 @@ export const FeedItem = memo(function FeedItem({
 	const hasContentWarnings =
 		post.contentWarnings && post.contentWarnings.length > 0;
 	const shouldBlur = hasContentWarnings && !isContentRevealed;
-	const blurredImageSrc = useBlurredImage(post.images?.[0]?.path, shouldBlur);
+	const blurredImageSrc = useBlurredImage(
+		post.images?.[0]?.path,
+		shouldBlur,
+		post.images?.[0]?.assetId,
+	);
 
 	useEffect(() => {
 		if (isLgOrLower) {
@@ -284,7 +289,7 @@ export const FeedItem = memo(function FeedItem({
 					</div>
 				) : (
 					<Reel
-						className="h-full w-full"
+						className="h-full w-full relative"
 						data={reelItems}
 						index={currentImageIndex}
 						onIndexChange={setCurrentImageIndex}
@@ -313,7 +318,18 @@ export const FeedItem = memo(function FeedItem({
 						<div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-linear-to-b from-black/60 via-black/30 to-transparent" />
 
 						{/* Bottom gradient */}
-						<div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-linear-to-t from-black/60 via-black/30 to-transparent" />
+						{/* <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-linear-to-t from-black/60 via-black/30 to-transparent" /> */}
+
+						{/* Smooth Blur */}
+						<div
+							className="absolute bottom-0 left-0 w-full h-1/2 pointer-events-none z-10 backdrop-blur-md"
+							style={{
+								maskImage:
+									"linear-gradient(to top, black 0%, black 45%, transparent 100%)",
+								WebkitMaskImage:
+									"linear-gradient(to top, black 0%, black 45%, transparent 100%)",
+							}}
+						/>
 
 						{/* Hide Content Button (when revealed) */}
 						{hasContentWarnings && isContentRevealed && (
@@ -323,13 +339,13 @@ export const FeedItem = memo(function FeedItem({
 										<Button
 											variant={"ghost"}
 											size={"icon"}
-											className="absolute right-2 top-2 z-20 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 hover:text-white"
+											className="absolute right-2 top-2 z-20 backdrop-blur-md"
 											onClick={(e) => {
 												e.stopPropagation();
 												setIsContentRevealed(false);
 											}}
 										>
-											<EyeOff className="size-4" />
+											<OutlineEyeOff />
 										</Button>
 									</TooltipTrigger>
 									<TooltipContent side={"left"}>

@@ -103,8 +103,8 @@ function CommandList({
 				"[&_>_[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]",
 				"[&_>_[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]",
 				// Reset top rounding if there's an element preceding the list (like input)
-				"[&:not(:first-child)_[cmdk-group]:not([hidden]):first-child_[cmdk-group-items]>[data-slot=command-item]:first-child]:rounded-t-sm",
-				"[&:not(:first-child)_>_[data-slot=command-item]:first-child]:rounded-t-sm",
+				"[&:not(:first-child)_[cmdk-group]:not([hidden]):first-child_[cmdk-group-items]>[data-slot=command-item]:first-child]:rounded-t-lg",
+				"[&:not(:first-child)_>_[data-slot=command-item]:first-child]:rounded-t-lg",
 				className,
 			)}
 			{...props}
@@ -161,7 +161,7 @@ function CommandItem({
 		<CommandPrimitive.Item
 			data-slot="command-item"
 			className={cn(
-				"data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"data-[selected=true]:bg-primary/6 data-[selected=true]:text-primary [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 				className,
 			)}
 			{...props}

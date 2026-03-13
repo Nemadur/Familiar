@@ -67,11 +67,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						<ThemeProvider>
 							<Toaster />
 							<div className={"flex min-h-screen flex-col"}>
-								<Container>
+								<Container className="flex h-full flex-1 flex-col">
 									<Header />
 									<main
 										className={
-											"flex min-h-[calc(100dvh-4rem)] h-full flex-1 flex-col sm:pb-5 lg:px-5"
+											"flex h-full min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5 lg:px-5"
 										}
 									>
 										{children}

@@ -1,8 +1,10 @@
+import { ScrollShadow } from "@heroui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
 	OutlineChat,
+	OutlineCheckmarkSeal,
 	OutlineChevronRight,
 	OutlineClock03,
 	OutlineCrown,
@@ -16,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAvailableFeeds } from "@/hooks/use-available-feeds";
 import { useBento } from "@/hooks/use-bento";
 import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
 import { type Tile, toPixels } from "@/lib/bento";
@@ -34,8 +37,6 @@ import { ProfileDetailsContent } from "./profile-details";
 import { ProfileSocials } from "./socials";
 import { SpokenLanguageBadge } from "./spoken-languages";
 import { mapFolderToFolderType, mapPostToPostWithAuthor } from "./utils";
-import { useAvailableFeeds } from "@/hooks/use-available-feeds";
-import { ScrollShadow } from "@heroui/react";
 
 // Temporary stubs for missing components
 const FollowButton = ({
@@ -254,12 +255,12 @@ export function UserFeedsSkeleton() {
 
 export function UserProfileSkeleton() {
 	return (
-		<div className={"md:px-6"}>
+		<div className="flex h-full flex-1 flex-col">
 			<ProfileCoverSkeleton />
-			<div className={"container mx-auto flex flex-col flex-1 md:px-4"}>
+			<div className={"container mx-auto flex flex-col flex-1 h-full"}>
 				<div
 					className={
-						"relative flex-1 h-full grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
+						"relative flex-1 px-5 h-full grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
 					}
 				>
 					<UserInfoSkeleton />
@@ -290,23 +291,21 @@ export default function UserProfile({
 	if (pending) return <UserProfileSkeleton />;
 
 	return (
-		<div className={"md:px-6 h-full flex-1"}>
+		<div className="flex flex-1 flex-col">
 			<ProfileCover user={user} />
-			<div className={"flex-1 min-h-0 md:px-4"}>
-				<div className={"flex-1 h-full"}>
-					<div
-						className={
-							"max-lg:px-5 grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
-						}
-					>
-						{/* Sidebar */}
+			<div className="flex min-h-0 flex-1 flex-col">
+				<div className="flex flex-1 flex-col gap-4 md:flex-row md:gap-8 px-5">
+					{/* Sidebar */}
+					<div className="shrink-0 md:w-[240px] lg:w-[280px]">
 						<UserProfileSidebar
 							user={user}
 							isMe={isMe}
 							isSuspended={isSuspended}
 						/>
+					</div>
 
-						{/* Main Content */}
+					{/* Main Content */}
+					<div className="flex min-w-0 flex-1 flex-col">
 						<UserProfileMainContent
 							user={user}
 							isSuspended={isSuspended}
@@ -335,11 +334,67 @@ export function UserProfileSidebar({
 	const onEditProfile = () => toast("open settings");
 	const { t } = useTranslation();
 
+	const Actions = () => (
+		<div className="flex flex-col gap-3">
+			{isMe ? (
+				<>
+					<Button
+						variant="secondary"
+						className="w-full"
+						onClick={onEditProfile}
+					>
+						{t("components.profile.actions.edit_profile")}
+					</Button>
+					<div className="flex gap-2">
+						<Button variant="secondary" className="flex-1">
+							{t("components.profile.actions.followers")}
+						</Button>
+						<Button variant="secondary" className="flex-1">
+							{t("components.profile.actions.following")}
+						</Button>
+					</div>
+				</>
+			) : (
+				<div className="flex items-center gap-2">
+					<FollowButton
+						isFollowing={false} // TODO: Implement follow status
+						loading={false}
+						canFollow={true}
+						onToggle={() => {}}
+						showText={true}
+						className="flex-1"
+					/>
+					{/* disabled for now */}
+					<Button variant="secondary" disabled size="icon">
+						<OutlineChat />
+					</Button>
+					<Button variant="ghost" size="icon">
+						<OutlineMore />
+					</Button>
+				</div>
+			)}
+
+			{/* Work Queue Status */}
+			{/* TODO: check if user is artist and has premium */}
+			{user.roles.includes("artist") && (
+				<Button variant="secondary">
+					<OutlineCheckmarkSeal className="fill-current" />
+					{t("components.profile.actions.work_queue")}
+				</Button>
+			)}
+		</div>
+	);
+
 	return (
 		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10">
-			{/* Avatar */}
-			<div className="relative z-10 flex">
+			{/* Avatar & Actions (Desktop: Stacked, Mobile: Avatar Left, Actions Right) */}
+			<div className="relative z-10 flex flex-row items-end justify-between gap-4 md:flex-col md:items-start md:justify-start">
 				<UserAvatar user={user} isHuge hasOutline />
+				{!isMe && (
+					<div className="w-fit md:hidden">
+						<Actions />
+					</div>
+				)}
 			</div>
 
 			{/* Profile Info */}
@@ -356,89 +411,48 @@ export function UserProfileSidebar({
 				</div>
 
 				{/* Actions */}
-				<div className="flex flex-col gap-3">
-					{isMe ? (
-						<>
-							<Button
-								variant="secondary"
-								className="w-full"
-								onClick={onEditProfile}
-							>
-								{t("components.profile.actions.edit_profile")}
-							</Button>
-							<div className="flex gap-2">
-								<Button variant="secondary" className="flex-1">
-									{t("components.profile.actions.followers")}
-								</Button>
-								<Button variant="secondary" className="flex-1">
-									{t("components.profile.actions.following")}
-								</Button>
-							</div>
-						</>
-					) : (
-						<div className="flex items-center gap-2">
-							<FollowButton
-								isFollowing={false} // TODO: Implement follow status
-								loading={false}
-								canFollow={true}
-								onToggle={() => {}}
-								showText={true}
-								className="flex-1"
-							/>
-							{/* disabled for now */}
-							<Button variant="secondary" disabled size="icon">
-								<OutlineChat />
-							</Button>
-							<Button variant="ghost" size="icon">
-								<OutlineMore />
-							</Button>
-						</div>
-					)}
-
-					{/* Work Queue Status */}
-					{/* TODO: check if user is artist and has premium */}
-					{user.roles.includes("artist") && (
-						<Button variant="secondary">
-							<OutlineCrown className="fill-current" />
-							{t("components.profile.actions.work_queue")}
-						</Button>
-					)}
+				<div className={isMe ? "block" : "hidden md:block"}>
+					<Actions />
 				</div>
 
 				{/* Time/Lang/Pronounce */}
-				<div className="flex flex-col gap-1 text-neutral-500 text-xs">
-					{user.timezone && (
-						<div className="flex items-center gap-2">
-							<OutlineClock03 size={14} />
-							<span>
-								{t("components.profile.info.local_time")}{" "}
-								{userLocalTime({ timeZone: user.timezone })}
-							</span>
-						</div>
-					)}
-					{user.pronouns && (
-						<div className="flex items-center gap-2">
-							<OutlineUser size={14} />
-							<span>{user.pronouns}</span>
-						</div>
-					)}
-					{user.spoken_languages && user.spoken_languages.length > 0 && (
-						<div className="flex items-center gap-2">
-							<OutlineGlobe size={14} />
-							<TooltipProvider delayDuration={100}>
-								<div className="flex items-center gap-1.5 flex-wrap">
-									{user.spoken_languages.map((lang, index, array) => (
-										<SpokenLanguageBadge
-											key={lang.locale}
-											language={lang}
-											showSeparator={index < array.length - 1}
-										/>
-									))}
-								</div>
-							</TooltipProvider>
-						</div>
-					)}
-				</div>
+				{(user.timezone ||
+					user.pronouns ||
+					(user.spoken_languages && user.spoken_languages.length > 0)) && (
+					<div className="flex flex-col gap-1 text-neutral-500 text-xs">
+						{user.timezone && (
+							<div className="flex items-center gap-2">
+								<OutlineClock03 size={14} />
+								<span>
+									{t("components.profile.info.local_time")}{" "}
+									{userLocalTime({ timeZone: user.timezone })}
+								</span>
+							</div>
+						)}
+						{user.pronouns && (
+							<div className="flex items-center gap-2">
+								<OutlineUser size={14} />
+								<span>{user.pronouns}</span>
+							</div>
+						)}
+						{user.spoken_languages && user.spoken_languages.length > 0 && (
+							<div className="flex items-center gap-2">
+								<OutlineGlobe size={14} />
+								<TooltipProvider delayDuration={100}>
+									<div className="flex items-center gap-1.5 flex-wrap">
+										{user.spoken_languages.map((lang, index, array) => (
+											<SpokenLanguageBadge
+												key={lang.locale}
+												language={lang}
+												showSeparator={index < array.length - 1}
+											/>
+										))}
+									</div>
+								</TooltipProvider>
+							</div>
+						)}
+					</div>
+				)}
 
 				{!isSuspended ? (
 					<ProfileBio user={user} isShort />
@@ -506,7 +520,7 @@ function UserFeeds({
 
 	if (availableFeeds.length === 0) {
 		return (
-			<div className="flex h-full flex-1 flex-col items-center justify-center">
+			<div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center">
 				<EmptyPage
 					icon={OutlineUser}
 					title={t("components.profile.feeds.empty.title")}
@@ -517,8 +531,8 @@ function UserFeeds({
 	}
 
 	return (
-		<>
-			<div className="mb-6 flex justify-start border-border border-b transition-all pt-2 pb-0">
+		<div className="flex h-full flex-1 flex-col">
+			<div className="mb-6 flex justify-start border-border border-b transition-all pt-2 pb-0 shrink-0">
 				<ScrollShadow
 					orientation="horizontal"
 					className="w-full h-full"
@@ -535,8 +549,10 @@ function UserFeeds({
 				</ScrollShadow>
 			</div>
 
-			<div className="mt-0 flex-1 flex flex-col pb-24">{children}</div>
-		</>
+			<div className="mt-0 flex-1 flex flex-col pb-24 min-h-0 h-full">
+				{children}
+			</div>
+		</div>
 	);
 }
 

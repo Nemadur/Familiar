@@ -530,7 +530,7 @@ export function FilterBarV4({
 						value={searchQuery}
 						onChange={(e) => onSearchChange(e.target.value)}
 						placeholder={searchPlaceholder}
-						className="bg-background/50 pl-9"
+						className="bg-background/50 pl-9 h-10"
 					/>
 				</div>
 

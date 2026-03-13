@@ -52,7 +52,9 @@ function LanguageSelect() {
 			</PopoverTrigger>
 			{/* CONTENT */}
 			<PopoverContent
-				className={"w-[200px] p-0 rounded-(--command-content-radius) overflow-hidden"}
+				className={
+					"w-[200px] p-0 rounded-(--command-content-radius) overflow-hidden"
+				}
 				style={
 					{
 						"--command-content-radius": "1.25rem",

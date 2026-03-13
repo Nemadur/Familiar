@@ -59,7 +59,7 @@ function ProfileCover({ user }: { user: User }) {
 }
 
 function ProfileCoverSkeleton() {
-	return <Skeleton className="h-48 w-full rounded-3xl md:h-72" />;
+	return <Skeleton className="h-48 w-full lg:rounded-3xl md:h-72" />;
 }
 
 export { ProfileCover, ProfileCoverSkeleton };

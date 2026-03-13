@@ -4,7 +4,7 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-	"inline-flex items-center justify-center cursor-pointer gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:mt-0.5 [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border border-transparent",
+	"inline-flex items-center justify-center cursor-pointer gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-color disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:mt-0.5 [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-accent/20 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border border-transparent",
 	{
 		variants: {
 			variant: {
@@ -12,18 +12,20 @@ const buttonVariants = cva(
 				destructive:
 					"bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
 				outline:
-					"bg-transparent hover:bg-primary/10 hover:text-accent-foreground dark:bg-border/30 border-broder ",
-				secondary: "bg-primary/6 text-secondary-foreground hover:bg-primary/10",
-				ghost: "text-primary hover:bg-primary/10 hover:text-accent-foreground",
+					"bg-transparent hover:bg-primary/10 hover:text-accent-foreground dark:bg-border/30 border-border ",
+				secondary:
+					"bg-primary/6 dark:bg-primary/3 text-secondary-foreground hover:bg-primary/10 dark:hover:bg-primary/6",
+				ghost:
+					"text-primary hover:bg-primary/6 bg-transparent dark:hover:bg-primary/3",
 				link: "text-blue-600 dark:text-blue-400 underline-offset-4 hover:underline p-0!",
 				"destructive-ghost":
 					"text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20",
 			},
 			size: {
 				default:
-					"h-9 px-4 py-2 has-[>svg:first-child]:pl-3 has-[>svg:last-child]:pr-3 has-[>span:not(.group\\/avatar):last-child]:pr-2",
-				sm: "h-8 gap-1.5 px-3 text-xs has-[>svg:first-child]:pl-2.5 has-[>svg:last-child]:pr-2.5 [&_svg:not([class*='size-'])]:size-3.5",
-				lg: "h-10 px-6 has-[>svg:first-child]:pl-3 has-[>svg:last-child]:pr-4 has-[>span:not(.group\\/avatar):last-child]:pr-3",
+					"h-9 px-4 py-2 has-[>svg:first-child]:pl-2 has-[>svg:last-child]:pr-2 has-[>span:not(.group\\/avatar):last-child]:pr-2",
+				sm: "h-8 gap-1.5 px-3 text-xs has-[>svg:first-child]:pl-1.5 has-[>svg:last-child]:pr-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+				lg: "h-10 px-6 has-[>svg:first-child]:pl-3 has-[>svg:last-child]:pr-3 has-[>span:not(.group\\/avatar):last-child]:pr-3",
 				xl: "h-12 px-8 has-[>svg:first-child]:pl-6 has-[>svg:last-child]:pr-6",
 				icon: "size-9",
 				"icon-sm": "size-8",

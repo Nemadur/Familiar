@@ -1,7 +1,8 @@
-import { Folder as FolderIcon } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineFolder } from "@/components/icons/icons";
+import { OutlineFolder, OutlineStar } from "@/components/icons/icons";
 import type { Folder } from "@/data/folders";
+import { getStyleFromHexShade } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 
 interface FolderCardProps {
@@ -12,7 +13,39 @@ interface FolderCardProps {
 
 export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 	const { t } = useTranslation();
-	const { name: title, count, images = [], hasSubfolders } = folder;
+	// Destructure premium props with defaults or overrides
+	const {
+		name: title,
+		count,
+		images = [],
+		hasSubfolders,
+		color: rawColor,
+		icon: CustomIcon,
+	} = folder;
+
+	// Fake data logic: assign color/icon if not present for demo
+	// In production, these would come from the DB
+	const color =
+		rawColor ||
+		(folder.slug === "featured" || folder.slug === "premium"
+			? "#8b5cf6" // Purple
+			: undefined);
+
+	const Icon =
+		CustomIcon ||
+		(folder.slug === "featured" ? OutlineStar : undefined) ||
+		OutlineFolder;
+
+	// Generate styles if color is present
+	const styles = useMemo(() => {
+		if (!color) return {};
+		return {
+			front: getStyleFromHexShade(color, "100", "backgroundColor"),
+			back: getStyleFromHexShade(color, "200", "backgroundColor"),
+			text: getStyleFromHexShade(color, "950", "color"),
+			icon: getStyleFromHexShade(color, "950", "color"), // Or maybe 600?
+		};
+	}, [color]);
 
 	// Prepare items for the stack (max 3)
 	// Priority: Images -> Subfolder placeholder
@@ -44,48 +77,94 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 			)}
 		>
 			{/* Folder Back (with Tab) */}
-			<div className="absolute bottom-0 h-[85%] w-full rounded-xl rounded-tl-none bg-neutral-100 dark:bg-neutral-800">
+			<div
+				className="absolute bottom-0 h-[90%] w-full rounded-xl rounded-tl-none bg-sidebar-border dark:bg-muted transition-colors"
+				style={styles.back}
+			>
 				{/* Tab */}
-				<div className="absolute -top-3 left-0 h-6 w-[40%] rounded-t-lg bg-neutral-100 dark:bg-neutral-800" />
+				<div
+					className="absolute -top-3 left-0 h-6 w-[40%] rounded-t-lg bg-sidebar-border dark:bg-muted transition-colors"
+					style={styles.back}
+				/>
 				{/* Tab Connector Hider */}
-				<div className="absolute -top-1 left-0 h-4 w-[40%] bg-neutral-100 dark:bg-neutral-800" />
+				<div
+					className="absolute -top-1 left-0 h-4 w-[40%] bg-sidebar-border dark:bg-muted transition-colors"
+					style={styles.back}
+				/>
 			</div>
 
 			{/* Card Stack (Inside) */}
-			<div className="absolute inset-x-4 bottom-4 z-10 flex h-[70%] items-end justify-center transition-transform duration-300 ease-out group-hover:-translate-y-6 [&>div]:absolute [&>div]:transform [&>div]:overflow-hidden [&>div]:rounded-lg">
+			<div className="absolute inset-x-4 bottom-4 z-10 flex h-[75%] items-end justify-center transition-transform duration-300 ease-out group-hover:-translate-y-6 [&>div]:absolute [&>div]:transform [&>div]:overflow-hidden [&>div]:rounded-lg">
 				{/* Card 3 (Back) - Slot 2 */}
 				{backItem && (
 					<div className="h-[90%] w-[90%] translate-x-[-10%] -rotate-6 transition-transform duration-300 group-hover:translate-x-[-15%] group-hover:-translate-y-2 group-hover:-rotate-12 bg-neutral-100 dark:bg-neutral-800">
-						<FolderItemContent item={backItem} opacity={0.8} />
+						<FolderItemContent
+							item={backItem}
+							opacity={0.8}
+							customIcon={Icon}
+							customColorStyle={styles.text}
+						/>
 					</div>
 				)}
 
 				{/* Card 2 (Middle) - Slot 1 */}
 				{middleItem && (
-					<div className="h-[90%] w-[90%] translate-x-[5%] rotate-3 bg-blue-500 transition-transform duration-300 group-hover:translate-x-[10%] group-hover:-translate-y-3 group-hover:rotate-6 dark:bg-neutral-800">
-						<FolderItemContent item={middleItem} opacity={0.9} />
+					<div className="h-[90%] w-[90%] translate-x-[5%] rotate-3 bg-blue-500 transition-transform duration-300 group-hover:translate-x-[10%] group-hover:-translate-y-3 group-hover:rotate-6">
+						<FolderItemContent
+							item={middleItem}
+							opacity={0.9}
+							customIcon={Icon}
+							customColorStyle={styles.text}
+						/>
 					</div>
 				)}
 
 				{/* Card 1 (Front) - Slot 0 */}
 				{frontItem && (
-					<div className="flex h-[90%] w-[90%] items-center justify-center bg-neutral-200 dark:bg-neutral-700">
-						<FolderItemContent item={frontItem} />
+					<div className="flex h-[90%] w-[90%] items-center justify-center bg-muted-foreground/30 supports-backdrop:backdrop-blur-lg">
+						<FolderItemContent
+							item={frontItem}
+							customIcon={Icon}
+							customColorStyle={styles.text}
+						/>
 					</div>
 				)}
 			</div>
 
 			{/* Folder Front */}
-			{/* TODO: prepare for premium custom folder color and icon */}
-			<div className="absolute bottom-0 z-20 flex h-[75%] w-full origin-bottom flex-col justify-end rounded-xl bg-neutral-100 dark:bg-neutral-900 p-4">
+			<div
+				className="absolute bottom-0 z-20 flex h-[80%] w-full origin-bottom flex-col justify-end rounded-xl bg-input p-3 transition-colors"
+				style={styles.front}
+			>
 				{/* Folder Front Cutout/Detail */}
-				<div className="absolute top-0 left-1/2 h-1 w-12 -translate-x-1/2 rounded-b-sm bg-border/20" />
+				<div
+					className="absolute top-0 left-1/2 h-1 w-12 -translate-x-1/2 rounded-b-sm bg-border/20"
+					style={styles.back}
+				/>
+
+				{/* Custom Icon (if no images or explicitly shown? Usually icon is shown if empty or on top) */}
+				{/* Logic: if folder has color/icon, maybe show icon on front too? Or just use it for empty state? */}
+				{/* For now, just show icon if folder is empty or use it as placeholder */}
 
 				<div className="space-y-0.5">
-					<h3 className="truncate font-semibold text-foreground leading-tight">
+					{color && (
+						<div className="mb-0.5">
+							<Icon
+								className="size-7 shrink-0 text-muted-foreground"
+								style={styles.text}
+							/>
+						</div>
+					)}
+					<h3
+						className="truncate font-semibold text-foreground leading-tight"
+						style={styles.text}
+					>
 						{title}
 					</h3>
-					<p className="text-muted-foreground text-xs">
+					<p
+						className="text-muted-foreground text-xs"
+						style={styles.text ? { ...styles.text, opacity: 0.8 } : undefined}
+					>
 						{t("components.portfolio.folder.items", { count })}
 					</p>
 				</div>
@@ -97,16 +176,23 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 function FolderItemContent({
 	item,
 	opacity = 1,
+	customIcon: CustomIcon,
+	customColorStyle,
 }: {
 	item: string | "folder_placeholder" | undefined;
 	opacity?: number;
+	customIcon?: React.ElementType;
+	customColorStyle?: React.CSSProperties;
 }) {
 	if (!item) return null;
 	if (item === "folder_placeholder") {
-		// TODO: prepare for premium custom folder color and icon
+		const Icon = CustomIcon || OutlineFolder;
 		return (
 			<div className="flex h-full w-full items-start pt-2 justify-center">
-				<OutlineFolder className="size-8 text-muted-foreground" />
+				<Icon
+					className="size-8 text-muted-foreground"
+					style={customColorStyle}
+				/>
 			</div>
 		);
 	}

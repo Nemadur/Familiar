@@ -9,7 +9,7 @@ export function Container({
 }) {
 	const maxWidthClass = maxWidth === "lg" ? "max-w-xl" : "max-w-7xl";
 	return (
-		<div className={`mx-auto w-full ${maxWidthClass} px-0 ${className}`}>
+		<div className={`mx-auto w-full ${maxWidthClass} px-0 ${className || ""}`}>
 			{children}
 		</div>
 	);

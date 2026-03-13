@@ -1,4 +1,4 @@
-import { ScrollShadow } from "@heroui/react";
+import { ScrollShadow, Surface } from "@heroui/react";
 import {
 	Check,
 	Info,
@@ -17,6 +17,7 @@ import { MarkdownDisplay } from "@/components/common/markdown-display";
 import { UserComment } from "@/components/common/user-comment";
 import {
 	OutlineChat,
+	OutlineCheck,
 	OutlineQestionMarkCrFr,
 	SolidStar,
 } from "@/components/icons/icons";
@@ -301,7 +302,10 @@ export function CommissionModal({
 							</div>
 
 							{/* License Selector */}
-							<div className="space-y-3 rounded-xl bg-secondary/20 p-4 border">
+							<Surface
+								variant={"default"}
+								className="space-y-3 rounded-xl p-4 border"
+							>
 								<div className="flex items-center justify-between">
 									<h4 className="font-semibold text-sm">
 										{t(
@@ -324,23 +328,37 @@ export function CommissionModal({
 									{systemLicenses.map(({ key, option, isAvailable }) => {
 										if (isAvailable && option) {
 											return (
-												<div
+												<button
 													key={key}
+													type="button"
 													className={cn(
-														"flex items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors",
+														"relative flex w-full items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors text-left",
 														(option.included ||
 															selectedLicenses.includes(key)) &&
 															"border-primary/50 bg-primary/5",
+														!option.included && "cursor-pointer",
 													)}
+													disabled={option.included}
+													onClick={() => {
+														if (selectedLicenses.includes(key)) {
+															setSelectedLicenses((prev) =>
+																prev.filter((id) => id !== key),
+															);
+														} else {
+															setSelectedLicenses((prev) => [...prev, key]);
+														}
+													}}
 												>
 													{option.included ? (
-														<div className="flex h-4 w-4 shrink-0 items-center justify-center">
-															<Check className="h-4 w-4 text-primary" />
+														<div className="flex size-4 shrink-0 items-center justify-center">
+															<OutlineCheck size={16} />
 														</div>
 													) : (
 														<Checkbox
 															id={key}
 															checked={selectedLicenses.includes(key)}
+															className="relative z-10"
+															onClick={(e) => e.stopPropagation()}
 															onCheckedChange={(checked) => {
 																if (checked) {
 																	setSelectedLicenses((prev) => [...prev, key]);
@@ -352,7 +370,7 @@ export function CommissionModal({
 															}}
 														/>
 													)}
-													<div className="flex flex-1 items-center justify-between gap-2">
+													<div className="relative z-10 flex flex-1 items-center justify-between gap-2">
 														<div className="flex items-center gap-2">
 															<label
 																htmlFor={key}
@@ -378,14 +396,15 @@ export function CommissionModal({
 															</span>
 														)}
 													</div>
-												</div>
+												</button>
 											);
 										}
 
 										// Unavailable System License
 										return (
-											<div
+											<button
 												key={key}
+												type="button"
 												className="flex items-start gap-3 rounded-lg border border-dashed bg-muted/20 p-3 opacity-60"
 											>
 												<div className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -400,7 +419,7 @@ export function CommissionModal({
 														</span>
 													</div>
 												</div>
-											</div>
+											</button>
 										);
 									})}
 
@@ -420,13 +439,28 @@ export function CommissionModal({
 												<AccordionContent>
 													<div className="grid gap-2 pt-2">
 														{customLicenses.map((license) => (
-															<div
+															<button
 																key={license.id}
+																type="button"
 																className={cn(
-																	"flex items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors",
+																	"relative flex w-full items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors text-left",
 																	selectedLicenses.includes(license.id) &&
 																		"border-primary/50 bg-primary/5",
+																	!license.included && "cursor-pointer",
 																)}
+																disabled={license.included}
+																onClick={() => {
+																	if (selectedLicenses.includes(license.id)) {
+																		setSelectedLicenses((prev) =>
+																			prev.filter((id) => id !== license.id),
+																		);
+																	} else {
+																		setSelectedLicenses((prev) => [
+																			...prev,
+																			license.id,
+																		]);
+																	}
+																}}
 															>
 																<Checkbox
 																	id={license.id}
@@ -434,6 +468,8 @@ export function CommissionModal({
 																		license.id,
 																	)}
 																	disabled={license.included}
+																	className="relative z-10"
+																	onClick={(e) => e.stopPropagation()}
 																	onCheckedChange={(checked) => {
 																		if (checked) {
 																			setSelectedLicenses((prev) => [
@@ -447,7 +483,7 @@ export function CommissionModal({
 																		}
 																	}}
 																/>
-																<div className="flex flex-1 items-center justify-between gap-2">
+																<div className="relative z-10 flex flex-1 items-center justify-between gap-2">
 																	<div className="flex items-center gap-2">
 																		<label
 																			htmlFor={license.id}
@@ -470,7 +506,7 @@ export function CommissionModal({
 																		</span>
 																	)}
 																</div>
-															</div>
+															</button>
 														))}
 													</div>
 												</AccordionContent>
@@ -485,7 +521,7 @@ export function CommissionModal({
 										</div>
 									)}
 								</div>
-							</div>
+							</Surface>
 
 							{/* Artist Info */}
 							<UserComment author={userData}>
@@ -715,7 +751,7 @@ export function CommissionModal({
 						{/* Footer Actions */}
 						<div className="sticky bottom-0 z-20 space-y-4 border-t bg-background p-6 pb-8 md:pb-6">
 							{/* TOS Checkbox */}
-							<div className="flex items-start space-x-2 rounded-lg border p-2">
+							<div className="flex items-start gap-2">
 								<Checkbox
 									id="terms"
 									checked={termsAccepted}

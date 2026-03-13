@@ -6,6 +6,7 @@ import {
 import type * as React from "react";
 import { type Button, buttonVariants } from "src/components/ui/button";
 import { cn } from "@/lib/utils";
+import { OutlineChevronRight, OutlineMore } from "../icons/icons";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
 	return (
@@ -53,7 +54,7 @@ function PaginationLink({
 			data-active={isActive}
 			className={cn(
 				buttonVariants({
-					variant: isActive ? "outline" : "ghost",
+					variant: isActive ? "default" : "ghost",
 					size,
 				}),
 				className,
@@ -70,8 +71,8 @@ function PaginationPrevious({
 	return (
 		<PaginationLink
 			aria-label="Go to previous page"
-			size="default"
-			className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
+			size={"sm"}
+			className={cn(buttonVariants({ variant: "ghost" }), className)}
 			{...props}
 		>
 			<ChevronLeftIcon />
@@ -87,12 +88,12 @@ function PaginationNext({
 	return (
 		<PaginationLink
 			aria-label="Go to next page"
-			size="default"
-			className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
+			size="sm"
+			className={cn(buttonVariants({ variant: "ghost" }), className)}
 			{...props}
 		>
 			<span className="hidden sm:block">Next</span>
-			<ChevronRightIcon />
+			<OutlineChevronRight />
 		</PaginationLink>
 	);
 }
@@ -108,7 +109,7 @@ function PaginationEllipsis({
 			className={cn("flex size-9 items-center justify-center", className)}
 			{...props}
 		>
-			<MoreHorizontalIcon className="size-4" />
+			<OutlineMore className="rotate-90" />
 			<span className="sr-only">More pages</span>
 		</span>
 	);

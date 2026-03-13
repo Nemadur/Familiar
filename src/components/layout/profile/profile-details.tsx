@@ -1,5 +1,5 @@
-import { memo } from "react";
 import type * as React from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	OutlineCalendar,
@@ -12,6 +12,7 @@ import {
 	SolidTwitter,
 } from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	DialogContent,
 	DialogHeader,
@@ -162,7 +163,7 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 					{stats.map((stat) => (
 						<div
 							key={stat.label}
-							className="flex flex-col bg-secondary items-center px-2 py-3 rounded-xl"
+							className="flex flex-col bg-muted text-muted-foreground items-center px-2 py-3 rounded-xl"
 						>
 							<span className="text-sm font-semibold text-foreground">
 								{numberFormat(stat.value)}
@@ -180,7 +181,7 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 							{badges.map((badge) => (
 								<Tooltip key={badge.uuid}>
 									<TooltipTrigger asChild>
-										<div className="flex aspect-square cursor-default flex-col items-center justify-center gap-1.5 rounded-xl bg-secondary transition-colors hover:bg-secondary/90">
+										<div className="flex aspect-square cursor-default flex-col items-center justify-center gap-1.5 rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-muted/90">
 											<BadgeIcon badge={badge} className="size-5" />
 											<span className="line-clamp-1 text-center text-[10px] font-medium text-muted-foreground leading-tight px-1">
 												{badge.label}
@@ -229,18 +230,18 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 						{user.social_links.map((link) => {
 							const Icon = getSocialIcon(link.url);
 							return (
-								<a
+								<Button
+									asChild
 									key={link.url}
-									href={link.url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="flex items-center w-fit gap-2.5 rounded-lg px-2 py-1.5 text-xs text-muted-foreground font-medium hover:text-foreground hover:bg-muted/50 transition-colors [&>span>svg]:size-3.5"
+									variant={"ghost"}
+									className="w-fit"
+									size={"sm"}
 								>
-									<span className="text-zinc-600">
+									<a href={link.url} target="_blank" rel="noopener noreferrer">
 										<Icon />
-									</span>
-									{link.label}
-								</a>
+										{link.label}
+									</a>
+								</Button>
 							);
 						})}
 					</div>

@@ -1,3 +1,4 @@
+import { Surface } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { OutlineArrowRight, SolidLogoText } from "@/components/icons/icons";
@@ -29,9 +30,12 @@ export default function Footer() {
 	];
 
 	return (
-		<footer className={"px-5"}>
+		<footer className={"px-4"}>
 			{/* Main Footer Content */}
-			<div className={"rounded-3xl bg-primary/6 p-6"}>
+			<Surface
+				variant={"secondary"}
+				className={"rounded-3xl p-6 text-secondary-foreground"}
+			>
 				<div
 					className={
 						"flex flex-col items-start justify-between gap-8 md:flex-row"
@@ -111,7 +115,7 @@ export default function Footer() {
 						</div>
 					</div>
 				</div>
-			</div>
+			</Surface>
 
 			{/* <SectionSeparator /> */}
 
