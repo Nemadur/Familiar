@@ -34,6 +34,8 @@ import { ProfileDetailsContent } from "./profile-details";
 import { ProfileSocials } from "./socials";
 import { SpokenLanguageBadge } from "./spoken-languages";
 import { mapFolderToFolderType, mapPostToPostWithAuthor } from "./utils";
+import { useAvailableFeeds } from "@/hooks/use-available-feeds";
+import { ScrollShadow } from "@heroui/react";
 
 // Temporary stubs for missing components
 const FollowButton = ({
@@ -470,10 +472,6 @@ export function UserProfileSidebar({
 		</aside>
 	);
 }
-
-import { ScrollShadow } from "@heroui/react";
-import { useAvailableFeeds } from "@/hooks/use-available-feeds";
-import { ProfileCommissions } from "./feed/commissions";
 
 function UserFeeds({
 	user,

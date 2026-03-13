@@ -181,9 +181,10 @@ export const FeedItem = memo(function FeedItem({
 			isLiked: post.isLiked || false,
 			isCommented: post.isCommented || false,
 			isReposted: post.isReposted || false,
-			isBookmarked: post.isBookmarked || false,
+			isBookmarked: false,
 			showBookmarksCount: false,
 			showLikeButton: !shouldBlur,
+			showBookmarkButton: false,
 			onLike: handleLike,
 			onComment: handleComment,
 			onRepost: handleRepost,
@@ -287,7 +288,7 @@ export const FeedItem = memo(function FeedItem({
 						data={reelItems}
 						index={currentImageIndex}
 						onIndexChange={setCurrentImageIndex}
-						playing={false}
+						playing={isPlaying}
 						onPlayingChange={setIsPlaying}
 						autoPlay={false}
 						muted={true}

@@ -101,19 +101,23 @@ function CommissionCard({
 				setHoverPlaying(false);
 				setCurrentImageIndex(0);
 			}}
-			onClick={() =>
-				navigate({
-					to: `/${artist.username}/commissions/${item.id}`,
-					replace: true,
-				})
-			}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
+			onClick={() => {
+				if (status === "open") {
 					navigate({
 						to: `/${artist.username}/commissions/${item.id}`,
 						replace: true,
 					});
+				}
+			}}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					if (status === "open") {
+						navigate({
+							to: `/${artist.username}/commissions/${item.id}`,
+							replace: true,
+						});
+					}
 				}
 			}}
 		>
@@ -173,7 +177,7 @@ function CommissionCard({
 
 				{/* Sensitive Content Overlay */}
 				{shouldBlur && (
-					<div className="absolute inset-0 z-10 flex flex-col space-y-4 items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+					<div className="absolute inset-0 z-10 flex flex-col space-y-4 text-white items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
 						<OutlineEyeOff size={32} />
 						<h4 className="mb-1 font-bold text-white text-xl">
 							{t("components.profile.commissions.card.sensitive_content")}

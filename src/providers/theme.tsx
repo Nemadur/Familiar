@@ -93,6 +93,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 	const [userTheme, setUserTheme] = useState<UserTheme>(getStoredUserTheme);
 
 	useEffect(() => {
+		// Ensure theme is correctly applied on mount
+		handleThemeChange(userTheme);
+
 		if (userTheme !== "system") return;
 		return setupPreferredListener();
 	}, [userTheme]);

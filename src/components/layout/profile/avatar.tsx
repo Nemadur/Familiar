@@ -33,7 +33,7 @@ export default function UserAvatar({
 			)}
 		>
 			<AvatarImage
-				src={user.media.avatar || undefined}
+				src={user.media?.avatar || undefined}
 				alt={user.display_name}
 			/>
 			<AvatarFallback>

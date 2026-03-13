@@ -159,7 +159,7 @@ export const Reel = ({
 			<div
 				className={cn(
 					"relative isolate h-full w-auto overflow-hidden bg-black",
-					"aspect-[9/16]",
+					"aspect-9/16",
 					className,
 				)}
 				{...props}
@@ -188,11 +188,15 @@ export const ReelContent = ({
 			data-reel-content
 			{...props}
 		>
-			<ReelContentItem
-				children={children}
-				currentItem={currentItem}
-				currentIndex={currentIndex}
-			/>
+			<div
+				key={currentIndex}
+				className="absolute inset-0 animate-in fade-in duration-300 fill-mode-forwards"
+				onAnimationEnd={() => setIsTransitioning(false)}
+			>
+				<ReelContentItem currentItem={currentItem} currentIndex={currentIndex}>
+					{children}
+				</ReelContentItem>
+			</div>
 		</div>
 	);
 };
@@ -425,6 +429,8 @@ export const ReelImage = ({
 					} else {
 						setCurrentIndex(0);
 					}
+					// Important: Do NOT call updateProgress recursively here if we're changing index
+					// The index change will trigger a re-render and cleanup, then a new effect will start
 				} else {
 					setProgress(newProgress);
 					pausedProgressRef.current = newProgress; // Keep ref in sync during playback
@@ -451,7 +457,6 @@ export const ReelImage = ({
 	]);
 
 	return (
-		// biome-ignore lint/performance/noImgElement: "Reel is framework-agnostic"
 		<img
 			alt={alt}
 			className={cn("absolute inset-0 size-full object-cover", className)}
@@ -538,7 +543,7 @@ export const ReelControls = ({ className, ...props }: ReelControlsProps) => (
 	<div
 		className={cn(
 			"absolute right-0 bottom-0 left-0 z-20 flex items-center justify-between p-4",
-			"bg-gradient-to-t from-black/60 to-transparent",
+			"bg-linear-to-t from-black/60 to-transparent",
 			className,
 		)}
 		{...props}
@@ -558,7 +563,7 @@ export const ReelPreviousButton = ({
 	const handlePrevious = () => {
 		if (currentIndex > 0) {
 			setIsNavigating(true);
-			setCurrentIndex((prev) => prev - 1);
+			setCurrentIndex(currentIndex - 1);
 			setTimeout(() => setIsNavigating(false), NAVIGATION_RESET_DELAY);
 		}
 	};
@@ -597,7 +602,7 @@ export const ReelNextButton = ({
 	const handleNext = () => {
 		if (currentIndex < totalItems - 1) {
 			setIsNavigating(true);
-			setCurrentIndex((prev) => prev + 1);
+			setCurrentIndex(currentIndex + 1);
 			setTimeout(() => setIsNavigating(false), NAVIGATION_RESET_DELAY);
 		}
 	};
@@ -637,7 +642,7 @@ export const ReelPlayButton = ({
 				"rounded-full text-white hover:bg-white/10 hover:text-white",
 				className,
 			)}
-			onClick={() => setIsPlaying((prev) => !prev)}
+			onClick={() => setIsPlaying(!isPlaying)}
 			size="icon"
 			variant="ghost"
 			{...props}
@@ -668,7 +673,7 @@ export const ReelMuteButton = ({
 				"rounded-full text-white hover:bg-white/10 hover:text-white",
 				className,
 			)}
-			onClick={() => setIsMuted((prev) => !prev)}
+			onClick={() => setIsMuted(!isMuted)}
 			size="icon"
 			variant="ghost"
 			{...props}
@@ -741,7 +746,7 @@ export const ReelHeader = ({ className, ...props }: ReelHeaderProps) => (
 	<div
 		className={cn(
 			"absolute top-0 right-0 left-0 z-20 p-4 pt-6",
-			"bg-gradient-to-b from-black/60 to-transparent",
+			"bg-linear-to-b from-black/60 to-transparent",
 			className,
 		)}
 		{...props}
@@ -754,7 +759,7 @@ export const ReelFooter = ({ className, ...props }: ReelFooterProps) => (
 	<div
 		className={cn(
 			"absolute right-0 bottom-0 left-0 z-20 p-4",
-			"bg-gradient-to-t from-black/60 to-transparent",
+			"bg-linear-to-t from-black/60 to-transparent",
 			className,
 		)}
 		{...props}

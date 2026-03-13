@@ -9,9 +9,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 	console.error("Missing Supabase environment variables");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+	auth: { autoRefreshToken: true },
+});
 
 // Service role client for admin tasks (server-side only)
 export const supabaseAdmin = supabaseServiceKey
-	? createClient(supabaseUrl, supabaseServiceKey)
+	? createClient(supabaseUrl, supabaseServiceKey, {
+			auth: { autoRefreshToken: true },
+		})
 	: null;

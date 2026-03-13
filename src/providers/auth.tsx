@@ -24,7 +24,44 @@ interface AuthContext {
 const AuthContext = React.createContext<AuthContext | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [user, setUser] = React.useState<User | null>(null);
+	// Initialize user from local storage if available
+	const [user, setUser] = React.useState<User | null>(() => {
+		try {
+			// Check if we are running in a browser environment
+			if (typeof window === "undefined" || !window.localStorage) {
+				return null;
+			}
+
+			const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+			if (!supabaseUrl) return null;
+
+			const hostname = new URL(supabaseUrl).hostname;
+			const projectId = hostname.split(".")[0];
+			const storageKey = `sb-${projectId}-auth-token`;
+			const sessionStr = localStorage.getItem(storageKey);
+
+			if (sessionStr) {
+				const session = JSON.parse(sessionStr);
+				if (session?.user) {
+					// We have a user object in local storage, return a minimal User object
+					// This prevents flash of logged out state
+					// The real user data will be fetched by refreshSession
+					return {
+						uuid: session.user.id,
+						username: session.user.user_metadata?.username || "",
+						display_name: session.user.user_metadata?.display_name || "",
+						email: session.user.email || "",
+						role: "user", // Default role
+						created_at: session.user.created_at,
+						// Add other required fields with defaults
+					} as unknown as User;
+				}
+			}
+		} catch (e) {
+			console.error("Failed to parse auth session from storage", e);
+		}
+		return null;
+	});
 	const [pending, setPending] = React.useState(true);
 	const listeners = React.useRef<((user: User | null) => void)[]>([]);
 

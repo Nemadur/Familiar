@@ -72,9 +72,10 @@ const ROLE_RANK: Record<string, number> = {
 	admin: 3,
 };
 
-function hasRole(userRoles: string[], minimum: string): boolean {
+function hasRole(userRoles: string[] | undefined, minimum: string): boolean {
+	const roles = userRoles || [];
 	const maxRank = Math.max(
-		...userRoles.map((r) => ROLE_RANK[r] ?? 0),
+		...roles.map((r) => ROLE_RANK[r] ?? 0),
 		ROLE_RANK.client,
 	);
 	return maxRank >= (ROLE_RANK[minimum] ?? 999);

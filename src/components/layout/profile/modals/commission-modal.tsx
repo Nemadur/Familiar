@@ -777,14 +777,16 @@ export function CommissionModal({
 				onOpenChange={setLicenseModalOpen}
 				customLicenses={customLicenses}
 			/>
-			<CommissionRequestModal
-				open={requestModalOpen}
-				onOpenChange={setRequestModalOpen}
-				onBack={handleRequestBack}
-				item={itemData}
-				artist={userData}
-				initialLicenses={selectedLicenses}
-			/>
+			{itemData && userData && (
+				<CommissionRequestModal
+					open={requestModalOpen}
+					onOpenChange={setRequestModalOpen}
+					onBack={handleRequestBack}
+					item={itemData}
+					artist={userData}
+					initialLicenses={selectedLicenses}
+				/>
+			)}
 
 			{infoModalState.type && (
 				<InfoSelectionModal
