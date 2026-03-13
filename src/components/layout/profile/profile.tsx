@@ -7,9 +7,7 @@ import {
 	OutlineCheckmarkSeal,
 	OutlineChevronRight,
 	OutlineClock03,
-	OutlineCrown,
 	OutlineGlobe,
-	OutlineLink,
 	OutlineMore,
 	OutlineUser,
 } from "@/components/icons/icons";
@@ -20,7 +18,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAvailableFeeds } from "@/hooks/use-available-feeds";
 import { useBento } from "@/hooks/use-bento";
-import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
 import { type Tile, toPixels } from "@/lib/bento";
 import { userLocalTime } from "@/lib/profile";
 import { useAuth } from "@/providers/auth";
@@ -29,14 +26,10 @@ import UserAvatar from "./avatar";
 import { ProfileBadge } from "./badge";
 import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
-import { ProfileCharacters } from "./feed/characters";
-import { ProfilePortfolio } from "./feed/portfolio";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
-import { UserFeedContent } from "./feed-content";
 import { ProfileDetailsContent } from "./profile-details";
 import { ProfileSocials } from "./socials";
 import { SpokenLanguageBadge } from "./spoken-languages";
-import { mapFolderToFolderType, mapPostToPostWithAuthor } from "./utils";
 
 // Temporary stubs for missing components
 const FollowButton = ({
@@ -107,6 +100,7 @@ export function CommissionsContentSkeleton() {
 			<div className="grid gap-4">
 				{[1, 2].map((i) => (
 					<div
+						// eslint-disable-next-line react-doctor/no-array-index-as-key
 						key={`skeleton-feed-${i}`}
 						className="flex flex-col rounded-3xl border border-border/50 p-2 sm:flex-row h-[320px] sm:h-[200px]"
 					>
@@ -334,7 +328,7 @@ export function UserProfileSidebar({
 	const onEditProfile = () => toast("open settings");
 	const { t } = useTranslation();
 
-	const Actions = () => (
+	const actions = (
 		<div className="flex flex-col gap-3">
 			{isMe ? (
 				<>
@@ -390,11 +384,7 @@ export function UserProfileSidebar({
 			{/* Avatar & Actions (Desktop: Stacked, Mobile: Avatar Left, Actions Right) */}
 			<div className="relative z-10 flex flex-row items-end justify-between gap-4 md:flex-col md:items-start md:justify-start">
 				<UserAvatar user={user} isHuge hasOutline />
-				{!isMe && (
-					<div className="w-fit md:hidden">
-						<Actions />
-					</div>
-				)}
+				{!isMe && <div className="w-fit md:hidden">{actions}</div>}
 			</div>
 
 			{/* Profile Info */}
@@ -411,9 +401,7 @@ export function UserProfileSidebar({
 				</div>
 
 				{/* Actions */}
-				<div className={isMe ? "block" : "hidden md:block"}>
-					<Actions />
-				</div>
+				<div className={isMe ? "block" : "hidden md:block"}>{actions}</div>
 
 				{/* Time/Lang/Pronounce */}
 				{(user.timezone ||

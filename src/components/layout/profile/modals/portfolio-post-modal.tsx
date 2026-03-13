@@ -276,12 +276,14 @@ export function PortfolioPostModal({
 														{[1, 2, 3, 4, 5].map((i) =>
 															i <= rating ? (
 																<SolidStar
+																	// eslint-disable-next-line react-doctor/no-array-index-as-key
 																	key={i}
 																	size={16}
 																	className="text-amber-600 dark:text-amber-200"
 																/>
 															) : (
 																<OutlineStar
+																	// eslint-disable-next-line react-doctor/no-array-index-as-key
 																	key={i}
 																	size={16}
 																	className="text-muted-foreground/30"

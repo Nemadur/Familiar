@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { domAnimation, LazyMotion, m } from "framer-motion";
 import { type ElementType, useId } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -37,43 +37,45 @@ export function TabSelector<T extends string>({
 	}[size];
 
 	return (
-		<Tabs
-			value={value}
-			onValueChange={(value) => onValueChange?.(value as T)}
-			className={cn("w-fit", className)}
-		>
-			<TabsList className="h-auto gap-2 bg-transparent">
-				{items.map((item) => {
-					const isActive = value === item.id;
-					const IconComponent =
-						isActive && item.activeIcon ? item.activeIcon : item.icon;
+		<LazyMotion features={domAnimation}>
+			<Tabs
+				value={value}
+				onValueChange={(value) => onValueChange?.(value as T)}
+				className={cn("w-fit", className)}
+			>
+				<TabsList className="h-auto gap-2 bg-transparent">
+					{items.map((item) => {
+						const isActive = value === item.id;
+						const IconComponent =
+							isActive && item.activeIcon ? item.activeIcon : item.icon;
 
-					return (
-						<TabsTrigger
-							key={item.id}
-							value={item.id}
-							size={size}
-							className="gap-2"
-						>
-							{IconComponent && <IconComponent className={iconSize} />}
-							{item.label}
-							{isActive && (
-								<motion.div
-									layout
-									layoutId={`${id}-active-tab-indicator-${item.id}`} // Unique ID per tab item to prevent cross-tab jumping on unrelated re-renders
-									initial={false}
-									className="absolute right-0 -bottom-3.5 left-0 mx-auto h-1 w-1/3 rounded-t-full bg-primary"
-									transition={{
-										type: "tween",
-										ease: "easeInOut",
-										duration: 0.25,
-									}}
-								/>
-							)}
-						</TabsTrigger>
-					);
-				})}
-			</TabsList>
-		</Tabs>
+						return (
+							<TabsTrigger
+								key={item.id}
+								value={item.id}
+								size={size}
+								className="gap-2"
+							>
+								{IconComponent && <IconComponent className={iconSize} />}
+								{item.label}
+								{isActive && (
+									<m.div
+										layout
+										layoutId={`${id}-active-tab-indicator-${item.id}`} // Unique ID per tab item to prevent cross-tab jumping on unrelated re-renders
+										initial={false}
+										className="absolute right-0 -bottom-3.5 left-0 mx-auto h-1 w-1/3 rounded-t-full bg-primary"
+										transition={{
+											type: "tween",
+											ease: "easeInOut",
+											duration: 0.25,
+										}}
+									/>
+								)}
+							</TabsTrigger>
+						);
+					})}
+				</TabsList>
+			</Tabs>
+		</LazyMotion>
 	);
 }

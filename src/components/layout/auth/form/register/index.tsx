@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineArrowLeft } from "@/components/icons/icons";
 import {
 	Stepper,
 	StepperIndicator,
@@ -26,13 +25,8 @@ const LAST_STEP: Step = 2;
 
 function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 	const [step, setStep] = useState<Step>(0);
-	const [isMounted, setIsMounted] = useState(false);
 	const { t } = useTranslation();
 	const { register: authRegister } = useAuth();
-
-	useEffect(() => {
-		setIsMounted(true);
-	}, []);
 
 	const emailRef = useRef<HTMLInputElement | null>(null);
 	const displayNameRef = useRef<HTMLInputElement | null>(null);
@@ -243,9 +237,7 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 								<Button
 									type="button"
 									onClick={handleContinue}
-									disabled={
-										!isMounted || (step === 0 && !isStep0Valid) || isPending
-									}
+									disabled={(step === 0 && !isStep0Valid) || isPending}
 									className="flex-1 w-full"
 									size={"lg"}
 								>

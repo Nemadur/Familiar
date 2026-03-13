@@ -1,14 +1,10 @@
 import { ScrollShadow } from "@heroui/react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { memo, type ReactNode, useCallback, useMemo, useState } from "react";
 import {
-	memo,
-	type ReactNode,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
-import { OutlineClose, OutlineFilter } from "@/components/icons/icons";
+	OutlineClose,
+	OutlineFilter,
+	OutlineSearch,
+} from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -289,25 +285,31 @@ const RangeFilterItem = memo(function RangeFilterItem({
 	value: FilterValue | undefined;
 	onChange: (groupId: string, value: FilterValue) => void;
 }) {
-	if (!group.range) return null;
-
+	const range = group.range || { min: 0, max: 0, step: 1 };
 	const currentValue = isRangeValue(value) ? value : undefined;
-	const min = currentValue?.min ?? group.range.min;
-	const max = currentValue?.max ?? group.range.max;
-	const isModified = hasActiveRange(currentValue, group.range);
+	const min = currentValue?.min ?? range.min;
+	const max = currentValue?.max ?? range.max;
+	const isModified = hasActiveRange(currentValue, range);
 
 	const [localValue, setLocalValue] = useState([min, max]);
+	const [prevMin, setPrevMin] = useState(min);
+	const [prevMax, setPrevMax] = useState(max);
 
-	useEffect(() => {
+	if (min !== prevMin || max !== prevMax) {
+		setPrevMin(min);
+		setPrevMax(max);
 		setLocalValue([min, max]);
-	}, [min, max]);
+	}
 
 	const handleClear = useCallback(() => {
+		if (!group.range) return;
 		onChange(group.id, {
-			min: group.range!.min,
-			max: group.range!.max,
+			min: group.range.min,
+			max: group.range.max,
 		});
 	}, [group.id, group.range, onChange]);
+
+	if (!group.range) return null;
 
 	return (
 		<div className="border-b border-border/40 pb-6 last:border-0 last:pb-0">
@@ -525,7 +527,7 @@ export function FilterBarV4({
 		<div className={cn("w-full", className)}>
 			<div className="flex w-full items-center gap-3">
 				<div className="relative flex-1 h-10">
-					<Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+					<OutlineSearch className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 					<Input
 						value={searchQuery}
 						onChange={(e) => onSearchChange(e.target.value)}

@@ -73,6 +73,7 @@ export function ReviewsPanel({
 						<Skeleton className="h-16 w-20" />
 						<div className="flex-1 space-y-2">
 							{[1, 2, 3, 4, 5].map((i) => (
+								// eslint-disable-next-line react-doctor/no-array-index-as-key
 								<Skeleton key={i} className="h-2 w-full" />
 							))}
 						</div>
@@ -80,6 +81,7 @@ export function ReviewsPanel({
 				</div>
 				<div className="space-y-4">
 					{[1, 2, 3].map((i) => (
+						// eslint-disable-next-line react-doctor/no-array-index-as-key
 						<div key={i} className="rounded-xl border bg-card p-4 space-y-2">
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2">

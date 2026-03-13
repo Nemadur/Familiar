@@ -43,7 +43,6 @@ export const FeedItem = memo(function FeedItem({
 	variant = "feed",
 }: FeedItemProps) {
 	const [isHovered, setIsHovered] = useState(false);
-	const [isPlaying, setIsPlaying] = useState(false);
 	const articleRef = useRef<HTMLElement>(null);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -60,13 +59,9 @@ export const FeedItem = memo(function FeedItem({
 		post.images?.[0]?.assetId,
 	);
 
-	useEffect(() => {
-		if (isLgOrLower) {
-			setIsPlaying(true);
-		} else {
-			setIsPlaying(false);
-		}
-	}, [isLgOrLower]);
+	const medias = post?.images || [];
+	const hasMultipleImages = medias.length > 1;
+	const isPlaying = isLgOrLower || (isHovered && hasMultipleImages);
 
 	// Memoized date values to prevent re-renders
 	const dateLabel = useMemo(
@@ -86,9 +81,6 @@ export const FeedItem = memo(function FeedItem({
 		[post?.createdAt],
 	);
 
-	const medias = post?.images || [];
-	const hasMultipleImages = medias.length > 1;
-
 	const reelItems: ReelItem[] = useMemo(
 		() =>
 			medias.map((img, index) => ({
@@ -105,13 +97,11 @@ export const FeedItem = memo(function FeedItem({
 	const handleMouseEnter = useCallback(() => {
 		if (isLgOrLower) return;
 		setIsHovered(true);
-		if (hasMultipleImages) setIsPlaying(true);
-	}, [hasMultipleImages, isLgOrLower]);
+	}, [isLgOrLower]);
 
 	const handleMouseLeave = useCallback(() => {
 		if (isLgOrLower) return;
 		setIsHovered(false);
-		setIsPlaying(false);
 		setCurrentImageIndex(0);
 	}, [isLgOrLower]);
 
@@ -294,7 +284,6 @@ export const FeedItem = memo(function FeedItem({
 						index={currentImageIndex}
 						onIndexChange={setCurrentImageIndex}
 						playing={isPlaying}
-						onPlayingChange={setIsPlaying}
 						autoPlay={false}
 						muted={true}
 						resetOnPause={true}

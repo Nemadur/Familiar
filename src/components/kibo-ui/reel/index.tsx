@@ -39,15 +39,13 @@ export type ReelItem = {
 
 type ReelContextType = {
 	currentIndex: number;
-	setCurrentIndex: (index: number) => void;
+	setCurrentIndex: (index: number | ((prev: number) => number)) => void;
 	isPlaying: boolean;
 	setIsPlaying: (playing: boolean) => void;
 	isMuted: boolean;
 	setIsMuted: (muted: boolean) => void;
 	progress: number;
 	setProgress: (progress: number) => void;
-	duration: number;
-	setDuration: (duration: number) => void;
 	data: ReelItem[];
 	currentItem: ReelItem;
 	isNavigating: boolean;
@@ -117,12 +115,11 @@ export const Reel = ({
 	});
 
 	const [progress, setProgress] = useState(0);
-	const [duration, setDuration] = useState(0);
 	const [isNavigating, setIsNavigating] = useState(false);
 	const [isTransitioning, setIsTransitioning] = useState(false);
 
 	const setCurrentIndex = useCallback(
-		(index: number) => {
+		(index: number | ((prev: number) => number)) => {
 			setIsTransitioning(true);
 			setProgress(0); // Reset progress immediately to prevent showing 100% during transition
 			setCurrentIndexState(index);
@@ -143,8 +140,6 @@ export const Reel = ({
 				setIsMuted,
 				progress,
 				setProgress,
-				duration,
-				setDuration,
 				data,
 				currentItem,
 				isNavigating,
@@ -235,9 +230,7 @@ export const ReelVideo = ({ className, ...props }: ReelVideoProps) => {
 	const {
 		isPlaying,
 		isMuted,
-		setDuration,
 		setProgress,
-		currentIndex,
 		setCurrentIndex,
 		data,
 		progress,
@@ -250,23 +243,12 @@ export const ReelVideo = ({ className, ...props }: ReelVideoProps) => {
 	const pausedProgressRef = useRef<number>(0);
 	const duration = currentItem.duration;
 
-	// Set duration when component mounts or currentIndex changes
+	// Reset progress when not transitioning
 	useEffect(() => {
-		setDuration(duration);
-		// Don't reset progress here anymore - it's handled in ReelContent after transition
 		if (!isTransitioning) {
 			pausedProgressRef.current = 0;
 		}
-	}, [duration, setDuration, isTransitioning]);
-
-	// Handle muting
-	useEffect(() => {
-		const video = videoRef.current;
-		if (!video) {
-			return;
-		}
-		video.muted = isMuted;
-	}, [isMuted]);
+	}, [isTransitioning]);
 
 	// Store progress when pausing
 	useEffect(() => {
@@ -303,11 +285,7 @@ export const ReelVideo = ({ className, ...props }: ReelVideoProps) => {
 
 				if (newProgress >= PERCENTAGE) {
 					const totalItems = data?.length || 0;
-					if (currentIndex < totalItems - 1) {
-						setCurrentIndex(currentIndex + 1);
-					} else {
-						setCurrentIndex(0);
-					}
+					setCurrentIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
 				} else {
 					setProgress(newProgress);
 					pausedProgressRef.current = newProgress; // Keep ref in sync during playback
@@ -328,20 +306,11 @@ export const ReelVideo = ({ className, ...props }: ReelVideoProps) => {
 	}, [
 		isPlaying,
 		duration,
-		currentIndex,
 		setProgress,
 		setCurrentIndex,
 		data,
 		isTransitioning,
 	]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Reset video when index changes
-	useEffect(() => {
-		const video = videoRef.current;
-		if (video) {
-			video.currentTime = 0;
-		}
-	}, [currentIndex]);
 
 	return (
 		<video
@@ -374,9 +343,7 @@ export const ReelImage = ({
 }: ReelImageProps) => {
 	const {
 		isPlaying,
-		setDuration,
 		setProgress,
-		currentIndex,
 		setCurrentIndex,
 		data,
 		progress,
@@ -387,14 +354,13 @@ export const ReelImage = ({
 	const startTimeRef = useRef<number | undefined>(undefined);
 	const pausedProgressRef = useRef<number>(0);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Reset progress when index changes
+	// Reset progress when not transitioning
 	useEffect(() => {
-		setDuration(duration);
 		// Don't reset progress here anymore - it's handled in ReelContent after transition
 		if (!isTransitioning) {
 			pausedProgressRef.current = 0;
 		}
-	}, [currentIndex, duration, setDuration, isTransitioning]);
+	}, [isTransitioning]);
 
 	// Store progress when pausing
 	useEffect(() => {
@@ -422,11 +388,7 @@ export const ReelImage = ({
 				if (newProgress >= PERCENTAGE) {
 					const totalItems = data?.length || 0;
 
-					if (currentIndex < totalItems - 1) {
-						setCurrentIndex(currentIndex + 1);
-					} else {
-						setCurrentIndex(0);
-					}
+					setCurrentIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
 					// Important: Do NOT call updateProgress recursively here if we're changing index
 					// The index change will trigger a re-render and cleanup, then a new effect will start
 				} else {
@@ -447,7 +409,6 @@ export const ReelImage = ({
 	}, [
 		isPlaying,
 		duration,
-		currentIndex,
 		setProgress,
 		setCurrentIndex,
 		data,

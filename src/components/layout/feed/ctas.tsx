@@ -65,11 +65,18 @@ export function useLocalAction({
 }) {
 	const [active, setActive] = useState(initialActive);
 	const [count, setCount] = useState(initialCount);
+	const [prevInitialActive, setPrevInitialActive] = useState(initialActive);
+	const [prevInitialCount, setPrevInitialCount] = useState(initialCount);
 
-	useEffect(() => {
+	if (
+		initialActive !== prevInitialActive ||
+		initialCount !== prevInitialCount
+	) {
+		setPrevInitialActive(initialActive);
+		setPrevInitialCount(initialCount);
 		setActive(initialActive);
 		setCount(initialCount);
-	}, [initialActive, initialCount]);
+	}
 
 	const handleAction = useCallback(() => {
 		const newActive = !active;

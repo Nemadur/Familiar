@@ -108,12 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 									data: { uuid: user.id, username, display_name },
 								});
 								// Retry fetch
-								await queryClient.invalidateQueries({
-									queryKey: ["user", user.id],
-								});
 								const retriedUser = await queryClient.fetchQuery({
 									queryKey: ["user", user.id],
 									queryFn: () => getUserById({ data: { uuid: user.id } }),
+									staleTime: 0,
 								});
 								if (retriedUser) {
 									setUser(retriedUser);
