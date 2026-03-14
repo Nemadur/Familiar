@@ -38,14 +38,16 @@ const handleThemeChange = createClientOnlyFn((userTheme: UserTheme) => {
 	const validatedTheme = UserThemeSchema.parse(userTheme);
 
 	const root = document.documentElement;
-	root.classList.remove("light", "dark", "system");
+	root.classList.remove("light", "dark", "oled", "system");
 
 	if (validatedTheme === "system") {
 		const systemTheme = getSystemTheme();
 		root.classList.add(systemTheme, "system");
+	} else if (validatedTheme === "oled") {
+		root.classList.add("dark", "oled");
+	} else {
+		root.classList.add(validatedTheme);
 	}
-
-	root.classList.add(validatedTheme);
 });
 
 /**
@@ -63,7 +65,9 @@ const themeScript = (() => {
 	function themeFn() {
 		try {
 			const storedTheme = localStorage.getItem("familiar-theme") || "system";
-			const validTheme = ["light", "dark", "system"].includes(storedTheme)
+			const validTheme = ["light", "dark", "oled", "system"].includes(
+				storedTheme,
+			)
 				? storedTheme
 				: "system";
 
@@ -73,9 +77,11 @@ const themeScript = (() => {
 					? "dark"
 					: "light";
 				document.documentElement.classList.add(systemTheme, "system");
+			} else if (validTheme === "oled") {
+				document.documentElement.classList.add("dark", "oled");
+			} else {
+				document.documentElement.classList.add(validTheme);
 			}
-
-			document.documentElement.classList.add(validTheme);
 		} catch {
 			const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
 				.matches

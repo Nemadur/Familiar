@@ -66,23 +66,23 @@ export default function UserDropDown({
 	const MenuItems = [
 		{
 			label: "Profile",
-			icon: <OutlineUser className="mr-2 h-4 w-4" />,
+			icon: <OutlineUser />,
 			to: "/$username",
 			params: { username: user.username },
 		},
 		{
 			label: "Requests",
-			icon: <OutlineReceipt className="mr-2 h-4 w-4" />,
+			icon: <OutlineReceipt />,
 			to: "/requests" as any,
 		},
 		{
 			label: "Orders",
-			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			icon: <OutlineSettings />,
 			to: "/orders" as any,
 		},
 		{
 			label: "Characters",
-			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			icon: <OutlineSettings />,
 			to: "/$username/$tab",
 			params: { username: user.username, tab: "characters" },
 		},
@@ -91,12 +91,12 @@ export default function UserDropDown({
 	const SecondaryMenuItems = [
 		{
 			label: "Settings",
-			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			icon: <OutlineSettings />,
 			to: "/settings" as any,
 		},
 		{
 			label: "Help",
-			icon: <OutlineSettings className="mr-2 h-4 w-4" />,
+			icon: <OutlineSettings />,
 			to: "https://help.familiar.art" as any,
 			target: "_blank",
 		},

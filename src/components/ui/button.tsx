@@ -1,10 +1,10 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "src/lib/utils";
 
 const buttonVariants = cva(
-	"inline-flex items-center justify-center cursor-pointer gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-color disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:mt-0.5 [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-accent/20 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border border-transparent",
+	"inline-flex items-center justify-center cursor-pointer gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-[color,background] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:mt-0.5 [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-accent/20 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border border-transparent",
 	{
 		variants: {
 			variant: {
@@ -12,11 +12,10 @@ const buttonVariants = cva(
 				destructive:
 					"bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
 				outline:
-					"bg-transparent hover:bg-primary/10 hover:text-accent-foreground dark:bg-border/30 border-border ",
+					"bg-transparent hover:bg-primary/12 hover:text-primary border-border ",
 				secondary:
-					"bg-primary/6 dark:bg-primary/3 text-secondary-foreground hover:bg-primary/10 dark:hover:bg-primary/6",
-				ghost:
-					"text-primary hover:bg-primary/6 bg-transparent dark:hover:bg-primary/3",
+					"bg-primary/9 dark:bg-primary/6 text-secondary-foreground hover:bg-primary/12 dark:hover:bg-primary/9",
+				ghost: "text-primary hover:bg-primary/12 bg-transparent",
 				link: "text-blue-600 dark:text-blue-400 underline-offset-4 hover:underline p-0!",
 				"destructive-ghost":
 					"text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20",

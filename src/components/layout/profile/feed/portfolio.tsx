@@ -23,7 +23,8 @@ interface ProfilePortfolioProps {
 	currentFolder?: FolderType;
 }
 
-import { FilterBarV4, type FilterGroup } from "./filter-bar";
+import { ColorPaletteDebugger } from "@/components/debug/color-palette-debugger";
+import { FilterBar, type FilterGroup } from "./filter-bar";
 
 export function ProfilePortfolio({
 	posts,
@@ -259,7 +260,7 @@ export function ProfilePortfolio({
 	return (
 		<div className="space-y-6">
 			{/* Search and Filter Bar */}
-			<FilterBarV4
+			<FilterBar
 				groups={filterGroups}
 				values={filters}
 				onFilterChange={handleFilterChange}
@@ -293,6 +294,8 @@ export function ProfilePortfolio({
 					))}
 				</div>
 			)}
+
+			{/* <ColorPaletteDebugger /> */}
 
 			{/* Posts Grid */}
 			{(!folderId || !currentFolder) && (

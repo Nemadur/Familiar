@@ -8,7 +8,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "src/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn } from "src/lib/utils";
 
 function Command({
 	className,
@@ -19,7 +19,7 @@ function Command({
 		<CommandPrimitive
 			data-slot="command"
 			className={cn(
-				"bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-(--command-content-radius)",
+				"bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-(--command-content-radius) group/command",
 				className,
 			)}
 			style={
@@ -72,7 +72,7 @@ function CommandInput({
 	return (
 		<div
 			data-slot="command-input-wrapper"
-			className="flex h-9 items-center gap-2 border-b px-3"
+			className="flex h-9 items-center gap-2 border-b px-3 peer"
 		>
 			<SearchIcon className="size-4 shrink-0 opacity-50" />
 			<CommandPrimitive.Input
@@ -95,14 +95,28 @@ function CommandList({
 		<CommandPrimitive.List
 			data-slot="command-list"
 			className={cn(
-				"max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto p-(--command-content-padding)",
-				"[&_[cmdk-group]:not([hidden]):last-child_[cmdk-group-items]>[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]",
-				"[&_[cmdk-group]:not([hidden]):first-child_[cmdk-group-items]>[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]",
-				"[&_>_[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]",
-				"[&_>_[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]",
-				// Reset top rounding if there's an element preceding the list (like input)
-				"[&:not(:first-child)_[cmdk-group]:not([hidden]):first-child_[cmdk-group-items]>[data-slot=command-item]:first-child]:rounded-t-lg",
-				"[&:not(:first-child)_>_[data-slot=command-item]:first-child]:rounded-t-lg",
+				"max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto p-(--command-content-padding) overflow-hidden group/list",
+
+				// First item styling (Grouped & Direct) - Default to Large Top Rounding
+				"[&_[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
+				"[&_[data-slot=command-group]:first-child_[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
+
+				// Reset First item to Small Rounding if Command has Input
+				"peer-[[data-slot=command-input-wrapper]]:[&_[data-slot=command-item]:first-child]:rounded-t-lg!",
+				"peer-[[data-slot=command-input-wrapper]]:[&_[data-slot=command-group]:first-child_[data-slot=command-item]:first-child]:rounded-t-lg!",
+
+				// Last item styling (Grouped & Direct) - Always applies Large Bottom Rounding
+				"[&_[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
+				"[&_[data-slot=command-group]:last-child_[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
+
+				// Fix: Reset rounded corners if item is followed by a separator
+				"[&_[data-slot=command-item]:has(+[data-slot=command-separator])]:rounded-b-lg!",
+				"[&_[data-slot=command-group]:has(+[data-slot=command-separator])_[data-slot=command-item]:last-child]:rounded-b-lg!",
+
+				// Fix: Reset rounded corners if item is preceded by a separator
+				"[&_[data-slot=command-separator]+[data-slot=command-item]]:rounded-t-lg!",
+				"[&_[data-slot=command-separator]+[data-slot=command-group]_[data-slot=command-item]:first-child]:rounded-t-lg!",
+
 				className,
 			)}
 			{...props}
@@ -130,7 +144,7 @@ function CommandGroup({
 		<CommandPrimitive.Group
 			data-slot="command-group"
 			className={cn(
-				"text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium",
+				"text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium group/group",
 				className,
 			)}
 			{...props}

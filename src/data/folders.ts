@@ -8,5 +8,5 @@ export interface Folder {
 	hasSubfolders?: boolean;
 	// Premium customization
 	color?: string;
-	icon?: React.ElementType;
+	icon?: React.ElementType | string;
 }

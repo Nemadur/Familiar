@@ -344,6 +344,7 @@ export const getProfileContent = createServerFn({
 					images: [],
 					hasSubfolders: true,
 					color: "#8b5cf6", // Violet
+					icon: "OutlineStar",
 				});
 			}
 

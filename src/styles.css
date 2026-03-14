@@ -5,7 +5,7 @@
 @import "@heroui/styles";
 
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .oled, .dark *, .oled *));
 
 body {
   @apply m-0;
@@ -95,6 +95,45 @@ code {
     --border: var(--color-familiar-600);
     --input: var(--color-familiar-600);
     --ring: var(--color-familiar-600);
+
+    --link: var(--color-blue-400);
+    --link-hover: var(--color-blue-300);
+  }
+
+  .oled {
+    --background: #000000;
+    --foreground: var(--color-familiar-500);
+
+    --card: #000000;
+    --card-foreground: var(--color-familiar-50);
+
+    --popover: #000000;
+    --popover-foreground: var(--color-familiar-50);
+
+    --sidebar-background: #000000;
+    --sidebar-foreground: var(--color-familiar-50);
+    --sidebar-primary: var(--color-blue-400);
+    --sidebar-primary-foreground: var(--color-familiar-50);
+    --sidebar-border: var(--color-familiar-800);
+
+    --primary: var(--color-familiar-50);
+    --primary-foreground: var(--color-familiar-950);
+
+    --secondary: var(--color-familiar-900);
+    --secondary-foreground: var(--color-familiar-50);
+
+    --muted: var(--color-familiar-800);
+    --muted-foreground: var(--color-familiar-500);
+
+    --accent: var(--color-blue-400);
+    --accent-foreground: var(--color-familiar-50);
+
+    --destructive: var(--color-red-500);
+    --destructive-foreground: var(--color-red-500);
+
+    --border: var(--color-familiar-800);
+    --input: var(--color-familiar-800);
+    --ring: var(--color-familiar-800);
 
     --link: var(--color-blue-400);
     --link-hover: var(--color-blue-300);

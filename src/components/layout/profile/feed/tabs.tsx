@@ -14,14 +14,6 @@ function ProfileFeedTabs<T extends string>({
 }: FeedTabSelectorProps<T>) {
 	const id = useId();
 
-	// Map size to icon dimensions
-	const iconSize = {
-		default: "size-4",
-		sm: "size-3.5",
-		lg: "size-5",
-		xl: "size-6",
-	}[size];
-
 	return (
 		<LazyMotion features={domAnimation}>
 			<Tabs
@@ -29,18 +21,18 @@ function ProfileFeedTabs<T extends string>({
 				onValueChange={(value) => onValueChange?.(value as T)}
 				className={cn("w-fit", className)}
 			>
-				<TabsList className="h-auto bg-transparent p-1">
+				<TabsList variant={"line"}>
 					{items.map((item) => {
 						const isActive = value === item.id;
-						const IconComponent =
-							isActive && item.activeIcon ? item.activeIcon : item.icon;
 
 						return (
 							<TabsTrigger
 								key={item.id}
 								value={item.id}
-								size={size}
-								className="gap-2 font-semibold px-5"
+								size={size as any}
+								className={cn(
+									"relative h-auto font-semibold data-[state=active]:text-primary!",
+								)}
 							>
 								{/* {IconComponent && <IconComponent className={iconSize} />} */}
 								{item.label}
@@ -49,7 +41,7 @@ function ProfileFeedTabs<T extends string>({
 										layout
 										layoutId={`${id}-active-tab-indicator-${item.id}`} // Unique ID per tab item to prevent cross-tab jumping on unrelated re-renders
 										initial={false}
-										className="absolute right-0 -bottom-3.5 left-0 mx-auto h-1 w-1/3 rounded-t-full bg-primary"
+										className="absolute w-2/3 right-0 bottom-0 left-1/2 -translate-x-1/2 h-1 rounded-t-full bg-primary"
 										transition={{
 											type: "tween",
 											ease: "easeInOut",

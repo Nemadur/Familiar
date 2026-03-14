@@ -1,344 +1,644 @@
 import type React from "react";
 
-export const ACCENT_COLORS = [
-	"blue",
-	"green",
-	"purple",
-	"pink",
-	"yellow",
-	"indigo",
-	"teal",
-	"orange",
-	"red",
-	"emerald",
-	"cyan",
-	"violet",
-	"amber",
-	"lime",
-	"sky",
-	"rose",
-] as const;
+export type ShadeKey =
+	| "50"
+	| "100"
+	| "200"
+	| "300"
+	| "400"
+	| "500"
+	| "600"
+	| "700"
+	| "800"
+	| "900"
+	| "950";
 
-export type AccentColor = (typeof ACCENT_COLORS)[number];
+export interface PaletteOptions {
+	baseShade?: number;
+	preserveInputShadeExact?: boolean;
+}
 
-// Color palette definitions with hex values
-export const COLOR_PALETTES: Record<AccentColor, Record<number, string>> = {
-	blue: {
-		50: "#eff6ff",
-		100: "#dbeafe",
-		200: "#bfdbfe",
-		300: "#93c5fd",
-		400: "#60a5fa",
-		500: "#3b82f6",
-		600: "#2563eb",
-		700: "#1d4ed8",
-		800: "#1e40af",
-		900: "#1e3a8a",
-		950: "#172554",
-	},
-	green: {
-		50: "#f0fdf4",
-		100: "#dcfce7",
-		200: "#bbf7d0",
-		300: "#86efac",
-		400: "#4ade80",
-		500: "#22c55e",
-		600: "#16a34a",
-		700: "#15803d",
-		800: "#166534",
-		900: "#14532d",
-		950: "#052e16",
-	},
-	purple: {
-		50: "#faf5ff",
-		100: "#f3e8ff",
-		200: "#e9d5ff",
-		300: "#d8b4fe",
-		400: "#c084fc",
-		500: "#a855f7",
-		600: "#9333ea",
-		700: "#7c3aed",
-		800: "#6b21a8",
-		900: "#581c87",
-		950: "#3b0764",
-	},
-	pink: {
-		50: "#fdf2f8",
-		100: "#fce7f3",
-		200: "#fbcfe8",
-		300: "#f9a8d4",
-		400: "#f472b6",
-		500: "#ec4899",
-		600: "#db2777",
-		700: "#be185d",
-		800: "#9d174d",
-		900: "#831843",
-		950: "#500724",
-	},
-	yellow: {
-		50: "#fefce8",
-		100: "#fef3c7",
-		200: "#fde68a",
-		300: "#fcd34d",
-		400: "#fbbf24",
-		500: "#f59e0b",
-		600: "#d97706",
-		700: "#b45309",
-		800: "#92400e",
-		900: "#78350f",
-		950: "#451a03",
-	},
-	indigo: {
-		50: "#eef2ff",
-		100: "#e0e7ff",
-		200: "#c7d2fe",
-		300: "#a5b4fc",
-		400: "#818cf8",
-		500: "#6366f1",
-		600: "#4f46e5",
-		700: "#4338ca",
-		800: "#3730a3",
-		900: "#312e81",
-		950: "#1e1b4b",
-	},
-	teal: {
-		50: "#f0fdfa",
-		100: "#ccfbf1",
-		200: "#99f6e4",
-		300: "#5eead4",
-		400: "#2dd4bf",
-		500: "#14b8a6",
-		600: "#0d9488",
-		700: "#0f766e",
-		800: "#115e59",
-		900: "#134e4a",
-		950: "#042f2e",
-	},
-	orange: {
-		50: "#fff7ed",
-		100: "#ffedd5",
-		200: "#fed7aa",
-		300: "#fdba74",
-		400: "#fb923c",
-		500: "#f97316",
-		600: "#ea580c",
-		700: "#c2410c",
-		800: "#9a3412",
-		900: "#7c2d12",
-		950: "#431407",
-	},
-	red: {
-		50: "#fef2f2",
-		100: "#fee2e2",
-		200: "#fecaca",
-		300: "#fca5a5",
-		400: "#f87171",
-		500: "#ef4444",
-		600: "#dc2626",
-		700: "#b91c1c",
-		800: "#991b1b",
-		900: "#7f1d1d",
-		950: "#450a0a",
-	},
-	emerald: {
-		50: "#ecfdf5",
-		100: "#d1fae5",
-		200: "#a7f3d0",
-		300: "#6ee7b7",
-		400: "#34d399",
-		500: "#10b981",
-		600: "#059669",
-		700: "#047857",
-		800: "#065f46",
-		900: "#064e3b",
-		950: "#022c22",
-	},
-	cyan: {
-		50: "#ecfeff",
-		100: "#cffafe",
-		200: "#a5f3fc",
-		300: "#67e8f9",
-		400: "#22d3ee",
-		500: "#06b6d4",
-		600: "#0891b2",
-		700: "#0e7490",
-		800: "#155e75",
-		900: "#164e63",
-		950: "#083344",
-	},
-	violet: {
-		50: "#faf5ff",
-		100: "#f3e8ff",
-		200: "#e9d5ff",
-		300: "#d8b4fe",
-		400: "#c084fc",
-		500: "#a855f7",
-		600: "#9333ea",
-		700: "#7c3aed",
-		800: "#6b21a8",
-		900: "#581c87",
-		950: "#3b0764",
-	},
-	amber: {
-		50: "#fffbeb",
-		100: "#fef3c7",
-		200: "#fde68a",
-		300: "#fcd34d",
-		400: "#fbbf24",
-		500: "#f59e0b",
-		600: "#d97706",
-		700: "#b45309",
-		800: "#92400e",
-		900: "#78350f",
-		950: "#451a03",
-	},
-	lime: {
-		50: "#f7fee7",
-		100: "#ecfccb",
-		200: "#d9f99d",
-		300: "#bef264",
-		400: "#a3e635",
-		500: "#84cc16",
-		600: "#65a30d",
-		700: "#4d7c0f",
-		800: "#3f6212",
-		900: "#365314",
-		950: "#1a2e05",
-	},
-	sky: {
-		50: "#f0f9ff",
-		100: "#e0f2fe",
-		200: "#bae6fd",
-		300: "#7dd3fc",
-		400: "#38bdf8",
-		500: "#0ea5e9",
-		600: "#0284c7",
-		700: "#0369a1",
-		800: "#075985",
-		900: "#0c4a6e",
-		950: "#082f49",
-	},
-	rose: {
-		50: "#fff1f2",
-		100: "#ffe4e6",
-		200: "#fecdd3",
-		300: "#fda4af",
-		400: "#fb7185",
-		500: "#f43f5e",
-		600: "#e11d48",
-		700: "#be123c",
-		800: "#9f1239",
-		900: "#881337",
-		950: "#4c0519",
-	},
-};
+interface AnchorCurve {
+	H: number;
+	name: string;
+	L500: number;
+	L: Record<number, number>;
+	C: Record<number, number>;
+	HD: Record<number, number>;
+}
 
-/**
- * Generate consistent accent color based on user ID
- * @param uuid - User's unique identifier
- * @returns Accent color name (e.g., 'blue', 'green', 'teal')
- */
-// function generateAccentColor(uuid: string): AccentColor {
-// 	// Generate consistent color index based on user ID
-// 	const hash = uuid.split("").reduce((a, b) => {
-// 		a = (a << 5) - a + b.charCodeAt(0);
-// 		return a & a;
-// 	}, 0);
+interface Rgb {
+	r: number;
+	g: number;
+	b: number;
+}
 
-// 	return ACCENT_COLORS[Math.abs(hash) % ACCENT_COLORS.length];
-// }
+const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 
-/**
- * Generate a random accent color different from current
- * @param currentColor - Current accent color to avoid
- * @returns New random accent color
- */
-// function generateRandomAccentColor(
-// 	currentColor: AccentColor,
-// ): AccentColor {
-// 	// Filter out the current color to ensure we get a different one
-// 	const availableColors = ACCENT_COLORS.filter(
-// 		(color) => color !== currentColor,
-// 	);
+const ANCHORS: AnchorCurve[] = [
+	{
+		H: 16.4,
+		name: "rose",
+		L500: 64.5,
+		L: {
+			50: 1.5033,
+			100: 1.4607,
+			200: 1.3844,
+			300: 1.2569,
+			400: 1.1165,
+			500: 1,
+			600: 0.906,
+			700: 0.794,
+			800: 0.7004,
+			900: 0.6307,
+			950: 0.417,
+		},
+		C: {
+			50: 0.0711,
+			100: 0.1406,
+			200: 0.2611,
+			300: 0.495,
+			400: 0.786,
+			500: 1,
+			600: 1.0317,
+			700: 0.9197,
+			800: 0.7945,
+			900: 0.6933,
+			950: 0.4668,
+		},
+		HD: {
+			50: -8.96,
+			100: -11.41,
+			200: -9.16,
+			300: -7.72,
+			400: -4.85,
+			500: 0,
+			600: 3.88,
+			700: 4.98,
+			800: 3.88,
+			900: 2.6,
+			950: 2.73,
+		},
+	},
+	{
+		H: 149.2,
+		name: "green",
+		L500: 70.2,
+		L: {
+			50: 1.3961,
+			100: 1.3678,
+			200: 1.3099,
+			300: 1.2262,
+			400: 1.1285,
+			500: 1,
+			600: 0.8661,
+			700: 0.731,
+			800: 0.6219,
+			900: 0.547,
+			950: 0.3705,
+		},
+		C: {
+			50: 0.0854,
+			100: 0.2287,
+			200: 0.4072,
+			300: 0.6981,
+			400: 0.9105,
+			500: 1,
+			600: 0.8873,
+			700: 0.7208,
+			800: 0.563,
+			900: 0.463,
+			950: 0.3254,
+		},
+		HD: {
+			50: 5.23,
+			100: 5.76,
+			200: 5.53,
+			300: 4.21,
+			400: 2.2,
+			500: 0,
+			600: -0.41,
+			700: 0.13,
+			800: 1.37,
+			900: 2.9,
+			950: 2.9,
+		},
+	},
+	{
+		H: 162.5,
+		name: "emerald",
+		L500: 69.6,
+		L: {
+			50: 1.4073,
+			100: 1.3658,
+			200: 1.3004,
+			300: 1.2146,
+			400: 1.1108,
+			500: 1,
+			600: 0.8564,
+			700: 0.7302,
+			800: 0.6205,
+			900: 0.5433,
+			950: 0.3766,
+		},
+		C: {
+			50: 0.1387,
+			100: 0.3404,
+			200: 0.6003,
+			300: 0.8717,
+			400: 1.0296,
+			500: 1,
+			600: 0.8547,
+			700: 0.7039,
+			800: 0.5801,
+			900: 0.4899,
+			950: 0.327,
+		},
+		HD: {
+			50: 3.63,
+			100: 0.57,
+			200: 1.67,
+			300: 2.5,
+			400: 0.74,
+			500: 0,
+			600: 0.75,
+			700: 3.13,
+			800: 4.43,
+			900: 6.46,
+			950: 10.07,
+		},
+	},
+	{
+		H: 259.8,
+		name: "blue",
+		L500: 62.3,
+		L: {
+			50: 1.5575,
+			100: 1.4957,
+			200: 1.4161,
+			300: 1.2985,
+			400: 1.1455,
+			500: 1,
+			600: 0.8765,
+			700: 0.7835,
+			800: 0.6812,
+			900: 0.6084,
+			950: 0.453,
+		},
+		C: {
+			50: 0.0754,
+			100: 0.168,
+			200: 0.3035,
+			300: 0.5085,
+			400: 0.7626,
+			500: 1,
+			600: 1.1446,
+			700: 1.155,
+			800: 0.962,
+			900: 0.7327,
+			950: 0.4651,
+		},
+		HD: {
+			50: -5.21,
+			100: -4.23,
+			200: -5.69,
+			300: -8,
+			400: -5.19,
+			500: 0,
+			600: 3.07,
+			700: 4.56,
+			800: 5.82,
+			900: 5.71,
+			950: 8.12,
+		},
+	},
+	{
+		H: 292.7,
+		name: "violet",
+		L500: 60.6,
+		L: {
+			50: 1.6028,
+			100: 1.5602,
+			200: 1.4831,
+			300: 1.3489,
+			400: 1.1793,
+			500: 1,
+			600: 0.8759,
+			700: 0.7853,
+			800: 0.691,
+			900: 0.6089,
+			950: 0.4592,
+		},
+		C: {
+			50: 0.075,
+			100: 0.1313,
+			200: 0.254,
+			300: 0.4666,
+			400: 0.7294,
+			500: 1,
+			600: 1.1264,
+			700: 1.1035,
+			800: 0.9632,
+			900: 0.8145,
+			950: 0.6178,
+		},
+		HD: {
+			50: 8.5,
+			100: 6.17,
+			200: 6.27,
+			300: 5.42,
+			400: 3.53,
+			500: 0,
+			600: -3.64,
+			700: -5.9,
+			800: -5.85,
+			900: -4.45,
+			950: -4.73,
+		},
+	},
+];
 
-// 	// Pick a random color from available ones
-// 	const randomIndex = Math.floor(Math.random() * availableColors.length);
-// 	return availableColors[randomIndex] || ACCENT_COLORS[0]; // Fallback to first color if needed
-// }
+const SNAP_DEG = 5;
 
-/**
- * Get actual color value (hex) for accent color with specific shade
- * @param color - Accent color name
- * @param shade - Color shade (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950)
- * @returns Hex color value (e.g., '#dbeafe')
- */
-export function getAccentColorValue(color: AccentColor, shade: number): string {
-	const palette = COLOR_PALETTES[color];
-	if (!palette || !palette[shade]) {
-		// Fallback to a default color if shade doesn't exist
-		return palette?.[500] || "#6b7280"; // Default to gray-500
+function clamp(n: number, min: number, max: number): number {
+	return Math.min(max, Math.max(min, n));
+}
+
+function angularDist(a: number, b: number): number {
+	const d = (((b - a) % 360) + 360) % 360;
+	return d > 180 ? d - 360 : d;
+}
+
+function findNearestAnchors(H: number) {
+	let b1: AnchorCurve | null = null;
+	let b2: AnchorCurve | null = null;
+	let d1 = Number.POSITIVE_INFINITY;
+	let d2 = Number.POSITIVE_INFINITY;
+
+	for (const a of ANCHORS) {
+		const d = Math.abs(angularDist(H, a.H));
+		if (d < d1) {
+			d2 = d1;
+			b2 = b1;
+			d1 = d;
+			b1 = a;
+		} else if (d < d2) {
+			d2 = d;
+			b2 = a;
+		}
 	}
-	return palette[shade];
+
+	return { b1: b1!, b2, d1, d2 };
 }
 
-/**
- * Get CSS style object for accent color with specific shade
- * @param color - Accent color name
- * @param shade - Color shade (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950)
- * @param property - CSS property to apply color to ('backgroundColor', 'color', 'borderColor')
- * @returns CSS style object (e.g., { backgroundColor: '#dbeafe' })
- */
-export function getAccentColorStyle(
-	color: AccentColor,
-	shade: number,
-	property: "backgroundColor" | "color" | "borderColor" = "backgroundColor",
-): React.CSSProperties {
-	const colorValue = getAccentColorValue(color, shade);
-	return { [property]: colorValue };
+function interpCurve(H: number, shade: number, key: "L" | "C" | "HD"): number {
+	const { b1, b2, d1, d2 } = findNearestAnchors(H);
+
+	if (d1 < SNAP_DEG || !b2 || d1 + d2 === 0) {
+		return b1[key][shade];
+	}
+
+	const t = d1 / (d1 + d2);
+	return b1[key][shade] * (1 - t) + b2[key][shade] * t;
 }
 
-/**
- * Get Tailwind CSS class for accent color with specific shade (DEPRECATED - use getAccentColorStyle instead)
- * @param color - Accent color name
- * @param shade - Tailwind shade (100, 200, 950, etc.)
- * @returns Tailwind CSS class (e.g., 'bg-blue-100', 'text-teal-950')
- * @deprecated Use getAccentColorStyle instead for better compatibility
- */
-export function getAccentColorClass(
-	color: AccentColor,
-	shade: number,
-	prefix: "bg" | "text" | "border" = "bg",
-): string {
-	console.warn(
-		"getAccentColorClass is deprecated. Use getAccentColorStyle instead.",
-	);
-	return `${prefix}-${color}-${shade}`;
+function interpL500(H: number): number {
+	const { b1, b2, d1, d2 } = findNearestAnchors(H);
+
+	if (d1 < SNAP_DEG || !b2 || d1 + d2 === 0) {
+		return b1.L500;
+	}
+
+	const t = d1 / (d1 + d2);
+	return b1.L500 * (1 - t) + b2.L500 * t;
 }
 
-// --- HEX utilities for DB-stored accent_color ---
+export function normalizeHex(value: string | null | undefined): string {
+	if (!value) return "#6b7280";
+	const hex = value.trim().replace(/^#/, "");
+
+	if (/^[0-9a-fA-F]{3}$/.test(hex)) {
+		return `#${hex
+			.split("")
+			.map((c) => c + c)
+			.join("")
+			.toLowerCase()}`;
+	}
+
+	if (/^[0-9a-fA-F]{6}$/.test(hex)) {
+		return `#${hex.toLowerCase()}`;
+	}
+
+	return value.trim();
+}
+
 export function isHexColor(value: string | null | undefined): boolean {
 	if (!value) return false;
-	return /^#?[0-9a-fA-F]{6}$/.test(value);
+	return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim());
 }
 
-export function normalizeHex(value: string): string {
-	if (!value) return "#6b7280";
-	return value.startsWith("#") ? value : `#${value}`;
+function hexToRgb(hex: string): Rgb | null {
+	const normalized = normalizeHex(hex);
+	const value = normalized.replace("#", "");
+
+	if (!/^[0-9a-f]{6}$/i.test(value)) return null;
+
+	const n = Number.parseInt(value, 16);
+	if (Number.isNaN(n)) return null;
+
+	return {
+		r: (n >> 16) & 255,
+		g: (n >> 8) & 255,
+		b: n & 255,
+	};
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-	const v = normalizeHex(hex).slice(1);
-	const bigint = parseInt(v, 16);
-	return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+function rgbToHex({ r, g, b }: Rgb): string {
+	return `#${[r, g, b]
+		.map((v) =>
+			Math.round(clamp(v, 0, 255))
+				.toString(16)
+				.padStart(2, "0"),
+		)
+		.join("")}`;
 }
 
-export function getReadableTextColor(bgHex: string): string {
-	const { r, g, b } = hexToRgb(bgHex);
-	// YIQ contrast
-	const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-	return yiq >= 140 ? "#111111" : "#ffffff";
+function linearize(channel: number): number {
+	const v = channel / 255;
+	return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 }
 
+function delinearize(v: number): number {
+	return v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
+}
+
+function rgbToOklch(r: number, g: number, b: number) {
+	const rl = linearize(r);
+	const gl = linearize(g);
+	const bl = linearize(b);
+
+	let l = 0.4122214708 * rl + 0.5363325363 * gl + 0.0514459929 * bl;
+	let m = 0.2119034982 * rl + 0.6806995451 * gl + 0.1073969566 * bl;
+	let s = 0.0883024619 * rl + 0.2817188376 * gl + 0.6299787005 * bl;
+
+	l = Math.cbrt(l);
+	m = Math.cbrt(m);
+	s = Math.cbrt(s);
+
+	const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
+	const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+	const b2 = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+
+	const C = Math.sqrt(a * a + b2 * b2);
+
+	let H = (Math.atan2(b2, a) * 180) / Math.PI;
+	if (H < 0) H += 360;
+
+	return { L: L * 100, C, H };
+}
+
+function oklchToRgbGamut(L: number, C: number, H: number): Rgb {
+	const raw = (c: number) => {
+		const Ln = L / 100;
+		const h = (H * Math.PI) / 180;
+
+		const a = c * Math.cos(h);
+		const b2 = c * Math.sin(h);
+
+		let l = Ln + 0.3963377774 * a + 0.2158037573 * b2;
+		let m = Ln - 0.1055613458 * a - 0.0638541728 * b2;
+		let s = Ln - 0.0894841775 * a - 1.291485548 * b2;
+
+		l = l ** 3;
+		m = m ** 3;
+		s = s ** 3;
+
+		return {
+			r:
+				delinearize(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s) *
+				255,
+			g:
+				delinearize(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s) *
+				255,
+			b:
+				delinearize(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s) *
+				255,
+		};
+	};
+
+	const inGamut = (c: number) => {
+		const t = raw(c);
+		return (
+			t.r >= -0.5 &&
+			t.r <= 255.5 &&
+			t.g >= -0.5 &&
+			t.g <= 255.5 &&
+			t.b >= -0.5 &&
+			t.b <= 255.5
+		);
+	};
+
+	let lo = 0;
+	let hi = C;
+	let best = inGamut(C) ? C : 0;
+
+	if (!inGamut(C)) {
+		for (let i = 0; i < 18; i++) {
+			const mid = (lo + hi) / 2;
+			if (inGamut(mid)) {
+				best = mid;
+				lo = mid;
+			} else {
+				hi = mid;
+			}
+		}
+	}
+
+	const res = raw(best);
+
+	return {
+		r: Math.round(clamp(res.r, 0, 255)),
+		g: Math.round(clamp(res.g, 0, 255)),
+		b: Math.round(clamp(res.b, 0, 255)),
+	};
+}
+
+function relativeLuminanceFromHex(hex: string): number {
+	const rgb = hexToRgb(hex);
+	if (!rgb) return 0;
+
+	const rs = linearize(rgb.r);
+	const gs = linearize(rgb.g);
+	const bs = linearize(rgb.b);
+
+	return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+function contrastRatio(hexA: string, hexB: string): number {
+	const l1 = relativeLuminanceFromHex(hexA);
+	const l2 = relativeLuminanceFromHex(hexB);
+	const lighter = Math.max(l1, l2);
+	const darker = Math.min(l1, l2);
+	return (lighter + 0.05) / (darker + 0.05);
+}
+
+export function getReadableTextColor(backgroundHex: string): string {
+	const black = "#000000";
+	const white = "#ffffff";
+	return contrastRatio(backgroundHex, white) >=
+		contrastRatio(backgroundHex, black)
+		? white
+		: black;
+}
+
+export function getTextColorShade(shade: number): number {
+	if (shade === 50) return 800;
+	if (shade <= 300) return 900;
+	return 100;
+}
+
+export function getTextColor(
+	palette: Record<number, string>,
+	shade: number,
+): string {
+	return (
+		palette[getTextColorShade(shade)] ??
+		getReadableTextColor(palette[shade] ?? "#ffffff")
+	);
+}
+
+function detectInputShade(inputL: number, inputH: number): number {
+	const expectedL500 = interpL500(inputH);
+	const ratio = inputL / expectedL500;
+
+	let bestShade = 500;
+	let bestDiff = Number.POSITIVE_INFINITY;
+
+	for (const s of SHADES) {
+		const diff = Math.abs(ratio - interpCurve(inputH, s, "L"));
+		if (diff < bestDiff) {
+			bestDiff = diff;
+			bestShade = s;
+		}
+	}
+
+	return bestShade;
+}
+
+function reconstructTrue500(
+	inputOk: { L: number; C: number; H: number },
+	inputShade: number,
+) {
+	const lR = interpCurve(inputOk.H, inputShade, "L");
+	const cR = interpCurve(inputOk.H, inputShade, "C");
+	const hD = interpCurve(inputOk.H, inputShade, "HD");
+
+	return {
+		L: inputOk.L / lR,
+		C: inputOk.C / cR,
+		H: (inputOk.H - hD + 360) % 360,
+	};
+}
+
+function generateFromOklch500(ok500: {
+	L: number;
+	C: number;
+	H: number;
+}): Record<number, string> {
+	const palette: Record<number, string> = {};
+
+	for (const s of SHADES) {
+		const tL = clamp(ok500.L * interpCurve(ok500.H, s, "L"), 1, 99);
+		const tC = Math.max(0, ok500.C * interpCurve(ok500.H, s, "C"));
+		const tH = (ok500.H + interpCurve(ok500.H, s, "HD") + 360) % 360;
+
+		palette[s] = rgbToHex(oklchToRgbGamut(tL, tC, tH));
+	}
+
+	return palette;
+}
+
+export function generateTailwindPalette(
+	baseHex: string,
+	options: PaletteOptions = {},
+): {
+	palette: Record<number, string>;
+	inputShade: number;
+} {
+	const normalized = normalizeHex(baseHex);
+	const rgb = hexToRgb(normalized);
+
+	if (!rgb) {
+		return { palette: {}, inputShade: 500 };
+	}
+
+	const inputOk = rgbToOklch(rgb.r, rgb.g, rgb.b);
+	const inputShade =
+		options.baseShade ?? detectInputShade(inputOk.L, inputOk.H);
+	const ok500 = reconstructTrue500(inputOk, inputShade);
+	const palette = generateFromOklch500(ok500);
+
+	if (options.preserveInputShadeExact ?? true) {
+		palette[inputShade] = normalized;
+	}
+
+	return { palette, inputShade };
+}
+
+export function getPaletteShadeFromBaseHex(
+	baseHex: string,
+	targetShade: number,
+	options: PaletteOptions = {},
+): string | null {
+	if (!isHexColor(baseHex)) return null;
+	const { palette } = generateTailwindPalette(baseHex, options);
+	return palette[targetShade] ?? null;
+}
+
+export function deriveShadeFromHex(
+	baseHex: string,
+	target: ShadeKey,
+	options: PaletteOptions = {},
+): string {
+	const shade = Number.parseInt(target, 10);
+	return getPaletteShadeFromBaseHex(baseHex, shade, options) ?? "#6b7280";
+}
+
+export function getStyleFromHexShade(
+	baseHex: string,
+	target: ShadeKey,
+	property: "backgroundColor" | "color" | "borderColor" = "backgroundColor",
+	options: PaletteOptions = {},
+): React.CSSProperties {
+	return {
+		[property]: deriveShadeFromHex(baseHex, target, options),
+	} as React.CSSProperties;
+}
+
+export function getSwatchStyles(
+	baseHex: string,
+	shade: number,
+	options: PaletteOptions = {},
+): React.CSSProperties {
+	const { palette } = generateTailwindPalette(baseHex, options);
+
+	return {
+		backgroundColor: palette[shade],
+		color: getTextColor(palette, shade),
+	};
+}
+
+export const getUserAccentStylesFromHex = (
+	hex: string,
+	options: PaletteOptions = {},
+) =>
+	({
+		coverBgStyle: getStyleFromHexShade(hex, "100", "backgroundColor", options),
+		avatarBgStyle: getStyleFromHexShade(hex, "200", "backgroundColor", options),
+		avatarForegroundStyle: getStyleFromHexShade(hex, "950", "color", options),
+	}) as const;
+
+// compatibility exports
 export function getStyleFromHex(
 	hex: string,
 	property: "backgroundColor" | "color" | "borderColor" = "backgroundColor",
@@ -346,126 +646,25 @@ export function getStyleFromHex(
 	return { [property]: normalizeHex(hex) } as React.CSSProperties;
 }
 
-// Try to map a base hex (typically shade 500) to one of our palettes
-export function findAccentBy500Hex(baseHex: string): AccentColor | null {
-	const target = normalizeHex(baseHex).toLowerCase();
-	for (const name of ACCENT_COLORS) {
-		const v = COLOR_PALETTES[name][500]?.toLowerCase();
-		if (v === target) return name;
-	}
+export function findAccentBy500Hex(_hex: string) {
 	return null;
 }
 
-export function getPaletteShadeFromBaseHex(
-	baseHex: string,
-	shade: number,
-): string | null {
-	const name = findAccentBy500Hex(baseHex);
-	if (!name) return null;
-	const val = COLOR_PALETTES[name][
-		shade as keyof (typeof COLOR_PALETTES)[AccentColor]
-	] as unknown as string | undefined;
-	return val ?? null;
+export function getAccentColorStyle(hex: string): React.CSSProperties {
+	return getStyleFromHex(hex, "backgroundColor");
 }
 
-// Basic HSL helpers for fallback shading when hex is not in our palette
-function hexToHsl(hex: string): { h: number; s: number; l: number } {
-	const { r, g, b } = hexToRgb(hex);
-	const r1 = r / 255,
-		g1 = g / 255,
-		b1 = b / 255;
-	const max = Math.max(r1, g1, b1),
-		min = Math.min(r1, g1, b1);
-	let h = 0,
-		s = 0;
-	const l = (max - min) / 2 + min; // not exact, but fine
-	if (max !== min) {
-		const d = max - min;
-		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-		switch (max) {
-			case r1:
-				h = (g1 - b1) / d + (g1 < b1 ? 6 : 0);
-				break;
-			case g1:
-				h = (b1 - r1) / d + 2;
-				break;
-			case b1:
-				h = (r1 - g1) / d + 4;
-				break;
-		}
-		h /= 6;
-	}
-	return { h: h * 360, s: s * 100, l: l * 100 };
+export function getAccentColorValue(hex: string): string {
+	return normalizeHex(hex);
 }
 
-function hslToHex(h: number, s: number, l: number): string {
-	h /= 360;
-	s /= 100;
-	l /= 100;
-	const hue2rgb = (p: number, q: number, t: number) => {
-		if (t < 0) t += 1;
-		if (t > 1) t -= 1;
-		if (t < 1 / 6) return p + (q - p) * 6 * t;
-		if (t < 1 / 2) return q;
-		if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-		return p;
-	};
-	let r: number;
-	let g: number;
-	let b: number;
-	if (s === 0) {
-		r = g = b = l;
-	} else {
-		const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-		const p = 2 * l - q;
-		r = hue2rgb(p, q, h + 1 / 3);
-		g = hue2rgb(p, q, h);
-		b = hue2rgb(p, q, h - 1 / 3);
-	}
-	const toHex = (x: number) => {
-		const v = Math.round(x * 255)
-			.toString(16)
-			.padStart(2, "0");
-		return v;
-	};
-	return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+export function getAccentColorClass(_hex: string): string {
+	return "";
 }
 
-export function deriveShadeFromHex(
-	baseHex: string,
-	target: "100" | "200" | "950",
-): string {
-	// If in palette, prefer exact palette shade
-	const shadeNum = target === "100" ? 100 : target === "200" ? 200 : 950;
-	const mapped = getPaletteShadeFromBaseHex(baseHex, shadeNum);
-	if (mapped) return mapped;
-	// Fallback: adjust lightness
-	const { h, s, l } = hexToHsl(baseHex);
-	if (target === "100") return hslToHex(h, s * 0.8, Math.min(95, l + 35));
-	if (target === "200") return hslToHex(h, s * 0.9, Math.min(90, l + 25));
-	// 950 -> darker text-like color
-	return hslToHex(h, Math.min(100, s * 1.1), Math.max(7, l * 0.2));
+export function getUserAccentStyles(hex: string) {
+	return getUserAccentStylesFromHex(hex);
 }
 
-export function getStyleFromHexShade(
-	baseHex: string,
-	target: "100" | "200" | "950",
-	property: "backgroundColor" | "color" | "borderColor" = "backgroundColor",
-): React.CSSProperties {
-	const v = deriveShadeFromHex(baseHex, target);
-	return { [property]: v } as React.CSSProperties;
-}
-
-export const getUserAccentStyles = (accentColor: AccentColor) =>
-	({
-		coverBgStyle: getAccentColorStyle(accentColor, 100, "backgroundColor"),
-		avatarBgStyle: getAccentColorStyle(accentColor, 200, "backgroundColor"),
-		avatarForegroundStyle: getAccentColorStyle(accentColor, 950, "color"),
-	}) as const;
-
-export const getUserAccentStylesFromHex = (hex: string) =>
-	({
-		coverBgStyle: getStyleFromHexShade(hex, "100", "backgroundColor"),
-		avatarBgStyle: getStyleFromHexShade(hex, "200", "backgroundColor"),
-		avatarForegroundStyle: getStyleFromHexShade(hex, "950", "color"),
-	}) as const;
+export const COLOR_PALETTES: Record<string, Record<number, string>> = {};
+export const ACCENT_COLORS: Array<{ name: string; hex: string }> = [];

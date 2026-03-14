@@ -3,6 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
+import type {
+	MultiOptionFilterOperator,
+	NumberFilterOperator,
+} from "@/components/data-table-filter/core/types";
 import {
 	OutlineBookmark,
 	OutlineChat,
@@ -419,7 +423,54 @@ function CommissionCardContent({
 	);
 }
 
-import { FilterBarV4, type FilterGroup, type FilterValue } from "./filter-bar";
+import { FilterBar, type FilterGroup, type FilterValue } from "./filter-bar";
+
+function applyMultiOptionFilter(
+	selectedValues: string[],
+	candidateValues: string[],
+	operator: MultiOptionFilterOperator | undefined,
+): boolean {
+	if (selectedValues.length === 0) return true;
+
+	switch (operator) {
+		case "exclude":
+			return !candidateValues.includes(selectedValues[0]);
+		case "exclude if any of":
+			return !selectedValues.some((value) => candidateValues.includes(value));
+		case "exclude if all":
+			return !selectedValues.every((value) => candidateValues.includes(value));
+		case "include all of":
+			return selectedValues.every((value) => candidateValues.includes(value));
+		default:
+			return selectedValues.some((value) => candidateValues.includes(value));
+	}
+}
+
+function applyNumberOperatorFilter(
+	value: number,
+	min: number,
+	max: number,
+	operator: NumberFilterOperator | undefined,
+): boolean {
+	switch (operator) {
+		case "is":
+			return value === min;
+		case "is not":
+			return value !== min;
+		case "is less than":
+			return value < min;
+		case "is less than or equal to":
+			return value <= min;
+		case "is greater than":
+			return value > min;
+		case "is greater than or equal to":
+			return value >= min;
+		case "is not between":
+			return value < min || value > max;
+		default:
+			return value >= min && value <= max;
+	}
+}
 
 export function ProfileCommissions({
 	categories,
@@ -434,6 +485,9 @@ export function ProfileCommissions({
 		status: [],
 		price: { min: undefined, max: undefined },
 	});
+	const [filterOperators, setFilterOperators] = useState<
+		Partial<Record<string, MultiOptionFilterOperator>>
+	>({});
 	const [searchQuery, setSearchQuery] = useState("");
 
 	// Extract filter options
@@ -473,7 +527,7 @@ export function ProfileCommissions({
 			tags: Array.from(tags).sort(),
 			contentWarnings: Array.from(cws).sort(),
 			statuses: Array.from(statuses).sort(),
-			priceRange: { min: Math.floor(minPrice), max: Math.ceil(maxPrice) },
+			priceRange: { min: 0, max: Math.ceil(maxPrice) },
 		};
 	}, [categories]);
 
@@ -544,25 +598,46 @@ export function ProfileCommissions({
 	const filteredCategories = useMemo(() => {
 		if (!categories) return [];
 		let result = categories;
+		const categoriesOperator = filterOperators.categories;
+		const statusOperator = filterOperators.status;
+		const tagsOperator = filterOperators.tags;
+		const cwsOperator = filterOperators.cws;
 
 		// 1. Filter by Category ID
 		if (Array.isArray(filters.categories) && filters.categories.length > 0) {
-			result = result.filter((c) =>
-				(filters.categories as string[]).includes(c.id),
-			);
+			result = result.filter((c) => {
+				const selected = filters.categories as string[];
+				return applyMultiOptionFilter(selected, [c.id], categoriesOperator);
+			});
 		}
 
-		// 2. Filter by Status
+		// 2. Status exclusion/include on category level for fast pruning
 		if (Array.isArray(filters.status) && filters.status.length > 0) {
-			result = result.filter((c) =>
-				(filters.status as string[]).includes(c.status),
-			);
+			result = result.filter((c) => {
+				const selected = filters.status as string[];
+				return applyMultiOptionFilter(selected, [c.status], statusOperator);
+			});
 		}
 
 		// 3. Filter by Tags & CWs & Search (Item Level)
 		result = result
 			.map((c) => {
 				const filteredItems = c.items.filter((i) => {
+					const effectiveStatus = i.status || c.status;
+
+					if (Array.isArray(filters.status) && filters.status.length > 0) {
+						const selected = filters.status as string[];
+						if (
+							!applyMultiOptionFilter(
+								selected,
+								[effectiveStatus],
+								statusOperator,
+							)
+						) {
+							return false;
+						}
+					}
+
 					// Price filter
 					if (
 						filters.price &&
@@ -575,28 +650,43 @@ export function ProfileCommissions({
 							i.price,
 							i.discountRate,
 						);
-						const priceFilter = filters.price as { min: number; max: number };
-						if (basePrice < priceFilter.min || basePrice > priceFilter.max) {
+						const priceFilter = filters.price as {
+							min?: number;
+							max?: number;
+							operator?: NumberFilterOperator;
+						};
+						const min = priceFilter.min ?? priceRange.min;
+						const max = priceFilter.max ?? priceRange.max;
+						if (
+							!applyNumberOperatorFilter(
+								basePrice,
+								min,
+								max,
+								priceFilter.operator,
+							)
+						) {
 							return false;
 						}
 					}
 
 					// Tag filter
-					if (
-						Array.isArray(filters.tags) &&
-						filters.tags.length > 0 &&
-						!filters.tags.some((t: string) => i.tags?.includes(t))
-					) {
-						return false;
+					if (Array.isArray(filters.tags) && filters.tags.length > 0) {
+						const selected = filters.tags as string[];
+						const itemTags = i.tags || [];
+						if (!applyMultiOptionFilter(selected, itemTags, tagsOperator)) {
+							return false;
+						}
 					}
-					// CW filter (if selected, only show items WITH those CWs? Or EXCLUDE? Usually include)
-					if (
-						Array.isArray(filters.cws) &&
-						filters.cws.length > 0 &&
-						!filters.cws.some((cw: string) => i.contentWarnings?.includes(cw))
-					) {
-						return false;
+
+					// Content warning filter
+					if (Array.isArray(filters.cws) && filters.cws.length > 0) {
+						const selected = filters.cws as string[];
+						const itemCws = i.contentWarnings || [];
+						if (!applyMultiOptionFilter(selected, itemCws, cwsOperator)) {
+							return false;
+						}
 					}
+
 					// Search query
 					if (searchQuery) {
 						const query = searchQuery.toLowerCase();
@@ -614,13 +704,29 @@ export function ProfileCommissions({
 			.filter((c) => c.items.length > 0);
 
 		return result;
-	}, [categories, filters, searchQuery]);
+	}, [categories, filters, filterOperators, searchQuery, priceRange]);
 
-	const handleFilterChange = (groupId: string, value: FilterValue) => {
+	const handleFilterChange = (
+		groupId: string,
+		value: FilterValue,
+		operator?: string,
+	) => {
 		setFilters((prev) => ({
 			...prev,
 			[groupId]: value,
 		}));
+		setFilterOperators((prev) => {
+			if (!operator) {
+				const next = { ...prev };
+				delete next[groupId];
+				return next;
+			}
+
+			return {
+				...prev,
+				[groupId]: operator as MultiOptionFilterOperator,
+			};
+		});
 	};
 
 	const handleClearAll = () => {
@@ -631,6 +737,7 @@ export function ProfileCommissions({
 			status: [],
 			price: { min: undefined, max: undefined },
 		});
+		setFilterOperators({});
 		setSearchQuery("");
 	};
 
@@ -648,7 +755,7 @@ export function ProfileCommissions({
 
 	return (
 		<div className="flex w-full flex-col gap-6">
-			<FilterBarV4
+			<FilterBar
 				groups={filterGroups}
 				values={filters}
 				onFilterChange={handleFilterChange}

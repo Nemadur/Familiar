@@ -1,18 +1,22 @@
-import { ScrollShadow } from "@heroui/react";
-import { memo, type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useRef } from "react";
 import {
-	OutlineClose,
-	OutlineFilter,
-	OutlineSearch,
-} from "@/components/icons/icons";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { useIsTablet } from "@/hooks/use-mobile";
+	DataTableFilter,
+	useDataTableFilters,
+} from "@/components/data-table-filter";
+import type {
+	ColumnConfig,
+	ColumnDataType,
+	FiltersState,
+	MultiOptionFilterOperator,
+	NumberFilterOperator,
+	OptionFilterOperator,
+} from "@/components/data-table-filter/core/types";
+import { OutlineFilter, OutlineSearch } from "@/components/icons/icons";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
 /* =========================
@@ -31,6 +35,7 @@ export type FilterGroupType = "select" | "multiselect" | "boolean" | "range";
 export interface RangeValue {
 	min?: number;
 	max?: number;
+	operator?: NumberFilterOperator;
 }
 
 export interface RangeConfig {
@@ -66,7 +71,11 @@ export type FilterValue = string[] | boolean | RangeValue;
 interface FilterBarV4Props {
 	groups: FilterGroup[];
 	values: Record<string, FilterValue>;
-	onFilterChange: (groupId: string, value: FilterValue) => void;
+	onFilterChange: (
+		groupId: string,
+		value: FilterValue,
+		operator?: string,
+	) => void;
 
 	searchQuery: string;
 	onSearchChange: (query: string) => void;
@@ -85,12 +94,6 @@ interface FilterBarV4Props {
    Helpers
 ========================= */
 
-const EMPTY_IDS: string[] = [];
-
-function isStringArrayValue(value: FilterValue | undefined): value is string[] {
-	return Array.isArray(value);
-}
-
 function isRangeValue(value: FilterValue | undefined): value is RangeValue {
 	return (
 		typeof value === "object" &&
@@ -100,389 +103,86 @@ function isRangeValue(value: FilterValue | undefined): value is RangeValue {
 	);
 }
 
-function hasActiveRange(value: RangeValue | undefined, range?: RangeConfig) {
-	if (!value || !range) return false;
+const SINGLE_NUMBER_OPERATORS: NumberFilterOperator[] = [
+	"is",
+	"is not",
+	"is less than",
+	"is greater than or equal to",
+	"is greater than",
+	"is less than or equal to",
+];
 
-	return (
-		(value.min !== undefined && value.min !== range.min) ||
-		(value.max !== undefined && value.max !== range.max)
-	);
+const RANGE_NUMBER_OPERATORS: NumberFilterOperator[] = [
+	"is between",
+	"is not between",
+];
+
+const SINGLE_OPTION_OPERATORS: OptionFilterOperator[] = ["is", "is not"];
+
+const MULTI_OPTION_OPERATORS: OptionFilterOperator[] = [
+	"is any of",
+	"is none of",
+];
+
+const SINGLE_MULTI_OPTION_OPERATORS: MultiOptionFilterOperator[] = [
+	"include",
+	"exclude",
+];
+
+const MULTI_MULTI_OPTION_OPERATORS: MultiOptionFilterOperator[] = [
+	"include any of",
+	"include all of",
+	"exclude if any of",
+	"exclude if all",
+];
+
+function resolveNumberOperator(
+	operator: NumberFilterOperator | undefined,
+	isSingle: boolean,
+): NumberFilterOperator {
+	if (isSingle) {
+		return operator && SINGLE_NUMBER_OPERATORS.includes(operator)
+			? operator
+			: "is";
+	}
+	return operator && RANGE_NUMBER_OPERATORS.includes(operator)
+		? operator
+		: "is between";
 }
 
-/* =========================
-   Small UI pieces
-========================= */
-
-const SectionHeader = memo(function SectionHeader({
-	label,
-	activeCount,
-	onClear,
-}: {
-	label: string;
-	activeCount: number;
-	onClear?: () => void;
-}) {
-	return (
-		<div className="mb-3.5 grid min-h-8 grid-cols-[1fr_auto] items-center gap-3">
-			<div className="flex min-w-0 items-center gap-2">
-				<span className="truncate text-sm font-semibold tracking-wide text-foreground/90">
-					{label}
-				</span>
-
-				<span
-					className={cn(
-						"inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-[11px] font-semibold text-secondary-foreground",
-						activeCount === 0 && "invisible",
-					)}
-					aria-hidden={activeCount === 0}
-				>
-					{activeCount || 0}
-				</span>
-			</div>
-
-			<button
-				type="button"
-				onClick={(e) => {
-					e.stopPropagation();
-					onClear?.();
-				}}
-				className={cn(
-					"text-xs transition-colors",
-					activeCount > 0 && onClear
-						? "text-muted-foreground hover:text-foreground"
-						: "pointer-events-none invisible",
-				)}
-			>
-				Clear
-			</button>
-		</div>
-	);
-});
-
-const Chip = memo(function Chip({
-	id,
-	label,
-	active,
-	onToggle,
-	count,
-}: {
-	id: string;
-	label: string;
-	active: boolean;
-	onToggle: (id: string) => void;
-	count?: number;
-}) {
-	return (
-		<Button
-			variant={active ? "default" : "outline"}
-			onClick={() => onToggle(id)}
-			size={"sm"}
-		>
-			{label}
-			{count !== undefined && (
-				<span className="text-[10px] opacity-70">{count}</span>
-			)}
-		</Button>
-	);
-});
-
-/* =========================
-   Group components
-========================= */
-
-const FilterSelectGroup = memo(function FilterSelectGroup({
-	group,
-	value,
-	onFilterChange,
-}: {
-	group: FilterGroup;
-	value: FilterValue | undefined;
-	onFilterChange: (groupId: string, value: FilterValue) => void;
-}) {
-	const currentIds = isStringArrayValue(value) ? value : EMPTY_IDS;
-
-	const selectedSet = useMemo(() => new Set(currentIds), [currentIds]);
-
-	const handleToggle = useCallback(
-		(optionId: string) => {
-			const isActive = selectedSet.has(optionId);
-
-			if (group.type === "select") {
-				onFilterChange(group.id, isActive ? EMPTY_IDS : [optionId]);
-				return;
-			}
-
-			onFilterChange(
-				group.id,
-				isActive
-					? currentIds.filter((id) => id !== optionId)
-					: [...currentIds, optionId],
-			);
-		},
-		[currentIds, group.id, group.type, onFilterChange, selectedSet],
-	);
-
-	const handleClear = useCallback(() => {
-		onFilterChange(group.id, EMPTY_IDS);
-	}, [group.id, onFilterChange]);
-
-	return (
-		<div className="border-b border-border/40 pb-6 last:border-0 last:pb-0">
-			<SectionHeader
-				label={group.label}
-				activeCount={currentIds.length}
-				onClear={handleClear}
-			/>
-
-			<div className="flex flex-wrap content-start items-start gap-2">
-				{group.options?.map((option) => (
-					<Chip
-						key={option.id}
-						id={option.id}
-						label={option.label}
-						count={option.count}
-						active={selectedSet.has(option.id)}
-						onToggle={handleToggle}
-					/>
-				))}
-			</div>
-		</div>
-	);
-});
-
-const FilterBooleanGroup = memo(function FilterBooleanGroup({
-	group,
-	value,
-	onFilterChange,
-}: {
-	group: FilterGroup;
-	value: FilterValue | undefined;
-	onFilterChange: (groupId: string, value: FilterValue) => void;
-}) {
-	const isActive = value === true;
-
-	return (
-		<div className="border-b border-border/40 pb-6 last:border-0 last:pb-0">
-			<div className="flex items-center justify-between rounded-xl border border-border/50 bg-secondary/20 p-3">
-				<span className="text-[13px] font-medium text-foreground/80">
-					{group.label}
-				</span>
-				<Switch
-					checked={isActive}
-					onCheckedChange={(checked) => onFilterChange(group.id, checked)}
-				/>
-			</div>
-		</div>
-	);
-});
-
-const RangeFilterItem = memo(function RangeFilterItem({
-	group,
-	value,
-	onChange,
-}: {
-	group: FilterGroup;
-	value: FilterValue | undefined;
-	onChange: (groupId: string, value: FilterValue) => void;
-}) {
-	const range = group.range || { min: 0, max: 0, step: 1 };
-	const currentValue = isRangeValue(value) ? value : undefined;
-	const min = currentValue?.min ?? range.min;
-	const max = currentValue?.max ?? range.max;
-	const isModified = hasActiveRange(currentValue, range);
-
-	const [localValue, setLocalValue] = useState([min, max]);
-	const [prevMin, setPrevMin] = useState(min);
-	const [prevMax, setPrevMax] = useState(max);
-
-	if (min !== prevMin || max !== prevMax) {
-		setPrevMin(min);
-		setPrevMax(max);
-		setLocalValue([min, max]);
+function resolveOptionOperator(
+	operator: OptionFilterOperator | undefined,
+	valueCount: number,
+): OptionFilterOperator {
+	if (valueCount <= 1) {
+		return operator && SINGLE_OPTION_OPERATORS.includes(operator)
+			? operator
+			: "is";
 	}
+	return operator && MULTI_OPTION_OPERATORS.includes(operator)
+		? operator
+		: "is any of";
+}
 
-	const handleClear = useCallback(() => {
-		if (!group.range) return;
-		onChange(group.id, {
-			min: group.range.min,
-			max: group.range.max,
-		});
-	}, [group.id, group.range, onChange]);
-
-	if (!group.range) return null;
-
-	return (
-		<div className="border-b border-border/40 pb-6 last:border-0 last:pb-0">
-			<SectionHeader
-				label={group.label}
-				activeCount={isModified ? 1 : 0}
-				onClear={handleClear}
-			/>
-
-			<div className="rounded-xl border border-border/50 bg-secondary/20 p-4">
-				<div className="mb-3.5 flex justify-between">
-					<div>
-						<div className="mb-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-							Min
-						</div>
-						<div className="font-syne text-lg font-semibold text-foreground">
-							{group.range.formatValue?.(localValue[0]) ?? localValue[0]}
-						</div>
-					</div>
-
-					<div className="text-right">
-						<div className="mb-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-							Max
-						</div>
-						<div className="font-syne text-lg font-semibold text-foreground">
-							{group.range.formatValue?.(localValue[1]) ?? localValue[1]}
-						</div>
-					</div>
-				</div>
-
-				<Slider
-					min={group.range.min}
-					max={group.range.max}
-					step={group.range.step ?? 1}
-					value={localValue}
-					onValueChange={setLocalValue}
-					onValueCommit={(val) =>
-						onChange(group.id, { min: val[0], max: val[1] })
-					}
-				/>
-			</div>
-		</div>
-	);
-});
-
-/* =========================
-   Filter Content
-========================= */
-
-function FilterContent({
-	mode,
-	groups,
-	values,
-	onFilterChange,
-	onClearAll,
-	totalActiveFilters,
-	setOpen,
-}: {
-	mode: "dialog" | "drawer";
-	groups: FilterGroup[];
-	values: Record<string, FilterValue>;
-	onFilterChange: (groupId: string, value: FilterValue) => void;
-	onClearAll?: () => void;
-	totalActiveFilters: number;
-	setOpen: (open: boolean) => void;
-}) {
-	const headerPadding = mode === "drawer" && "px-4 pt-2 pb-4";
-	const bodyPadding = mode === "drawer" && "px-4";
-	const footerPadding =
-		mode === "drawer" && "px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]";
-
-	return (
-		<div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
-			<header className={cn("shrink-0", headerPadding)}>
-				<div className="mb-5 flex items-start justify-between gap-4">
-					<div className="min-w-0">
-						<h2 className="text-2xl font-bold leading-tight tracking-tight text-foreground">
-							Filters
-						</h2>
-						<p className="mt-1 text-sm font-normal text-muted-foreground">
-							Refine your search results
-						</p>
-					</div>
-
-					<Button
-						variant="ghost"
-						size="icon"
-						className="shrink-0 max-lg:hidden"
-						onClick={() => setOpen(false)}
-					>
-						<OutlineClose />
-					</Button>
-				</div>
-
-				<div className="h-px bg-border/40" />
-			</header>
-
-			<div className="min-h-0 flex-1">
-				<ScrollShadow className={cn("h-full py-4", bodyPadding)}>
-					<div className="space-y-6 pb-2">
-						{groups.map((group) => {
-							const value = values[group.id];
-
-							if (group.type === "select" || group.type === "multiselect") {
-								return (
-									<FilterSelectGroup
-										key={group.id}
-										group={group}
-										value={value}
-										onFilterChange={onFilterChange}
-									/>
-								);
-							}
-
-							if (group.type === "range" && group.range) {
-								return (
-									<RangeFilterItem
-										key={group.id}
-										group={group}
-										value={value}
-										onChange={onFilterChange}
-									/>
-								);
-							}
-
-							if (group.type === "boolean") {
-								return (
-									<FilterBooleanGroup
-										key={group.id}
-										group={group}
-										value={value}
-										onFilterChange={onFilterChange}
-									/>
-								);
-							}
-
-							return null;
-						})}
-					</div>
-				</ScrollShadow>
-			</div>
-
-			<footer
-				className={cn(
-					"shrink-0 border-t pt-4 border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80",
-					footerPadding,
-				)}
-			>
-				<div className="flex items-center justify-between gap-3">
-					<div className="text-[13px] text-muted-foreground">
-						<strong>{totalActiveFilters}</strong> active
-					</div>
-
-					<div className="flex items-center gap-2">
-						{totalActiveFilters > 0 && onClearAll && (
-							<Button variant="ghost" onClick={onClearAll}>
-								Reset
-							</Button>
-						)}
-
-						<Button onClick={() => setOpen(false)}>Show Results</Button>
-					</div>
-				</div>
-			</footer>
-		</div>
-	);
+function resolveMultiOptionOperator(
+	operator: MultiOptionFilterOperator | undefined,
+	valueCount: number,
+): MultiOptionFilterOperator {
+	if (valueCount <= 1) {
+		return operator && SINGLE_MULTI_OPTION_OPERATORS.includes(operator)
+			? operator
+			: "include";
+	}
+	return operator && MULTI_MULTI_OPTION_OPERATORS.includes(operator)
+		? operator
+		: "include any of";
 }
 
 /* =========================
    Main Component
 ========================= */
 
-export function FilterBarV4({
+export function FilterBar({
 	groups,
 	values,
 	onFilterChange,
@@ -493,88 +193,227 @@ export function FilterBarV4({
 	className,
 	onClearAll,
 }: FilterBarV4Props) {
-	const isTablet = useIsTablet();
-	const [open, setOpen] = useState(false);
+	const operatorMemoryRef = useRef<Record<string, string>>({});
 
-	const totalActiveFilters = useMemo(() => {
-		let count = 0;
+	const columnsConfig = useMemo<ColumnConfig<any>[]>(() => {
+		return groups.map((group) => {
+			let type: ColumnDataType = "option";
+			if (group.type === "multiselect") type = "multiOption";
+			if (group.type === "range") type = "number";
 
+			return {
+				id: group.id,
+				displayName: group.label,
+				type,
+				accessor: () => null,
+				icon: OutlineFilter,
+				min: group.range?.min,
+				max: group.range?.max,
+			};
+		});
+	}, [groups]);
+
+	const options = useMemo(() => {
+		const opts: Record<string, any[]> = {};
 		for (const group of groups) {
-			const val = values[group.id];
-			if (!val) continue;
-
-			if (Array.isArray(val)) count += val.length;
-			if (typeof val === "boolean" && val) count += 1;
-			if (isRangeValue(val) && hasActiveRange(val, group.range)) count += 1;
+			if (group.options) {
+				opts[group.id] = group.options.map((o) => ({
+					label: o.label,
+					value: o.value || o.id,
+					count: o.count,
+				}));
+			} else if (group.type === "boolean") {
+				opts[group.id] = [
+					{ label: "Yes", value: "true" },
+					{ label: "No", value: "false" },
+				];
+			}
 		}
+		return opts;
+	}, [groups]);
 
-		return count;
-	}, [groups, values]);
+	const filters = useMemo<FiltersState>(() => {
+		const state: FiltersState = [];
+		for (const [id, val] of Object.entries(values)) {
+			const group = groups.find((g) => g.id === id);
+			if (!group) continue;
 
-	const triggerButton = (
-		<Button variant="outline" size={"lg"} className="border-dashed">
-			<OutlineFilter />
-			Filter
-			{totalActiveFilters > 0 && (
-				<Badge variant="secondary" className="flex h-5 min-w-5 px-1">
-					{totalActiveFilters}
-				</Badge>
-			)}
-		</Button>
-	);
+			if (group.type === "range") {
+				if (isRangeValue(val)) {
+					// Show as filtered if any value is explicitly set (even if matching range limits)
+					// Only consider it "default" (hidden) if both are undefined
+					const isDefault = val.min === undefined && val.max === undefined;
+
+					if (!isDefault) {
+						const currentMin = val.min ?? group.range?.min ?? 0;
+						const currentMax = val.max ?? group.range?.max ?? 100;
+						const isSingle = currentMin === currentMax;
+						const rememberedOperator = operatorMemoryRef.current[id] as
+							| NumberFilterOperator
+							| undefined;
+						const operator = resolveNumberOperator(
+							val.operator ?? rememberedOperator,
+							isSingle,
+						);
+
+						state.push({
+							columnId: id,
+							type: "number",
+							operator,
+							values: isSingle ? [currentMin] : [currentMin, currentMax],
+						});
+					}
+				}
+			} else if (group.type === "boolean") {
+				if (typeof val === "boolean" && val) {
+					const rememberedOperator = operatorMemoryRef.current[id] as
+						| OptionFilterOperator
+						| undefined;
+					state.push({
+						columnId: id,
+						type: "option",
+						operator: resolveOptionOperator(rememberedOperator, 1),
+						values: ["true"],
+					});
+				}
+			} else {
+				if (Array.isArray(val) && val.length > 0) {
+					const rememberedOperator = operatorMemoryRef.current[id];
+					const isMultiOption = group.type === "multiselect";
+					state.push({
+						columnId: id,
+						type: isMultiOption ? "multiOption" : "option",
+						operator: isMultiOption
+							? resolveMultiOptionOperator(
+									rememberedOperator as MultiOptionFilterOperator | undefined,
+									val.length,
+								)
+							: resolveOptionOperator(
+									rememberedOperator as OptionFilterOperator | undefined,
+									val.length,
+								),
+						values: val,
+					});
+				}
+			}
+		}
+		return state;
+	}, [values, groups]);
+
+	const {
+		filters: hookFilters,
+		actions,
+		columns,
+	} = useDataTableFilters({
+		columnsConfig,
+		data: [],
+		filters,
+		onFiltersChange: (update) => {
+			const next = typeof update === "function" ? update(filters) : update;
+
+			if (next.length === 0 && filters.length > 0) {
+				onClearAll?.();
+				return;
+			}
+
+			// Added/Changed
+			for (const f of next) {
+				const oldF = filters.find((o) => o.columnId === f.columnId);
+				if (
+					!oldF ||
+					JSON.stringify(oldF.values) !== JSON.stringify(f.values) ||
+					oldF.operator !== f.operator
+				) {
+					operatorMemoryRef.current[f.columnId] = f.operator;
+					const group = groups.find((g) => g.id === f.columnId);
+					if (!group) continue;
+
+					let newVal: FilterValue = f.values as string[];
+					if (group.type === "range") {
+						if (f.values.length === 1) {
+							const val = f.values[0] as number;
+							newVal = {
+								min: val,
+								max: val,
+								operator: f.operator as NumberFilterOperator,
+							};
+						} else {
+							newVal = {
+								min: f.values[0] as number,
+								max: f.values[1] as number,
+								operator: f.operator as NumberFilterOperator,
+							};
+						}
+					} else if (group.type === "boolean") {
+						newVal = f.values[0] === "true";
+					}
+
+					onFilterChange(group.id, newVal, f.operator);
+					return;
+				}
+			}
+
+			// Removed
+			for (const f of filters) {
+				const newF = next.find((n) => n.columnId === f.columnId);
+				if (!newF) {
+					delete operatorMemoryRef.current[f.columnId];
+					const group = groups.find((g) => g.id === f.columnId);
+					if (group?.type === "select" || group?.type === "multiselect") {
+						onFilterChange(f.columnId, [], undefined);
+					} else if (group?.type === "boolean") {
+						onFilterChange(f.columnId, false, undefined);
+					} else if (group?.type === "range" && group.range) {
+						onFilterChange(f.columnId, {
+							min: undefined,
+							max: undefined,
+						});
+					}
+					return;
+				}
+			}
+		},
+		options,
+		strategy: "and",
+	});
 
 	return (
-		<div className={cn("w-full", className)}>
-			<div className="flex w-full items-center gap-3">
-				<div className="relative flex-1 h-10">
-					<OutlineSearch className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-					<Input
+		<div className={cn("w-full space-y-3", className)}>
+			<div className="flex w-full items-start gap-3">
+				<InputGroup className="flex-1 h-10 bg-input">
+					<InputGroupAddon>
+						<OutlineSearch />
+					</InputGroupAddon>
+					<InputGroupInput
 						value={searchQuery}
 						onChange={(e) => onSearchChange(e.target.value)}
 						placeholder={searchPlaceholder}
-						className="bg-background/50 pl-9 h-10"
+						className="h-10"
+					/>
+				</InputGroup>
+
+				<div className="min-w-0 pt-0.5 ml-auto">
+					<DataTableFilter
+						columns={columns}
+						filters={hookFilters}
+						actions={actions}
+						strategy="and"
+						layout="selector-only"
 					/>
 				</div>
 
-				{isTablet ? (
-					<Drawer open={open} onOpenChange={setOpen}>
-						<DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
-						<DrawerContent className="h-[90svh] max-h-[90svh]">
-							<div className="mx-auto flex h-full min-h-0 w-full max-w-screen-sm flex-col">
-								<FilterContent
-									mode="drawer"
-									groups={groups}
-									values={values}
-									onFilterChange={onFilterChange}
-									onClearAll={onClearAll}
-									totalActiveFilters={totalActiveFilters}
-									setOpen={setOpen}
-								/>
-							</div>
-						</DrawerContent>
-					</Drawer>
-				) : (
-					<Dialog open={open} onOpenChange={setOpen}>
-						<DialogTrigger asChild>{triggerButton}</DialogTrigger>
-						<DialogContent
-							showCloseButton={false}
-							className="h-[60svh] min-w-xl"
-						>
-							<FilterContent
-								mode="dialog"
-								groups={groups}
-								values={values}
-								onFilterChange={onFilterChange}
-								onClearAll={onClearAll}
-								totalActiveFilters={totalActiveFilters}
-								setOpen={setOpen}
-							/>
-						</DialogContent>
-					</Dialog>
-				)}
-
 				{extraActions}
 			</div>
+
+			{hookFilters.length > 0 && (
+				<DataTableFilter
+					columns={columns}
+					filters={hookFilters}
+					actions={actions}
+					strategy="and"
+					layout="active-only"
+				/>
+			)}
 		</div>
 	);
 }

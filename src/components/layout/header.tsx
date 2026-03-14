@@ -38,7 +38,7 @@ export default function Header() {
 					<MobileNav />
 					<NavWrapper className="hidden lg:flex">
 						<Link to="/" className="mr-2 ml-3 flex items-center space-x-2">
-							<span className="font-bold text-sm uppercase tracking-wider">
+							<span className="font-bold text-sm uppercase tracking-wider text-primary">
 								{t("header.title")}
 							</span>
 						</Link>
