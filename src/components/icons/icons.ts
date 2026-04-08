@@ -120,6 +120,17 @@ export {
 } from "./assets/food_and_drinks/carrot";
 // Formatting
 export { DuotoneBold, OutlineBold, SolidBold } from "./assets/formatting/bold";
+export {
+	DuotoneItalic,
+	OutlineItalic,
+	SolidItalic,
+} from "./assets/formatting/italic";
+export {
+	DuotoneListBoxes,
+	OutlineListBoxes,
+	SolidListBoxes,
+} from "./assets/formatting/list-boxes";
+// Logo
 export { SolidLogo } from "./assets/logo/logo";
 export { SolidLogoText } from "./assets/logo/logo_text";
 export {
@@ -198,6 +209,11 @@ export {
 	OutlineFilter,
 	SolidFilter,
 } from "./assets/shopping_and_ecommerce/filter";
+export {
+	DuotoneFilterClear,
+	OutlineFilterClear,
+	SolidFilterClear,
+} from "./assets/shopping_and_ecommerce/filter_clear";
 export {
 	DuotoneReceipt,
 	OutlineReceipt,
@@ -316,7 +332,6 @@ export {
 	OutlineFolder,
 	SolidFolder,
 } from "./assets/user_interface/folder";
-// User Interface
 export {
 	DuotoneFolderAddOuLc,
 	OutlineFolderAddOuLc,
@@ -347,6 +362,12 @@ export {
 	OutlineLink,
 	SolidLink,
 } from "./assets/user_interface/link";
+// User Interface
+export {
+	DuotoneListBulletPortrait,
+	OutlineListBulletPortrait,
+	SolidListBulletPortrait,
+} from "./assets/user_interface/list-bullet-portrait";
 export {
 	DuotoneLock,
 	OutlineLock,

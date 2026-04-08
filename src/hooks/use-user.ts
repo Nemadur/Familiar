@@ -1,38 +1,67 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { getUserById, getUserByUsername } from "@/data/user";
+import { useQuery } from "@tanstack/react-query";
+import { getMyRoles } from "@/api/roles";
+import { getUserById, getUserByUsername, getUsersByFilter } from "@/api/users";
 import { useAuth } from "@/providers/auth";
+import type { TUserProfile, TUserResponse } from "@/types/user";
+import type { TRoles } from "@/types/user/roles";
 
-export function useUserByUsername(username: string | undefined) {
-	return useQuery({
+type UseUserProfileResult = {
+	user: TUserProfile | null;
+	error: Error | null;
+	isPending: boolean;
+	isFetching: boolean;
+};
+
+export function useUserByUsername(
+	username: string | undefined,
+): UseUserProfileResult {
+	const userQuery = useQuery<TUserResponse, Error>({
 		queryKey: ["user", username],
-		queryFn: async () => {
-			if (!username) return null;
-			const user = await getUserByUsername({ data: { username } });
-			return user || null;
+		queryFn: () => {
+			if (!username) throw new Error("username is required");
+			return getUserByUsername({ username });
 		},
 		enabled: !!username,
 	});
+
+	const user: TUserProfile | null = userQuery.data
+		? {
+				...userQuery.data,
+				stats: {
+					followersCount: 0,
+					followingCount: 0,
+					worksCount: 0,
+					commissionsCount: 0,
+					charactersCount: 0,
+				},
+			}
+		: null;
+
+	return {
+		user,
+		error: userQuery.error,
+		isPending: userQuery.isPending,
+		isFetching: userQuery.isFetching,
+	};
 }
 
-export function useSuspenseUser(username: string) {
-	return useSuspenseQuery({
-		queryKey: ["user", username],
-		queryFn: async () => {
-			const user = await getUserByUsername({ data: { username } });
-			return user || null;
-		},
-	});
-}
+// export function useUserStats(userId: string | undefined) {
+// 	const { data, error, isPending } = useQuery({
+// 		queryKey: ["user-stats", userId],
+// 		queryFn: async () => {
+// 			if (!userId) return null;
+// 			const stats = await getUserStats({ userId });
+// 			return stats || null;
+// 		},
+// 		enabled: !!userId,
+// 	});
 
-export function useUserStats(userId: string | undefined) {
-	return useQuery({
-		queryKey: ["user-stats", userId],
-		queryFn: async () => {
-			if (!userId) return null;
-		},
-		enabled: !!userId,
-	});
-}
+// 	return {
+// 		stats: data,
+// 		error,
+// 		isPending,
+// 	};
+// }
 
 export function useCurrentUser() {
 	const { user, pending } = useAuth();
@@ -49,13 +78,43 @@ export function useCurrentUser() {
 }
 
 export function useUserById(userId: string | undefined) {
-	return useQuery({
+	const { data, error, isPending } = useQuery<TUserResponse, Error>({
 		queryKey: ["user-by-id", userId],
 		queryFn: async () => {
-			if (!userId) return null;
-			const user = await getUserById({ data: { uuid: userId } });
+			if (!userId) throw new Error("userId is required");
+			const user = await getUserById({ userId });
 			return user || null;
 		},
 		enabled: !!userId,
 	});
+
+	return {
+		user: data,
+		error,
+		isPending,
+	};
+}
+
+export function useUserByFilter({
+	page,
+	pageSize,
+}: {
+	page: number;
+	pageSize: number;
+}) {
+	const { data, error, isPending } = useQuery<TUserResponse[], Error>({
+		queryKey: ["users", page, pageSize],
+		queryFn: () =>
+			getUsersByFilter({
+				page,
+				pageSize,
+			}),
+		enabled: !!page && !!pageSize,
+	});
+
+	return {
+		users: data || [],
+		error,
+		isPending,
+	};
 }

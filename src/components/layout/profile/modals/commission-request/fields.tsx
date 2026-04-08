@@ -8,7 +8,10 @@ import {
 import type { Control } from "react-hook-form";
 import {
 	OutlineDiscord,
+	OutlineEdit,
+	OutlineFaceSmilling,
 	OutlineInstagram,
+	OutlineLink,
 	OutlineMail,
 	OutlineSend,
 	OutlineTwitter,
@@ -35,6 +38,7 @@ import {
 	InputGroupAddon,
 	InputGroupButton,
 	InputGroupInput,
+	InputGroupText,
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import {
@@ -69,12 +73,14 @@ export function CommissionRequestFields({
 				name="name"
 				render={({ field, fieldState }) => (
 					<Field>
-						<FieldLabel htmlFor={field.name}>
-							Your name <span className="text-destructive">*</span>
+						<FieldLabel htmlFor={field.name} className="w-full justify-between">
+							{/* TODO: add translation + check if it's required */}
+							<span className="flex-1 w-full">Your name</span>
+							<span className="w-fit text-destructive">Required *</span>
 						</FieldLabel>
-						<InputGroup className="h-12 border-transparent">
-							<InputGroupAddon className="pointer-events-none pl-3">
-								<OutlineUser className="text-muted-foreground" />
+						<InputGroup className="h-12">
+							<InputGroupAddon>
+								<OutlineUser />
 							</InputGroupAddon>
 							<InputGroupInput
 								id={field.name}
@@ -89,17 +95,25 @@ export function CommissionRequestFields({
 
 			{/* Contact Details */}
 			<div className="space-y-4">
-				<div className="flex items-center justify-between">
-					<Label className="font-medium text-base">Your contact details</Label>
+				{/* <div className="flex items-center justify-between">
+					<Label>Your contact details</Label>
 					<span className="text-muted-foreground text-xs">Required</span>
-				</div>
+				</div> */}
 
 				<FormField
 					control={control}
 					name="email"
 					render={({ field, fieldState }) => (
 						<Field>
-							<InputGroup className="h-12 border-transparent">
+							<FieldLabel
+								htmlFor={field.name}
+								className="w-full justify-between"
+							>
+								{/* TODO: add translation + check if it's required */}
+								<span className="flex-1 w-full">Your email</span>
+								<span className="w-fit text-destructive">Required *</span>
+							</FieldLabel>
+							<InputGroup className="h-12">
 								<InputGroupAddon>
 									<OutlineMail />
 								</InputGroupAddon>
@@ -129,7 +143,7 @@ export function CommissionRequestFields({
 						name="discord"
 						render={({ field, fieldState }) => (
 							<Field>
-								<InputGroup className="h-12 border-transparent">
+								<InputGroup className="h-12">
 									<InputGroupAddon>
 										<OutlineDiscord />
 									</InputGroupAddon>
@@ -148,7 +162,7 @@ export function CommissionRequestFields({
 						name="twitter"
 						render={({ field, fieldState }) => (
 							<Field>
-								<InputGroup className="h-12 border-transparent">
+								<InputGroup className="h-12">
 									<InputGroupAddon>
 										<OutlineTwitter />
 									</InputGroupAddon>
@@ -167,7 +181,7 @@ export function CommissionRequestFields({
 						name="instagram"
 						render={({ field, fieldState }) => (
 							<Field>
-								<InputGroup className="h-12 border-transparent">
+								<InputGroup className="h-12">
 									<InputGroupAddon>
 										<OutlineInstagram />
 									</InputGroupAddon>
@@ -186,7 +200,7 @@ export function CommissionRequestFields({
 						name="telegram"
 						render={({ field, fieldState }) => (
 							<Field>
-								<InputGroup className="h-12 border-transparent">
+								<InputGroup className="h-12">
 									<InputGroupAddon>
 										<OutlineSend />
 									</InputGroupAddon>
@@ -221,6 +235,7 @@ export function CommissionRequestFields({
 					label="Background choice"
 					description="make sure the self-provide background is public use art or an art you own for monetized use"
 					options={customOptions}
+					required
 				/>
 			)}
 
@@ -230,15 +245,18 @@ export function CommissionRequestFields({
 				<p className="text-muted-foreground text-sm">
 					Character reference sheets, PSD for rigging, mood boards, etc.
 				</p>
-				<div className="flex flex-wrap gap-3">
-					<Button variant="outline" className="gap-2 bg-background" type="button">
-						<Smile className="h-4 w-4" /> <span>Tag character profile</span>
+				<div className="flex flex-wrap gap-2">
+					<Button variant="outline" type="button">
+						<OutlineFaceSmilling /> <span>Tag character profile</span>
 					</Button>
-					<Button variant="outline" className="gap-2 bg-background" type="button">
-						<Upload className="h-4 w-4" /> <span>Upload file</span>
+					<Button variant="outline" type="button">
+						<Upload /> <span>Upload file</span>
 					</Button>
-					<Button variant="outline" className="gap-2 bg-background" type="button">
-						<LinkIcon className="h-4 w-4" /> <span>Add link</span>
+					<Button variant="outline" type="button">
+						<OutlineLink /> <span>Add link</span>
+					</Button>
+					<Button variant="outline" type="button">
+						<OutlineEdit /> <span>description</span>
 					</Button>
 				</div>
 			</div>
@@ -268,12 +286,14 @@ export function CommissionRequestFields({
 								<Button
 									variant={"outline"}
 									className={cn(
-										"h-12 w-full justify-between border-transparent  text-left font-normal hover:bg-secondary/30",
+										"h-12 w-full justify-between",
 										!field.value && "text-muted-foreground",
 									)}
 								>
 									<span>
-										{field.value ? format(field.value, "PPP") : "mm / dd / yyyy"}
+										{field.value
+											? format(field.value, "PPP")
+											: "mm / dd / yyyy"}
 									</span>
 									<CalendarIcon className="mr-2 h-4 w-4" />
 								</Button>
@@ -297,15 +317,19 @@ export function CommissionRequestFields({
 				name="extraInfo"
 				render={({ field, fieldState }) => (
 					<Field className="space-y-2">
-						<FieldLabel className="font-medium text-base">Extra info</FieldLabel>
+						<FieldLabel className="font-medium text-base">
+							Extra info
+						</FieldLabel>
 						<FieldDescription>
 							Pose, traits, multiple characters, add-ons, etc.
 						</FieldDescription>
-						<Textarea
-							placeholder="Your answer"
-							className="min-h-[100px] resize-none border-transparent  focus:border-primary"
-							{...field}
-						/>
+						<InputGroup className="rounded-xl">
+							<Textarea
+								placeholder="Your answer"
+								className="min-h-[100px] w-full resize-none"
+								{...field}
+							/>
+						</InputGroup>
 						<FieldError errors={[fieldState.error]} />
 					</Field>
 				)}
@@ -328,8 +352,8 @@ export function CommissionRequestFields({
 									htmlFor="terms"
 									className="font-normal text-sm leading-snug"
 								>
-									I understand that submitting this request does not guarantee that{" "}
-									{artistName} will accept my commission
+									I understand that submitting this request does not guarantee
+									that {artistName} will accept my commission
 									<span className="text-destructive">*</span>
 								</FieldLabel>
 							</FieldContent>

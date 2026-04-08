@@ -7,32 +7,32 @@ import {
 	OutlineHeart,
 	OutlineUser,
 } from "@/components/icons/icons";
-import type { User } from "@/types/user";
+import type { TUserProfile } from "@/types/user";
 
-export function useAvailableFeeds(user: User, isMe: boolean) {
+export function useAvailableFeeds(user: TUserProfile, isMe: boolean) {
 	const { t } = useTranslation();
 
 	const availableFeeds = useMemo(() => {
 		const feeds = [];
 		// Use counts from user object instead of fetching content
-		if (isMe || user.commissions_count > 0)
-			feeds.push({
-				id: "commissions",
-				label: t("components.profile.tabs.commissions"),
-				icon: OutlineCrown,
-			});
-		if (isMe || user.works_count > 0)
-			feeds.push({
-				id: "portfolio",
-				label: t("components.profile.tabs.portfolio"),
-				icon: OutlineDribbble,
-			});
-		if (isMe || user.characters_count > 0)
-			feeds.push({
-				id: "characters",
-				label: t("components.profile.tabs.characters"),
-				icon: OutlineUser,
-			});
+		// if (isMe || user.stats.commissionsCount > 0)
+		feeds.push({
+			id: "commissions",
+			label: t("components.profile.tabs.commissions"),
+			icon: OutlineCrown,
+		});
+		// if (isMe || user.stats.worksCount > 0)
+		feeds.push({
+			id: "portfolio",
+			label: t("components.profile.tabs.portfolio"),
+			icon: OutlineDribbble,
+		});
+		// if (isMe || user.stats.charactersCount > 0)
+		feeds.push({
+			id: "characters",
+			label: t("components.profile.tabs.characters"),
+			icon: OutlineUser,
+		});
 		if (isMe) {
 			feeds.push({
 				id: "saved",
@@ -46,7 +46,7 @@ export function useAvailableFeeds(user: User, isMe: boolean) {
 			});
 		}
 		return feeds;
-	}, [user, isMe, t]);
+	}, [isMe, t]);
 
 	return availableFeeds;
 }

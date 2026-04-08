@@ -55,7 +55,7 @@ export default function ThemeToggle() {
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button variant="secondary" role="combobox" className="gap-2">
+				<Button variant="secondary" role="combobox" size={"xl"}>
 					{selectedTheme ? (
 						<>
 							<selectedTheme.icon className="size-4" />

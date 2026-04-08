@@ -24,6 +24,7 @@ import {
 } from "src/components/ui/command";
 import {
 	Popover,
+	PopoverAnchor,
 	PopoverContent,
 	PopoverTrigger,
 } from "src/components/ui/popover";
@@ -42,7 +43,6 @@ import type {
 	ColumnOptionExtended,
 	DataTableFilterActions,
 	FilterModel,
-	FilterOperators,
 	FilterStrategy,
 } from "../core/types";
 import { useDebounceCallback } from "../hooks/use-debounce-callback";
@@ -73,7 +73,8 @@ function __FilterValue<TData, TType extends ColumnDataType>({
 			<PopoverTrigger asChild>
 				<Button
 					variant="ghost"
-					className="m-0 h-full w-fit whitespace-nowrap rounded-none p-0 px-2.5 text-xs"
+					size="xl"
+					className="whitespace-nowrap rounded-none text-xs hover:text-foreground"
 				>
 					<FilterValueDisplay
 						filter={filter}
@@ -83,11 +84,15 @@ function __FilterValue<TData, TType extends ColumnDataType>({
 					/>
 				</Button>
 			</PopoverTrigger>
+
 			<PopoverContent
 				align="start"
-				side="bottom"
-				className="w-fit p-0 origin-(--radix-popover-content-transform-origin)"
-				onOpenAutoFocus={(e) => e.preventDefault()}
+				className={cn(
+					"p-0 origin-(--radix-popover-content-transform-origin)",
+					column.type === "date"
+						? "w-auto min-w-[18rem] max-w-none overflow-visible"
+						: "w-fit",
+				)}
 			>
 				<FilterValueController
 					filter={filter}
@@ -174,13 +179,6 @@ export function FilterValueOptionDisplay<TData>({
 	const options = useMemo(() => column.getOptions(), [column]);
 	const selected = options.filter((o) => filter?.values.includes(o.value));
 
-	// We display the selected options based on how many are selected
-	//
-	// If there is only one option selected, we display its icon and label
-	//
-	// If there are multiple options selected, we display:
-	// 1) up to 3 icons of the selected options
-	// 2) the number of selected options
 	if (selected.length === 1) {
 		const { label, icon: Icon } = selected[0];
 		const hasIcon = !!Icon;
@@ -197,7 +195,6 @@ export function FilterValueOptionDisplay<TData>({
 		);
 	}
 	const name = column.displayName.toLowerCase();
-	// TODO: Better pluralization for different languages
 	const pluralName = name.endsWith("s") ? `${name}es` : `${name}s`;
 
 	const hasOptionIcons = !options?.some((o) => !o.icon);
@@ -296,9 +293,7 @@ export function FilterValueDateDisplay<TData>({
 	if (filter.values.length === 0) return <Ellipsis className="size-4" />;
 	if (filter.values.length === 1) {
 		const value = filter.values[0];
-
 		const formattedDateStr = format(value, "MMM d, yyyy");
-
 		return <span>{formattedDateStr}</span>;
 	}
 
@@ -430,7 +425,6 @@ interface OptionItemProps {
 	onToggle: (value: string, checked: boolean) => void;
 }
 
-// Memoized option item to prevent re-renders unless its own props change
 const OptionItem = memo(function OptionItem({
 	option,
 	onToggle,
@@ -449,7 +443,7 @@ const OptionItem = memo(function OptionItem({
 			<div className="flex items-center gap-1.5">
 				<Checkbox
 					checked={selected}
-					className="opacity-0 data-[state=checked]:opacity-100 group-data-[selected=true]:opacity-100 dark:border-ring mr-1"
+					className="opacity-0 border-primary/12 data-[state=checked]:opacity-100 group-data-[selected=true]:opacity-100 mr-1"
 				/>
 				{Icon &&
 					(isValidElement(Icon) ? (
@@ -474,29 +468,28 @@ const OptionItem = memo(function OptionItem({
 	);
 });
 
-export function FilterValueMultiOptionController<TData>({
+export function FilterValueOptionController<TData>({
 	filter,
 	column,
 	actions,
 	locale = "en",
-}: FilterValueControllerProps<TData, "multiOption">) {
-	// Compute initial options once per mount
+}: FilterValueControllerProps<TData, "option">) {
 	const initialOptions = useMemo(() => {
 		const counts = column.getFacetedUniqueValues();
-		return column.getOptions().map((o) => {
-			const selected = filter?.values.includes(o.value);
-			return {
-				...o,
-				selected,
-				initialSelected: selected,
-				count: counts?.get(o.value) ?? 0,
-			};
-		});
-	}, []);
+		return column.getOptions().map((o) => ({
+			...o,
+			selected: filter?.values.includes(o.value),
+			initialSelected: filter?.values.includes(o.value),
+			count: counts?.get(o.value) ?? 0,
+		}));
+	}, [
+		column.getFacetedUniqueValues,
+		column.getOptions,
+		filter?.values.includes,
+	]);
 
 	const [options, setOptions] = useState(initialOptions);
 
-	// Update selected state when filter values change
 	useEffect(() => {
 		setOptions((prev) =>
 			prev.map((o) => ({ ...o, selected: filter?.values.includes(o.value) })),
@@ -511,7 +504,6 @@ export function FilterValueMultiOptionController<TData>({
 		[actions, column],
 	);
 
-	// Derive groups based on `initialSelected` only
 	const { selectedOptions, unselectedOptions } = useMemo(() => {
 		const sel: typeof options = [];
 		const unsel: typeof options = [];
@@ -524,9 +516,9 @@ export function FilterValueMultiOptionController<TData>({
 
 	return (
 		<Command loop>
-			<CommandInput placeholder={t("search", locale)} />
+			<CommandInput autoFocus placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-			<CommandList>
+			<CommandList className="max-h-fit">
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem
@@ -536,9 +528,7 @@ export function FilterValueMultiOptionController<TData>({
 						/>
 					))}
 				</CommandGroup>
-				{selectedOptions.length > 0 && unselectedOptions.length > 0 && (
-					<CommandSeparator className="my-1" />
-				)}
+				{selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
 				<CommandGroup
 					className={cn(unselectedOptions.length === 0 && "hidden")}
 				>
@@ -555,26 +545,31 @@ export function FilterValueMultiOptionController<TData>({
 	);
 }
 
-export function FilterValueOptionController<TData>({
+export function FilterValueMultiOptionController<TData>({
 	filter,
 	column,
 	actions,
 	locale = "en",
-}: FilterValueControllerProps<TData, "option">) {
-	// Compute initial options once per mount
+}: FilterValueControllerProps<TData, "multiOption">) {
 	const initialOptions = useMemo(() => {
 		const counts = column.getFacetedUniqueValues();
-		return column.getOptions().map((o) => ({
-			...o,
-			selected: filter?.values.includes(o.value),
-			initialSelected: filter?.values.includes(o.value),
-			count: counts?.get(o.value) ?? 0,
-		}));
-	}, []);
+		return column.getOptions().map((o) => {
+			const selected = filter?.values.includes(o.value);
+			return {
+				...o,
+				selected,
+				initialSelected: selected,
+				count: counts?.get(o.value) ?? 0,
+			};
+		});
+	}, [
+		column.getFacetedUniqueValues,
+		column.getOptions,
+		filter?.values.includes,
+	]);
 
 	const [options, setOptions] = useState(initialOptions);
 
-	// Update selected state when filter values change
 	useEffect(() => {
 		setOptions((prev) =>
 			prev.map((o) => ({ ...o, selected: filter?.values.includes(o.value) })),
@@ -589,7 +584,6 @@ export function FilterValueOptionController<TData>({
 		[actions, column],
 	);
 
-	// Derive groups based on `initialSelected` only
 	const { selectedOptions, unselectedOptions } = useMemo(() => {
 		const sel: typeof options = [];
 		const unsel: typeof options = [];
@@ -602,9 +596,9 @@ export function FilterValueOptionController<TData>({
 
 	return (
 		<Command loop>
-			<CommandInput placeholder={t("search", locale)} />
+			<CommandInput autoFocus placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-			<CommandList className="max-h-fit">
+			<CommandList>
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem
@@ -614,9 +608,7 @@ export function FilterValueOptionController<TData>({
 						/>
 					))}
 				</CommandGroup>
-				{selectedOptions.length > 0 && unselectedOptions.length > 0 && (
-					<CommandSeparator />
-				)}
+				{selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
 				<CommandGroup
 					className={cn(unselectedOptions.length === 0 && "hidden")}
 				>
@@ -639,9 +631,16 @@ export function FilterValueDateController<TData>({
 	actions,
 }: FilterValueControllerProps<TData, "date">) {
 	const [date, setDate] = useState<DateRange | undefined>({
-		from: filter?.values[0] ?? new Date(),
+		from: filter?.values[0] ?? undefined,
 		to: filter?.values[1] ?? undefined,
 	});
+
+	useEffect(() => {
+		setDate({
+			from: filter?.values[0] ?? undefined,
+			to: filter?.values[1] ?? undefined,
+		});
+	}, [filter?.values]);
 
 	function changeDateRange(value: DateRange | undefined) {
 		const start = value?.from;
@@ -652,29 +651,20 @@ export function FilterValueDateController<TData>({
 
 		setDate({ from: start, to: end });
 
-		const isRange = start && end;
+		const isRange = !!start && !!end;
 		const newValues = isRange ? [start, end] : start ? [start] : [];
 
 		actions.setFilterValue(column, newValues);
 	}
 
 	return (
-		<Command>
-			<CommandList className="max-h-fit">
-				<CommandGroup>
-					<div>
-						<Calendar
-							initialFocus
-							mode="range"
-							defaultMonth={date?.from}
-							selected={date}
-							onSelect={changeDateRange}
-							numberOfMonths={1}
-						/>
-					</div>
-				</CommandGroup>
-			</CommandList>
-		</Command>
+		<Calendar
+			mode="range"
+			defaultMonth={date?.from ?? new Date()}
+			selected={date}
+			onSelect={changeDateRange}
+			numberOfMonths={2}
+		/>
 	);
 }
 
@@ -714,51 +704,37 @@ export function FilterValueNumberController<TData>({
 }: FilterValueControllerProps<TData, "number">) {
 	const minMax = useMemo(() => column.getFacetedMinMaxValues(), [column]);
 	const [sliderMin, sliderMax] = [
-		column.min !== undefined ? column.min : minMax ? minMax[0] : 0,
-		column.max !== undefined ? column.max : minMax ? minMax[1] : 100,
+		minMax ? minMax[0] : 0,
+		minMax ? minMax[1] : 0,
 	];
 
-	const hasMinMax =
-		minMax || (column.min !== undefined && column.max !== undefined);
+	const [values, setValues] = useState(filter?.values ?? [0, 0]);
 
-	const isNumberRange = filter
-		? numberFilterOperators[filter.operator].target === "multiple"
-		: hasMinMax;
-
-	// Local state for values
-	const [values, setValues] = useState(
-		filter?.values ?? (isNumberRange ? [sliderMin, sliderMax] : [sliderMin, 0]),
-	);
-
-	// Sync with parent filter changes
 	useEffect(() => {
-		if (!filter) return;
-		const isRange =
-			numberFilterOperators[filter.operator].target === "multiple";
-		// When operator changes type (single <-> multiple), we need to reset/adjust values
-		if (isRange && values.length === 1) {
-			setValues([values[0], sliderMax]);
-		} else if (!isRange && values.length === 2) {
-			setValues([values[0]]);
-		} else if (
+		if (
 			filter?.values &&
-			(filter.values.length !== values.length ||
-				!filter.values.every((v, i) => v === values[i]))
+			filter.values.length === values.length &&
+			filter.values.every((v, i) => v === values[i])
 		) {
 			setValues(filter.values);
 		}
-	}, [filter?.values]);
+	}, [filter?.values, values]);
+
+	const isNumberRange =
+		filter && numberFilterOperators[filter.operator].target === "multiple";
+
+	const setFilterOperatorDebounced = useDebounceCallback(
+		actions.setFilterOperator,
+		500,
+	);
+	const setFilterValueDebounced = useDebounceCallback(
+		actions.setFilterValue,
+		500,
+	);
 
 	const changeNumber = (value: number[]) => {
 		setValues(value);
 		setFilterValueDebounced(column as any, value);
-	};
-
-	const commitNumber = (value: number[]) => {
-		setValues(value);
-		// Cancel any pending debounced calls to avoid overwriting the committed value
-		setFilterValueDebounced.cancel();
-		actions.setFilterValue(column, value);
 	};
 
 	const changeMinNumber = (value: number) => {
@@ -775,76 +751,56 @@ export function FilterValueNumberController<TData>({
 
 	const changeType = useCallback(
 		(type: "single" | "range") => {
-			if (
-				(type === "single" && !isNumberRange) ||
-				(type === "range" && isNumberRange)
-			) {
-				return;
-			}
 			let newValues: number[] = [];
-			const currentMin = sliderMin;
-			const currentMax = sliderMax;
-
-			if (type === "single") {
-				// Keep the first value for single mode, ensuring it's within bounds
-				newValues = [Math.max(currentMin, Math.min(values[0], currentMax))];
-			} else {
-				// Default to full range if switching to range mode
-				newValues = [currentMin, currentMax];
+			if (type === "single") newValues = [values[0]];
+			else if (!minMax)
+				newValues = createNumberRange([values[0], values[1] ?? 0]);
+			else {
+				const value = values[0];
+				newValues =
+					value - minMax[0] < minMax[1] - value
+						? createNumberRange([value, minMax[1]])
+						: createNumberRange([minMax[0], value]);
 			}
 
-			let newOperator: FilterOperators["number"] =
-				type === "single" ? "is" : "is between";
+			const newOperator = type === "single" ? "is" : "is between";
 
-			// If the current operator matches the requested type, keep it
-			if (
-				filter &&
-				numberFilterOperators[filter.operator].target ===
-					(type === "single" ? "single" : "multiple")
-			) {
-				newOperator = filter.operator;
-			}
-
-			// Update local state
 			setValues(newValues);
 
-			// Cancel in-flight debounced calls to prevent flicker/race conditions
 			setFilterOperatorDebounced.cancel();
 			setFilterValueDebounced.cancel();
 
-			// Update global filter state atomically
 			actions.setFilterOperator(column.id, newOperator);
 			actions.setFilterValue(column, newValues);
 		},
-		[values, column, actions, sliderMin, sliderMax, isNumberRange, filter],
+		[
+			values,
+			column,
+			actions,
+			minMax,
+			setFilterOperatorDebounced.cancel,
+			setFilterValueDebounced.cancel,
+		],
 	);
-
-	const { setFilterValueDebounced, setFilterOperatorDebounced } =
-		useDataTableFiltersDebounced(actions);
 
 	return (
 		<Command>
-			<CommandList className="w-[300px] px-2 py-2 max-h-[unset] overflow-visible">
+			<CommandList className="w-[300px] px-2 py-2">
 				<CommandGroup>
 					<div className="flex flex-col w-full">
 						<Tabs
 							value={isNumberRange ? "range" : "single"}
 							onValueChange={(v) => changeType(v as "single" | "range")}
 						>
-							<TabsList className="w-full">
-								<TabsTrigger value="single" className="flex-1">
-									{t("single", locale)}
-								</TabsTrigger>
-								<TabsTrigger value="range" className="flex-1">
-									{t("range", locale)}
-								</TabsTrigger>
+							<TabsList className="w-full *:text-xs">
+								<TabsTrigger value="single">{t("single", locale)}</TabsTrigger>
+								<TabsTrigger value="range">{t("range", locale)}</TabsTrigger>
 							</TabsList>
 							<TabsContent value="single" className="flex flex-col gap-4 mt-4">
-								{hasMinMax && (
+								{minMax && (
 									<Slider
 										value={[values[0]]}
-										onValueChange={(value) => setValues(value)}
-										onValueCommit={commitNumber}
+										onValueChange={(value) => changeNumber(value)}
 										min={sliderMin}
 										max={sliderMax}
 										step={1}
@@ -852,23 +808,22 @@ export function FilterValueNumberController<TData>({
 									/>
 								)}
 								<div className="flex items-center gap-2">
-									<span className="text-xs font-medium w-9">
+									<span className="text-xs font-medium">
 										{t("value", locale)}
 									</span>
 									<DebouncedInput
 										id="single"
 										type="number"
-										value={values[0].toString()} // Use values[0] directly
+										value={values[0].toString()}
 										onChange={(v) => changeNumber([Number(v)])}
 									/>
 								</div>
 							</TabsContent>
 							<TabsContent value="range" className="flex flex-col gap-4 mt-4">
-								{hasMinMax && (
+								{minMax && (
 									<Slider
-										value={values} // Use values directly
-										onValueChange={(value) => setValues(value)}
-										onValueCommit={commitNumber}
+										value={values}
+										onValueChange={changeNumber}
 										min={sliderMin}
 										max={sliderMax}
 										step={1}
@@ -877,7 +832,7 @@ export function FilterValueNumberController<TData>({
 								)}
 								<div className="grid grid-cols-2 gap-4">
 									<div className="flex items-center gap-2">
-										<span className="text-xs font-medium w-9">
+										<span className="text-xs font-medium">
 											{t("min", locale)}
 										</span>
 										<DebouncedInput
@@ -887,7 +842,7 @@ export function FilterValueNumberController<TData>({
 										/>
 									</div>
 									<div className="flex items-center gap-2">
-										<span className="text-xs font-medium w-9">
+										<span className="text-xs font-medium">
 											{t("max", locale)}
 										</span>
 										<DebouncedInput
@@ -904,17 +859,4 @@ export function FilterValueNumberController<TData>({
 			</CommandList>
 		</Command>
 	);
-}
-
-// Hook to provide debounced actions
-function useDataTableFiltersDebounced(actions: DataTableFilterActions) {
-	const setFilterValueDebounced = useDebounceCallback(
-		actions.setFilterValue,
-		300,
-	);
-	const setFilterOperatorDebounced = useDebounceCallback(
-		actions.setFilterOperator,
-		300,
-	);
-	return { setFilterValueDebounced, setFilterOperatorDebounced };
 }

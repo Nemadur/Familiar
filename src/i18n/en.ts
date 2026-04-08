@@ -295,7 +295,8 @@ const en: Locale = {
 						description: "Description",
 					},
 					tos: {
-						title: "Terms of Service",
+						title: "{{artist_displayname}}'s Terms of Service",
+						updated_at: "Updated {{updated_at}}",
 						agreement_prefix: "By commissioning me, you agree to:",
 						read_full: "Read full Terms of Service",
 					},

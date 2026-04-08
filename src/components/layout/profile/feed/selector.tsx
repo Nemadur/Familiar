@@ -9,6 +9,7 @@ export interface TabItem<T extends string> {
 	description?: string;
 	icon?: ElementType;
 	activeIcon?: ElementType;
+	disabled?: boolean;
 }
 
 interface TabSelectorProps<T extends string> {
@@ -54,7 +55,11 @@ export function TabSelector<T extends string>({
 								key={item.id}
 								value={item.id}
 								size={size}
-								className="gap-2"
+								className={cn(
+									"gap-2",
+									item.disabled &&
+										"pointer-events-none cursor-not-allowed opacity-50",
+								)}
 							>
 								{IconComponent && <IconComponent className={iconSize} />}
 								{item.label}
@@ -63,7 +68,7 @@ export function TabSelector<T extends string>({
 										layout
 										layoutId={`${id}-active-tab-indicator-${item.id}`} // Unique ID per tab item to prevent cross-tab jumping on unrelated re-renders
 										initial={false}
-										className="absolute right-0 -bottom-3.5 left-0 mx-auto h-1 w-1/3 rounded-t-full bg-primary"
+										className="absolute right-0 -bottom-1.5 left-0 mx-auto h-1 w-1/3 rounded-t-full bg-primary"
 										transition={{
 											type: "tween",
 											ease: "easeInOut",

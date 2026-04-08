@@ -4,8 +4,6 @@ import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
-	useLocation,
-	useMatches,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Container } from "@/components/layout/container";
@@ -19,6 +17,7 @@ import { ThemeProvider } from "@/providers/theme";
 import Header from "../components/layout/header";
 import { AuthProvider } from "../providers/auth";
 import appCss from "../styles.css?url";
+// import "../bones/registry";
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
@@ -50,7 +49,7 @@ export const Route = createRootRouteWithContext<{
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-	const context = Route.useRouteContext();
+	// const context = Route.useRouteContext();
 
 	return (
 		<html lang={i18n.language || "en"} suppressHydrationWarning>

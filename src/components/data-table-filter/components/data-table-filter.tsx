@@ -1,4 +1,6 @@
-import { useIsMobile } from "src/hooks/use-mobile";
+"use client";
+
+import { ScrollShadow } from "@heroui/react";
 import type {
 	Column,
 	DataTableFilterActions,
@@ -6,7 +8,7 @@ import type {
 	FiltersState,
 } from "../core/types";
 import type { Locale } from "../lib/i18n";
-import { ActiveFilters, ActiveFiltersMobileContainer } from "./active-filters";
+import { ActiveFilters } from "./active-filters";
 import { FilterActions } from "./filter-actions";
 import { FilterSelector } from "./filter-selector";
 
@@ -16,7 +18,6 @@ interface DataTableFilterProps<TData> {
 	actions: DataTableFilterActions;
 	strategy: FilterStrategy;
 	locale?: Locale;
-	layout?: "default" | "selector-only" | "active-only";
 }
 
 export function DataTableFilter<TData>({
@@ -25,14 +26,22 @@ export function DataTableFilter<TData>({
 	actions,
 	strategy,
 	locale = "en",
-	layout = "default",
 }: DataTableFilterProps<TData>) {
-	const isMobile = useIsMobile();
-	if (isMobile) {
-		return (
-			<div className="flex w-full items-start justify-between gap-2">
-				<div className="flex gap-1">
-					<FilterSelector
+	return (
+		<div className="flex w-full flex-col gap-2">
+			<div className="flex w-full items-start">
+				<FilterSelector
+					columns={columns}
+					filters={filters}
+					actions={actions}
+					strategy={strategy}
+					locale={locale}
+				/>
+			</div>
+
+			<ScrollShadow orientation="horizontal" hideScrollBar className="w-full">
+				<div className="flex min-w-max items-start gap-2 pb-1">
+					<ActiveFilters
 						columns={columns}
 						filters={filters}
 						actions={actions}
@@ -45,77 +54,7 @@ export function DataTableFilter<TData>({
 						locale={locale}
 					/>
 				</div>
-				<ActiveFiltersMobileContainer>
-					<ActiveFilters
-						columns={columns}
-						filters={filters}
-						actions={actions}
-						strategy={strategy}
-						locale={locale}
-					/>
-				</ActiveFiltersMobileContainer>
-			</div>
-		);
-	}
-
-	if (layout === "selector-only") {
-		return (
-			<div className="flex w-full items-start gap-2">
-				<FilterSelector
-					columns={columns}
-					filters={filters}
-					actions={actions}
-					strategy={strategy}
-					locale={locale}
-				/>
-			</div>
-		);
-	}
-
-	if (layout === "active-only") {
-		return (
-			<div className="flex w-full items-start justify-between gap-2">
-				<div className="flex md:flex-wrap gap-2 w-full flex-1">
-					<ActiveFilters
-						columns={columns}
-						filters={filters}
-						actions={actions}
-						strategy={strategy}
-						locale={locale}
-					/>
-				</div>
-				<FilterActions
-					hasFilters={filters.length > 0}
-					actions={actions}
-					locale={locale}
-				/>
-			</div>
-		);
-	}
-
-	return (
-		<div className="flex w-full items-start justify-between gap-2">
-			<div className="flex md:flex-wrap gap-2 w-full flex-1">
-				<FilterSelector
-					columns={columns}
-					filters={filters}
-					actions={actions}
-					strategy={strategy}
-					locale={locale}
-				/>
-				<ActiveFilters
-					columns={columns}
-					filters={filters}
-					actions={actions}
-					strategy={strategy}
-					locale={locale}
-				/>
-			</div>
-			<FilterActions
-				hasFilters={filters.length > 0}
-				actions={actions}
-				locale={locale}
-			/>
+			</ScrollShadow>
 		</div>
 	);
 }

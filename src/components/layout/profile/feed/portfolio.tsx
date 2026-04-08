@@ -24,7 +24,7 @@ interface ProfilePortfolioProps {
 }
 
 import { ColorPaletteDebugger } from "@/components/debug/color-palette-debugger";
-import { FilterBar, type FilterGroup } from "./filter-bar";
+import { FilterBar, type FilterGroup } from "@/components/layout/filter-bar";
 
 export function ProfilePortfolio({
 	posts,
@@ -181,7 +181,7 @@ export function ProfilePortfolio({
 
 				{/* Subfolders Grid */}
 				{subfolders.length > 0 && (
-					<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+					<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 						{subfolders.map((folder) => (
 							<Link
 								key={folder.id}
@@ -260,7 +260,7 @@ export function ProfilePortfolio({
 	return (
 		<div className="space-y-6">
 			{/* Search and Filter Bar */}
-			<FilterBar
+			{/* <FilterBar
 				groups={filterGroups}
 				values={filters}
 				onFilterChange={handleFilterChange}
@@ -273,11 +273,11 @@ export function ProfilePortfolio({
 						Add Folder
 					</Button>
 				}
-			/>
+			/> */}
 
 			{/* Folders Grid */}
 			{showFolders && filteredFolders.length > 0 && (
-				<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+				<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 					{filteredFolders.map((folder) => (
 						<Link
 							key={folder.id}

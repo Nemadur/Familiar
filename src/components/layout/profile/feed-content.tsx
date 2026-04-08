@@ -1,7 +1,8 @@
 import { useMemo } from "react";
+import { useProfileCommisions } from "@/hooks/use-commisions";
 import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
-import type { CommissionCategory } from "@/types/commission";
-import type { User } from "@/types/user";
+import type { TCommission, TCommissionCategory } from "@/types/commissions";
+import type { TUserProfile } from "@/types/user";
 import { ProfileCharacters } from "./feed/characters";
 import { ProfileCommissions } from "./feed/commissions";
 import { ProfilePortfolio } from "./feed/portfolio";
@@ -16,48 +17,64 @@ export function UserFeedContent({
 	tab,
 	isMe,
 }: {
-	user: User;
+	user: TUserProfile;
 	tab: string;
 	isMe: boolean;
 }) {
-	const { categories, posts, characters, folders } = useSuspenseProfileContent(
-		user.uuid,
-		tab as "commissions" | "portfolio" | "characters" | "saved" | "liked",
-	);
+	// TODO: fetch data from API
+	// const { categories, posts, characters, folders } = useSuspenseProfileContent(
+	// 	user.uuid,
+	// 	tab as "commissions" | "portfolio" | "characters" | "saved" | "liked",
+	// );
 
-	const commissionCategories = useMemo<CommissionCategory[]>(() => {
-		console.log(
-			`[UserFeedContent] Mapping categories: ${categories?.length || 0}`,
-		);
-		// Map backend categories to frontend structure
-		return (categories || []).map((cat: any) => ({
-			id: cat.id,
-			title: cat.title,
-			status: cat.status || "open",
-			items: (cat.items || []).map(mapCommissionToCommissionItem),
-		}));
-	}, [categories]);
+	// const commissionCategories = useMemo<CommissionCategory[]>(() => {
+	// 	console.log(
+	// 		`[UserFeedContent] Mapping categories: ${categories?.length || 0}`,
+	// 	);
+	// 	// Map backend categories to frontend structure
+	// 	return (categories || []).map((cat: any) => ({
+	// 		id: cat.id,
+	// 		title: cat.title,
+	// 		status: cat.status || "open",
+	// 		items: (cat.items || []).map(mapCommissionToCommissionItem),
+	// 	}));
+	// }, [categories]);
 
-	const portfolioPosts = useMemo(
-		() => posts.map((post: any) => mapPostToPostWithAuthor(post, user)),
-		[posts, user],
-	);
+	// const portfolioPosts = useMemo(
+	// 	() => posts.map((post: any) => mapPostToPostWithAuthor(post, user)),
+	// 	[posts, user],
+	// );
 
-	const portfolioFolders = useMemo(
-		() =>
-			folders.map((folder: any) => {
-				// Calculate subfolders count
-				const subfoldersCount = folders.filter(
-					(f: any) => f.parentId === folder.id,
-				).length;
-				return {
-					...folder,
-					count: folder.count + subfoldersCount,
-					hasSubfolders: subfoldersCount > 0,
-				};
-			}),
-		[folders],
-	);
+	// const portfolioFolders = useMemo(
+	// 	() =>
+	// 		folders.map((folder: any) => {
+	// 			// Calculate subfolders count
+	// 			const subfoldersCount = folders.filter(
+	// 				(f: any) => f.parentId === folder.id,
+	// 			).length;
+	// 			return {
+	// 				...folder,
+	// 				count: folder.count + subfoldersCount,
+	// 				hasSubfolders: subfoldersCount > 0,
+	// 			};
+	// 		}),
+	// 	[folders],
+	// );
+
+	// const { categories, isPending, error } = useProfileCommisions(user.userId);
+
+	// const commissionCategories = useMemo<TCommissionCategory[]>(() => {
+	// 	// Map backend categories to frontend structure
+	// 	return (categories || []).map((cat) => ({
+	// 		id: cat.id,
+	// 		name: cat.name,
+	// 		items: (cat.items || []).map(mapCommissionToCommissionItem),
+	// 	}));
+	// }, [categories]);
+
+	const { data: commissions } = useProfileCommisions(user.userId);
+
+	console.log(commissions);
 
 	// Permission check for private tabs
 	// TODO: user can switch between private/public for each tab
@@ -68,19 +85,19 @@ export function UserFeedContent({
 	switch (tab) {
 		case "commissions":
 			return (
-				<ProfileCommissions categories={commissionCategories} artist={user} />
+				<ProfileCommissions artist={user} commissions={commissions || []} />
 			);
 		case "portfolio":
-			return (
-				<ProfilePortfolio
-					posts={portfolioPosts}
-					folderId={undefined}
-					username={user.username}
-					folders={portfolioFolders}
-				/>
-			);
+		// return (
+		// 	<ProfilePortfolio
+		// 		posts={portfolioPosts}
+		// 		folderId={undefined}
+		// 		username={user.username}
+		// 		folders={portfolioFolders}
+		// 	/>
+		// );
 		case "characters":
-			return <ProfileCharacters characters={characters} />;
+		// return <ProfileCharacters characters={characters} />;
 		case "saved":
 			// TODO: Implement saved feed
 			return <div>Saved</div>;

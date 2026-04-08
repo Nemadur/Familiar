@@ -31,6 +31,7 @@ function PopoverContent({
 					{
 						"--popover-content-radius": "1.25rem",
 						"--popover-content-padding": "0.25rem",
+						"--command-content-radius": "1.25rem",
 						...style,
 					} as React.CSSProperties
 				}

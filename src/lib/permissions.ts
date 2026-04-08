@@ -3,7 +3,7 @@ import {
 	createMongoAbility,
 	type MongoAbility,
 } from "@casl/ability";
-import type { User } from "@/types/user";
+import type { TUserProfile } from "@/types/user";
 
 // Define subjects using local interfaces to avoid Drizzle dependency
 interface ProfileSubject {
@@ -55,7 +55,7 @@ export type AppSubjects =
 	| "Listing"
 	| "ShopItem"
 	| "Folder"
-	| "Sona"
+	| "Charater"
 	| "Ban";
 
 export type AppActions = "create" | "read" | "update" | "delete" | "manage";
@@ -81,7 +81,7 @@ function hasRole(userRoles: string[] | undefined, minimum: string): boolean {
 	return maxRank >= (ROLE_RANK[minimum] ?? 999);
 }
 
-export function getUserPermissions(user: User | null | undefined) {
+export function getUserPermissions(user: TUserProfile | null | undefined) {
 	const { can, cannot, build } = new AbilityBuilder<AppAbility>(
 		createMongoAbility,
 	);
@@ -90,7 +90,7 @@ export function getUserPermissions(user: User | null | undefined) {
 	can("read", "Post", { visibility: "public" });
 	can("read", "Listing", { status: "open" });
 	can("read", "ShopItem"); // Assuming public by default or handle logic
-	can("read", "Sona", { isPrivate: false });
+	can("read", "Charater", { isPrivate: false });
 	can("read", "Profile", { isPrivate: false });
 
 	if (!user) {
@@ -99,36 +99,36 @@ export function getUserPermissions(user: User | null | undefined) {
 
 	// ─── Authenticated (Client) ─────────────────────────────────────────
 	// Users can manage their own content
-	can("manage", "Profile", { userId: user.uuid });
-	can("manage", "Post", { artistId: user.uuid });
-	can("manage", "Listing", { artistId: user.uuid });
-	can("manage", "ShopItem", { sellerId: user.uuid });
-	can("manage", "Folder", { ownerId: user.uuid });
-	can("manage", "Sona", { ownerId: user.uuid });
+	can("manage", "Profile", { userId: user.userId });
+	can("manage", "Post", { artistId: user.userId });
+	can("manage", "Listing", { artistId: user.userId });
+	can("manage", "ShopItem", { sellerId: user.userId });
+	can("manage", "Folder", { ownerId: user.userId });
+	can("manage", "Charater", { ownerId: user.userId });
 
 	// Users can read their own private content
-	can("read", "Post", { artistId: user.uuid });
-	can("read", "Sona", { ownerId: user.uuid });
-	can("read", "Profile", { userId: user.uuid });
-	can("read", "Folder", { ownerId: user.uuid });
+	can("read", "Post", { artistId: user.userId });
+	can("read", "Charater", { ownerId: user.userId });
+	can("read", "Profile", { userId: user.userId });
+	can("read", "Folder", { ownerId: user.userId });
 
 	// ─── Artist ──────────────────────────────────────────────────────────
-	if (hasRole(user.roles, "artist")) {
+	if (hasRole(user.roles, "ARTIST")) {
 		can("create", "Post");
 		can("create", "Listing");
 		can("create", "ShopItem");
 		can("create", "Folder");
-		can("create", "Sona");
+		can("create", "Charater");
 	}
 
 	// ─── Moderator ───────────────────────────────────────────────────────
-	if (hasRole(user.roles, "moderator")) {
+	if (hasRole(user.roles, "MODERATOR")) {
 		can("read", "all");
 		can("manage", "Ban");
 	}
 
 	// ─── Admin ───────────────────────────────────────────────────────────
-	if (hasRole(user.roles, "admin")) {
+	if (hasRole(user.roles, "ADMIN")) {
 		can("manage", "all");
 	}
 

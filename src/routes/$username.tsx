@@ -1,7 +1,6 @@
 import {
 	createFileRoute,
 	Outlet,
-	useLocation,
 	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
@@ -39,21 +38,20 @@ function RouteComponent() {
 	// Use the tab param if available, otherwise undefined
 	const activeTab = (params as any).tab;
 	const isModalOpen = !!(params as any).commisionId;
+	// FIXME: user profile refresh data every time, use cache instead
 
 	return (
-		<Suspense fallback={<UserProfileSkeleton />}>
-			<UserProfileWrapper
-				username={username}
-				activeTab={activeTab}
-				onTabChange={(tab) => {
-					navigate({
-						to: `/${username}/${tab}`,
-						replace: isModalOpen,
-					});
-				}}
-			>
-				<Outlet />
-			</UserProfileWrapper>
-		</Suspense>
+		<UserProfileWrapper
+			username={username}
+			activeTab={activeTab}
+			onTabChange={(tab) => {
+				navigate({
+					to: `/${username}/${tab}`,
+					replace: isModalOpen,
+				});
+			}}
+		>
+			<Outlet />
+		</UserProfileWrapper>
 	);
 }

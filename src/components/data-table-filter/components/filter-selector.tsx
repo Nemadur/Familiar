@@ -65,6 +65,7 @@ function __FilterSelector<TData>({
 		: undefined;
 
 	const hasFilters = filters.length > 0;
+	const isDateProperty = column?.type === "date";
 
 	useEffect(() => {
 		if (property && inputRef) {
@@ -72,21 +73,6 @@ function __FilterSelector<TData>({
 			setValue("");
 		}
 	}, [property]);
-
-	useEffect(() => {
-		if (!property || !column || filter || column.type !== "number") return;
-
-		const minMax = column.getFacetedMinMaxValues();
-		const min =
-			typeof column.min === "number" ? column.min : (minMax?.[0] ?? 0);
-		const max =
-			typeof column.max === "number" ? column.max : (minMax?.[1] ?? 100);
-
-		actions.setFilterValue(column as Column<TData, "number", number>, [
-			min,
-			max,
-		]);
-	}, [property, column, filter, actions]);
 
 	useEffect(() => {
 		if (!open) setTimeout(() => setValue(""), 150);
@@ -141,28 +127,42 @@ function __FilterSelector<TData>({
 					</CommandList>
 				</Command>
 			),
-		[property, column, filter, filters, columns, actions, value],
+		[
+			property,
+			column,
+			filter,
+			filters,
+			columns,
+			actions,
+			value,
+			strategy,
+			locale,
+		],
 	);
 
 	return (
 		<Popover
 			open={open}
-			onOpenChange={async (value) => {
+			onOpenChange={(value) => {
 				setOpen(value);
 				if (!value) setTimeout(() => setProperty(undefined), 100);
 			}}
 		>
 			<PopoverTrigger asChild>
-				<Button variant="outline" size={"lg"}>
+				<Button size={"xl"} variant="outline">
 					<OutlineFilter />
 					{t("filter", locale)}
-					{/* {!hasFilters && <span>{t("filter", locale)}</span>} */}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
-				align="start"
+				align="end"
 				side="bottom"
-				className="w-fit p-0 origin-(--radix-popover-content-transform-origin)"
+				className={cn(
+					"p-0 origin-(--radix-popover-content-transform-origin)",
+					isDateProperty
+						? "w-auto min-w-[20rem] max-w-none overflow-visible"
+						: "w-fit",
+				)}
 			>
 				{content}
 			</PopoverContent>
@@ -191,7 +191,6 @@ export function FilterableColumn<TData, TType extends ColumnDataType, TVal>({
 
 		if (!target) return;
 
-		// Set up MutationObserver
 		const observer = new MutationObserver((mutations) => {
 			for (const mutation of mutations) {
 				if (mutation.type === "attributes") {
@@ -201,13 +200,11 @@ export function FilterableColumn<TData, TType extends ColumnDataType, TVal>({
 			}
 		});
 
-		// Set up observer
 		observer.observe(target, {
 			attributes: true,
 			attributeFilter: ["data-selected"],
 		});
 
-		// Cleanup on unmount
 		return () => observer.disconnect();
 	}, [prefetch]);
 

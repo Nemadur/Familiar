@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
 	OutlineChat,
-	OutlineCheckmarkSeal,
 	OutlineChevronRight,
 	OutlineClock03,
 	OutlineGlobe,
+	OutlineListBoxes,
 	OutlineMore,
 	OutlineUser,
 } from "@/components/icons/icons";
@@ -18,10 +18,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAvailableFeeds } from "@/hooks/use-available-feeds";
 import { useBento } from "@/hooks/use-bento";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { type Tile, toPixels } from "@/lib/bento";
 import { userLocalTime } from "@/lib/profile";
 import { useAuth } from "@/providers/auth";
-import type { User } from "@/types/user";
+import type { TUserProfile } from "@/types/user";
+import { TRoles } from "@/types/user/roles";
 import UserAvatar from "./avatar";
 import { ProfileBadge } from "./badge";
 import { ProfileBio } from "./bio";
@@ -218,6 +220,7 @@ export function CharactersContentSkeleton() {
 	return (
 		<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{Array.from({ length: 10 }).map((_, i) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 				<div key={i} className="flex flex-col gap-2">
 					<Skeleton className="aspect-[3/4] w-full rounded-xl" />
 					<Skeleton className="h-4 w-3/4" />
@@ -254,7 +257,7 @@ export function UserProfileSkeleton() {
 			<div className={"container mx-auto flex flex-col flex-1 h-full"}>
 				<div
 					className={
-						"relative flex-1 px-5 h-full grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
+						"relative flex-1 h-full grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
 					}
 				>
 					<UserInfoSkeleton />
@@ -273,14 +276,14 @@ export default function UserProfile({
 	activeTab,
 	onTabChange,
 }: {
-	user: User;
+	user: TUserProfile;
 	children?: React.ReactNode;
 	activeTab?: string;
 	onTabChange?: (tab: string) => void;
 }) {
 	const { user: me, pending } = useAuth();
 	const isMe = me?.username === user.username;
-	const isSuspended = user.banned_until !== null;
+	// const isSuspended = user.banned_until !== null;
 
 	if (pending) return <UserProfileSkeleton />;
 
@@ -288,21 +291,17 @@ export default function UserProfile({
 		<div className="flex flex-1 flex-col">
 			<ProfileCover user={user} />
 			<div className="flex min-h-0 flex-1 flex-col">
-				<div className="flex flex-1 flex-col gap-4 md:flex-row md:gap-8 px-5">
+				<div className="flex flex-1 flex-col sm:flex-row gap-4 md:gap-8 max-lg:px-5">
 					{/* Sidebar */}
 					<div className="shrink-0 md:w-[240px] lg:w-[280px]">
-						<UserProfileSidebar
-							user={user}
-							isMe={isMe}
-							isSuspended={isSuspended}
-						/>
+						<UserProfileSidebar user={user} isMe={isMe} isSuspended={false} />
 					</div>
 
 					{/* Main Content */}
 					<div className="flex min-w-0 flex-1 flex-col">
 						<UserProfileMainContent
 							user={user}
-							isSuspended={isSuspended}
+							isSuspended={false}
 							isMe={isMe}
 							activeTab={activeTab}
 							onTabChange={onTabChange}
@@ -321,90 +320,132 @@ export function UserProfileSidebar({
 	isMe,
 	isSuspended,
 }: {
-	user: User;
+	user: TUserProfile;
 	isMe: boolean;
 	isSuspended: boolean;
 }) {
 	const onEditProfile = () => toast("open settings");
 	const { t } = useTranslation();
 
-	const actions = (
-		<div className="flex flex-col gap-3">
-			{isMe ? (
-				<>
-					<Button
-						variant="secondary"
-						className="w-full"
-						onClick={onEditProfile}
-					>
-						{t("components.profile.actions.edit_profile")}
-					</Button>
-					<div className="flex gap-2">
-						<Button variant="secondary" className="flex-1">
-							{t("components.profile.actions.followers")}
-						</Button>
-						<Button variant="secondary" className="flex-1">
-							{t("components.profile.actions.following")}
-						</Button>
-					</div>
-				</>
-			) : (
-				<div className="flex items-center gap-2">
-					<FollowButton
-						isFollowing={false} // TODO: Implement follow status
-						loading={false}
-						canFollow={true}
-						onToggle={() => {}}
-						showText={true}
-						className="flex-1"
-					/>
-					{/* disabled for now */}
-					<Button variant="secondary" disabled size="icon">
-						<OutlineChat />
-					</Button>
-					<Button variant="ghost" size="icon">
-						<OutlineMore />
-					</Button>
-				</div>
-			)}
-
-			{/* Work Queue Status */}
-			{/* TODO: check if user is artist and has premium */}
-			{user.roles.includes("artist") && (
-				<Button variant="secondary">
-					<OutlineCheckmarkSeal className="fill-current" />
-					{t("components.profile.actions.work_queue")}
-				</Button>
-			)}
-		</div>
-	);
-
 	return (
 		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10">
 			{/* Avatar & Actions (Desktop: Stacked, Mobile: Avatar Left, Actions Right) */}
-			<div className="relative z-10 flex flex-row items-end justify-between gap-4 md:flex-col md:items-start md:justify-start">
+			<div className="relative z-10 flex gap-4 flex-row items-start justify-between lg:flex-col lg:justify-start">
 				<UserAvatar user={user} isHuge hasOutline />
-				{!isMe && <div className="w-fit md:hidden">{actions}</div>}
+				<div className="flex gap-2 sm:hidden w-fit max-w-full self-end shrink-0">
+					{!isMe ? (
+						<>
+							<FollowButton
+								isFollowing={false} // TODO: Implement follow status
+								loading={false}
+								canFollow={true}
+								onToggle={() => {}}
+								showText={true}
+							/>
+							{/* Work Queue Status */}
+							{/* TODO: check if user have queue */}
+							{user.roles.includes(TRoles.Artist) && user.isVerified && (
+								<Button variant="secondary" size={"icon"}>
+									<OutlineListBoxes />
+								</Button>
+							)}
+							{/* disabled for now */}
+							<Button variant="secondary" disabled size="icon">
+								<OutlineChat />
+							</Button>
+							<Button variant="ghost" size="icon">
+								<OutlineMore />
+							</Button>
+						</>
+					) : (
+						<>
+							<Button className="flex-1" onClick={onEditProfile}>
+								{t("components.profile.actions.edit_profile")}
+							</Button>
+							{user.roles.includes(TRoles.Artist) && user.isVerified && (
+								<Button variant="secondary" size={"icon"}>
+									<OutlineListBoxes />
+								</Button>
+							)}
+						</>
+					)}
+				</div>
 			</div>
 
 			{/* Profile Info */}
 			<div className="space-y-4">
-				<div>
-					<h3 className="inline-flex w-full items-center gap-2 font-bold text-2xl text-neutral-950 dark:text-neutral-50">
-						{/* TODO: make auto slide text if too more than 12 characters */}
-						<span className="truncate">{user.display_name}</span>
-						<ProfileBadge user={user} />
-					</h3>
-					<p className="text-neutral-600 dark:text-neutral-400">
-						@{user.username}
-					</p>
-				</div>
+				<h3 className="inline-flex w-full items-center gap-2 font-bold text-2xl text-neutral-950 dark:text-neutral-50">
+					{/* TODO: make auto slide text if too more than 12 characters */}
+					<span className="truncate">{user.displayName}</span>
+					<ProfileBadge user={user} />
+				</h3>
+				<p className="text-neutral-600 dark:text-neutral-400">
+					@{user.username}
+				</p>
 
 				{/* Actions */}
-				<div className={isMe ? "block" : "hidden md:block"}>{actions}</div>
+				<div className="gap-2 hidden sm:flex flex-col">
+					{isMe ? (
+						<div className="flex gap-2">
+							<Button className="flex-1" onClick={onEditProfile}>
+								{t("components.profile.actions.edit_profile")}
+							</Button>
+							{user.roles.includes(TRoles.Artist) && user.isVerified && (
+								<Button variant="secondary" size={"icon"}>
+									<OutlineListBoxes />
+									{/* {t("components.profile.actions.work_queue")} */}
+								</Button>
+							)}
+						</div>
+					) : (
+						<div className="flex gap-2">
+							<div className="flex gap-2 w-full">
+								<FollowButton
+									isFollowing={false} // TODO: Implement follow status
+									loading={false}
+									canFollow={true}
+									onToggle={() => {}}
+									showText={true}
+									className={"flex-1"}
+								/>
+								{/* TODO: check if user have queue */}
+								{user.roles.includes(TRoles.Artist) && user.isVerified && (
+									<Button variant="secondary" size={"icon"}>
+										<OutlineListBoxes />
+									</Button>
+								)}
+								{/* disabled for now */}
+								<Button variant="secondary" disabled size="icon">
+									<OutlineChat />
+								</Button>
+								<Button variant="ghost" size="icon">
+									<OutlineMore />
+								</Button>
+							</div>
+						</div>
+					)}
+				</div>
+
+				{/* Followers/Following */}
+				<div className="flex gap-2 text-neutral-500 text-xs">
+					<div className="flex items-center gap-2">
+						{/* <OutlineUser size={14} /> */}
+						<span className="flex items-center gap-2">
+							<span className="text-primary font-semibold">0</span>{" "}
+							{t("components.profile.actions.followers", "followers")}
+						</span>
+					</div>
+					<div className="flex items-center gap-2">
+						{/* <OutlineUser size={14} /> */}
+						<span className="flex items-center gap-2">
+							<span className="text-primary font-semibold">0</span>{" "}
+							{t("components.profile.actions.following", "following")}
+						</span>
+					</div>
+				</div>
 
 				{/* Time/Lang/Pronounce */}
-				{(user.timezone ||
+				{/* {(user.timezone ||
 					user.pronouns ||
 					(user.spoken_languages && user.spoken_languages.length > 0)) && (
 					<div className="flex flex-col gap-1 text-neutral-500 text-xs">
@@ -440,7 +481,7 @@ export function UserProfileSidebar({
 							</div>
 						)}
 					</div>
-				)}
+				)} */}
 
 				{!isSuspended ? (
 					<ProfileBio user={user} isShort />
@@ -467,9 +508,9 @@ export function UserProfileSidebar({
 				</Dialog>
 
 				{/* Social Links (Horizontal on mobile, Vertical on desktop) */}
-				{!isSuspended && user.social_links && user.social_links.length > 0 && (
+				{/* {!isSuspended && user.social_links && user.social_links.length > 0 && (
 					<ProfileSocials links={user.social_links} />
-				)}
+				)} */}
 			</div>
 		</aside>
 	);
@@ -482,7 +523,7 @@ function UserFeeds({
 	activeTab,
 	onTabChange,
 }: {
-	user: User;
+	user: TUserProfile;
 	isMe: boolean;
 	children?: React.ReactNode;
 	activeTab?: string;
@@ -520,13 +561,13 @@ function UserFeeds({
 
 	return (
 		<div className="flex h-full flex-1 flex-col">
-			<div className="mb-6 flex justify-start border-border border-b transition-all pt-2 pb-0 shrink-0">
+			<div className="mb-6 flex justify-start transition-all pt-2 pb-0 shrink-0">
 				<ScrollShadow
 					orientation="horizontal"
 					className="w-full h-full"
 					hideScrollBar
 				>
-					<div className="w-fit rounded-full pb-2">
+					<div className="w-full border-b">
 						<ProfileFeedTabs
 							items={availableFeeds}
 							value={currentFeed}
@@ -552,7 +593,7 @@ function UserProfileMainContent({
 	activeTab,
 	onTabChange,
 }: {
-	user: User;
+	user: TUserProfile;
 	isMe: boolean;
 	isSuspended: boolean;
 	children?: React.ReactNode;

@@ -1,6 +1,5 @@
-import { ScrollShadow, Surface } from "@heroui/react";
+import { ScrollShadow } from "@heroui/react";
 import {
-	Check,
 	Info,
 	Maximize2,
 	MessageCircle,
@@ -8,148 +7,110 @@ import {
 	RefreshCw,
 	Sparkles,
 	ThumbsUp,
-	X,
 	Zap,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
 import { UserComment } from "@/components/common/user-comment";
-import {
-	OutlineChat,
-	OutlineCheck,
-	OutlineQestionMarkCrFr,
-	SolidStar,
-} from "@/components/icons/icons";
-import { ProfileBadge } from "@/components/layout/profile/badge";
+import { OutlineChat, SolidStar } from "@/components/icons/icons";
 import {
 	type TabItem,
 	TabSelector,
 } from "@/components/layout/profile/feed/selector";
 import { ReviewsPanel } from "@/components/layout/profile/reviews-panel";
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tooltip,
 	TooltipContent,
-	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useCommission } from "@/hooks/use-commisions";
+import { useProfileTermsOfService } from "@/hooks/use-tos";
+import { useUserById } from "@/hooks/use-user";
 import {
 	calculateCommissionPricing,
 	calculateReviewStats,
 } from "@/lib/commission-utils";
-import { cn } from "@/lib/utils";
-import type { CommissionItem } from "@/types/commission";
-import type { User } from "@/types/user";
+import type { TCommission } from "@/types/commissions";
+import type { TUserProfile, TUserResponse } from "@/types/user";
 import { CommissionRequestModal } from "./commission-request-modal";
-import { type InfoOption, InfoSelectionModal } from "./info-selection-modal";
-import { LicenseInfoModal } from "./license-info-modal";
+import { InfoSelectionModal } from "./info-selection-modal";
 import { TermsModal } from "./terms-modal";
 import { UniversalModalLayout } from "./universal-modal-layout";
 
 interface CommissionModalProps {
-	item?: CommissionItem;
-	commissionId?: string;
+	commissionId: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	artist?: User;
-	artistName?: string;
-	artistHandle?: string;
-	artistAvatar?: string;
-	isLoading?: boolean;
-	isDetailsLoading?: boolean;
-	isError?: boolean;
-	error?: unknown;
 }
 
 export function CommissionModal({
-	item: itemData,
-	commissionId: propCommissionId,
+	commissionId,
 	open,
 	onOpenChange,
-	artist: propArtist,
-	artistAvatar: propArtistAvatar,
-	isLoading,
-	isDetailsLoading,
-	isError,
-	error,
 }: CommissionModalProps) {
 	const { t } = useTranslation();
-	const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+
 	const [requestModalOpen, setRequestModalOpen] = useState(false);
 	const [termsAccepted, setTermsAccepted] = useState(false);
 	const [activeTab, setActiveTab] = useState("description");
-	const [reviewsPage, setReviewsPage] = useState(1);
-	const REVIEWS_PER_PAGE = 3;
-
-	// Info Modals State
 	const [infoModalState, setInfoModalState] = useState<{
 		open: boolean;
 		type: "service" | "communication" | "process" | null;
 	}>({ open: false, type: null });
-
 	const [termsModalOpen, setTermsModalOpen] = useState(false);
+
+	const {
+		data: commissionData,
+		isPending,
+		isFetching,
+		isError,
+		error,
+	} = useCommission(commissionId);
 
 	useEffect(() => {
 		if (isError) {
-			console.error(`[CommissionModal] Error fetching commission:`, error);
+			console.error("[CommissionModal] Error fetching commission:", error);
 		}
 	}, [isError, error]);
 
-	const artistData = itemData?.artist || propArtist;
+	const commission = commissionData;
+	const isLoading = isPending;
+	const isDetailsLoading = isFetching;
 
-	// User data should be available from props or fetched item
-	const userData: User | undefined = artistData;
+	// Fetch Artist data
+	const {
+		user: fetchedArtist,
+		isPending: isArtistPending,
+		error: artistError,
+	} = useUserById(commission?.artistId);
 
-	const licenseOptions = itemData?.licenseOptions || [];
+	useEffect(() => {
+		if (artistError) {
+			console.error("[CommissionModal] Error fetching artist:", artistError);
+		}
+	}, [artistError]);
 
-	const SYSTEM_LICENSE_KEYS = ["personal", "monetized", "commercial"] as const;
+	// TODO: fetch reviews
+	// const {
+	// 	data: fetchedReviews,
+	// 	isPending: isReviewsPending,
+	// 	error: reviewsError,
+	// } = useCommissionReviews(commissionId);
 
-	const systemLicenses = SYSTEM_LICENSE_KEYS.map((key) => {
-		const option = licenseOptions.find((l) => l.id === key);
-		return {
-			key,
-			option,
-			isAvailable: !!option,
-		};
-	});
+	// useEffect(() => {
+	// 	if (reviewsError) {
+	// 		console.error("[CommissionModal] Error fetching reviews:", reviewsError);
+	// 	}
+	// }, [reviewsError]);
 
-	const customLicenses = licenseOptions.filter(
-		(l) => !SYSTEM_LICENSE_KEYS.includes(l.id as any),
-	);
+	const fetchedReviews = null;
 
-	const [selectedLicenses, setSelectedLicenses] = useState<string[]>(() =>
-		licenseOptions.filter((l) => l.included === true).map((l) => l.id),
-	);
-
-	// Update selected licenses when fetched data arrives
-	const [prevLicenseOptions, setPrevLicenseOptions] = useState(
-		itemData?.licenseOptions,
-	);
-	if (itemData?.licenseOptions !== prevLicenseOptions) {
-		setPrevLicenseOptions(itemData?.licenseOptions);
-		setSelectedLicenses(
-			itemData?.licenseOptions
-				?.filter((l) => l.included === true)
-				.map((l) => l.id) || [],
-		);
-	}
-
-	const artistName = userData?.display_name;
-	const artistHandle = userData?.username ? `@${userData.username}` : "";
-	const artistAvatar = userData?.media?.avatar || propArtistAvatar;
-
-	const reviewStats = calculateReviewStats(itemData?.reviews);
+	const reviewStats = calculateReviewStats(fetchedReviews ?? []);
 
 	const tabs: TabItem<string>[] = [
 		{
@@ -160,75 +121,78 @@ export function CommissionModal({
 			id: "reviews",
 			label: reviewStats.formatted,
 			icon: SolidStar,
+			disabled: true,
 		},
 	];
 
-	const { basePrice, originalPrice } = itemData
-		? calculateCommissionPricing(itemData.price, itemData.discountRate)
+	const { basePrice, originalPrice } = commission
+		? calculateCommissionPricing(
+				commission.basePrice,
+				0, //TODO: commission.discountRate,
+			)
 		: { basePrice: 0, originalPrice: 0 };
 
-	const getLicensePrice = (license: (typeof licenseOptions)[0]) => {
-		if (license.price !== undefined) return license.price;
-		if (license.pricePercentage !== undefined)
-			return basePrice * (license.pricePercentage / 100);
-		return 0;
-	};
-
-	const totalPrice = useMemo(() => {
-		const licensesPrice = selectedLicenses.reduce((acc, licenseId) => {
-			const license = licenseOptions.find((l) => l.id === licenseId);
-			if (license && !license.included) {
-				return acc + getLicensePrice(license);
-			}
-			return acc;
-		}, 0);
-		return basePrice + licensesPrice;
-	}, [basePrice, selectedLicenses, licenseOptions]);
+	const totalPrice = basePrice;
 
 	const handleRequestOpen = () => {
-		onOpenChange(false);
 		setRequestModalOpen(true);
 	};
 
 	const handleRequestBack = () => {
 		setRequestModalOpen(false);
-		onOpenChange(true);
 	};
 
-	const isMobile = useIsMobile();
+	const handlePreviewOpenChange = (nextOpen: boolean) => {
+		if (!nextOpen) {
+			setRequestModalOpen(false);
+			onOpenChange(false);
+		}
+	};
 
-	if (!itemData && !isLoading) {
+	const handleRequestModalOpenChange = (nextOpen: boolean) => {
+		setRequestModalOpen(nextOpen);
+
+		if (!nextOpen) {
+			onOpenChange(false);
+		}
+	};
+
+	if (!commission && !isLoading) {
 		return null;
 	}
 
 	return (
 		<>
 			<UniversalModalLayout
-				open={open}
-				onOpenChange={onOpenChange}
+				open={open && !requestModalOpen}
+				onOpenChange={handlePreviewOpenChange}
 				title={t("components.profile.commissions.modal.title")}
 				mediaClassName="bg-transparent"
 				mediaContent={
 					<>
-						{/* Mobile & Tablet View (< lg) */}
 						<ScrollShadow
 							orientation="horizontal"
 							className="flex w-full gap-4 p-4 lg:hidden"
-							hideScrollBar
 						>
-							{itemData?.imageUrls && itemData.imageUrls.length > 0 ? (
-								itemData.imageUrls.map((url, index) => (
-									<div
-										key={url}
-										className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg"
-									>
-										<img
-											src={url}
-											alt={`${itemData.title} - ${index + 1}`}
-											className="h-full w-full rounded-lg object-cover shadow-sm"
-										/>
-									</div>
-								))
+							{commission?.multimedia && commission.multimedia.length > 0 ? (
+								commission.multimedia.map((media) => {
+									const url = media.sizes.half;
+
+									if (!url) return null;
+
+									return (
+										<div
+											key={media.id}
+											className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg"
+										>
+											<img
+												src={url}
+												alt={commission.title}
+												className="h-full w-full rounded-lg object-cover shadow-sm"
+											/>
+										</div>
+									);
+								})
 							) : isLoading ? (
 								<div className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg bg-secondary/5">
 									<Skeleton className="h-full w-full rounded-lg" />
@@ -240,23 +204,28 @@ export function CommissionModal({
 							)}
 						</ScrollShadow>
 
-						{/* Desktop View (>= lg) */}
 						<div className="hidden flex-col gap-4 p-4 lg:flex">
-							{itemData?.imageUrls && itemData.imageUrls.length > 0 ? (
-								itemData.imageUrls.map((url, index) => (
-									<div
-										key={url}
-										className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg"
-									>
-										<img
-											src={url}
-											alt={`${itemData.title} - ${index + 1}`}
-											className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain shadow-sm"
-										/>
-									</div>
-								))
+							{commission?.multimedia && commission.multimedia.length > 0 ? (
+								commission.multimedia.map((media, index) => {
+									const url = media.sizes.half;
+
+									if (!url) return null;
+
+									return (
+										<div
+											key={media.id}
+											className="relative flex w-full items-center justify-center rounded-lg"
+										>
+											<img
+												src={url}
+												alt={`${commission.title} - ${index + 1}`}
+												className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain shadow-sm"
+											/>
+										</div>
+									);
+								})
 							) : isLoading ? (
-								<div className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg bg-secondary/5">
+								<div className="relative flex w-full items-center justify-center rounded-lg bg-secondary/5">
 									<Skeleton className="h-full w-full rounded-lg" />
 								</div>
 							) : (
@@ -268,559 +237,211 @@ export function CommissionModal({
 					</>
 				}
 				detailsContent={
-					<>
-						<div className="space-y-6 p-4">
-							{/* Title & Price */}
-							<div className="space-y-2">
-								<div className="flex items-center gap-2 font-medium text-muted-foreground text-sm uppercase tracking-wide">
-									{/* Could be category or tag */}
-									{t("components.profile.commissions.modal.category_label")}
-								</div>
-								{/* TODO: replace USD to dynamic exchange */}
-								{itemData ? (
-									<h1 className="text-3xl font-bold leading-tight">
-										{itemData.title}
-									</h1>
-								) : (
-									<Skeleton className="h-10 w-3/4" />
-								)}
-								<div className="flex items-baseline gap-2">
-									{itemData ? (
-										<>
-											<div className="font-semibold text-2xl text-primary">
-												{t("components.profile.commissions.card.from")} USD{" "}
-												{totalPrice.toFixed(2)}
-											</div>
-											<div className="text-lg text-muted-foreground line-through opacity-70">
-												USD {originalPrice.toFixed(2)}
-											</div>
-										</>
+					<div className="flex h-full flex-col overflow-hidden">
+						<div className="min-h-0 flex-1 overflow-y-auto">
+							<div className="space-y-6 px-4 pt-4 pb-6">
+								<div className="space-y-2">
+									<div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+										{t("components.profile.commissions.modal.category_label")}
+									</div>
+
+									{commission ? (
+										<h1 className="text-3xl font-bold leading-tight">
+											{commission.title}
+										</h1>
 									) : (
-										<Skeleton className="h-8 w-1/2" />
+										<Skeleton className="h-10 w-3/4" />
 									)}
-								</div>
-							</div>
 
-							{/* License Selector */}
-							<Surface
-								variant={"default"}
-								className="space-y-3 rounded-xl p-4 border"
-							>
-								<div className="flex items-center justify-between">
-									<h4 className="font-semibold text-sm">
-										{t(
-											"components.profile.commissions.modal.license.title",
-											"License Options",
-										)}
-									</h4>
-									<Button
-										variant={"ghost"}
-										size={"icon-sm"}
-										className="text-muted-foreground"
-										onClick={() => setLicenseModalOpen(true)}
-									>
-										<OutlineQestionMarkCrFr />
-									</Button>
-								</div>
-
-								<div className="grid gap-2">
-									{/* System Licenses */}
-									{systemLicenses.map(({ key, option, isAvailable }) => {
-										if (isAvailable && option) {
-											return (
-												<button
-													key={key}
-													type="button"
-													className={cn(
-														"relative flex w-full items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors text-left",
-														(option.included ||
-															selectedLicenses.includes(key)) &&
-															"border-primary/50 bg-primary/5",
-														!option.included && "cursor-pointer",
-													)}
-													disabled={option.included}
-													onClick={() => {
-														if (selectedLicenses.includes(key)) {
-															setSelectedLicenses((prev) =>
-																prev.filter((id) => id !== key),
-															);
-														} else {
-															setSelectedLicenses((prev) => [...prev, key]);
-														}
-													}}
-												>
-													{option.included ? (
-														<div className="flex size-4 shrink-0 items-center justify-center">
-															<OutlineCheck size={16} />
-														</div>
-													) : (
-														<Checkbox
-															id={key}
-															checked={selectedLicenses.includes(key)}
-															className="relative z-10"
-															onClick={(e) => e.stopPropagation()}
-															onCheckedChange={(checked) => {
-																if (checked) {
-																	setSelectedLicenses((prev) => [...prev, key]);
-																} else {
-																	setSelectedLicenses((prev) =>
-																		prev.filter((id) => id !== key),
-																	);
-																}
-															}}
-														/>
-													)}
-													<div className="relative z-10 flex flex-1 items-center justify-between gap-2">
-														<div className="flex items-center gap-2">
-															<label
-																htmlFor={key}
-																className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-															>
-																{t(
-																	`components.profile.commissions.modal.license.${key}`,
-																	option.label,
-																)}
-															</label>
-														</div>
-														{option.included ? (
-															<span className="font-medium text-primary text-xs">
-																{t(
-																	"components.profile.commissions.modal.license.included",
-																)}
-															</span>
-														) : (
-															<span className="font-medium text-primary text-xs">
-																{option.pricePercentage !== undefined
-																	? `+ ${option.pricePercentage}%`
-																	: `+ USD ${getLicensePrice(option).toFixed(2)}`}
-															</span>
-														)}
-													</div>
-												</button>
-											);
-										}
-
-										// Unavailable System License
-										return (
-											<button
-												key={key}
-												type="button"
-												className="flex items-start gap-3 rounded-lg border border-dashed bg-muted/20 p-3 opacity-60"
-											>
-												<div className="flex h-4 w-4 shrink-0 items-center justify-center">
-													<X className="h-4 w-4 text-muted-foreground" />
+									<div className="flex items-baseline gap-2">
+										{commission ? (
+											<>
+												<div className="text-2xl font-semibold text-primary">
+													{t("components.profile.commissions.card.from")}{" "}
+													{commission.currencyCode} {totalPrice.toFixed(2)}
 												</div>
-												<div className="grid gap-1">
-													<div className="flex items-center gap-2">
-														<span className="font-medium text-muted-foreground text-sm leading-none line-through">
+												{originalPrice > totalPrice && (
+													<div className="text-lg line-through opacity-70 text-muted-foreground">
+														{commission.currencyCode} {originalPrice.toFixed(2)}
+													</div>
+												)}
+											</>
+										) : (
+											<Skeleton className="h-8 w-1/2" />
+										)}
+									</div>
+								</div>
+
+								<div className="-mx-4">
+									<div className="px-4">
+										<TabSelector
+											items={tabs}
+											value={activeTab}
+											onValueChange={setActiveTab}
+											className="mb-4"
+											size="sm"
+										/>
+									</div>
+									<Separator />
+								</div>
+
+								{activeTab === "description" && (
+									<div className="space-y-6 pt-2">
+										<div className="leading-relaxed text-muted-foreground">
+											{commission?.description ? (
+												<MarkdownDisplay content={commission.description} />
+											) : (
+												<div className="space-y-2">
+													<Skeleton className="h-4 w-full" />
+													<Skeleton className="h-4 w-full" />
+													<Skeleton className="h-4 w-3/4" />
+												</div>
+											)}
+										</div>
+
+										{commission?.artistTos ? (
+											<div className="space-y-3">
+												<div className="-mx-4">
+													<Separator className="mb-4" />
+												</div>
+
+												<div className="flex items-start justify-between">
+													<div className="space-y-0">
+														<h4 className="text-lg font-bold">
 															{t(
-																`components.profile.commissions.modal.license.${key}`,
+																"components.profile.commissions.modal.tos.title",
+																{
+																	artist_displayname:
+																		fetchedArtist?.displayName,
+																},
+															)}
+														</h4>
+														<span className="text-xs text-muted-foreground">
+															{t(
+																"components.profile.commissions.modal.tos.updated_at",
+																{
+																	updated_at: new Date(
+																		commission.artistTos.updatedAt,
+																	).toLocaleDateString("en-US", {
+																		month: "short",
+																		day: "numeric",
+																		year: "numeric",
+																	}),
+																},
 															)}
 														</span>
 													</div>
+
+													{/* <Button
+														variant="ghost"
+														size="icon-sm"
+														onClick={() => setTermsModalOpen(true)}
+													>
+														<Maximize2 />
+													</Button> */}
 												</div>
-											</button>
-										);
-									})}
 
-									{/* Custom Licenses Accordion */}
-									{customLicenses.length > 0 && (
-										<Accordion type="single" collapsible className="w-full">
-											<AccordionItem
-												value="custom-licenses"
-												className="border-none"
-											>
-												<AccordionTrigger className="py-2 text-sm text-muted-foreground hover:no-underline">
-													{t(
-														"components.profile.commissions.modal.license.other_licenses_count",
-														{ count: customLicenses.length },
-													)}
-												</AccordionTrigger>
-												<AccordionContent>
-													<div className="grid gap-2 pt-2">
-														{customLicenses.map((license) => (
-															<button
-																key={license.id}
-																type="button"
-																className={cn(
-																	"relative flex w-full items-start gap-3 rounded-lg border bg-background/50 p-3 transition-colors text-left",
-																	selectedLicenses.includes(license.id) &&
-																		"border-primary/50 bg-primary/5",
-																	!license.included && "cursor-pointer",
-																)}
-																disabled={license.included}
-																onClick={() => {
-																	if (selectedLicenses.includes(license.id)) {
-																		setSelectedLicenses((prev) =>
-																			prev.filter((id) => id !== license.id),
-																		);
-																	} else {
-																		setSelectedLicenses((prev) => [
-																			...prev,
-																			license.id,
-																		]);
-																	}
-																}}
-															>
-																<Checkbox
-																	id={license.id}
-																	checked={selectedLicenses.includes(
-																		license.id,
-																	)}
-																	disabled={license.included}
-																	className="relative z-10"
-																	onClick={(e) => e.stopPropagation()}
-																	onCheckedChange={(checked) => {
-																		if (checked) {
-																			setSelectedLicenses((prev) => [
-																				...prev,
-																				license.id,
-																			]);
-																		} else {
-																			setSelectedLicenses((prev) =>
-																				prev.filter((id) => id !== license.id),
-																			);
-																		}
-																	}}
-																/>
-																<div className="relative z-10 flex flex-1 items-center justify-between gap-2">
-																	<div className="flex items-center gap-2">
-																		<label
-																			htmlFor={license.id}
-																			className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-																		>
-																			{license.label}
-																		</label>
-																	</div>
-																	{license.included ? (
-																		<span className="font-medium text-primary text-xs">
-																			{t(
-																				"components.profile.commissions.modal.license.included",
-																			)}
-																		</span>
-																	) : (
-																		<span className="font-medium text-primary text-xs">
-																			{license.pricePercentage !== undefined
-																				? `+ ${license.pricePercentage}%`
-																				: `+ USD ${getLicensePrice(license).toFixed(2)}`}
-																		</span>
-																	)}
-																</div>
-															</button>
-														))}
-													</div>
-												</AccordionContent>
-											</AccordionItem>
-										</Accordion>
-									)}
-
-									{isDetailsLoading && (
-										<div className="space-y-2">
-											<Skeleton className="h-12 w-full" />
-											<Skeleton className="h-12 w-full" />
-										</div>
-									)}
-								</div>
-							</Surface>
-
-							{/* Artist Info */}
-							<UserComment author={userData}>
-								{itemData?.artistNote}
-							</UserComment>
-
-							{/* Description & Tabs */}
-							<div className="w-full">
-								<TabSelector
-									items={tabs}
-									value={activeTab}
-									onValueChange={setActiveTab}
-									className="mb-4"
-									size="sm"
-								/>
-
-								<div className="min-h-[400px]">
-									{activeTab === "description" && (
-										<div className="space-y-6">
-											{itemData ? (
-												<div className="space-y-4">
-													{/* Service Type */}
-													<div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
-														<div className="mt-1 rounded-full bg-primary/10 p-2 text-primary">
-															<Sparkles className="h-5 w-5" />
-														</div>
-														<div className="flex-1 space-y-1">
-															<div className="flex items-center justify-between">
-																<h4 className="font-semibold text-base">
-																	{t(
-																		`components.profile.commissions.modal.service.${
-																			itemData.serviceType ===
-																			"personalized_ych"
-																				? "ych"
-																				: "custom"
-																		}.title`,
-																	)}
-																</h4>
-																<Button
-																	variant="ghost"
-																	size="icon"
-																	className="h-6 w-6 text-muted-foreground"
-																	onClick={() =>
-																		setInfoModalState({
-																			open: true,
-																			type: "service",
-																		})
-																	}
-																>
-																	<Info className="size-4" />
-																</Button>
-															</div>
-															<p className="text-muted-foreground text-sm">
-																{t(
-																	`components.profile.commissions.modal.service.${
-																		itemData.serviceType === "personalized_ych"
-																			? "ych"
-																			: "custom"
-																	}.description`,
-																)}
-															</p>
-														</div>
-													</div>
-
-													{/* Communication Style */}
-													<div className="rounded-2xl border bg-card p-4 flex items-start gap-4">
-														<div className="mt-1 rounded-full bg-orange-500/10 p-2 text-orange-500">
-															<MessageCircle className="h-5 w-5" />
-														</div>
-														<div className="flex-1 space-y-1">
-															<div className="flex items-center justify-between">
-																<h4 className="font-semibold text-base">
-																	{t(
-																		`components.profile.commissions.modal.service.${
-																			itemData.communicationType ===
-																			"surprise_me"
-																				? "surprise"
-																				: "communication"
-																		}.title`,
-																	)}
-																</h4>
-																<Button
-																	variant="ghost"
-																	size="icon"
-																	className="h-6 w-6 text-muted-foreground"
-																	onClick={() =>
-																		setInfoModalState({
-																			open: true,
-																			type: "communication",
-																		})
-																	}
-																>
-																	<Info className="size-4" />
-																</Button>
-															</div>
-															<p className="text-muted-foreground text-sm">
-																{t(
-																	`components.profile.commissions.modal.service.${
-																		itemData.communicationType === "surprise_me"
-																			? "surprise"
-																			: "communication"
-																	}.description`,
-																)}
-															</p>
-														</div>
-													</div>
-
-													{/* Process */}
-													<div className="flex items-start gap-4 rounded-2xl border bg-card p-4">
-														<div className="mt-1 rounded-full bg-blue-500/10 p-2 text-blue-500">
-															<ThumbsUp className="h-5 w-5" />
-														</div>
-														<div className="flex-1 space-y-1">
-															<div className="flex items-center justify-between">
-																<h4 className="font-semibold text-base">
-																	{t(
-																		`components.profile.commissions.modal.service.${
-																			itemData.requestingProcess ===
-																			"instant_order"
-																				? "instant"
-																				: "proposal"
-																		}.title`,
-																	)}
-																</h4>
-																<Button
-																	variant="ghost"
-																	size="icon"
-																	className="h-6 w-6 text-muted-foreground"
-																	onClick={() =>
-																		setInfoModalState({
-																			open: true,
-																			type: "process",
-																		})
-																	}
-																>
-																	<Info className="size-4" />
-																</Button>
-															</div>
-															<p className="text-muted-foreground text-sm">
-																{t(
-																	`components.profile.commissions.modal.service.${
-																		itemData.requestingProcess ===
-																		"instant_order"
-																			? "instant"
-																			: "proposal"
-																	}.description`,
-																)}
-															</p>
-														</div>
-													</div>
-												</div>
-											) : (
-												<div className="space-y-4">
-													<Skeleton className="h-24 w-full rounded-2xl" />
-													<Skeleton className="h-24 w-full rounded-2xl" />
-													<Skeleton className="h-24 w-full rounded-2xl" />
-												</div>
-											)}
-
-											{/* Details Section */}
-											<div className="text-muted-foreground leading-relaxed">
-												{itemData?.description ? (
-													<MarkdownDisplay content={itemData.description} />
-												) : (
-													<div className="space-y-2">
-														<Skeleton className="h-4 w-full" />
-														<Skeleton className="h-4 w-full" />
-														<Skeleton className="h-4 w-3/4" />
-													</div>
-												)}
+												<ScrollShadow className="min-h-48 flex-1">
+													<MarkdownDisplay
+														content={commission.artistTos.tosText}
+														className="text-sm"
+													/>
+												</ScrollShadow>
 											</div>
-
-											{/* Artist TOS Section */}
-											{itemData?.artistTerms?.tosMd ? (
-												<div className="space-y-3 border-t pt-4">
-													<div className="flex items-center justify-between">
-														<h4 className="font-semibold text-sm">
-															{t(
-																"components.profile.commissions.modal.tos.title",
-															)}{" "}
-															{artistName && `(${artistName})`}
-														</h4>
-														<Button
-															variant={"ghost"}
-															size={"icon-sm"}
-															onClick={() => setTermsModalOpen(true)}
-														>
-															<Maximize2 />
-														</Button>
-													</div>
-													<div className="text-sm">
-														<ScrollShadow className="max-h-48">
-															<MarkdownDisplay
-																content={itemData.artistTerms.tosMd}
-																className="text-sm"
-															/>
-														</ScrollShadow>
-													</div>
+										) : isDetailsLoading ? (
+											<div className="space-y-3">
+												<div className="-mx-4">
+													<Separator className="mb-4" />
 												</div>
-											) : isDetailsLoading ? (
-												<div className="space-y-3 border-t pt-4">
-													<Skeleton className="h-4 w-32" />
-													<Skeleton className="h-32 w-full rounded-xl" />
+												<Skeleton className="h-4 w-32" />
+												<Skeleton className="h-32 w-full rounded-xl" />
+											</div>
+										) : (
+											<div className="space-y-3">
+												<div className="-mx-4">
+													<Separator className="mb-4" />
 												</div>
-											) : (
-												<div className="border-t pt-4 text-muted-foreground text-xs italic">
+												<div className="text-xs italic text-muted-foreground">
 													Terms of service not available.
 												</div>
-											)}
-										</div>
-									)}
-
-									{activeTab === "reviews" && (
-										<ReviewsPanel
-											reviews={itemData?.reviews || []}
-											isLoading={isDetailsLoading}
-											itemsPerPage={3}
-											showSummary={true}
-											showAverageScore={false}
-											variant="clean"
-										/>
-									)}
-								</div>
+											</div>
+										)}
+									</div>
+								)}
 							</div>
 						</div>
 
-						{/* Footer Actions */}
-						<div className="sticky bottom-0 z-20 space-y-4 border-t bg-background p-6 pb-8 md:pb-6">
-							{/* TOS Checkbox */}
-							<div className="flex items-start gap-2">
-								<Checkbox
-									id="terms"
-									checked={termsAccepted}
-									onCheckedChange={(c) => setTermsAccepted(c === true)}
-									className="mt-0.5"
-								/>
-								<div className="flex-1 grid gap-1.5">
-									<label
-										htmlFor="terms"
-										className="font-medium text-sm leading-snug peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-									>
-										{t(
-											"components.profile.commissions.modal.footer.accept_tos_label",
-											{ artist: userData?.display_name },
-										)}
-									</label>
-								</div>
-							</div>
+						<Separator />
 
-							<div className="flex gap-3 min-w-0">
-								<Button
-									className="flex-1 min-w-0"
-									size={"xl"}
-									disabled={!termsAccepted}
-									onClick={handleRequestOpen}
-								>
-									<span className="truncate px-2">
-										{t(
-											"components.profile.commissions.modal.footer.accept_start",
-										)}
-									</span>
-								</Button>
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Button
-											variant="secondary"
-											size={"icon-xl"}
-											className="shrink-0"
-											disabled
+						<div className="sticky bottom-0 z-20 bg-background">
+							<div className="space-y-4 p-6 pb-8 md:pb-6">
+								<div className="flex items-start gap-2">
+									<Checkbox
+										id="terms"
+										checked={termsAccepted}
+										onCheckedChange={(c) => setTermsAccepted(c === true)}
+										className="mt-0.5"
+									/>
+									<div className="grid flex-1 gap-1.5">
+										<label
+											htmlFor="terms"
+											className="text-sm font-medium leading-snug"
 										>
-											<OutlineChat />
-										</Button>
-									</TooltipTrigger>
-									<TooltipContent>
-										{t(
-											"components.profile.commissions.modal.footer.feature_disabled",
-										)}
-									</TooltipContent>
-								</Tooltip>
+											{t(
+												"components.profile.commissions.modal.footer.accept_tos_label",
+												{ artist: fetchedArtist?.displayName },
+											)}
+										</label>
+									</div>
+								</div>
+
+								<div className="flex min-w-0 gap-3">
+									<Button
+										type="button"
+										className="min-w-0 flex-1"
+										size="xl"
+										disabled={!termsAccepted}
+										onClick={handleRequestOpen}
+									>
+										<span className="truncate px-2">
+											{t(
+												"components.profile.commissions.modal.footer.accept_start",
+											)}
+										</span>
+									</Button>
+
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												type="button"
+												variant="secondary"
+												size="icon-xl"
+												className="shrink-0"
+												disabled
+											>
+												<OutlineChat />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>
+											{t(
+												"components.profile.commissions.modal.footer.feature_disabled",
+											)}
+										</TooltipContent>
+									</Tooltip>
+								</div>
 							</div>
 						</div>
-						<div className="flex-1 bg-background" />
-					</>
+					</div>
 				}
 			/>
 
-			<LicenseInfoModal
-				open={licenseModalOpen}
-				onOpenChange={setLicenseModalOpen}
-				customLicenses={customLicenses}
-			/>
-			{itemData && userData && (
+			{commission?.artistId && (
 				<CommissionRequestModal
-					open={requestModalOpen}
-					onOpenChange={setRequestModalOpen}
+					open={open && requestModalOpen}
+					onOpenChange={handleRequestModalOpenChange}
 					onBack={handleRequestBack}
-					item={itemData}
-					artist={userData}
-					initialLicenses={selectedLicenses}
+					commissionId={commission.id}
+					initialLicenses={[]}
 				/>
 			)}
 
@@ -838,10 +459,10 @@ export function CommissionModal({
 					)}
 					selectedId={
 						infoModalState.type === "service"
-							? itemData?.serviceType || ""
+							? commission?.service_type || ""
 							: infoModalState.type === "communication"
-								? itemData?.communicationType || ""
-								: itemData?.requestingProcess || ""
+								? commission?.communication_type || ""
+								: commission?.requesting_process || ""
 					}
 					options={
 						infoModalState.type === "service"
@@ -916,15 +537,13 @@ export function CommissionModal({
 				/>
 			)}
 
-			{itemData?.artistTerms?.tosMd && (
+			{/* {commission?.artistTos && (
 				<TermsModal
 					open={termsModalOpen}
 					onOpenChange={setTermsModalOpen}
-					artistName={artistName || ""}
-					tosMd={itemData.artistTerms.tosMd}
-					date={itemData.artistTerms.createdAt}
+					artistId={commission?.artistId || ""}
 				/>
-			)}
+			)} */}
 		</>
 	);
 }

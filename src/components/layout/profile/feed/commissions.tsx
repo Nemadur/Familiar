@@ -1,12 +1,8 @@
-import { ScrollShadow } from "@heroui/react";
+import { ScrollShadow, surfaceVariants } from "@heroui/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
-import type {
-	MultiOptionFilterOperator,
-	NumberFilterOperator,
-} from "@/components/data-table-filter/core/types";
 import {
 	OutlineBookmark,
 	OutlineChat,
@@ -22,7 +18,7 @@ import {
 	ReelProgress,
 } from "@/components/kibo-ui/reel";
 import { EmptyPage } from "@/components/layout/empty-page";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -32,70 +28,90 @@ import {
 import { useBlurredImage } from "@/hooks/use-blurred-image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
-import type { CommissionCategory, CommissionItem } from "@/types/commission";
-import type { User } from "@/types/user";
-
-export type { CommissionCategory, CommissionItem };
+import { cn } from "@/lib/utils";
+import {
+	type TCommission,
+	type TCommissionDetailResponse,
+	TCommissionStatus,
+	type TMultimediaItem,
+} from "@/types/commissions";
+import type { TUserProfile } from "@/types/user";
 
 interface ProfileCommissionsProps {
-	categories: CommissionCategory[];
-	artist: User;
+	artist: TUserProfile;
+	commissions: TCommissionDetailResponse[];
+}
+
+function getCommissionImages(multimedia: TMultimediaItem[]): string[] {
+	return [...multimedia]
+		.map((item) => item.sizes.half)
+		.filter((src): src is string => Boolean(src));
 }
 
 function CommissionCard({
-	item,
-	status: categoryStatus,
+	commission,
 	artist,
 }: {
-	item: CommissionItem;
-	status: CommissionCategory["status"];
-	artist: User;
+	commission: TCommission;
+	artist: TUserProfile;
 }) {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [hoverPlaying, setHoverPlaying] = useState(false);
-	const navigate = useNavigate();
 	const [isContentRevealed, setIsContentRevealed] = useState(false);
 
+	// FIXME: use hook for media query
 	const isLgOrLower = useMediaQuery("(max-width: 1279px)");
-
 	const isPlaying = isLgOrLower || hoverPlaying;
 
-	// Use item status if available, otherwise fallback to category status
-	const status = item.status || categoryStatus;
+	const status = commission.commissionStatus;
 
-	const images =
-		item.imageUrls && item.imageUrls.length > 0
-			? item.imageUrls
-			: ["https://placehold.co/600x400?text=No+Image"];
+	const images = getCommissionImages(commission.multimedia);
+	const displayImages =
+		images.length > 0 ? images : ["https://placehold.co/600x400?text=No+Image"];
 
-	const reelItems: ReelItem[] = images.map((url, index) => ({
-		id: `${item.id}-${index}`,
+	const reelItems: ReelItem[] = displayImages.map((src, index) => ({
+		id: `${commission.id}-${index}`,
 		type: "image",
-		src: url,
+		src,
 		duration: 1,
-		alt: item.title,
+		alt: commission.title,
 	}));
 
-	const hasMultipleImages = images.length > 1;
-	const hasContentWarnings =
-		item.contentWarnings && item.contentWarnings.length > 0;
-	const shouldBlur = hasContentWarnings && !isContentRevealed;
-	const blurredImageSrc = useBlurredImage(
-		item.imageUrls?.[0],
-		shouldBlur || false,
-	);
+	const hasMultipleImages = displayImages.length > 1;
 
-	// Platform fee and Discount logic via utility
+	const warningTags = commission.tags.filter((tag) => tag.hasContentWarning);
+	const hasContentWarnings = warningTags.length > 0;
+	const adultOnlyTags = commission.tags.filter((tag) => tag.isAdultOnly);
+	const hasAdultOnly = adultOnlyTags.length > 0;
+	const shouldBlur =
+		(hasContentWarnings && !isContentRevealed) ||
+		(hasAdultOnly && !isContentRevealed);
+
+	const firstImage = commission.multimedia[0]?.fileName;
+	const blurredImageSrc = useBlurredImage(firstImage, shouldBlur);
+
 	const {
 		basePrice: discountedPrice,
 		originalPrice,
 		discountRate,
-	} = calculateCommissionPricing(item.price, item.discountRate);
+	} = calculateCommissionPricing(commission.basePrice, 0);
+
+	const handleNavigate = () => {
+		if (status !== TCommissionStatus.Active) return;
+
+		navigate({
+			to: `/${artist.username}/commissions/${commission.id}`,
+		});
+	};
 
 	return (
 		<article
-			className="group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-border/50 bg-card p-2 text-left transition-colors hover:border-foreground/10 hover:bg-primary/6 xl:flex-row sm:rounded-4xl"
+			className={cn(
+				"group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-3xl p-2 text-left transition-colors xl:flex-row",
+				surfaceVariants({ variant: "secondary" }),
+			)}
 			onMouseEnter={() => {
 				if (isLgOrLower) return;
 				setHoverPlaying(true);
@@ -105,28 +121,15 @@ function CommissionCard({
 				setHoverPlaying(false);
 				setCurrentImageIndex(0);
 			}}
-			onClick={() => {
-				if (status === "open") {
-					navigate({
-						to: `/${artist.username}/commissions/${item.id}`,
-						replace: true,
-					});
-				}
-			}}
+			onClick={handleNavigate}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
-					if (status === "open") {
-						navigate({
-							to: `/${artist.username}/commissions/${item.id}`,
-							replace: true,
-						});
-					}
+					handleNavigate();
 				}
 			}}
 		>
-			{/* Image Section */}
-			<div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl bg-muted xl:w-2/5 sm:rounded-3xl">
+			<div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl bg-muted xl:w-2/5">
 				{shouldBlur ? (
 					<div className="h-full w-full overflow-hidden bg-zinc-900">
 						{blurredImageSrc ? (
@@ -134,10 +137,10 @@ function CommissionCard({
 								className="h-full w-full bg-cover bg-center opacity-80 blur-xl filter transition-all duration-500 hover:scale-110 hover:opacity-100"
 								style={{ backgroundImage: `url(${blurredImageSrc})` }}
 							/>
-						) : artist.media?.avatar ? (
+						) : artist.avatarPath ? (
 							<div
 								className="h-full w-full bg-cover bg-center opacity-50 blur-3xl filter transition-all duration-500 hover:scale-110 hover:opacity-70"
-								style={{ backgroundImage: `url(${artist.media.avatar})` }}
+								style={{ backgroundImage: `url(${artist.avatarPath})` }}
 							/>
 						) : (
 							<div className="h-full w-full bg-linear-to-br from-zinc-800 to-zinc-950 opacity-50" />
@@ -150,18 +153,18 @@ function CommissionCard({
 							data={reelItems}
 							index={currentImageIndex}
 							onIndexChange={setCurrentImageIndex}
-							playing={(isPlaying && hasMultipleImages) || false}
+							playing={hasMultipleImages ? isPlaying : false}
 							onPlayingChange={(playing) => {
 								if (hasMultipleImages) setHoverPlaying(playing);
 							}}
 							autoPlay={false}
-							muted={true}
-							resetOnPause={true}
+							muted
+							resetOnPause
 						>
 							{hasMultipleImages && (
 								<>
 									<div
-										className="absolute bottom-0 left-0 w-full h-1/3 pointer-events-none z-10 backdrop-blur-md"
+										className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-1/3 backdrop-blur-md"
 										style={{
 											maskImage:
 												"linear-gradient(to top, black 0%, black 30%, transparent 100%)",
@@ -187,45 +190,41 @@ function CommissionCard({
 					</div>
 				)}
 
-				{/* Sensitive Content Overlay */}
 				{shouldBlur && (
-					<div className="absolute inset-0 z-10 flex flex-col space-y-4 text-white items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+					<div className="absolute inset-0 z-10 flex flex-col items-center justify-center space-y-4 bg-black/60 p-4 text-white backdrop-blur-sm">
 						<OutlineEyeOff size={32} />
-						<h4 className="mb-1 font-bold text-white text-xl">
+						<h4 className="mb-1 text-xl font-bold text-white">
 							{t("components.profile.commissions.card.sensitive_content")}
 						</h4>
-						<p className="text-sm text-white/70">
-							{item.contentWarnings && item.contentWarnings.length > 0
+						<p className="text-center text-sm text-white/70">
+							{/* TODO: add content for adult only tags */}
+							{hasContentWarnings
 								? t("components.profile.commissions.card.contains_tags", {
-										tags: item.contentWarnings
-											.map((w) => w.replace(/_/g, " ").toLowerCase())
-											.join(", "),
+										tags: warningTags.map((tag) => tag.name).join(", "),
 									})
 								: t("components.profile.commissions.card.content_warning")}
 						</p>
 
 						<Button
-							size={"sm"}
-							className="border-none w-fit bg-white hover:bg-white/90 text-black"
+							size="sm"
+							className="w-fit border-none bg-white text-black hover:bg-white/90"
 							onClick={(e) => {
 								e.stopPropagation();
 								setIsContentRevealed(true);
 							}}
 						>
-							{/* <OutlineEye /> */}
 							{t("components.profile.commissions.card.show_content")}
 						</Button>
 					</div>
 				)}
 
-				{/* Hide Content Button (when revealed) */}
 				{hasContentWarnings && isContentRevealed && (
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Button
-								variant={"ghost"}
-								size={"icon"}
-								className="absolute right-2 top-2 z-20 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 hover:text-white"
+								variant="ghost"
+								size="icon"
+								className="absolute top-2 right-2 z-20 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 hover:text-white"
 								onClick={(e) => {
 									e.stopPropagation();
 									setIsContentRevealed(false);
@@ -234,22 +233,21 @@ function CommissionCard({
 								<OutlineEyeOff className="size-4" />
 							</Button>
 						</TooltipTrigger>
-						<TooltipContent side={"left"}>
+						<TooltipContent side="left">
 							{t("components.profile.commissions.card.hide_content")}
 						</TooltipContent>
 					</Tooltip>
 				)}
 			</div>
 
-			{/* Content Section */}
 			<CommissionCardContent
-				item={item}
+				item={commission}
 				status={status}
 				artist={artist}
 				discountedPrice={discountedPrice}
 				originalPrice={originalPrice}
 				discountRate={discountRate}
-				shouldBlur={shouldBlur || false}
+				shouldBlur={shouldBlur}
 				setIsContentRevealed={setIsContentRevealed}
 			/>
 		</article>
@@ -266,9 +264,9 @@ function CommissionCardContent({
 	shouldBlur,
 	setIsContentRevealed,
 }: {
-	item: CommissionItem;
-	status: string;
-	artist: User;
+	item: TCommission;
+	status: TCommissionStatus;
+	artist: TUserProfile;
 	discountedPrice: number;
 	originalPrice: number;
 	discountRate: number;
@@ -278,48 +276,64 @@ function CommissionCardContent({
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 
+	const currency = item.currencyCode || "USD";
+
 	return (
 		<div className="flex flex-1 flex-col gap-3 p-2 sm:gap-4 sm:p-1 xl:pl-6 xl:pr-2">
 			<div className="space-y-1 sm:space-y-2">
 				<div className="relative flex gap-10">
-					<div className="flex flex-col gap-1 w-full md:pr-14">
-						<div className="flex items-center justify-between gap-2">
-							<h3 className="line-clamp-2 text-start min-w-0 font-bold text-foreground text-lg leading-tight transition-colors group-hover:text-primary">
+					<div className="flex w-full flex-col gap-2 md:pr-14">
+						<div className="flex items-start justify-between gap-2">
+							<h3 className="min-w-0 line-clamp-2 text-start text-lg font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
 								{item.title}
 							</h3>
 						</div>
+
+						{/* <div className="flex flex-wrap items-center gap-2">
+							<Badge variant="secondary">{status}</Badge>
+							{item.category?.name ? (
+								<Badge variant="outline">{item.category.name}</Badge>
+							) : null}
+							{item.tags.map((tag) => (
+								<Badge key={tag.id} variant="outline">
+									{tag.name}
+								</Badge>
+							))}
+						</div> */}
 					</div>
+
 					<Button
-						size={"icon"}
-						className="absolute hidden xl:flex top-0 right-0 z-0 shrink-0 bg-transparent text-primary shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:bg-primary/6 before:transition-all hover:bg-transparent hover:before:translate-y-1.5 hover:before:bg-primary/10 [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5"
+						size="icon"
+						className="absolute top-0 right-0 z-0 hidden shrink-0 bg-transparent text-primary shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:bg-primary/6 before:transition-all hover:bg-transparent hover:before:translate-y-1.5 hover:before:bg-primary/10 hover:[&>svg]:translate-y-1.5 xl:flex [&>svg]:transition-transform"
+						onClick={(e) => e.stopPropagation()}
 					>
 						<OutlineBookmark />
 					</Button>
 				</div>
 
 				<div className="relative">
-					{/* TODO: replace USD to dynamic exchange */}
 					<div className="flex items-center justify-between text-sm">
 						<div className="flex items-baseline gap-2 text-left">
 							<span className="font-medium text-muted-foreground">
 								{t("components.profile.commissions.card.from")}
 							</span>
 							<span className="font-semibold text-primary">
-								USD {discountedPrice.toFixed(2)}
+								{currency} {discountedPrice.toFixed(2)}
 							</span>
 							{discountRate > 0 && (
-								<span className="text-muted-foreground text-xs opacity-70 gap-2 flex">
+								<span className="flex gap-2 text-xs text-muted-foreground opacity-70">
 									<span className="line-through">
-										USD {originalPrice.toFixed(2)}
+										{currency} {originalPrice.toFixed(2)}
 									</span>
 									<span>(-{Math.round(discountRate * 100)}%)</span>
 								</span>
 							)}
 						</div>
 					</div>
+
 					<ScrollShadow
 						hideScrollBar
-						className="mt-2 max-h-16 text-left overflow-hidden sm:mt-3 opacity-50"
+						className="mt-2 max-h-16 overflow-hidden text-left opacity-50 sm:mt-3"
 					>
 						<MarkdownDisplay
 							className="[--tw-prose-body:var(--muted-foreground)] [--tw-prose-headings:var(--muted-foreground)] [--tw-prose-bold:var(--muted-foreground)] [--tw-prose-bullets:var(--muted-foreground)] [--tw-prose-counters:var(--muted-foreground)] text-sm"
@@ -329,26 +343,29 @@ function CommissionCardContent({
 				</div>
 			</div>
 
-			<div className="flex w-full gap-2 mt-auto">
-				{status === "open" && (
+			<div className="mt-auto flex w-full gap-2">
+				{status === TCommissionStatus.Active && (
 					<>
 						<Button
 							className="flex-1"
 							onClick={(e) => {
 								e.stopPropagation();
+
 								if (shouldBlur) {
 									setIsContentRevealed(true);
-								} else {
-									navigate({
-										to: `/${artist.username}/commissions/${item.id}`,
-									});
+									return;
 								}
+
+								navigate({
+									to: `/${artist.username}/commissions/${item.id}`,
+								});
 							}}
 						>
 							{shouldBlur
 								? t("components.profile.commissions.card.show_details_18_plus")
 								: t("components.profile.commissions.card.start_request")}
 						</Button>
+
 						<Button
 							variant="secondary"
 							size="icon"
@@ -356,6 +373,7 @@ function CommissionCardContent({
 						>
 							<OutlineChat />
 						</Button>
+
 						<Button
 							variant="secondary"
 							size="icon"
@@ -366,7 +384,8 @@ function CommissionCardContent({
 						</Button>
 					</>
 				)}
-				{status === "waitlist" && (
+
+				{status === TCommissionStatus.OnHold && (
 					<>
 						<Button
 							variant="secondary"
@@ -375,6 +394,7 @@ function CommissionCardContent({
 						>
 							{t("components.profile.commissions.card.join_waitlist")}
 						</Button>
+
 						<Button
 							variant="secondary"
 							size="icon"
@@ -382,6 +402,7 @@ function CommissionCardContent({
 						>
 							<OutlineChat />
 						</Button>
+
 						<Button
 							variant="secondary"
 							size="icon"
@@ -392,15 +413,17 @@ function CommissionCardContent({
 						</Button>
 					</>
 				)}
-				{status === "closed" && (
+
+				{status === TCommissionStatus.Paused && (
 					<>
 						<Button
-							variant="secondary"
+							variant="outline"
 							className="flex-1"
 							onClick={(e) => e.stopPropagation()}
 						>
 							{t("components.profile.commissions.card.get_notified")}
 						</Button>
+
 						<Button
 							variant="secondary"
 							size="icon"
@@ -408,6 +431,7 @@ function CommissionCardContent({
 						>
 							<OutlineChat />
 						</Button>
+
 						<Button
 							variant="secondary"
 							size="icon"
@@ -423,325 +447,19 @@ function CommissionCardContent({
 	);
 }
 
-import { FilterBar, type FilterGroup, type FilterValue } from "./filter-bar";
-
-function applyMultiOptionFilter(
-	selectedValues: string[],
-	candidateValues: string[],
-	operator: MultiOptionFilterOperator | undefined,
-): boolean {
-	if (selectedValues.length === 0) return true;
-
-	switch (operator) {
-		case "exclude":
-			return !candidateValues.includes(selectedValues[0]);
-		case "exclude if any of":
-			return !selectedValues.some((value) => candidateValues.includes(value));
-		case "exclude if all":
-			return !selectedValues.every((value) => candidateValues.includes(value));
-		case "include all of":
-			return selectedValues.every((value) => candidateValues.includes(value));
-		default:
-			return selectedValues.some((value) => candidateValues.includes(value));
-	}
-}
-
-function applyNumberOperatorFilter(
-	value: number,
-	min: number,
-	max: number,
-	operator: NumberFilterOperator | undefined,
-): boolean {
-	switch (operator) {
-		case "is":
-			return value === min;
-		case "is not":
-			return value !== min;
-		case "is less than":
-			return value < min;
-		case "is less than or equal to":
-			return value <= min;
-		case "is greater than":
-			return value > min;
-		case "is greater than or equal to":
-			return value >= min;
-		case "is not between":
-			return value < min || value > max;
-		default:
-			return value >= min && value <= max;
-	}
-}
-
 export function ProfileCommissions({
-	categories,
 	artist,
+	commissions,
 }: ProfileCommissionsProps) {
 	const { t } = useTranslation();
-	// Initialize filter state
-	const [filters, setFilters] = useState<Record<string, FilterValue>>({
-		categories: [],
-		tags: [],
-		cws: [],
-		status: [],
-		price: { min: undefined, max: undefined },
-	});
-	const [filterOperators, setFilterOperators] = useState<
-		Partial<Record<string, MultiOptionFilterOperator>>
-	>({});
-	const [searchQuery, setSearchQuery] = useState("");
 
-	// Extract filter options
-	const { tags, contentWarnings, statuses, priceRange } = useMemo(() => {
-		const tags = new Set<string>();
-		const cws = new Set<string>();
-		const statuses = new Set<string>();
-		let minPrice = Infinity;
-		let maxPrice = -Infinity;
-
-		categories?.forEach((c) => {
-			statuses.add(c.status);
-			c.items.forEach((i) => {
-				if (i.status) {
-					statuses.add(i.status);
-				}
-				i.tags?.forEach((t) => {
-					tags.add(t);
-				});
-				i.contentWarnings?.forEach((cw) => {
-					cws.add(cw);
-				});
-
-				const { basePrice } = calculateCommissionPricing(
-					i.price,
-					i.discountRate,
-				);
-				if (basePrice < minPrice) minPrice = basePrice;
-				if (basePrice > maxPrice) maxPrice = basePrice;
-			});
+	const sortedCommissions = useMemo(() => {
+		return [...commissions].sort((a, b) => {
+			return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 		});
+	}, [commissions]);
 
-		if (minPrice === Infinity) minPrice = 0;
-		if (maxPrice === -Infinity) maxPrice = 0;
-
-		return {
-			tags: Array.from(tags).sort(),
-			contentWarnings: Array.from(cws).sort(),
-			statuses: Array.from(statuses).sort(),
-			priceRange: { min: 0, max: Math.ceil(maxPrice) },
-		};
-	}, [categories]);
-
-	// Define filter groups
-	const filterGroups = useMemo<FilterGroup[]>(
-		() => [
-			{
-				id: "categories",
-				label: "Categories",
-				type: "multiselect",
-				options: (categories || []).map((c) => ({
-					id: c.id,
-					label: c.title,
-					count: c.items.length,
-				})),
-			},
-			{
-				id: "status",
-				label: "Status",
-				type: "multiselect",
-				options: statuses.map((s) => ({
-					id: s,
-					label: t(`components.profile.commissions.card.${s}`),
-				})),
-			},
-			{
-				id: "price",
-				label: "Price Range",
-				type: "range",
-				range: {
-					min: priceRange.min,
-					max: priceRange.max,
-					step: 5,
-					formatValue: (v) => `$${v}`,
-				},
-			},
-			...(contentWarnings.length > 0
-				? [
-						{
-							id: "cws",
-							label: "Content Warnings",
-							type: "multiselect" as const,
-							options: contentWarnings.map((cw) => ({
-								id: cw,
-								label: cw.replace(/_/g, " "),
-							})),
-						},
-					]
-				: []),
-			...(tags.length > 0
-				? [
-						{
-							id: "tags",
-							label: "Tags",
-							type: "multiselect" as const,
-							options: tags.map((tag) => ({
-								id: tag,
-								label: tag,
-							})),
-						},
-					]
-				: []),
-		],
-		[categories, tags, contentWarnings, statuses, priceRange, t],
-	);
-
-	// Filtering logic
-	const filteredCategories = useMemo(() => {
-		if (!categories) return [];
-		let result = categories;
-		const categoriesOperator = filterOperators.categories;
-		const statusOperator = filterOperators.status;
-		const tagsOperator = filterOperators.tags;
-		const cwsOperator = filterOperators.cws;
-
-		// 1. Filter by Category ID
-		if (Array.isArray(filters.categories) && filters.categories.length > 0) {
-			result = result.filter((c) => {
-				const selected = filters.categories as string[];
-				return applyMultiOptionFilter(selected, [c.id], categoriesOperator);
-			});
-		}
-
-		// 2. Status exclusion/include on category level for fast pruning
-		if (Array.isArray(filters.status) && filters.status.length > 0) {
-			result = result.filter((c) => {
-				const selected = filters.status as string[];
-				return applyMultiOptionFilter(selected, [c.status], statusOperator);
-			});
-		}
-
-		// 3. Filter by Tags & CWs & Search (Item Level)
-		result = result
-			.map((c) => {
-				const filteredItems = c.items.filter((i) => {
-					const effectiveStatus = i.status || c.status;
-
-					if (Array.isArray(filters.status) && filters.status.length > 0) {
-						const selected = filters.status as string[];
-						if (
-							!applyMultiOptionFilter(
-								selected,
-								[effectiveStatus],
-								statusOperator,
-							)
-						) {
-							return false;
-						}
-					}
-
-					// Price filter
-					if (
-						filters.price &&
-						typeof filters.price === "object" &&
-						filters.price !== null &&
-						"min" in filters.price &&
-						"max" in filters.price
-					) {
-						const { basePrice } = calculateCommissionPricing(
-							i.price,
-							i.discountRate,
-						);
-						const priceFilter = filters.price as {
-							min?: number;
-							max?: number;
-							operator?: NumberFilterOperator;
-						};
-						const min = priceFilter.min ?? priceRange.min;
-						const max = priceFilter.max ?? priceRange.max;
-						if (
-							!applyNumberOperatorFilter(
-								basePrice,
-								min,
-								max,
-								priceFilter.operator,
-							)
-						) {
-							return false;
-						}
-					}
-
-					// Tag filter
-					if (Array.isArray(filters.tags) && filters.tags.length > 0) {
-						const selected = filters.tags as string[];
-						const itemTags = i.tags || [];
-						if (!applyMultiOptionFilter(selected, itemTags, tagsOperator)) {
-							return false;
-						}
-					}
-
-					// Content warning filter
-					if (Array.isArray(filters.cws) && filters.cws.length > 0) {
-						const selected = filters.cws as string[];
-						const itemCws = i.contentWarnings || [];
-						if (!applyMultiOptionFilter(selected, itemCws, cwsOperator)) {
-							return false;
-						}
-					}
-
-					// Search query
-					if (searchQuery) {
-						const query = searchQuery.toLowerCase();
-						if (
-							!i.title.toLowerCase().includes(query) &&
-							!i.description?.toLowerCase().includes(query)
-						) {
-							return false;
-						}
-					}
-					return true;
-				});
-				return { ...c, items: filteredItems };
-			})
-			.filter((c) => c.items.length > 0);
-
-		return result;
-	}, [categories, filters, filterOperators, searchQuery, priceRange]);
-
-	const handleFilterChange = (
-		groupId: string,
-		value: FilterValue,
-		operator?: string,
-	) => {
-		setFilters((prev) => ({
-			...prev,
-			[groupId]: value,
-		}));
-		setFilterOperators((prev) => {
-			if (!operator) {
-				const next = { ...prev };
-				delete next[groupId];
-				return next;
-			}
-
-			return {
-				...prev,
-				[groupId]: operator as MultiOptionFilterOperator,
-			};
-		});
-	};
-
-	const handleClearAll = () => {
-		setFilters({
-			categories: [],
-			tags: [],
-			cws: [],
-			status: [],
-			price: { min: undefined, max: undefined },
-		});
-		setFilterOperators({});
-		setSearchQuery("");
-	};
-
-	if (!categories?.length) {
+	if (!sortedCommissions.length) {
 		return (
 			<div className="flex flex-1 flex-col items-center justify-center">
 				<EmptyPage
@@ -755,47 +473,22 @@ export function ProfileCommissions({
 
 	return (
 		<div className="flex w-full flex-col gap-6">
-			<FilterBar
-				groups={filterGroups}
-				values={filters}
-				onFilterChange={handleFilterChange}
-				searchQuery={searchQuery}
-				onSearchChange={setSearchQuery}
-				onClearAll={handleClearAll}
-			/>
-
 			<div className="flex flex-col gap-8">
-				{filteredCategories.length > 0 ? (
-					filteredCategories.map((category) => (
-						<div key={category.title} className="space-y-4">
-							<div className="flex items-center gap-3">
-								<h2 className="font-medium text-neutral-900 text-xl dark:text-neutral-100">
-									{category.title}
-								</h2>
-								<Badge
-									variant={category.status === "open" ? "default" : "secondary"}
-								>
-									{t(`components.profile.commissions.card.${category.status}`)}
-								</Badge>
-							</div>
-
-							<div className="grid gap-4">
-								{category.items.map((item) => (
-									<CommissionCard
-										key={item.id}
-										item={item}
-										status={category.status}
-										artist={artist}
-									/>
-								))}
-							</div>
-						</div>
-					))
+				{sortedCommissions.length > 0 ? (
+					<div className="grid gap-4">
+						{sortedCommissions.map((commission) => (
+							<CommissionCard
+								key={commission.id}
+								commission={commission}
+								artist={artist}
+							/>
+						))}
+					</div>
 				) : (
 					<EmptyPage
 						icon={OutlineFilter}
-						title={"Not found"}
-						description={"No commissions found matching your filters."}
+						title="Not found"
+						description="No commissions found matching your filters."
 					/>
 				)}
 			</div>

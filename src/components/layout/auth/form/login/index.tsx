@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
 	OutlineEye,
 	OutlineEyeOff,
@@ -16,7 +15,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -31,7 +29,7 @@ import type { LoginData } from "@/types/auth/schema/login";
 
 function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 	const [showPassword, setShowPassword] = useState(false);
-	const { login: authLogin } = useAuth();
+	const { login: authLogin, pending } = useAuth();
 	const { t } = useTranslation();
 
 	const form = useFormValidation({
@@ -42,20 +40,20 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 		},
 	});
 
-	const { handleSubmit, isPending, control } = form;
+	const { handleSubmit, control } = form;
 
 	const onSubmit = async (data: LoginData) => {
 		try {
 			await authLogin(data);
 			onSuccess();
-		} catch (error) {
-			// Error is handled by authLogin toast
+		} catch {
+			// handled in auth provider toast
 		}
 	};
 
 	return (
 		<Form {...form}>
-			<form onSubmit={handleSubmit(onSubmit)} className={"space-y-4 px-1"}>
+			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-1">
 				<FormField
 					control={control}
 					name="email"
@@ -70,6 +68,7 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 									<InputGroupInput
 										placeholder={t("auth.email.placeholder")}
 										type="email"
+										autoComplete="email"
 										{...field}
 									/>
 								</InputGroup>
@@ -93,6 +92,7 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 									<InputGroupInput
 										placeholder={t("auth.password.placeholder")}
 										type={showPassword ? "text" : "password"}
+										autoComplete="current-password"
 										{...field}
 									/>
 									<InputGroupAddon align="inline-end">
@@ -100,7 +100,7 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 											type="button"
 											variant="ghost"
 											size="icon-xs"
-											onClick={() => setShowPassword(!showPassword)}
+											onClick={() => setShowPassword((prev) => !prev)}
 										>
 											{showPassword ? <OutlineEyeOff /> : <OutlineEye />}
 											<span className="sr-only">
@@ -115,31 +115,29 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 					)}
 				/>
 
-				<Button disabled={isPending} className={"w-full"}>
-					{isPending ? t("auth.login.cta") : t("auth.login.cta")}
+				<Button type="submit" disabled={pending} className="w-full" size="lg">
+					{t("auth.login.cta")}
 				</Button>
 
 				<div className="text-center">
 					<Button
 						type="button"
 						onClick={() => onForgot?.()}
-						variant={"link"}
-						size={"sm"}
-						className={
-							"text-blue-600 text-sm hover:underline dark:text-blue-400"
-						}
+						variant="link"
+						size="sm"
+						className="text-blue-600 text-sm hover:underline dark:text-blue-400"
 					>
 						{t("auth.forgot.cta")}
 					</Button>
 
-					<div className={"text-muted-foreground text-sm"}>
+					<div className="text-muted-foreground text-sm">
 						{t("auth.forgot.register_question")}{" "}
 						<Button
 							type="button"
 							onClick={() => onModeChange("register")}
-							variant={"link"}
-							size={"sm"}
-							className={"text-blue-600 hover:underline dark:text-blue-400"}
+							variant="link"
+							size="sm"
+							className="text-blue-600 hover:underline dark:text-blue-400"
 						>
 							{t("auth.register.cta")}
 						</Button>

@@ -9,10 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UsersRouteImport } from './routes/users'
+import { Route as MyRequestsRouteImport } from './routes/my-requests'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as UsernameRouteImport } from './routes/$username'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UsernameIndexRouteImport } from './routes/$username/index'
+import { Route as MyRequestsRequestIdRouteImport } from './routes/my-requests/$requestId'
 import { Route as UsernameTabRouteImport } from './routes/$username/$tab'
 import { Route as AuthRegisterIndexRouteImport } from './routes/auth/register/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/auth/login/index'
@@ -22,6 +24,16 @@ import { Route as UsernameTabFolderFolderSlugIndexRouteImport } from './routes/$
 import { Route as UsernameTabFolderFolderSlugPostIdRouteImport } from './routes/$username/$tab/folder/$folderSlug/$postId'
 import { Route as UsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport } from './routes/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
 
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyRequestsRoute = MyRequestsRouteImport.update({
+  id: '/my-requests',
+  path: '/my-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
@@ -37,10 +49,10 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UsernameIndexRoute = UsernameIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => UsernameRoute,
+const MyRequestsRequestIdRoute = MyRequestsRequestIdRouteImport.update({
+  id: '/$requestId',
+  path: '/$requestId',
+  getParentRoute: () => MyRequestsRoute,
 } as any)
 const UsernameTabRoute = UsernameTabRouteImport.update({
   id: '/$tab',
@@ -91,8 +103,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$username': typeof UsernameRouteWithChildren
   '/logout': typeof LogoutRoute
+  '/my-requests': typeof MyRequestsRouteWithChildren
+  '/users': typeof UsersRoute
   '/$username/$tab': typeof UsernameTabRouteWithChildren
-  '/$username/': typeof UsernameIndexRoute
+  '/my-requests/$requestId': typeof MyRequestsRequestIdRoute
   '/auth/forgot/': typeof AuthForgotIndexRoute
   '/auth/login/': typeof AuthLoginIndexRoute
   '/auth/register/': typeof AuthRegisterIndexRoute
@@ -103,9 +117,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$username': typeof UsernameRouteWithChildren
   '/logout': typeof LogoutRoute
+  '/my-requests': typeof MyRequestsRouteWithChildren
+  '/users': typeof UsersRoute
   '/$username/$tab': typeof UsernameTabRouteWithChildren
-  '/$username': typeof UsernameIndexRoute
+  '/my-requests/$requestId': typeof MyRequestsRequestIdRoute
   '/auth/forgot': typeof AuthForgotIndexRoute
   '/auth/login': typeof AuthLoginIndexRoute
   '/auth/register': typeof AuthRegisterIndexRoute
@@ -119,8 +136,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$username': typeof UsernameRouteWithChildren
   '/logout': typeof LogoutRoute
+  '/my-requests': typeof MyRequestsRouteWithChildren
+  '/users': typeof UsersRoute
   '/$username/$tab': typeof UsernameTabRouteWithChildren
-  '/$username/': typeof UsernameIndexRoute
+  '/my-requests/$requestId': typeof MyRequestsRequestIdRoute
   '/auth/forgot/': typeof AuthForgotIndexRoute
   '/auth/login/': typeof AuthLoginIndexRoute
   '/auth/register/': typeof AuthRegisterIndexRoute
@@ -135,8 +154,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$username'
     | '/logout'
+    | '/my-requests'
+    | '/users'
     | '/$username/$tab'
-    | '/$username/'
+    | '/my-requests/$requestId'
     | '/auth/forgot/'
     | '/auth/login/'
     | '/auth/register/'
@@ -147,9 +168,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/logout'
-    | '/$username/$tab'
     | '/$username'
+    | '/logout'
+    | '/my-requests'
+    | '/users'
+    | '/$username/$tab'
+    | '/my-requests/$requestId'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -162,8 +186,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$username'
     | '/logout'
+    | '/my-requests'
+    | '/users'
     | '/$username/$tab'
-    | '/$username/'
+    | '/my-requests/$requestId'
     | '/auth/forgot/'
     | '/auth/login/'
     | '/auth/register/'
@@ -177,6 +203,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   UsernameRoute: typeof UsernameRouteWithChildren
   LogoutRoute: typeof LogoutRoute
+  MyRequestsRoute: typeof MyRequestsRouteWithChildren
+  UsersRoute: typeof UsersRoute
   AuthForgotIndexRoute: typeof AuthForgotIndexRoute
   AuthLoginIndexRoute: typeof AuthLoginIndexRoute
   AuthRegisterIndexRoute: typeof AuthRegisterIndexRoute
@@ -184,6 +212,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-requests': {
+      id: '/my-requests'
+      path: '/my-requests'
+      fullPath: '/my-requests'
+      preLoaderRoute: typeof MyRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logout': {
       id: '/logout'
       path: '/logout'
@@ -205,12 +247,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$username/': {
-      id: '/$username/'
-      path: '/'
-      fullPath: '/$username/'
-      preLoaderRoute: typeof UsernameIndexRouteImport
-      parentRoute: typeof UsernameRoute
+    '/my-requests/$requestId': {
+      id: '/my-requests/$requestId'
+      path: '/$requestId'
+      fullPath: '/my-requests/$requestId'
+      preLoaderRoute: typeof MyRequestsRequestIdRouteImport
+      parentRoute: typeof MyRequestsRoute
     }
     '/$username/$tab': {
       id: '/$username/$tab'
@@ -293,22 +335,34 @@ const UsernameTabRouteWithChildren = UsernameTabRoute._addFileChildren(
 
 interface UsernameRouteChildren {
   UsernameTabRoute: typeof UsernameTabRouteWithChildren
-  UsernameIndexRoute: typeof UsernameIndexRoute
 }
 
 const UsernameRouteChildren: UsernameRouteChildren = {
   UsernameTabRoute: UsernameTabRouteWithChildren,
-  UsernameIndexRoute: UsernameIndexRoute,
 }
 
 const UsernameRouteWithChildren = UsernameRoute._addFileChildren(
   UsernameRouteChildren,
 )
 
+interface MyRequestsRouteChildren {
+  MyRequestsRequestIdRoute: typeof MyRequestsRequestIdRoute
+}
+
+const MyRequestsRouteChildren: MyRequestsRouteChildren = {
+  MyRequestsRequestIdRoute: MyRequestsRequestIdRoute,
+}
+
+const MyRequestsRouteWithChildren = MyRequestsRoute._addFileChildren(
+  MyRequestsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   UsernameRoute: UsernameRouteWithChildren,
   LogoutRoute: LogoutRoute,
+  MyRequestsRoute: MyRequestsRouteWithChildren,
+  UsersRoute: UsersRoute,
   AuthForgotIndexRoute: AuthForgotIndexRoute,
   AuthLoginIndexRoute: AuthLoginIndexRoute,
   AuthRegisterIndexRoute: AuthRegisterIndexRoute,

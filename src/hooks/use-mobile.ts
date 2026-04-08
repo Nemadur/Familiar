@@ -1,40 +1,52 @@
 import * as React from "react";
 
-const MOBILE_BREAKPOINT = 768;
-const TABLET_BREAKPOINT = 1024;
+const BREAKPOINTS = {
+	sm: 640,
+	md: 768,
+	lg: 1024,
+	xl: 1280,
+	"2xl": 1536,
+} as const;
 
-export function useIsTablet() {
-	const [isTablet, setIsTablet] = React.useState<boolean | undefined>(
-		undefined,
-	);
+type BreakpointKey = keyof typeof BREAKPOINTS;
+
+function useIsBelowBreakpoint(breakpoint: BreakpointKey) {
+	const [isBelow, setIsBelow] = React.useState<boolean | undefined>(undefined);
+	const breakpointValue = BREAKPOINTS[breakpoint];
 
 	React.useEffect(() => {
-		const mql = window.matchMedia(`(max-width: ${TABLET_BREAKPOINT - 1}px)`);
+		const mql = window.matchMedia(`(max-width: ${breakpointValue - 1}px)`);
 		const onChange = () => {
-			setIsTablet(window.innerWidth < TABLET_BREAKPOINT);
+			setIsBelow(window.innerWidth < breakpointValue);
 		};
 		mql.addEventListener("change", onChange);
-		setIsTablet(window.innerWidth < TABLET_BREAKPOINT);
+		setIsBelow(window.innerWidth < breakpointValue);
 		return () => mql.removeEventListener("change", onChange);
-	}, []);
+	}, [breakpointValue]);
 
-	return !!isTablet;
+	return !!isBelow;
+}
+
+export function useIsSmDown() {
+	return useIsBelowBreakpoint("md");
+}
+
+export function useIsMdDown() {
+	return useIsBelowBreakpoint("lg");
+}
+
+export function useIsLgDown() {
+	return useIsBelowBreakpoint("xl");
+}
+
+export function useIsXlDown() {
+	return useIsBelowBreakpoint("2xl");
+}
+
+export function useIsTablet() {
+	return useIsMdDown();
 }
 
 export function useIsMobile() {
-	const [isMobile, setIsMobile] = React.useState<boolean | undefined>(
-		undefined,
-	);
-
-	React.useEffect(() => {
-		const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-		const onChange = () => {
-			setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-		};
-		mql.addEventListener("change", onChange);
-		setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-		return () => mql.removeEventListener("change", onChange);
-	}, []);
-
-	return !!isMobile;
+	return useIsBelowBreakpoint("md");
 }

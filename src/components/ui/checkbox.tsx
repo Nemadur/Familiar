@@ -18,9 +18,9 @@ function Checkbox({
 		>
 			<CheckboxPrimitive.Indicator
 				data-slot="checkbox-indicator"
-				className="grid mt-0.25 place-content-center text-current transition-none"
+				className="grid place-content-center transition-none"
 			>
-				<OutlineCheck className="size-3" />
+				<OutlineCheck className="size-3 text-current" />
 			</CheckboxPrimitive.Indicator>
 		</CheckboxPrimitive.Root>
 	);

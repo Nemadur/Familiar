@@ -1,4 +1,9 @@
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
+import {
+	CheckIcon,
+	ChevronRightIcon,
+	CircleIcon,
+	SearchIcon,
+} from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import type * as React from "react";
 import { cn } from "src/lib/utils";
@@ -47,7 +52,66 @@ function DropdownMenuContent({
 					} as React.CSSProperties
 				}
 				className={cn(
-					"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-(--dropdown-menu-radius) border p-(--dropdown-menu-padding) shadow-md [&_[data-slot=dropdown-menu-group]:first-child_>_[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))] [&_[data-slot=dropdown-menu-group]:last-child_>_[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))] [&>_[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))] [&>_[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]",
+					"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-(--dropdown-menu-radius) border p-(--dropdown-menu-padding) shadow-md",
+					// Direct children: big outer top/bottom radius
+					"[&>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					// Group-aware: only the first item in the first group and last item in the last group get big outer radius
+					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					// If the group is not first/last, keep inner radius only
+					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
+					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
+					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
+					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
+					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
+					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
+					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
+					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
+					// Input wrapper above first visible option: always only lg top radius + spacing
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-item]]:mt-1",
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-checkbox-item]]:mt-1",
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-radio-item]]:mt-1",
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-sub-trigger]]:mt-1",
+					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group]:mt-1",
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-item]]:rounded-t-lg!",
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-checkbox-item]]:rounded-t-lg!",
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-radio-item]]:rounded-t-lg!",
+					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-sub-trigger]]:rounded-t-lg!",
+					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
+					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
+					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
+					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
+					// Separator behavior around direct children
+					"[&>[data-slot=dropdown-menu-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+					"[&>[data-slot=dropdown-menu-checkbox-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+					"[&>[data-slot=dropdown-menu-radio-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+					"[&>[data-slot=dropdown-menu-sub-trigger]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-item]]:rounded-t-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-checkbox-item]]:rounded-t-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-radio-item]]:rounded-t-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-sub-trigger]]:rounded-t-lg!",
+					// Separator behavior around grouped items
+					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
+					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
+					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
+					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
+					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
 					className,
 				)}
 				{...props}
@@ -56,11 +120,51 @@ function DropdownMenuContent({
 	);
 }
 
+function DropdownMenuInputWrapper({
+	className,
+	...props
+}: React.ComponentProps<"div">) {
+	return (
+		<div
+			data-slot="dropdown-menu-input-wrapper"
+			className={cn(
+				"dropdown-menu-input-wrapper flex h-9 items-center gap-2 border-b px-3",
+				className,
+			)}
+			{...props}
+		/>
+	);
+}
+
+function DropdownMenuInput({
+	className,
+	...props
+}: React.ComponentProps<"input">) {
+	return (
+		<DropdownMenuInputWrapper>
+			<SearchIcon className="size-4 shrink-0 opacity-50" />
+			<input
+				data-slot="dropdown-menu-input"
+				className={cn(
+					"placeholder:text-muted-foreground flex h-9 w-full rounded-lg bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+					className,
+				)}
+				{...props}
+			/>
+		</DropdownMenuInputWrapper>
+	);
+}
+
 function DropdownMenuGroup({
+	className,
 	...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
 	return (
-		<DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+		<DropdownMenuPrimitive.Group
+			data-slot="dropdown-menu-group"
+			className={cn("dropdown-menu-group", className)}
+			{...props}
+		/>
 	);
 }
 
@@ -237,7 +341,7 @@ function DropdownMenuSubContent({
 			data-slot="dropdown-menu-sub-content"
 			style={
 				{
-					"--dropdown-menu-radius": "0.375rem",
+					"--dropdown-menu-radius": "0.75rem",
 					"--dropdown-menu-padding": "0.25rem",
 					...style,
 				} as React.CSSProperties
@@ -256,6 +360,8 @@ export {
 	DropdownMenuPortal,
 	DropdownMenuTrigger,
 	DropdownMenuContent,
+	DropdownMenuInputWrapper,
+	DropdownMenuInput,
 	DropdownMenuGroup,
 	DropdownMenuLabel,
 	DropdownMenuItem,

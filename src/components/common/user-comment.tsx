@@ -5,10 +5,10 @@ import type { ReactNode } from "react";
 import UserAvatar from "@/components/layout/profile/avatar";
 import { ProfileBadge } from "@/components/layout/profile/badge";
 import { cn } from "@/lib/utils";
-import type { User } from "@/types/user";
+import type { TUserProfile } from "@/types/user";
 
 interface UserCommentProps {
-	author: User | undefined;
+	author: TUserProfile | undefined;
 	// Content to show below the name (e.g. handle or date)
 	subtitle?: ReactNode;
 	// Content to show on the right side (e.g. date + stars)
@@ -31,7 +31,7 @@ export function UserComment({
 					to="/$username"
 					params={{ username: author?.username || "unknown" }}
 				>
-					<UserAvatar user={author ?? undefined} />
+					<UserAvatar user={author!} />
 				</Link>
 				<div className="flex-1 min-w-0">
 					<div className="flex items-center justify-between">
@@ -42,7 +42,7 @@ export function UserComment({
 							<div className="flex flex-col">
 								<div className="flex items-center gap-1">
 									<span className="font-semibold text-sm">
-										{author?.display_name || "Unknown"}
+										{author?.displayName || "Unknown"}
 									</span>
 									{author && <ProfileBadge user={author} />}
 								</div>

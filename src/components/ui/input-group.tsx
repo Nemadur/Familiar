@@ -1,8 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Button } from "src/components/ui/button";
+import { Input } from "src/components/ui/input";
+import { cn } from "src/lib/utils";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
 	return (
@@ -10,7 +10,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
 			data-slot="input-group"
 			className={cn(
 				"group/input-group relative flex w-full items-center rounded-full border border-input bg-muted/30 outline-none transition-[color,box-shadow]",
-				"h-9 min-w-0 has-[>textarea]:h-auto",
+				"h-10 min-w-0 has-[>textarea]:h-auto",
 
 				// Variants based on alignment.
 				"has-[>[data-align=inline-start]]:[&>input]:pl-2",
@@ -37,9 +37,9 @@ const inputGroupAddonVariants = cva(
 		variants: {
 			align: {
 				"inline-start":
-					"order-first pl-3 has-[>button]:ml-[-0.45rem] has-[>kbd]:ml-[-0.35rem]",
+					"order-first pl-3 has-[>button]:ml-[-0.5rem] has-[>kbd]:ml-[-0.35rem]",
 				"inline-end":
-					"order-last pr-3 has-[>button]:mr-[-0.45rem] has-[>kbd]:mr-[-0.35rem]",
+					"order-last pr-3 has-[>button]:mr-[-0.5rem] has-[>kbd]:mr-[-0.35rem]",
 				"block-start":
 					"order-first w-full justify-start px-3 pt-3 [.border-b]:pb-3 group-has-[>input]/input-group:pt-2.5",
 				"block-end":
@@ -99,8 +99,8 @@ const inputGroupButtonVariants = cva(
 			size: {
 				xs: "h-7 gap-1 px-2 [&>svg:not([class*='size-'])]:size-3.5 has-[>svg]:px-2",
 				sm: "h-8 px-2.5 gap-1.5 has-[>svg]:px-2.5",
-				"icon-xs": "size-7 p-0 has-[>svg]:p-0",
-				"icon-sm": "size-8 p-0 has-[>svg]:p-0",
+				"icon-xs": "size-8 p-0 has-[>svg:first-child]:p-0",
+				"icon-sm": "size-9 p-0 has-[>svg:first-child]:p-0",
 			},
 		},
 		defaultVariants: {

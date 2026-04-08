@@ -5,6 +5,7 @@ import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { boneyardPlugin } from "boneyard-js/vite";
 
 const config = defineConfig({
 	plugins: [
@@ -14,6 +15,7 @@ const config = defineConfig({
 		tailwindcss(),
 		tanstackStart(),
 		viteReact(),
+		boneyardPlugin(),
 	],
 	optimizeDeps: {
 		exclude: [
@@ -24,5 +26,7 @@ const config = defineConfig({
 		],
 	},
 });
+
+nitro({ preset: "bun" });
 
 export default config;

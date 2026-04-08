@@ -204,7 +204,7 @@ const pl: Locale = {
 			commissions: {
 				card: {
 					from: "Od",
-					start_request: "Rozpocznij zlecenie",
+					start_request: "Zleć pracę",
 					join_waitlist: "Dołącz do kolejki",
 					get_notified: "Otrzymuj powiadomienia",
 					open: "Otwarte",
@@ -296,7 +296,8 @@ const pl: Locale = {
 						description: "Opis",
 					},
 					tos: {
-						title: "Warunki usługi",
+						title: "Warunki usługi {{artist_displayname}}",
+						updated_at: "Zaktualizowano {{updated_at}}",
 						agreement_prefix: "Zlecając mi pracę, zgadzasz się na:",
 						read_full: "Przeczytaj pełny Regulamin",
 					},
@@ -388,7 +389,7 @@ const pl: Locale = {
 							"Zaznaczając to pole, zgadzasz się na warunki artysty.",
 						terms_summary: "Podsumowanie warunków:",
 						no_terms: "Brak dostępnych warunków",
-						accept_start: "Zaakceptuj warunki, aby rozpocząć zlecenie",
+						accept_start: "Zaakceptuj warunki, aby zlecić pracę",
 						feature_disabled: "Funkcja tymczasowo wyłączona",
 					},
 				},

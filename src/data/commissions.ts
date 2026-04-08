@@ -146,7 +146,7 @@ export const getCommission = createServerFn({
 				.from("commission_listings")
 				.select(`
 					*,
-					artist:profiles!commission_listings_artist_id_fkey (
+					artist:users!commission_listings_artist_id_fkey (
 						*,
 						terms:artist_terms(
 							*
@@ -164,7 +164,7 @@ export const getCommission = createServerFn({
 					),
 					reviews:reviews(
 						*,
-						author:profiles!reviews_client_id_fkey(
+						author:users!reviews_client_id_fkey(
 							*,
 							badges:user_badges(
 								*,

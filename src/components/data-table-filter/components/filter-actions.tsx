@@ -1,7 +1,7 @@
-import { FilterXIcon } from "lucide-react";
 import { memo } from "react";
 import { Button } from "src/components/ui/button";
 import { cn } from "src/lib/utils";
+import { OutlineFilterClear } from "@/components/icons/icons";
 import type { DataTableFilterActions } from "../core/types";
 import { type Locale, t } from "../lib/i18n";
 
@@ -19,11 +19,12 @@ function __FilterActions({
 }: FilterActionsProps) {
 	return (
 		<Button
-			className={cn("h-10 px-2!", !hasFilters && "hidden")}
+			size={"xl"}
+			className={cn(!hasFilters && "hidden")}
 			variant="destructive"
 			onClick={actions?.removeAllFilters}
 		>
-			<FilterXIcon />
+			<OutlineFilterClear />
 			<span className="hidden md:block">{t("clear", locale)}</span>
 		</Button>
 	);

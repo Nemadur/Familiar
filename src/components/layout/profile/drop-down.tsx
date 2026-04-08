@@ -22,21 +22,23 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useIsTablet } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
-import type { User } from "@/types/user";
+import type { TUserProfile, TUserResponse } from "@/types/user";
 import UserAvatar from "./avatar";
 
+// TODO: make dropdown as optional prop state
 export default function UserDropDown({
 	user,
 	showInfo = false,
 }: {
-	user: User;
+	user: TUserResponse;
 	showInfo?: boolean;
 }) {
 	const { logout } = useAuth();
-	const isDesktop = useMediaQuery("(min-width: 768px)");
+	const isTablet = useIsTablet();
+	// TODO: replace isDesktop to useIsTablet
 	const [open, setOpen] = useState(false);
 
 	const TriggerButton = (
@@ -46,14 +48,14 @@ export default function UserDropDown({
 				"flex items-center gap-2 rounded-xl hover:bg-secondary/80",
 				showInfo
 					? "w-full justify-start p-2 pr-4 h-auto"
-					: "h-10 w-10 rounded-full p-0 justify-center",
+					: "size-10 rounded-full p-0 justify-center",
 			)}
 		>
-			<UserAvatar user={user} />
+			<UserAvatar user={user as TUserProfile} />
 			{showInfo && (
 				<div className="flex flex-col items-start text-left">
 					<span className="font-medium text-sm leading-none">
-						{user.display_name}
+						{user.displayName}
 					</span>
 					<span className="text-xs text-muted-foreground leading-none mt-1">
 						@{user.username}
@@ -73,7 +75,7 @@ export default function UserDropDown({
 		{
 			label: "Requests",
 			icon: <OutlineReceipt />,
-			to: "/requests" as any,
+			to: "/my-requests",
 		},
 		{
 			label: "Orders",
@@ -106,12 +108,7 @@ export default function UserDropDown({
 		<>
 			<div className="flex flex-col gap-1 p-1">
 				{MenuItems.map((item) => (
-					<Button
-						key={item.label}
-						variant="ghost"
-						className="w-full justify-start cursor-pointer h-9 px-2"
-						asChild
-					>
+					<Button key={item.label} variant="ghost" size={"xl"} asChild>
 						<Link
 							to={item.to}
 							params={item.params}
@@ -127,12 +124,7 @@ export default function UserDropDown({
 			<DropdownMenuSeparator />
 			<div className="flex flex-col gap-1 p-1">
 				{SecondaryMenuItems.map((item) => (
-					<Button
-						key={item.label}
-						variant="ghost"
-						className="w-full justify-start cursor-pointer h-9 px-2"
-						asChild
-					>
+					<Button key={item.label} variant="ghost" size={"xl"} asChild>
 						<Link
 							to={item.to}
 							target={item.target}
@@ -148,7 +140,7 @@ export default function UserDropDown({
 			<DropdownMenuSeparator />
 			<div className="p-1">
 				<Button
-					variant="destructive-ghost"
+					variant={"destructive"}
 					className="w-full justify-start cursor-pointer h-9 px-2"
 					onClick={() => {
 						logout();
@@ -162,7 +154,7 @@ export default function UserDropDown({
 		</>
 	);
 
-	if (isDesktop) {
+	if (!isTablet) {
 		return (
 			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger asChild>{TriggerButton}</DropdownMenuTrigger>

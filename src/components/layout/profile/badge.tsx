@@ -6,7 +6,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { User, UserSummary } from "@/types/user";
+import type { TUserProfile } from "@/types/user";
 import {
 	BadgeIcon,
 	BadgeTooltipContent,
@@ -17,7 +17,7 @@ import {
 const ProfileBadge = memo(function ProfileBadge({
 	user,
 }: {
-	user: User | UserSummary;
+	user: TUserProfile;
 }) {
 	const badges = getUserBadges(user);
 

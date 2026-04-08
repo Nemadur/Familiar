@@ -78,7 +78,7 @@ export const getProfileContent = createServerFn({
 							),
 							reviews:reviews(
 								*,
-								author:profiles!reviews_client_id_fkey(*)
+								author:users!reviews_client_id_fkey(*)
 							),
 							category:commission_categories(*)
 						`)

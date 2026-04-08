@@ -1,13 +1,18 @@
+import { OutlineArrowLeft, OutlineCheck } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
-import { OutlineCheck } from "@/components/icons/icons";
+import { useCurrentUser } from "@/hooks/use-user";
 
 interface CommissionRequestFooterProps {
+	onBack: () => void;
 	totalPrice: number;
 }
 
 export function CommissionRequestFooter({
+	onBack,
 	totalPrice,
 }: CommissionRequestFooterProps) {
+	const currentUser = useCurrentUser();
+
 	return (
 		<div className="z-20 space-y-3 border-t bg-background p-4">
 			<div className="flex items-center justify-between rounded-lg bg-secondary/10 px-4 py-2 lg:hidden">
@@ -46,12 +51,35 @@ export function CommissionRequestFooter({
 				</div>
 			</div>
 			<div className="flex w-full gap-3">
-				<Button size="xl" className="flex-1" type="button">
-					Sign up / login
-				</Button>
-				<Button size="xl" variant="outline" className="flex-1" type="submit">
-					Request as Guest
-				</Button>
+				{!currentUser ? (
+					<>
+						<Button variant="ghost" size="xl" onClick={onBack} type="button">
+							<OutlineArrowLeft />
+							Back
+						</Button>
+						<Button size="xl" className="flex-1" type="button">
+							Sign up / login
+						</Button>
+						<Button
+							size="xl"
+							variant="outline"
+							className="flex-1"
+							type="submit"
+						>
+							Request as Guest
+						</Button>
+					</>
+				) : (
+					<>
+						<Button variant="ghost" size="xl" onClick={onBack} type="button">
+							<OutlineArrowLeft />
+							Back
+						</Button>
+						<Button size="xl" className="flex-1" type="button">
+							Request commission
+						</Button>
+					</>
+				)}
 			</div>
 			<div className="px-4 text-center text-muted-foreground text-xs">
 				By submitting a request, you agree to Terms of Service and acknowledge

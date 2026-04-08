@@ -629,14 +629,31 @@ export function getSwatchStyles(
 }
 
 export const getUserAccentStylesFromHex = (
-	hex: string,
+	hex: string | null | undefined,
 	options: PaletteOptions = {},
-) =>
-	({
-		coverBgStyle: getStyleFromHexShade(hex, "100", "backgroundColor", options),
-		avatarBgStyle: getStyleFromHexShade(hex, "200", "backgroundColor", options),
-		avatarForegroundStyle: getStyleFromHexShade(hex, "950", "color", options),
-	}) as const;
+) => {
+	const accentHex = normalizeHex(hex);
+	return {
+		coverBgStyle: getStyleFromHexShade(
+			accentHex,
+			"100",
+			"backgroundColor",
+			options,
+		),
+		avatarBgStyle: getStyleFromHexShade(
+			accentHex,
+			"200",
+			"backgroundColor",
+			options,
+		),
+		avatarForegroundStyle: getStyleFromHexShade(
+			accentHex,
+			"950",
+			"color",
+			options,
+		),
+	} as const;
+};
 
 // compatibility exports
 export function getStyleFromHex(
@@ -662,7 +679,7 @@ export function getAccentColorClass(_hex: string): string {
 	return "";
 }
 
-export function getUserAccentStyles(hex: string) {
+export function getUserAccentStyles(hex: string | null | undefined) {
 	return getUserAccentStylesFromHex(hex);
 }
 

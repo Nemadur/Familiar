@@ -1,26 +1,31 @@
-import { Suspense } from "react";
-import { useSuspenseUser } from "@/hooks/use-user";
-import { useAuth } from "@/providers/auth";
+import { useUserByUsername } from "@/hooks/use-user";
 import type { ProfileWrapperProps } from "@/types/user/wrapper";
 import { EmptyPage } from "../empty-page";
-import UserProfile from "./profile";
+import UserProfile, { UserProfileSkeleton } from "./profile";
 
 function UserProfileWrapper({
 	username,
-	folderId,
-	initialTab,
 	activeTab,
 	onTabChange,
 	children,
 }: ProfileWrapperProps) {
-	const { data } = useSuspenseUser(username);
+	const { user, error, isPending } = useUserByUsername(username);
 
-	if (!data) {
+	// FIXME: profile skeleton showing for every page (first we should check if ${username} exists in db than return skeletion based on this info)
+	if (isPending && !user) {
+		return <UserProfileSkeleton />;
+	}
+
+	if (error) {
+		return <EmptyPage title={`Error loading user "${username}"`} />;
+	}
+
+	if (!user) {
 		return <EmptyPage title={`User "${username}" not found`} />;
 	}
 
 	return (
-		<UserProfile user={data} activeTab={activeTab} onTabChange={onTabChange}>
+		<UserProfile user={user} activeTab={activeTab} onTabChange={onTabChange}>
 			{children}
 		</UserProfile>
 	);

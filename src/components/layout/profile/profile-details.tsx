@@ -1,3 +1,4 @@
+import type { User } from "@supabase/supabase-js";
 import type * as React from "react";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import { userJoinDate, userLocalTime } from "@/lib/profile";
 import { cn, numberFormat } from "@/lib/utils";
-import type { User, UserSummary } from "@/types/user";
+import type { TUserProfile } from "@/types/user";
 import type { UserBadge } from "@/types/user/badge";
 import { ProfileBio } from "./bio";
 import { getSocialIcon } from "./socials";
@@ -46,8 +47,8 @@ export const BADGE_ICONS: Record<string, React.ElementType> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-export function getUserBadges(user: User | UserSummary): UserBadge[] {
-	return (user.badges ?? []).map((badge) => ({
+export function getUserBadges(user: TUserProfile): UserBadge[] {
+	return (user?.badges ?? []).map((badge) => ({
 		uuid: badge.uuid,
 		label: badge.label,
 		description: badge.description,
@@ -75,7 +76,7 @@ export function BadgeIcon({
 	className?: string;
 	fontSize?: string;
 }) {
-	const Icon = BADGE_ICONS[badge.icon];
+	const Icon = BADGE_ICONS[badge.icon as keyof typeof BADGE_ICONS];
 	if (!Icon) return null;
 	return <Icon className={cn(className)} style={{ color: badge.color }} />;
 }
@@ -85,11 +86,11 @@ export function BadgeTooltipContent({ badge }: { badge: UserBadge }) {
 		<div className="flex flex-col gap-1.5">
 			<div className="flex items-center gap-1">
 				<BadgeIcon badge={badge} className="size-[1.5em]" />
-				<span className="font-semibold">{badge.label}</span>
+				<span className="font-semibold">{badge?.label}</span>
 			</div>
-			{badge.description && (
+			{badge?.description && (
 				<p className="leading-snug text-muted-foreground">
-					{badge.description}
+					{badge?.description}
 				</p>
 			)}
 		</div>
@@ -101,25 +102,25 @@ export function BadgeTooltipContent({ badge }: { badge: UserBadge }) {
 export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 	user,
 }: {
-	user: User | UserSummary;
+	user: TUserProfile;
 }) {
 	const badges = getUserBadges(user);
-	const joinDate = userJoinDate({ createdAt: (user as User).created_at });
-	const localTime = userLocalTime({ timeZone: (user as User).timezone });
+	const joinDate = userJoinDate({ createdAt: user?.createdAt });
+	const localTime = userLocalTime({ timeZone: user?.timezone });
 	const { t } = useTranslation();
 
 	const stats = [
 		{
 			label: t("components.profile.details.stats.followers"),
-			value: (user as User).followers_count,
+			value: user?.stats?.followersCount ?? 0,
 		},
 		{
 			label: t("components.profile.details.stats.following"),
-			value: (user as User).following_count,
+			value: user?.stats?.followingCount ?? 0,
 		},
 		{
 			label: t("components.profile.details.stats.works"),
-			value: (user as User).works_count,
+			value: user?.stats?.worksCount ?? 0,
 		},
 	];
 
@@ -127,14 +128,14 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 		<DialogContent className="max-w-sm! p-4 gap-3 border-border rounded-2xl">
 			<DialogHeader>
 				<DialogTitle className="text-base leading-4 font-semibold tracking-tight">
-					{user.display_name}
+					{user?.displayName || user?.username}
 				</DialogTitle>
 				<div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-					<span>@{user.username}</span>
-					{(user as User).pronouns && (
+					<span>@{user?.username}</span>
+					{user?.pronouns && (
 						<>
 							<span>·</span>
-							<span>{(user as User).pronouns}</span>
+							<span>{user?.pronouns}</span>
 						</>
 					)}
 				</div>
@@ -162,14 +163,14 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 				<div className="grid grid-cols-3 gap-1 mb-4">
 					{stats.map((stat) => (
 						<div
-							key={stat.label}
+							key={stat?.label}
 							className="flex flex-col bg-muted text-muted-foreground items-center px-2 py-3 rounded-xl"
 						>
 							<span className="text-sm font-semibold text-foreground">
-								{numberFormat(stat.value)}
+								{numberFormat(stat?.value ?? 0)}
 							</span>
 							<span className="text-[10px] text-muted-foreground">
-								{stat.label}
+								{stat?.label}
 							</span>
 						</div>
 					))}
@@ -179,12 +180,12 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 					<TooltipProvider>
 						<div className="grid grid-cols-4 gap-1 mb-4">
 							{badges.map((badge) => (
-								<Tooltip key={badge.uuid}>
+								<Tooltip key={badge?.uuid}>
 									<TooltipTrigger asChild>
 										<div className="flex aspect-square cursor-default flex-col items-center justify-center gap-1.5 rounded-xl bg-muted text-muted-foreground transition-colors hover:bg-muted/90">
 											<BadgeIcon badge={badge} className="size-5" />
 											<span className="line-clamp-1 text-center text-[10px] font-medium text-muted-foreground leading-tight px-1">
-												{badge.label}
+												{badge?.label}
 											</span>
 										</div>
 									</TooltipTrigger>
@@ -199,23 +200,23 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 			</div>
 
 			{/* Bio */}
-			{(user as User).bio && (
+			{user?.bio && (
 				<div className="mb-4">
 					<SectionLabel>{t("components.profile.details.bio")}</SectionLabel>
 					<div className="line-clamp-10 text-primary/80 leading-relaxed">
-						<ProfileBio user={user as User} className="text-xs" />
+						<ProfileBio user={user} className="text-xs" />
 					</div>
 				</div>
 			)}
 
 			{/* Languages */}
-			{user.spoken_languages && user.spoken_languages.length > 0 && (
+			{user?.spokenLanguages && user?.spokenLanguages.length > 0 && (
 				<div className="mb-4">
 					<SectionLabel>
 						{t("components.profile.details.languages")}
 					</SectionLabel>
 					<div className="flex flex-col gap-0.5">
-						{user.spoken_languages.map((lang) => (
+						{user.spokenLanguages.map((lang) => (
 							<SpokenLanguageRow key={lang.locale} language={lang} />
 						))}
 					</div>
@@ -223,23 +224,27 @@ export const ProfileDetailsContent = memo(function ProfileDetailsContent({
 			)}
 
 			{/* Social links */}
-			{user.social_links && user.social_links.length > 0 && (
+			{user?.socialLinks && user?.socialLinks.length > 0 && (
 				<>
 					<Separator />
 					<div className="flex flex-col gap-1">
-						{user.social_links.map((link) => {
+						{user?.socialLinks.map((link) => {
 							const Icon = getSocialIcon(link.url);
 							return (
 								<Button
 									asChild
-									key={link.url}
+									key={link?.url}
 									variant={"ghost"}
 									className="w-fit"
 									size={"sm"}
 								>
-									<a href={link.url} target="_blank" rel="noopener noreferrer">
+									<a
+										href={link?.url || ""}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
 										<Icon />
-										{link.label}
+										{link?.label}
 									</a>
 								</Button>
 							);

@@ -46,7 +46,7 @@ export function UniversalModalLayout({
 	mediaContent,
 	detailsContent,
 	title = "Details",
-	showBookmark = true,
+	showBookmark = false,
 	isBookmarked = false,
 	onBookmark,
 	mediaClassName,
@@ -135,43 +135,6 @@ export function UniversalModalLayout({
 				<DialogDescription className="sr-only">View details</DialogDescription>
 
 				<div className="flex flex-col lg:flex-row h-full w-full lg:overflow-hidden overflow-y-auto">
-					{/* Mobile/Tablet Header (Above Images) */}
-					{/* <div className="sticky top-0 z-50 flex shrink-0 items-center justify-between border-b bg-background px-4 py-2 lg:hidden">
-						<div className="flex items-center gap-2">
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => onOpenChange(false)}
-							>
-								<OutlineClose />
-							</Button>
-						</div>
-						<div className="flex items-center gap-2">
-							{showBookmark && (
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={handleBookmarkClick}
-									className={cn(
-										"relative bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
-										bookmarked
-											? "text-yellow-500 drop-shadow-[0_1px_10px_rgba(234,179,8,0.75)] bg-yellow-500/20 before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
-											: "text-primary hover:before:bg-primary/10 before:bg-primary/6",
-									)}
-								>
-									{bookmarked ? (
-										<SolidBookmark className="text-yellow-500" />
-									) : (
-										<OutlineBookmark />
-									)}
-								</Button>
-							)}
-							<Button variant="ghost" size="icon">
-								<OutlineMore />
-							</Button>
-						</div>
-					</div> */}
-
 					{/* Left Column: Media */}
 					<div
 						className={cn(
@@ -187,46 +150,33 @@ export function UniversalModalLayout({
 					{/* Right Column: Details */}
 					<div className="w-full lg:w-[40%] flex flex-col bg-background lg:border-l lg:h-full shrink-0">
 						{/* Header Actions */}
-						<div className="sticky top-0 z-20 hidden lg:flex shrink-0 items-center justify-between border-b bg-background px-6 py-4">
-							<div className="flex items-center gap-2 text-muted-foreground text-sm">
-								<Button
-									variant="ghost"
-									size="icon"
-									className="hidden lg:flex"
-									onClick={() => onOpenChange(false)}
-								>
-									<OutlineClose />
-								</Button>
-							</div>
+						<div className="sticky top-0 z-20 hidden lg:flex shrink-0 items-center justify-end gap-2 border-b bg-background p-4">
 							{showBookmark && (
-								<>
-									{/* Desktop Bookmark (Fancy) */}
-									<Button
-										size={"icon"}
-										className={cn(
-											"absolute right-16 top-4 z-0 hidden shrink-0 bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
-											bookmarked
-												? "text-yellow-500 drop-shadow-[0_0px_10px_rgba(137,75,0)] dark:drop-shadow-[0_0px_10px_rgba(255,240,133)] before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
-												: "text-primary hover:before:bg-primary/10 before:bg-primary/6",
-										)}
-										onClick={handleBookmarkClick}
-									>
-										{bookmarked ? (
-											<SolidBookmark className=" text-yellow-800 dark:text-yellow-200" />
-										) : (
-											<OutlineBookmark />
-										)}
-									</Button>
-								</>
+								<Button
+									size={"icon"}
+									className={cn(
+										"relative z-0 hidden shrink-0 bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
+										bookmarked
+											? "text-yellow-500 drop-shadow-[0_0px_10px_rgba(137,75,0)] dark:drop-shadow-[0_0px_10px_rgba(255,240,133)] before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
+											: "text-primary hover:before:bg-primary/10 before:bg-primary/6",
+									)}
+									onClick={handleBookmarkClick}
+								>
+									{bookmarked ? (
+										<SolidBookmark className=" text-yellow-800 dark:text-yellow-200" />
+									) : (
+										<OutlineBookmark />
+									)}
+								</Button>
 							)}
-							<div className="flex items-center gap-2">
+							<div className="flex items-center flex-1 w-full justify-end gap-2">
 								{showBookmark && (
 									/* Mobile/Tablet Bookmark (Standard) */
 									<Button
 										variant="ghost"
 										size="icon"
-										className="lg:hidden"
 										onClick={handleBookmarkClick}
+										className="lg:hidden"
 									>
 										{bookmarked ? (
 											<SolidBookmark className="text-yellow-500" />
@@ -237,6 +187,14 @@ export function UniversalModalLayout({
 								)}
 								<Button variant="ghost" size="icon">
 									<OutlineMore />
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="hidden lg:flex"
+									onClick={() => onOpenChange(false)}
+								>
+									<OutlineClose />
 								</Button>
 							</div>
 						</div>

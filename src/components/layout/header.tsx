@@ -8,12 +8,10 @@ import {
 	OutlineReceipt,
 	SolidFileText,
 	SolidHome,
-	SolidLogoText,
 	SolidReceipt,
 } from "@/components/icons/icons";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
-import { useTheme } from "@/providers/theme";
 import { Button } from "../ui/button";
 import {
 	Sheet,
@@ -23,6 +21,7 @@ import {
 	SheetTrigger,
 } from "../ui/sheet";
 import UserDropDown from "./profile/drop-down";
+import User from "./profile/User";
 import LanguageSelect from "./select/language";
 import ThemeToggle from "./select/theme-toggle";
 
@@ -55,16 +54,17 @@ export default function Header() {
 						<ThemeToggle />
 						<LanguageSelect />
 						{user ? (
-							<UserDropDown user={user} />
+							// <UserDropDown user={user} />
+							<User user={user} showInfo={false} isDropdown />
 						) : (
 							<div className="hidden lg:flex items-center gap-2">
-								<Button asChild variant={"secondary"}>
+								<Button asChild variant={"secondary"} size={"xl"}>
 									<Link to="/auth/login">
 										{/* <OutlineLogout /> */}
 										{t("auth.login.cta")}
 									</Link>
 								</Button>
-								<Button asChild>
+								<Button asChild size={"xl"}>
 									<Link to="/auth/register">
 										{/* <SolidUser /> */}
 										{t("auth.register.cta")}
@@ -114,10 +114,15 @@ const MobileNav = () => {
 							</div>
 						) : (
 							<div className="grid grid-cols-2 gap-3 px-2">
-								<Button asChild variant="secondary" className="w-full">
+								<Button
+									asChild
+									variant="secondary"
+									size={"xl"}
+									className="w-full"
+								>
 									<Link to="/auth/login">{t("auth.login.cta")}</Link>
 								</Button>
-								<Button asChild className="w-full">
+								<Button asChild className="w-full" size={"xl"}>
 									<Link to="/auth/register">{t("auth.register.cta")}</Link>
 								</Button>
 							</div>
@@ -129,7 +134,7 @@ const MobileNav = () => {
 	);
 };
 
-const NavLinks = memo(({ size = "default" }: { size?: "sm" | "default" }) => {
+const NavLinks = memo(() => {
 	const { t } = useTranslation();
 	const location = useLocation();
 	const pathname = location.pathname;
@@ -166,18 +171,13 @@ const NavLinks = memo(({ size = "default" }: { size?: "sm" | "default" }) => {
 				const isActive = pathname === link.path;
 				const icon = getIconState(link.path, isActive);
 				const isIconOnly = icon && !link.label;
-				const buttonSize = isIconOnly
-					? "icon"
-					: size === "sm"
-						? "sm"
-						: "default";
 
 				return (
 					<Button
 						asChild
 						key={link.path}
 						variant={isActive ? "default" : "ghost"}
-						size={buttonSize}
+						size={"xl"}
 						className={cn(!isIconOnly && "justify-start")}
 					>
 						<Link to={link.path}>

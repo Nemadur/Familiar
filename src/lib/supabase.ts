@@ -19,3 +19,30 @@ export const supabaseAdmin = supabaseServiceKey
 			auth: { autoRefreshToken: true },
 		})
 	: null;
+
+export async function getAccessToken() {
+	if (typeof window === "undefined") return null;
+
+	const {
+		data: { session },
+		error,
+	} = await supabase.auth.getSession();
+	if (error) throw error;
+	return session?.access_token ?? null;
+}
+
+export function getSupabaseStorageKey() {
+	try {
+		if (typeof window === "undefined" || !window.localStorage) return null;
+
+		const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+		if (!supabaseUrl) return null;
+
+		const hostname = new URL(supabaseUrl).hostname;
+		const projectId = hostname.split(".")[0];
+
+		return `sb-${projectId}-auth-token`;
+	} catch {
+		return null;
+	}
+}

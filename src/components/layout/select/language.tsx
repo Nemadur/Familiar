@@ -1,6 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineCheck, OutlineChevronRight } from "@/components/icons/icons";
+import {
+	OutlineCheck,
+	OutlineChevronDown,
+	OutlineChevronRight,
+} from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -25,40 +29,33 @@ function LanguageSelect() {
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button variant={"secondary"} role={"combobox"}>
+				<Button variant={"secondary"} role={"combobox"} size={"xl"}>
 					{i18n.language
 						? (() => {
 								const selectedLanguage = languages.find((language) =>
 									i18n.language.startsWith(language.value),
 								);
 								return selectedLanguage ? (
-									<span className={"flex items-center gap-2"}>
-										<span className={"text-lg leading-none"}>
-											{selectedLanguage.flag}
-										</span>
-										<span
-											className={"text-sm font-medium hidden sm:inline-block"}
-										>
+									<>
+										{/* TODO: replace with svg icons (twittermoji?) */}
+										<span className={"text-lg"}>{selectedLanguage.flag}</span>
+										<span className={"hidden sm:inline-block"}>
 											{selectedLanguage.label}
 										</span>
-									</span>
+									</>
 								) : (
 									t("components.language_switcher.select")
 								);
 							})()
 						: t("components.language_switcher.select")}
-					<OutlineChevronRight className={"rotate-90"} />
+					<OutlineChevronDown />
 				</Button>
 			</PopoverTrigger>
 			{/* CONTENT */}
 			<PopoverContent
+				align="end"
 				className={
 					"w-[200px] p-0 rounded-(--command-content-radius) overflow-hidden"
-				}
-				style={
-					{
-						"--command-content-radius": "1.25rem",
-					} as React.CSSProperties
 				}
 			>
 				<Command>

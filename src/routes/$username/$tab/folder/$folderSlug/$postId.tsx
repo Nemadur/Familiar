@@ -6,8 +6,8 @@ import {
 	mapPostToPostWithAuthor,
 } from "@/components/layout/profile/utils";
 import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
-import { useSuspenseUser } from "@/hooks/use-user";
-import type { User } from "@/types/user";
+import { useUserByUsername } from "@/hooks/use-user";
+import type { TUserProfile } from "@/types/user";
 
 export const Route = createFileRoute(
 	"/$username/$tab/folder/$folderSlug/$postId",
@@ -18,7 +18,7 @@ export const Route = createFileRoute(
 function RouteComponent() {
 	const { username, tab, folderSlug, postId } = Route.useParams();
 	const navigate = useNavigate();
-	const { data: user } = useSuspenseUser(username);
+	const { user } = useUserByUsername(username);
 
 	if (!user) {
 		return <div>User not found</div>;
@@ -42,28 +42,30 @@ function PostContent({
 	postId,
 	navigate,
 }: {
-	user: User;
+	user: TUserProfile;
 	tab: string;
 	folderSlug: string;
 	postId: string;
 	navigate: ReturnType<typeof useNavigate>;
 }) {
-	const { posts, categories } = useSuspenseProfileContent(
-		user.uuid,
-		"portfolio",
-	);
+	// TODO: fetch post from API
+	// const { posts, categories } = useSuspenseProfileContent(
+	// 	user.uuid,
+	// 	"portfolio",
+	// );
 
-	const portfolioPosts = useMemo(
-		() => [
-			...posts.map((post: any) => mapPostToPostWithAuthor(post, user)),
-			...(categories || [])
-				.flatMap((cat: any) => cat.items || [])
-				.map((comm: any) => mapCommissionToPostWithAuthor(comm, user)),
-		],
-		[posts, categories, user],
-	);
+	// const portfolioPosts = useMemo(
+	// 	() => [
+	// 		...posts.map((post: any) => mapPostToPostWithAuthor(post, user)),
+	// 		...(categories || [])
+	// 			.flatMap((cat: any) => cat.items || [])
+	// 			.map((comm: any) => mapCommissionToPostWithAuthor(comm, user)),
+	// 	],
+	// 	[posts, categories, user],
+	// );
 
-	const post = portfolioPosts.find((p) => p.id === postId);
+	// const post = portfolioPosts.find((p) => p.id === postId) || null;
+	const post = null;
 
 	if (!post) {
 		return <div>Post not found</div>;

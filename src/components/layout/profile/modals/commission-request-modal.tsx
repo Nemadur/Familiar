@@ -1,25 +1,29 @@
 import { ScrollShadow } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { Option } from "@/components/layout/commision/form-blocks";
 import { QuickMath } from "@/components/layout/commision/quick-math";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
+import { useCommission } from "@/hooks/use-commisions";
+import { useUserById } from "@/hooks/use-user";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
-import type { CommissionItem } from "@/types/commission";
-import type { User } from "@/types/user";
+import type { TCommission } from "@/types/commissions";
+import type { TUserResponse } from "@/types/user";
 import { CommissionRequestFields } from "./commission-request/fields";
 import { CommissionRequestFooter } from "./commission-request/footer";
 import { CommissionRequestHeader } from "./commission-request/header";
 import { CommissionRequestIntroBox } from "./commission-request/intro-box";
-import { formSchema, type FormValues } from "./commission-request/types";
+import { type FormValues, formSchema } from "./commission-request/types";
+
+// FIXME: OPTIMZE RERENDERING ISSUES
 
 interface CommissionRequestModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onBack: () => void;
-	item: CommissionItem;
-	artist: User;
+	commissionId: string;
 	initialLicenses?: string[];
 }
 
@@ -27,8 +31,7 @@ export function CommissionRequestModal({
 	open,
 	onOpenChange,
 	onBack,
-	item,
-	artist,
+	commissionId,
 	initialLicenses = ["personal"],
 }: CommissionRequestModalProps) {
 	const form = useForm<FormValues>({
@@ -54,9 +57,41 @@ export function CommissionRequestModal({
 	const { control, handleSubmit, watch } = form;
 	const watchedValues = watch();
 
+	// Fetch commission
+	const {
+		data: commission,
+		isPending: isCommissionPending,
+		error: commissionError,
+	} = useCommission(commissionId);
+
+	useEffect(() => {
+		if (commissionError) {
+			console.error(
+				"[CommissionRequestModal] Error fetching commission:",
+				commissionError,
+			);
+		}
+	}, [commissionError]);
+
+	// Fetch Commission Artist
+	const {
+		user: artist,
+		isPending: isArtistPending,
+		error: artistError,
+	} = useUserById(commission?.artistId);
+
+	useEffect(() => {
+		if (artistError) {
+			console.error(
+				"[CommissionRequestModal] Error fetching artist:",
+				artistError,
+			);
+		}
+	}, [artistError]);
+
 	const { basePrice, originalPrice } = calculateCommissionPricing(
-		item.price,
-		item.discountRate,
+		commission?.basePrice || 0,
+		commission?.discountRate || 0,
 	);
 
 	// Default options if not provided by the item
@@ -99,14 +134,24 @@ export function CommissionRequestModal({
 		{ id: "self", label: "Self-Provide" },
 	];
 
-	const licenseOptions = (item.licenseOptions || defaultLicenseOptions).map(
+	const licenseOptions = (
+		commission?.licenseOptions || defaultLicenseOptions
+	).map((opt) => ({
+		...opt,
+		disabled: opt.included !== undefined,
+	}));
+	const sharingOptions = (
+		commission?.sharingOptions || defaultSharingOptions
+	).map((opt) => ({
+		...opt,
+		disabled: opt.included !== undefined,
+	}));
+	const customOptions = (commission?.customOptions || demoCustomOptions).map(
 		(opt) => ({
 			...opt,
 			disabled: opt.included !== undefined,
 		}),
 	);
-	const sharingOptions = item.sharingOptions || defaultSharingOptions;
-	const customOptions = item.customOptions || demoCustomOptions;
 
 	const getOptionPrice = (option: Option) => {
 		if (option.price !== undefined) return option.price;
@@ -171,14 +216,14 @@ export function CommissionRequestModal({
 					>
 						<CommissionRequestHeader
 							onBack={onBack}
-							artistName={artist.display_name}
+							artistName={artist?.displayName || ""}
 						/>
 
 						<ScrollShadow className="flex-1 overflow-y-auto">
 							<div className="space-y-8 p-6">
 								<CommissionRequestIntroBox
-									artist={artist}
-									item={item}
+									artist={artist as TUserResponse}
+									commission={commission as TCommission}
 									basePrice={basePrice}
 									originalPrice={originalPrice}
 								/>
@@ -188,12 +233,12 @@ export function CommissionRequestModal({
 									licenseOptions={licenseOptions}
 									customOptions={customOptions}
 									sharingOptions={sharingOptions}
-									artistName={artist.display_name}
+									artistName={artist?.displayName || ""}
 								/>
 							</div>
 						</ScrollShadow>
 
-						<CommissionRequestFooter totalPrice={totalPrice} />
+						<CommissionRequestFooter onBack={onBack} totalPrice={totalPrice} />
 					</form>
 					<QuickMath
 						basePrice={basePrice}

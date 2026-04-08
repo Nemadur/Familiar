@@ -13,6 +13,8 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "src/components/ui/popover";
+import { OutlineCheck } from "@/components/icons/icons";
+import { cn } from "@/lib/utils";
 import {
 	dateFilterOperators,
 	filterTypeOperatorDetails,
@@ -55,7 +57,8 @@ export function FilterOperator<TData, TType extends ColumnDataType>({
 			<PopoverTrigger asChild>
 				<Button
 					variant="ghost"
-					className="m-0 h-full w-fit whitespace-nowrap rounded-none p-0 px-2.5 text-xs"
+					size={"xl"}
+					className="whitespace-nowrap rounded-none hover:text-foreground text-xs"
 				>
 					<FilterOperatorDisplay
 						filter={filter}
@@ -114,6 +117,7 @@ interface FilterOperatorControllerProps<TData, TType extends ColumnDataType> {
 /*
  *
  * TODO: Reduce into a single component. Each data type does not need it's own controller.
+ * TODO: make controler selector show check for selected operator
  *
  */
 export function FilterOperatorController<TData, TType extends ColumnDataType>({
@@ -200,13 +204,22 @@ function FilterOperatorOptionController<TData>({
 	return (
 		<CommandGroup heading={t("operators", locale)}>
 			{relatedFilters.map((r) => {
+				const isActive = filter.operator === r.value;
+
 				return (
 					<CommandItem
-						onSelect={() => changeOperator(r.value)}
-						value={r.value}
 						key={r.value}
+						value={r.value}
+						onSelect={changeOperator}
+						className="flex items-center justify-between"
 					>
-						{t(r.key, locale)}
+						<span>{t(r.key, locale)}</span>
+						<OutlineCheck
+							className={cn(
+								"size-4 text-primary transition-opacity",
+								isActive ? "opacity-100" : "opacity-0",
+							)}
+						/>
 					</CommandItem>
 				);
 			})}
@@ -239,11 +252,7 @@ function FilterOperatorMultiOptionController<TData>({
 		<CommandGroup heading={t("operators", locale)}>
 			{relatedFilters.map((r) => {
 				return (
-					<CommandItem
-						onSelect={() => changeOperator(r.value)}
-						value={r.value}
-						key={r.value}
-					>
+					<CommandItem onSelect={changeOperator} value={r.value} key={r.value}>
 						{t(r.key, locale)}
 					</CommandItem>
 				);
@@ -274,11 +283,7 @@ function FilterOperatorDateController<TData>({
 		<CommandGroup>
 			{relatedFilters.map((r) => {
 				return (
-					<CommandItem
-						onSelect={() => changeOperator(r.value)}
-						value={r.value}
-						key={r.value}
-					>
+					<CommandItem onSelect={changeOperator} value={r.value} key={r.value}>
 						{t(r.key, locale)}
 					</CommandItem>
 				);
@@ -309,11 +314,7 @@ export function FilterOperatorTextController<TData>({
 		<CommandGroup heading={t("operators", locale)}>
 			{relatedFilters.map((r) => {
 				return (
-					<CommandItem
-						onSelect={() => changeOperator(r.value)}
-						value={r.value}
-						key={r.value}
-					>
+					<CommandItem onSelect={changeOperator} value={r.value} key={r.value}>
 						{t(r.key, locale)}
 					</CommandItem>
 				);
@@ -329,8 +330,6 @@ function FilterOperatorNumberController<TData>({
 	closeController,
 	locale = "en",
 }: FilterOperatorControllerProps<TData, "number">) {
-	if (!filter) return null;
-
 	const filterDetails = numberFilterOperators[filter.operator];
 
 	const relatedFilters = Object.values(numberFilterOperators).filter(
@@ -343,9 +342,9 @@ function FilterOperatorNumberController<TData>({
 	};
 
 	return (
-		<CommandGroup heading={t("operators", locale)}>
-			{relatedFilters.map((r) => {
-				return (
+		<div>
+			<CommandGroup heading={t("operators", locale)}>
+				{relatedFilters.map((r) => (
 					<CommandItem
 						onSelect={() => changeOperator(r.value)}
 						value={r.value}
@@ -353,8 +352,8 @@ function FilterOperatorNumberController<TData>({
 					>
 						{t(r.key, locale)}
 					</CommandItem>
-				);
-			})}
-		</CommandGroup>
+				))}
+			</CommandGroup>
+		</div>
 	);
 }

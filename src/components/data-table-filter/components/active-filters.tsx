@@ -74,7 +74,8 @@ export function ActiveFilter<TData, TType extends ColumnDataType>({
 	locale = "en",
 }: ActiveFilterProps<TData, TType>) {
 	return (
-		<div className="flex h-10 items-center rounded-2xl border border-border bg-background shadow-xs text-xs">
+		// TODO: try make h based on prop size (xs, sm, lg)
+		<div className="flex h-10 items-center rounded-full border border-border bg-background text-xs">
 			<FilterSubject column={column} />
 			<Separator orientation="vertical" />
 			<FilterOperator
@@ -94,10 +95,11 @@ export function ActiveFilter<TData, TType extends ColumnDataType>({
 			<Separator orientation="vertical" />
 			<Button
 				variant="ghost"
-				className="rounded-none rounded-r-2xl text-xs w-10 h-full"
+				className="rounded-l-none! hover:text-foreground"
+				size={"icon-xl"}
 				onClick={() => actions.removeFilter(filter.columnId)}
 			>
-				<OutlineClose className="-translate-x-0.5" />
+				<OutlineClose className="size-4 -translate-x-0.5" />
 			</Button>
 		</div>
 	);

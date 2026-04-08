@@ -222,7 +222,7 @@ export const ReelItem = ({ className, ...props }: ReelItemProps) => (
 
 export type ReelVideoProps = VideoHTMLAttributes<HTMLVideoElement>;
 
-const MS_TO_SECONDS = 1000;
+const MS_TO_SECONDS = 3000;
 const PERCENTAGE = 100;
 
 export const ReelVideo = ({ className, ...props }: ReelVideoProps) => {

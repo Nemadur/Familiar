@@ -1,6 +1,10 @@
-import { DialogDescription, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { OutlineArrowLeft, OutlineClose } from "@/components/icons/icons";
+import { Button } from "@/components/ui/button";
+import {
+	DialogClose,
+	DialogDescription,
+	DialogTitle,
+} from "@/components/ui/dialog";
 
 interface CommissionRequestHeaderProps {
 	onBack: () => void;
@@ -12,15 +16,9 @@ export function CommissionRequestHeader({
 	artistName,
 }: CommissionRequestHeaderProps) {
 	return (
-		<div className="z-20 flex shrink-0 items-center justify-between border-b bg-background px-6 py-4">
+		<div className="z-20 flex shrink-0 items-center justify-between border-b bg-background p-4">
 			<div className="flex items-center gap-2">
-				<Button
-					variant="ghost"
-					size="icon"
-					className="-ml-2"
-					onClick={onBack}
-					type="button"
-				>
+				<Button variant="ghost" size="icon" onClick={onBack} type="button">
 					<OutlineArrowLeft />
 				</Button>
 				<DialogTitle>Commission Request</DialogTitle>
