@@ -16,3 +16,5 @@ todos.json
 .heroui-docs/
 /.agents
 skills-lock.json
+boneyard.config.json
+src/api/api-docs.json

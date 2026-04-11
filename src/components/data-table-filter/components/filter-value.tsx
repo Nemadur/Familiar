@@ -1,5 +1,5 @@
 import { format, isEqual } from "date-fns";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, ChevronRight, ChevronLeft } from "lucide-react";
 import {
 	cloneElement,
 	isValidElement,
@@ -421,30 +421,39 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 }
 
 interface OptionItemProps {
-	option: ColumnOptionExtended & { initialSelected: boolean };
+	option: ColumnOptionExtended & { initialSelected: boolean; isFolder?: boolean };
 	onToggle: (value: string, checked: boolean) => void;
+	onFolderClick?: (id: string) => void;
 }
 
 const OptionItem = memo(function OptionItem({
 	option,
 	onToggle,
+	onFolderClick,
 }: OptionItemProps) {
-	const { value, label, icon: Icon, selected, count } = option;
+	const { value, label, icon: Icon, selected, count, isFolder, id } = option;
+	
 	const handleSelect = useCallback(() => {
-		onToggle(value, !selected);
-	}, [onToggle, value, selected]);
+		if (isFolder && onFolderClick && id) {
+			onFolderClick(id);
+		} else {
+			onToggle(value, !selected);
+		}
+	}, [onToggle, value, selected, isFolder, onFolderClick, id]);
 
 	return (
 		<CommandItem
-			key={value}
+			key={value || id}
 			onSelect={handleSelect}
-			className="group flex items-center justify-between gap-1.5"
+			className="group flex items-center justify-between gap-1.5 cursor-pointer"
 		>
 			<div className="flex items-center gap-1.5">
-				<Checkbox
-					checked={selected}
-					className="opacity-0 border-primary/12 data-[state=checked]:opacity-100 group-data-[selected=true]:opacity-100 mr-1"
-				/>
+				{!isFolder && (
+					<Checkbox
+						checked={selected}
+						className="opacity-0 border-primary/12 data-[state=checked]:opacity-100 group-data-[selected=true]:opacity-100 mr-1"
+					/>
+				)}
 				{Icon &&
 					(isValidElement(Icon) ? (
 						Icon
@@ -453,17 +462,22 @@ const OptionItem = memo(function OptionItem({
 					))}
 				<span>
 					{label}
-					<sup
-						className={cn(
-							count == null && "hidden",
-							"ml-0.5 tabular-nums tracking-tight text-muted-foreground",
-							count === 0 && "slashed-zero",
-						)}
-					>
-						{typeof count === "number" ? (count < 100 ? count : "100+") : ""}
-					</sup>
+					{!isFolder && (
+						<sup
+							className={cn(
+								count == null && "hidden",
+								"ml-0.5 tabular-nums tracking-tight text-muted-foreground",
+								count === 0 && "slashed-zero",
+							)}
+						>
+							{typeof count === "number" ? (count < 100 ? count : "100+") : ""}
+						</sup>
+					)}
 				</span>
 			</div>
+			{isFolder && (
+				<ChevronRight className="size-4 ml-auto text-muted-foreground" />
+			)}
 		</CommandItem>
 	);
 });
@@ -474,6 +488,8 @@ export function FilterValueOptionController<TData>({
 	actions,
 	locale = "en",
 }: FilterValueControllerProps<TData, "option">) {
+	const [activeFolder, setActiveFolder] = useState<string | null>(null);
+
 	const initialOptions = useMemo(() => {
 		const counts = column.getFacetedUniqueValues();
 		return column.getOptions().map((o) => ({
@@ -504,21 +520,76 @@ export function FilterValueOptionController<TData>({
 		[actions, column],
 	);
 
-	const { selectedOptions, unselectedOptions } = useMemo(() => {
-		const sel: typeof options = [];
-		const unsel: typeof options = [];
+	const { folders, visibleOptions } = useMemo(() => {
+		const f: typeof options = [];
+		const v: typeof options = [];
+		
+		const foldersMap = new Map<string, string>();
+		
 		for (const o of options) {
+			if (o.parentId) {
+				if (!foldersMap.has(o.parentId)) {
+					foldersMap.set(o.parentId, o.parentId);
+					f.push({
+						...o,
+						id: o.parentId,
+						label: o.parentId,
+						value: "",
+						isFolder: true,
+					});
+				}
+				
+				if (activeFolder === o.parentId) {
+					v.push(o);
+				}
+			} else if (!activeFolder) {
+				v.push(o);
+			}
+		}
+		
+		return { folders: activeFolder ? [] : f, visibleOptions: v };
+	}, [options, activeFolder]);
+
+	const { selectedOptions, unselectedOptions } = useMemo(() => {
+		const sel: typeof visibleOptions = [];
+		const unsel: typeof visibleOptions = [];
+		for (const o of visibleOptions) {
 			if (o.initialSelected) sel.push(o);
 			else unsel.push(o);
 		}
 		return { selectedOptions: sel, unselectedOptions: unsel };
-	}, [options]);
+	}, [visibleOptions]);
 
 	return (
 		<Command loop>
 			<CommandInput autoFocus placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
 			<CommandList className="max-h-fit">
+				{/* {activeFolder && (
+					<>
+					<CommandGroup>
+						<CommandItem
+							onSelect={() => setActiveFolder(null)}
+							className="cursor-pointer text-muted-foreground font-medium"
+						>
+							<ChevronLeft className="size-4 mr-2" />
+							{t("back", locale) || "Back"}
+						</CommandItem>
+					</CommandGroup>
+					<CommandSeparator className="my-1" />
+					</>
+				)} */}
+				<CommandGroup className={cn(folders.length === 0 && "hidden")}>
+					{folders.map((folder) => (
+						<OptionItem
+							key={`folder-${folder.id}`}
+							option={folder}
+							onToggle={handleToggle}
+							onFolderClick={setActiveFolder}
+						/>
+					))}
+				</CommandGroup>
+				{folders.length > 0 && selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem
@@ -551,6 +622,8 @@ export function FilterValueMultiOptionController<TData>({
 	actions,
 	locale = "en",
 }: FilterValueControllerProps<TData, "multiOption">) {
+	const [activeFolder, setActiveFolder] = useState<string | null>(null);
+
 	const initialOptions = useMemo(() => {
 		const counts = column.getFacetedUniqueValues();
 		return column.getOptions().map((o) => {
@@ -584,21 +657,73 @@ export function FilterValueMultiOptionController<TData>({
 		[actions, column],
 	);
 
-	const { selectedOptions, unselectedOptions } = useMemo(() => {
-		const sel: typeof options = [];
-		const unsel: typeof options = [];
+	const { folders, visibleOptions } = useMemo(() => {
+		const f: typeof options = [];
+		const v: typeof options = [];
+		
+		const foldersMap = new Map<string, string>();
+		
 		for (const o of options) {
+			if (o.parentId) {
+				if (!foldersMap.has(o.parentId)) {
+					foldersMap.set(o.parentId, o.parentId);
+					f.push({
+						...o,
+						id: o.parentId,
+						label: o.parentId,
+						value: "",
+						isFolder: true,
+					});
+				}
+				
+				if (activeFolder === o.parentId) {
+					v.push(o);
+				}
+			} else if (!activeFolder) {
+				v.push(o);
+			}
+		}
+		
+		return { folders: activeFolder ? [] : f, visibleOptions: v };
+	}, [options, activeFolder]);
+
+	const { selectedOptions, unselectedOptions } = useMemo(() => {
+		const sel: typeof visibleOptions = [];
+		const unsel: typeof visibleOptions = [];
+		for (const o of visibleOptions) {
 			if (o.initialSelected) sel.push(o);
 			else unsel.push(o);
 		}
 		return { selectedOptions: sel, unselectedOptions: unsel };
-	}, [options]);
+	}, [visibleOptions]);
 
 	return (
 		<Command loop>
 			<CommandInput autoFocus placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-			<CommandList>
+			<CommandList className="max-h-[300px]">
+				{activeFolder && (
+					<CommandGroup>
+						<CommandItem
+							onSelect={() => setActiveFolder(null)}
+							className="cursor-pointer text-muted-foreground font-medium"
+						>
+							<ChevronLeft className="size-4 mr-2" />
+							{t("back", locale) || "Back"}
+						</CommandItem>
+					</CommandGroup>
+				)}
+				<CommandGroup className={cn(folders.length === 0 && "hidden")}>
+					{folders.map((folder) => (
+						<OptionItem
+							key={`folder-${folder.id}`}
+							option={folder}
+							onToggle={handleToggle}
+							onFolderClick={setActiveFolder}
+						/>
+					))}
+				</CommandGroup>
+				{folders.length > 0 && selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem

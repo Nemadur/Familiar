@@ -27,9 +27,9 @@ import type {
 	AuthModalProps,
 	AuthTab,
 } from "@/types/auth/modal";
-import ForgotForm from "./form/forgot";
-import LoginForm from "./form/login";
-import RegisterForm from "./form/register";
+// import ForgotForm from "./form/forgot";
+// import LoginForm from "./form/login";
+// import RegisterForm from "./form/register";
 
 function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 	const { t } = useTranslation();

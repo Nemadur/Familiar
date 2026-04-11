@@ -9,155 +9,180 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UsersRouteImport } from './routes/users'
-import { Route as MyRequestsRouteImport } from './routes/my-requests'
-import { Route as LogoutRouteImport } from './routes/logout'
-import { Route as UsernameRouteImport } from './routes/$username'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as MyRequestsRequestIdRouteImport } from './routes/my-requests/$requestId'
-import { Route as UsernameTabRouteImport } from './routes/$username/$tab'
-import { Route as AuthRegisterIndexRouteImport } from './routes/auth/register/index'
-import { Route as AuthLoginIndexRouteImport } from './routes/auth/login/index'
-import { Route as AuthForgotIndexRouteImport } from './routes/auth/forgot/index'
-import { Route as UsernameTabCommissionIdIndexRouteImport } from './routes/$username/$tab/$commissionId/index'
-import { Route as UsernameTabFolderFolderSlugIndexRouteImport } from './routes/$username/$tab/folder/$folderSlug/index'
-import { Route as UsernameTabFolderFolderSlugPostIdRouteImport } from './routes/$username/$tab/folder/$folderSlug/$postId'
-import { Route as UsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport } from './routes/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as MainRouteImport } from './routes/_main'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as MainIndexRouteImport } from './routes/_main.index'
+import { Route as DashboardCommissionsRouteImport } from './routes/dashboard/commissions'
+import { Route as MainUsersRouteImport } from './routes/_main.users'
+import { Route as MainMyRequestsRouteImport } from './routes/_main.my-requests'
+import { Route as MainLogoutRouteImport } from './routes/_main.logout'
+import { Route as MainUsernameRouteImport } from './routes/_main.$username'
+import { Route as MainUsernameTabRouteImport } from './routes/_main.$username/$tab'
+import { Route as MainAuthRegisterIndexRouteImport } from './routes/_main.auth/register/index'
+import { Route as MainAuthLoginIndexRouteImport } from './routes/_main.auth/login/index'
+import { Route as MainAuthForgotIndexRouteImport } from './routes/_main.auth/forgot/index'
+import { Route as MainUsernameTabCommissionIdIndexRouteImport } from './routes/_main.$username/$tab/$commissionId/index'
+import { Route as MainUsernameTabFolderFolderSlugIndexRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/index'
+import { Route as MainUsernameTabFolderFolderSlugPostIdRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/$postId'
+import { Route as MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
 
-const UsersRoute = UsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MyRequestsRoute = MyRequestsRouteImport.update({
-  id: '/my-requests',
-  path: '/my-requests',
+const MainRoute = MainRouteImport.update({
+  id: '/_main',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LogoutRoute = LogoutRouteImport.update({
-  id: '/logout',
-  path: '/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UsernameRoute = UsernameRouteImport.update({
-  id: '/$username',
-  path: '/$username',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => DashboardRoute,
 } as any)
-const MyRequestsRequestIdRoute = MyRequestsRequestIdRouteImport.update({
-  id: '/$requestId',
-  path: '/$requestId',
-  getParentRoute: () => MyRequestsRoute,
+const MainIndexRoute = MainIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MainRoute,
 } as any)
-const UsernameTabRoute = UsernameTabRouteImport.update({
+const DashboardCommissionsRoute = DashboardCommissionsRouteImport.update({
+  id: '/commissions',
+  path: '/commissions',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const MainUsersRoute = MainUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainMyRequestsRoute = MainMyRequestsRouteImport.update({
+  id: '/my-requests',
+  path: '/my-requests',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainLogoutRoute = MainLogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainUsernameRoute = MainUsernameRouteImport.update({
+  id: '/$username',
+  path: '/$username',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainUsernameTabRoute = MainUsernameTabRouteImport.update({
   id: '/$tab',
   path: '/$tab',
-  getParentRoute: () => UsernameRoute,
+  getParentRoute: () => MainUsernameRoute,
 } as any)
-const AuthRegisterIndexRoute = AuthRegisterIndexRouteImport.update({
+const MainAuthRegisterIndexRoute = MainAuthRegisterIndexRouteImport.update({
   id: '/auth/register/',
   path: '/auth/register/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => MainRoute,
 } as any)
-const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
+const MainAuthLoginIndexRoute = MainAuthLoginIndexRouteImport.update({
   id: '/auth/login/',
   path: '/auth/login/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => MainRoute,
 } as any)
-const AuthForgotIndexRoute = AuthForgotIndexRouteImport.update({
+const MainAuthForgotIndexRoute = MainAuthForgotIndexRouteImport.update({
   id: '/auth/forgot/',
   path: '/auth/forgot/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => MainRoute,
 } as any)
-const UsernameTabCommissionIdIndexRoute =
-  UsernameTabCommissionIdIndexRouteImport.update({
+const MainUsernameTabCommissionIdIndexRoute =
+  MainUsernameTabCommissionIdIndexRouteImport.update({
     id: '/$commissionId/',
     path: '/$commissionId/',
-    getParentRoute: () => UsernameTabRoute,
+    getParentRoute: () => MainUsernameTabRoute,
   } as any)
-const UsernameTabFolderFolderSlugIndexRoute =
-  UsernameTabFolderFolderSlugIndexRouteImport.update({
+const MainUsernameTabFolderFolderSlugIndexRoute =
+  MainUsernameTabFolderFolderSlugIndexRouteImport.update({
     id: '/folder/$folderSlug/',
     path: '/folder/$folderSlug/',
-    getParentRoute: () => UsernameTabRoute,
+    getParentRoute: () => MainUsernameTabRoute,
   } as any)
-const UsernameTabFolderFolderSlugPostIdRoute =
-  UsernameTabFolderFolderSlugPostIdRouteImport.update({
+const MainUsernameTabFolderFolderSlugPostIdRoute =
+  MainUsernameTabFolderFolderSlugPostIdRouteImport.update({
     id: '/folder/$folderSlug/$postId',
     path: '/folder/$folderSlug/$postId',
-    getParentRoute: () => UsernameTabRoute,
+    getParentRoute: () => MainUsernameTabRoute,
   } as any)
-const UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute =
-  UsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport.update({
+const MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute =
+  MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport.update({
     id: '/folder/$folderSlug/$subfolderSlug/$postId',
     path: '/folder/$folderSlug/$subfolderSlug/$postId',
-    getParentRoute: () => UsernameTabRoute,
+    getParentRoute: () => MainUsernameTabRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$username': typeof UsernameRouteWithChildren
-  '/logout': typeof LogoutRoute
-  '/my-requests': typeof MyRequestsRouteWithChildren
-  '/users': typeof UsersRoute
-  '/$username/$tab': typeof UsernameTabRouteWithChildren
-  '/my-requests/$requestId': typeof MyRequestsRequestIdRoute
-  '/auth/forgot/': typeof AuthForgotIndexRoute
-  '/auth/login/': typeof AuthLoginIndexRoute
-  '/auth/register/': typeof AuthRegisterIndexRoute
-  '/$username/$tab/$commissionId/': typeof UsernameTabCommissionIdIndexRoute
-  '/$username/$tab/folder/$folderSlug/$postId': typeof UsernameTabFolderFolderSlugPostIdRoute
-  '/$username/$tab/folder/$folderSlug/': typeof UsernameTabFolderFolderSlugIndexRoute
-  '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
+  '/': typeof MainIndexRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/$username': typeof MainUsernameRouteWithChildren
+  '/logout': typeof MainLogoutRoute
+  '/my-requests': typeof MainMyRequestsRoute
+  '/users': typeof MainUsersRoute
+  '/dashboard/commissions': typeof DashboardCommissionsRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/$username/$tab': typeof MainUsernameTabRouteWithChildren
+  '/auth/forgot/': typeof MainAuthForgotIndexRoute
+  '/auth/login/': typeof MainAuthLoginIndexRoute
+  '/auth/register/': typeof MainAuthRegisterIndexRoute
+  '/$username/$tab/$commissionId/': typeof MainUsernameTabCommissionIdIndexRoute
+  '/$username/$tab/folder/$folderSlug/$postId': typeof MainUsernameTabFolderFolderSlugPostIdRoute
+  '/$username/$tab/folder/$folderSlug/': typeof MainUsernameTabFolderFolderSlugIndexRoute
+  '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$username': typeof UsernameRouteWithChildren
-  '/logout': typeof LogoutRoute
-  '/my-requests': typeof MyRequestsRouteWithChildren
-  '/users': typeof UsersRoute
-  '/$username/$tab': typeof UsernameTabRouteWithChildren
-  '/my-requests/$requestId': typeof MyRequestsRequestIdRoute
-  '/auth/forgot': typeof AuthForgotIndexRoute
-  '/auth/login': typeof AuthLoginIndexRoute
-  '/auth/register': typeof AuthRegisterIndexRoute
-  '/$username/$tab/$commissionId': typeof UsernameTabCommissionIdIndexRoute
-  '/$username/$tab/folder/$folderSlug/$postId': typeof UsernameTabFolderFolderSlugPostIdRoute
-  '/$username/$tab/folder/$folderSlug': typeof UsernameTabFolderFolderSlugIndexRoute
-  '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
+  '/$username': typeof MainUsernameRouteWithChildren
+  '/logout': typeof MainLogoutRoute
+  '/my-requests': typeof MainMyRequestsRoute
+  '/users': typeof MainUsersRoute
+  '/dashboard/commissions': typeof DashboardCommissionsRoute
+  '/': typeof MainIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/$username/$tab': typeof MainUsernameTabRouteWithChildren
+  '/auth/forgot': typeof MainAuthForgotIndexRoute
+  '/auth/login': typeof MainAuthLoginIndexRoute
+  '/auth/register': typeof MainAuthRegisterIndexRoute
+  '/$username/$tab/$commissionId': typeof MainUsernameTabCommissionIdIndexRoute
+  '/$username/$tab/folder/$folderSlug/$postId': typeof MainUsernameTabFolderFolderSlugPostIdRoute
+  '/$username/$tab/folder/$folderSlug': typeof MainUsernameTabFolderFolderSlugIndexRoute
+  '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/$username': typeof UsernameRouteWithChildren
-  '/logout': typeof LogoutRoute
-  '/my-requests': typeof MyRequestsRouteWithChildren
-  '/users': typeof UsersRoute
-  '/$username/$tab': typeof UsernameTabRouteWithChildren
-  '/my-requests/$requestId': typeof MyRequestsRequestIdRoute
-  '/auth/forgot/': typeof AuthForgotIndexRoute
-  '/auth/login/': typeof AuthLoginIndexRoute
-  '/auth/register/': typeof AuthRegisterIndexRoute
-  '/$username/$tab/$commissionId/': typeof UsernameTabCommissionIdIndexRoute
-  '/$username/$tab/folder/$folderSlug/$postId': typeof UsernameTabFolderFolderSlugPostIdRoute
-  '/$username/$tab/folder/$folderSlug/': typeof UsernameTabFolderFolderSlugIndexRoute
-  '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
+  '/_main': typeof MainRouteWithChildren
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/_main/$username': typeof MainUsernameRouteWithChildren
+  '/_main/logout': typeof MainLogoutRoute
+  '/_main/my-requests': typeof MainMyRequestsRoute
+  '/_main/users': typeof MainUsersRoute
+  '/dashboard/commissions': typeof DashboardCommissionsRoute
+  '/_main/': typeof MainIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/_main/$username/$tab': typeof MainUsernameTabRouteWithChildren
+  '/_main/auth/forgot/': typeof MainAuthForgotIndexRoute
+  '/_main/auth/login/': typeof MainAuthLoginIndexRoute
+  '/_main/auth/register/': typeof MainAuthRegisterIndexRoute
+  '/_main/$username/$tab/$commissionId/': typeof MainUsernameTabCommissionIdIndexRoute
+  '/_main/$username/$tab/folder/$folderSlug/$postId': typeof MainUsernameTabFolderFolderSlugPostIdRoute
+  '/_main/$username/$tab/folder/$folderSlug/': typeof MainUsernameTabFolderFolderSlugIndexRoute
+  '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dashboard'
     | '/$username'
     | '/logout'
     | '/my-requests'
     | '/users'
+    | '/dashboard/commissions'
+    | '/dashboard/'
     | '/$username/$tab'
-    | '/my-requests/$requestId'
     | '/auth/forgot/'
     | '/auth/login/'
     | '/auth/register/'
@@ -167,13 +192,14 @@ export interface FileRouteTypes {
     | '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/$username'
     | '/logout'
     | '/my-requests'
     | '/users'
+    | '/dashboard/commissions'
+    | '/'
+    | '/dashboard'
     | '/$username/$tab'
-    | '/my-requests/$requestId'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -183,189 +209,228 @@ export interface FileRouteTypes {
     | '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
   id:
     | '__root__'
-    | '/'
-    | '/$username'
-    | '/logout'
-    | '/my-requests'
-    | '/users'
-    | '/$username/$tab'
-    | '/my-requests/$requestId'
-    | '/auth/forgot/'
-    | '/auth/login/'
-    | '/auth/register/'
-    | '/$username/$tab/$commissionId/'
-    | '/$username/$tab/folder/$folderSlug/$postId'
-    | '/$username/$tab/folder/$folderSlug/'
-    | '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
+    | '/_main'
+    | '/dashboard'
+    | '/_main/$username'
+    | '/_main/logout'
+    | '/_main/my-requests'
+    | '/_main/users'
+    | '/dashboard/commissions'
+    | '/_main/'
+    | '/dashboard/'
+    | '/_main/$username/$tab'
+    | '/_main/auth/forgot/'
+    | '/_main/auth/login/'
+    | '/_main/auth/register/'
+    | '/_main/$username/$tab/$commissionId/'
+    | '/_main/$username/$tab/folder/$folderSlug/$postId'
+    | '/_main/$username/$tab/folder/$folderSlug/'
+    | '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  UsernameRoute: typeof UsernameRouteWithChildren
-  LogoutRoute: typeof LogoutRoute
-  MyRequestsRoute: typeof MyRequestsRouteWithChildren
-  UsersRoute: typeof UsersRoute
-  AuthForgotIndexRoute: typeof AuthForgotIndexRoute
-  AuthLoginIndexRoute: typeof AuthLoginIndexRoute
-  AuthRegisterIndexRoute: typeof AuthRegisterIndexRoute
+  MainRoute: typeof MainRouteWithChildren
+  DashboardRoute: typeof DashboardRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/users': {
-      id: '/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof UsersRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/my-requests': {
-      id: '/my-requests'
-      path: '/my-requests'
-      fullPath: '/my-requests'
-      preLoaderRoute: typeof MyRequestsRouteImport
+    '/_main': {
+      id: '/_main'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof MainRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/logout': {
-      id: '/logout'
-      path: '/logout'
-      fullPath: '/logout'
-      preLoaderRoute: typeof LogoutRouteImport
-      parentRoute: typeof rootRouteImport
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
-    '/$username': {
-      id: '/$username'
-      path: '/$username'
-      fullPath: '/$username'
-      preLoaderRoute: typeof UsernameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/_main/': {
+      id: '/_main/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MainIndexRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/my-requests/$requestId': {
-      id: '/my-requests/$requestId'
-      path: '/$requestId'
-      fullPath: '/my-requests/$requestId'
-      preLoaderRoute: typeof MyRequestsRequestIdRouteImport
-      parentRoute: typeof MyRequestsRoute
+    '/dashboard/commissions': {
+      id: '/dashboard/commissions'
+      path: '/commissions'
+      fullPath: '/dashboard/commissions'
+      preLoaderRoute: typeof DashboardCommissionsRouteImport
+      parentRoute: typeof DashboardRoute
     }
-    '/$username/$tab': {
-      id: '/$username/$tab'
+    '/_main/users': {
+      id: '/_main/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof MainUsersRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/my-requests': {
+      id: '/_main/my-requests'
+      path: '/my-requests'
+      fullPath: '/my-requests'
+      preLoaderRoute: typeof MainMyRequestsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/logout': {
+      id: '/_main/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof MainLogoutRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/$username': {
+      id: '/_main/$username'
+      path: '/$username'
+      fullPath: '/$username'
+      preLoaderRoute: typeof MainUsernameRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/$username/$tab': {
+      id: '/_main/$username/$tab'
       path: '/$tab'
       fullPath: '/$username/$tab'
-      preLoaderRoute: typeof UsernameTabRouteImport
-      parentRoute: typeof UsernameRoute
+      preLoaderRoute: typeof MainUsernameTabRouteImport
+      parentRoute: typeof MainUsernameRoute
     }
-    '/auth/register/': {
-      id: '/auth/register/'
+    '/_main/auth/register/': {
+      id: '/_main/auth/register/'
       path: '/auth/register'
       fullPath: '/auth/register/'
-      preLoaderRoute: typeof AuthRegisterIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MainAuthRegisterIndexRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/auth/login/': {
-      id: '/auth/login/'
+    '/_main/auth/login/': {
+      id: '/_main/auth/login/'
       path: '/auth/login'
       fullPath: '/auth/login/'
-      preLoaderRoute: typeof AuthLoginIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MainAuthLoginIndexRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/auth/forgot/': {
-      id: '/auth/forgot/'
+    '/_main/auth/forgot/': {
+      id: '/_main/auth/forgot/'
       path: '/auth/forgot'
       fullPath: '/auth/forgot/'
-      preLoaderRoute: typeof AuthForgotIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MainAuthForgotIndexRouteImport
+      parentRoute: typeof MainRoute
     }
-    '/$username/$tab/$commissionId/': {
-      id: '/$username/$tab/$commissionId/'
+    '/_main/$username/$tab/$commissionId/': {
+      id: '/_main/$username/$tab/$commissionId/'
       path: '/$commissionId'
       fullPath: '/$username/$tab/$commissionId/'
-      preLoaderRoute: typeof UsernameTabCommissionIdIndexRouteImport
-      parentRoute: typeof UsernameTabRoute
+      preLoaderRoute: typeof MainUsernameTabCommissionIdIndexRouteImport
+      parentRoute: typeof MainUsernameTabRoute
     }
-    '/$username/$tab/folder/$folderSlug/': {
-      id: '/$username/$tab/folder/$folderSlug/'
+    '/_main/$username/$tab/folder/$folderSlug/': {
+      id: '/_main/$username/$tab/folder/$folderSlug/'
       path: '/folder/$folderSlug'
       fullPath: '/$username/$tab/folder/$folderSlug/'
-      preLoaderRoute: typeof UsernameTabFolderFolderSlugIndexRouteImport
-      parentRoute: typeof UsernameTabRoute
+      preLoaderRoute: typeof MainUsernameTabFolderFolderSlugIndexRouteImport
+      parentRoute: typeof MainUsernameTabRoute
     }
-    '/$username/$tab/folder/$folderSlug/$postId': {
-      id: '/$username/$tab/folder/$folderSlug/$postId'
+    '/_main/$username/$tab/folder/$folderSlug/$postId': {
+      id: '/_main/$username/$tab/folder/$folderSlug/$postId'
       path: '/folder/$folderSlug/$postId'
       fullPath: '/$username/$tab/folder/$folderSlug/$postId'
-      preLoaderRoute: typeof UsernameTabFolderFolderSlugPostIdRouteImport
-      parentRoute: typeof UsernameTabRoute
+      preLoaderRoute: typeof MainUsernameTabFolderFolderSlugPostIdRouteImport
+      parentRoute: typeof MainUsernameTabRoute
     }
-    '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': {
-      id: '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
+    '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': {
+      id: '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
       path: '/folder/$folderSlug/$subfolderSlug/$postId'
       fullPath: '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
-      preLoaderRoute: typeof UsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport
-      parentRoute: typeof UsernameTabRoute
+      preLoaderRoute: typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport
+      parentRoute: typeof MainUsernameTabRoute
     }
   }
 }
 
-interface UsernameTabRouteChildren {
-  UsernameTabCommissionIdIndexRoute: typeof UsernameTabCommissionIdIndexRoute
-  UsernameTabFolderFolderSlugPostIdRoute: typeof UsernameTabFolderFolderSlugPostIdRoute
-  UsernameTabFolderFolderSlugIndexRoute: typeof UsernameTabFolderFolderSlugIndexRoute
-  UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute: typeof UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
+interface MainUsernameTabRouteChildren {
+  MainUsernameTabCommissionIdIndexRoute: typeof MainUsernameTabCommissionIdIndexRoute
+  MainUsernameTabFolderFolderSlugPostIdRoute: typeof MainUsernameTabFolderFolderSlugPostIdRoute
+  MainUsernameTabFolderFolderSlugIndexRoute: typeof MainUsernameTabFolderFolderSlugIndexRoute
+  MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute: typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
 
-const UsernameTabRouteChildren: UsernameTabRouteChildren = {
-  UsernameTabCommissionIdIndexRoute: UsernameTabCommissionIdIndexRoute,
-  UsernameTabFolderFolderSlugPostIdRoute:
-    UsernameTabFolderFolderSlugPostIdRoute,
-  UsernameTabFolderFolderSlugIndexRoute: UsernameTabFolderFolderSlugIndexRoute,
-  UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute:
-    UsernameTabFolderFolderSlugSubfolderSlugPostIdRoute,
+const MainUsernameTabRouteChildren: MainUsernameTabRouteChildren = {
+  MainUsernameTabCommissionIdIndexRoute: MainUsernameTabCommissionIdIndexRoute,
+  MainUsernameTabFolderFolderSlugPostIdRoute:
+    MainUsernameTabFolderFolderSlugPostIdRoute,
+  MainUsernameTabFolderFolderSlugIndexRoute:
+    MainUsernameTabFolderFolderSlugIndexRoute,
+  MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute:
+    MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute,
 }
 
-const UsernameTabRouteWithChildren = UsernameTabRoute._addFileChildren(
-  UsernameTabRouteChildren,
+const MainUsernameTabRouteWithChildren = MainUsernameTabRoute._addFileChildren(
+  MainUsernameTabRouteChildren,
 )
 
-interface UsernameRouteChildren {
-  UsernameTabRoute: typeof UsernameTabRouteWithChildren
+interface MainUsernameRouteChildren {
+  MainUsernameTabRoute: typeof MainUsernameTabRouteWithChildren
 }
 
-const UsernameRouteChildren: UsernameRouteChildren = {
-  UsernameTabRoute: UsernameTabRouteWithChildren,
+const MainUsernameRouteChildren: MainUsernameRouteChildren = {
+  MainUsernameTabRoute: MainUsernameTabRouteWithChildren,
 }
 
-const UsernameRouteWithChildren = UsernameRoute._addFileChildren(
-  UsernameRouteChildren,
+const MainUsernameRouteWithChildren = MainUsernameRoute._addFileChildren(
+  MainUsernameRouteChildren,
 )
 
-interface MyRequestsRouteChildren {
-  MyRequestsRequestIdRoute: typeof MyRequestsRequestIdRoute
+interface MainRouteChildren {
+  MainUsernameRoute: typeof MainUsernameRouteWithChildren
+  MainLogoutRoute: typeof MainLogoutRoute
+  MainMyRequestsRoute: typeof MainMyRequestsRoute
+  MainUsersRoute: typeof MainUsersRoute
+  MainIndexRoute: typeof MainIndexRoute
+  MainAuthForgotIndexRoute: typeof MainAuthForgotIndexRoute
+  MainAuthLoginIndexRoute: typeof MainAuthLoginIndexRoute
+  MainAuthRegisterIndexRoute: typeof MainAuthRegisterIndexRoute
 }
 
-const MyRequestsRouteChildren: MyRequestsRouteChildren = {
-  MyRequestsRequestIdRoute: MyRequestsRequestIdRoute,
+const MainRouteChildren: MainRouteChildren = {
+  MainUsernameRoute: MainUsernameRouteWithChildren,
+  MainLogoutRoute: MainLogoutRoute,
+  MainMyRequestsRoute: MainMyRequestsRoute,
+  MainUsersRoute: MainUsersRoute,
+  MainIndexRoute: MainIndexRoute,
+  MainAuthForgotIndexRoute: MainAuthForgotIndexRoute,
+  MainAuthLoginIndexRoute: MainAuthLoginIndexRoute,
+  MainAuthRegisterIndexRoute: MainAuthRegisterIndexRoute,
 }
 
-const MyRequestsRouteWithChildren = MyRequestsRoute._addFileChildren(
-  MyRequestsRouteChildren,
+const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
+
+interface DashboardRouteChildren {
+  DashboardCommissionsRoute: typeof DashboardCommissionsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardCommissionsRoute: DashboardCommissionsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  UsernameRoute: UsernameRouteWithChildren,
-  LogoutRoute: LogoutRoute,
-  MyRequestsRoute: MyRequestsRouteWithChildren,
-  UsersRoute: UsersRoute,
-  AuthForgotIndexRoute: AuthForgotIndexRoute,
-  AuthLoginIndexRoute: AuthLoginIndexRoute,
-  AuthRegisterIndexRoute: AuthRegisterIndexRoute,
+  MainRoute: MainRouteWithChildren,
+  DashboardRoute: DashboardRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

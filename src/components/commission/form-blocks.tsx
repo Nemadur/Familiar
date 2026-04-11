@@ -1,4 +1,9 @@
-import { Control, FieldValues, Path, useFormContext } from "react-hook-form";
+import {
+	type Control,
+	type FieldValues,
+	type Path,
+	useFormContext,
+} from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	FormControl,
@@ -10,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
 
 export interface Option {
 	id: string;

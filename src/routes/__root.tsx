@@ -4,6 +4,8 @@ import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
+	useLocation,
+	Outlet,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Container } from "@/components/layout/container";
@@ -45,12 +47,20 @@ export const Route = createRootRouteWithContext<{
 	beforeLoad: async () => {
 		await setSSRLanguage();
 	},
-	shellComponent: RootDocument,
+	notFoundComponent: () => {
+		return (
+			<div className="flex flex-1 flex-col items-center justify-center p-8 text-center min-h-screen">
+				<h2 className="text-2xl font-bold mb-2">Page not found</h2>
+				<p className="text-muted-foreground">
+					The page you are looking for does not exist.
+				</p>
+			</div>
+		)
+	},
+	component: RootDocument,
 });
 
-function RootDocument({ children }: { children: React.ReactNode }) {
-	// const context = Route.useRouteContext();
-
+function RootDocument() {
 	return (
 		<html lang={i18n.language || "en"} suppressHydrationWarning>
 			<head>
@@ -65,19 +75,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<AbilityProvider>
 						<ThemeProvider>
 							<Toaster />
-							<div className={"flex min-h-screen flex-col"}>
-								<Container className="flex h-full flex-1 flex-col">
-									<Header />
-									<main
-										className={
-											"flex h-full min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5 lg:px-5"
-										}
-									>
-										{children}
-									</main>
-									<Footer />
-								</Container>
-							</div>
+							<Outlet />
 							<TanStackDevtools
 								config={{
 									position: "bottom-right",

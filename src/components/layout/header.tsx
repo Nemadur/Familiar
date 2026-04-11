@@ -21,18 +21,18 @@ import {
 	SheetTrigger,
 } from "../ui/sheet";
 import UserDropDown from "./profile/drop-down";
-import User from "./profile/User";
+import User from "./profile/user";
 import LanguageSelect from "./select/language";
 import ThemeToggle from "./select/theme-toggle";
+import { TRoles } from "@/types/user/roles";
 
 export default function Header() {
 	const { t } = useTranslation();
-	const { user } = useAuth();
+	const { user, isPending } = useAuth();
 
 	return (
 		<header className="sticky top-0 z-50 px-4">
 			<div className="flex h-16 items-center justify-between gap-4">
-				{/* NAVIGATION */}
 				<div className="flex items-center gap-2">
 					<MobileNav />
 					<NavWrapper className="hidden lg:flex">
@@ -42,36 +42,32 @@ export default function Header() {
 							</span>
 						</Link>
 						<NavLinks />
-						{/* TODO: mobile nav */}
 					</NavWrapper>
 				</div>
-				{/* USER CTAS */}
+
 				<div className="flex shrink-0 items-center gap-2">
 					<NavWrapper>
-						{/* CurrencySelect */}
-						{/* LanguageSelect */}
-						{/* ThemeSelect */}
 						<ThemeToggle />
 						<LanguageSelect />
-						{user ? (
-							// <UserDropDown user={user} />
+						{/* <Skeleton loading={isPending}> */}
+						{isPending ? null : user?.roles?.includes(TRoles.Artist) && (
+							<Button size={"xl"} asChild>
+								<Link to="/dashboard">{t("header.artist-dashboard", "Artist Dashboard")}</Link>
+							</Button>
+						)}
+						{isPending ? null : user ? (
 							<User user={user} showInfo={false} isDropdown />
 						) : (
 							<div className="hidden lg:flex items-center gap-2">
 								<Button asChild variant={"secondary"} size={"xl"}>
-									<Link to="/auth/login">
-										{/* <OutlineLogout /> */}
-										{t("auth.login.cta")}
-									</Link>
+									<Link to="/auth/login">{t("auth.login.cta")}</Link>
 								</Button>
 								<Button asChild size={"xl"}>
-									<Link to="/auth/register">
-										{/* <SolidUser /> */}
-										{t("auth.register.cta")}
-									</Link>
+									<Link to="/auth/register">{t("auth.register.cta")}</Link>
 								</Button>
 							</div>
 						)}
+						{/* </Skeleton> */}
 					</NavWrapper>
 				</div>
 			</div>

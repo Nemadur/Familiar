@@ -1,21 +1,5 @@
 import { getAccessToken } from "./supabase";
 
-export type BackendMeResponse = {
-	userId: string;
-	username: string;
-	displayName: string;
-	pronouns?: string | null;
-	bio?: string | null;
-	avatarPath?: string | null;
-	coverPath?: string | null;
-	accentColor?: string | null;
-	isVerified?: boolean;
-	isPremium?: boolean;
-	isPrivate?: boolean;
-	createdAt: string;
-	roles?: string[];
-};
-
 export function getApiBaseUrl() {
 	const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
 
@@ -23,36 +7,54 @@ export function getApiBaseUrl() {
 		return apiUrl.replace(/\/$/, "");
 	}
 
-	// if backend is on the same domain behind reverse proxy, relative path is fine
 	return "";
 }
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}) {
+export async function apiFetch<T = unknown>(
+	path: string,
+	init: RequestInit = {},
+): Promise<T> {
 	const accessToken = await getAccessToken();
 
 	const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 	const baseUrl = getApiBaseUrl();
 	const url = baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
 
+	const headers = new Headers(init.headers);
+
+	if (!headers.has("Accept")) {
+		headers.set("Accept", "application/json");
+	}
+
+	if (accessToken) {
+		headers.set("Authorization", `Bearer ${accessToken}`);
+	}
+
 	const response = await fetch(url, {
 		...init,
-		headers: {
-			Accept: "application/json",
-			...(init.headers ?? {}),
-			...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-		},
+		headers,
 	});
 
+	const contentType = response.headers.get("content-type") ?? "";
+	const isJson = contentType.includes("application/json");
+
 	if (!response.ok) {
-		const contentType = response.headers.get("content-type") ?? "";
-		const bodyText = await response.text();
+		let bodyText = "";
+
+		try {
+			bodyText = isJson
+				? JSON.stringify(await response.json())
+				: await response.text();
+		} catch {
+			bodyText = "";
+		}
 
 		console.error("apiFetch failed", {
 			url,
 			status: response.status,
 			statusText: response.statusText,
 			contentType,
-			hasToken: Boolean(accessToken),
+			hasToken: !!accessToken,
 			body: bodyText,
 		});
 
@@ -63,5 +65,17 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}) {
 		);
 	}
 
-	return response.json() as Promise<T>;
+	if (response.status === 204 || response.status === 205) {
+		return undefined as T;
+	}
+
+	if (!contentType) {
+		return undefined as T;
+	}
+
+	if (isJson) {
+		return response.json() as Promise<T>;
+	}
+
+	return (await response.text()) as T;
 }

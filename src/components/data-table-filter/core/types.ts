@@ -26,6 +26,11 @@ export interface ColumnOption {
   value: string
   /* An optional icon to display next to the label. */
   icon?: React.ReactElement | React.ElementType
+  
+  /* Optional parent for nested options */
+  parentId?: string
+  /* Optional ID for nested options */
+  id?: string
 }
 
 export interface ColumnOptionExtended extends ColumnOption {

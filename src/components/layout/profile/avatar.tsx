@@ -19,9 +19,7 @@ export default function UserAvatar({
 		[user?.accentColor],
 	);
 
-	const facehashName = user?.displayName?.trim();
-
-	const altText = user?.displayName || user?.username || "User avatar";
+	const altText = user?.displayName || user?.username;
 
 	return (
 		<Avatar
@@ -33,11 +31,12 @@ export default function UserAvatar({
 			<AvatarImage src={user?.avatarPath || undefined} alt={altText} />
 			<AvatarFallback>
 				<Facehash
+					aria-label={altText}
 					intensity3d={"none"}
 					enableBlink
 					style={{ ...avatarBgStyle, ...avatarForegroundStyle }}
 					variant={"solid"}
-					name={facehashName || ""}
+					name={altText || ""}
 					size={isHuge ? 128 : 36}
 				/>
 			</AvatarFallback>

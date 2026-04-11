@@ -1,6 +1,6 @@
 import { OutlineArrowLeft, OutlineCheck } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
-import { useCurrentUser } from "@/hooks/use-user";
+import { useAuth } from "@/providers/auth";
 
 interface CommissionRequestFooterProps {
 	onBack: () => void;
@@ -11,7 +11,7 @@ export function CommissionRequestFooter({
 	onBack,
 	totalPrice,
 }: CommissionRequestFooterProps) {
-	const currentUser = useCurrentUser();
+	const { user: currentUser } = useAuth();
 
 	return (
 		<div className="z-20 space-y-3 border-t bg-background p-4">

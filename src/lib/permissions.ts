@@ -4,6 +4,7 @@ import {
 	type MongoAbility,
 } from "@casl/ability";
 import type { TUserProfile } from "@/types/user";
+import { TRoles } from "@/types/user/roles";
 
 // Define subjects using local interfaces to avoid Drizzle dependency
 interface ProfileSubject {
@@ -66,17 +67,18 @@ export const createAbility = createMongoAbility as unknown as () => AppAbility;
 
 // Role hierarchy rank
 const ROLE_RANK: Record<string, number> = {
-	client: 0,
-	artist: 1,
-	moderator: 2,
-	admin: 3,
+	[TRoles.Guest]: 0,
+	[TRoles.User]: 1,
+	[TRoles.Artist]: 2,
+	[TRoles.Moderator]: 3,
+	[TRoles.Admin]: 4,
 };
 
-function hasRole(userRoles: string[] | undefined, minimum: string): boolean {
+function hasRole(userRoles: string[] | undefined, minimum: TRoles): boolean {
 	const roles = userRoles || [];
 	const maxRank = Math.max(
 		...roles.map((r) => ROLE_RANK[r] ?? 0),
-		ROLE_RANK.client,
+		ROLE_RANK[TRoles.Guest],
 	);
 	return maxRank >= (ROLE_RANK[minimum] ?? 999);
 }
@@ -97,23 +99,25 @@ export function getUserPermissions(user: TUserProfile | null | undefined) {
 		return build();
 	}
 
-	// ─── Authenticated (Client) ─────────────────────────────────────────
-	// Users can manage their own content
-	can("manage", "Profile", { userId: user.userId });
-	can("manage", "Post", { artistId: user.userId });
-	can("manage", "Listing", { artistId: user.userId });
-	can("manage", "ShopItem", { sellerId: user.userId });
-	can("manage", "Folder", { ownerId: user.userId });
-	can("manage", "Charater", { ownerId: user.userId });
+	// ─── Authenticated (Client/User) ────────────────────────────────────
+	if (hasRole(user.roles, TRoles.User)) {
+		// Users can manage their own content
+		can("manage", "Profile", { userId: user.userId });
+		can("manage", "Post", { artistId: user.userId });
+		can("manage", "Listing", { artistId: user.userId });
+		can("manage", "ShopItem", { sellerId: user.userId });
+		can("manage", "Folder", { ownerId: user.userId });
+		can("manage", "Charater", { ownerId: user.userId });
 
-	// Users can read their own private content
-	can("read", "Post", { artistId: user.userId });
-	can("read", "Charater", { ownerId: user.userId });
-	can("read", "Profile", { userId: user.userId });
-	can("read", "Folder", { ownerId: user.userId });
+		// Users can read their own private content
+		can("read", "Post", { artistId: user.userId });
+		can("read", "Charater", { ownerId: user.userId });
+		can("read", "Profile", { userId: user.userId });
+		can("read", "Folder", { ownerId: user.userId });
+	}
 
 	// ─── Artist ──────────────────────────────────────────────────────────
-	if (hasRole(user.roles, "ARTIST")) {
+	if (hasRole(user.roles, TRoles.Artist)) {
 		can("create", "Post");
 		can("create", "Listing");
 		can("create", "ShopItem");
@@ -122,13 +126,13 @@ export function getUserPermissions(user: TUserProfile | null | undefined) {
 	}
 
 	// ─── Moderator ───────────────────────────────────────────────────────
-	if (hasRole(user.roles, "MODERATOR")) {
+	if (hasRole(user.roles, TRoles.Moderator)) {
 		can("read", "all");
 		can("manage", "Ban");
 	}
 
 	// ─── Admin ───────────────────────────────────────────────────────────
-	if (hasRole(user.roles, "ADMIN")) {
+	if (hasRole(user.roles, TRoles.Admin)) {
 		can("manage", "all");
 	}
 

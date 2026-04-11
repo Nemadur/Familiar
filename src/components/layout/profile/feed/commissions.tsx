@@ -1,8 +1,21 @@
 import { ScrollShadow, surfaceVariants } from "@heroui/react";
 import { useNavigate } from "@tanstack/react-router";
+import {
+	FolderOpen,
+	ListFilterIcon,
+	Tag,
+	Wallet,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
+import type { NumberFilterOperator } from "@/components/data-table-filter/core/types";
+import {
+	type FilterGroup,
+	type FilterValue,
+	type ManagedFilterValue,
+	FilterBar,
+} from "@/components/layout/filter-bar";
 import {
 	OutlineBookmark,
 	OutlineChat,
@@ -18,7 +31,7 @@ import {
 	ReelProgress,
 } from "@/components/kibo-ui/reel";
 import { EmptyPage } from "@/components/layout/empty-page";
-// import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -26,21 +39,39 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBlurredImage } from "@/hooks/use-blurred-image";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useIsTablet } from "@/hooks/use-mobile";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
 import { cn } from "@/lib/utils";
 import {
-	type TCommission,
 	type TCommissionDetailResponse,
 	TCommissionStatus,
 	type TMultimediaItem,
 } from "@/types/commissions";
 import type { TUserProfile } from "@/types/user";
 
+import { useAuth } from "@/providers/auth";
+
 interface ProfileCommissionsProps {
 	artist: TUserProfile;
 	commissions: TCommissionDetailResponse[];
 }
+
+type CategoryFolder = {
+	id: string;
+	label: string;
+	status: TCommissionStatus;
+	items: TCommissionDetailResponse[];
+	isClosed?: boolean;
+};
+
+type ManagedFiltersState = Record<string, ManagedFilterValue>;
+
+const INITIAL_FILTER_STATE: ManagedFiltersState = {
+	category: { value: [] },
+	status: { value: [] },
+	tags: { value: [] },
+	price: { value: [] },
+};
 
 function getCommissionImages(multimedia: TMultimediaItem[]): string[] {
 	return [...multimedia]
@@ -48,11 +79,132 @@ function getCommissionImages(multimedia: TMultimediaItem[]): string[] {
 		.filter((src): src is string => Boolean(src));
 }
 
+function getCommissionCategoryId(commission: TCommissionDetailResponse) {
+	return commission.category?.id ?? "uncategorized";
+}
+
+function getCommissionCategoryLabel(commission: TCommissionDetailResponse) {
+	if (!commission.category?.name) return "Uncategorized";
+
+	return commission.category.parentName
+		? `${commission.category.parentName} / ${commission.category.name}`
+		: commission.category.name;
+}
+
+function formatCommissionStatus(status: TCommissionStatus | string) {
+	const value = String(status);
+
+	switch (value) {
+		case "ACTIVE":
+			return "Active";
+		case "ONHOLD":
+			return "On hold";
+		case "PAUSED":
+			return "Paused";
+		case "ARCHIVED":
+			return "Archived";
+		case "DRAFT":
+			return "Draft";
+		default:
+			return value
+				.toLowerCase()
+				.replace(/_/g, " ")
+				.replace(/\b\w/g, (char) => char.toUpperCase());
+	}
+}
+
+function getSelectedValues(value: FilterValue | undefined): string[] {
+	if (Array.isArray(value)) {
+		return value.filter((item): item is string => typeof item === "string");
+	}
+
+	if (typeof value === "string") {
+		return [value];
+	}
+
+	return [];
+}
+
+function getSelectedNumbers(value: FilterValue | undefined): number[] {
+	if (!Array.isArray(value)) return [];
+
+	return value.filter((item): item is number => typeof item === "number");
+}
+
+function resolveOptionOperator(
+	operator: ManagedFilterValue["operator"],
+	valueCount: number,
+) {
+	if (operator) return operator as string;
+	return valueCount <= 1 ? "is" : "is any of";
+}
+
+function matchSingleOrMulti(
+	itemValue: string | string[],
+	operator: string,
+	selectedValues: string[],
+) {
+	if (selectedValues.length === 0) return true;
+
+	const itemValues = Array.isArray(itemValue) ? itemValue : [itemValue];
+
+	switch (operator) {
+		case "is not":
+		case "is none of":
+			return selectedValues.every((value) => !itemValues.includes(value));
+		case "is all of":
+			return selectedValues.every((value) => itemValues.includes(value));
+		case "is":
+		case "is any of":
+		default:
+			return selectedValues.some((value) => itemValues.includes(value));
+	}
+}
+
+function matchNumber(
+	input: number,
+	values: number[],
+	operator?: ManagedFilterValue["operator"],
+) {
+	if (values.length === 0) return true;
+
+	const op = (operator ?? (values.length > 1 ? "is between" : "is")) as
+		| NumberFilterOperator
+		| string;
+	const first = values[0];
+	const second = values[1] ?? values[0];
+	const min = Math.min(first, second);
+	const max = Math.max(first, second);
+
+	switch (op) {
+		case "is":
+			return input === first;
+		case "is not":
+			return input !== first;
+		case "is greater than":
+			return input > first;
+		case "is greater than or equal to":
+		case "is at least":
+			return input >= first;
+		case "is less than":
+			return input < first;
+		case "is less than or equal to":
+		case "is at most":
+			return input <= first;
+		case "is between":
+			return input >= min && input <= max;
+		case "is not between":
+			return !(input >= min && input <= max);
+		default:
+			return true;
+	}
+}
+
 function CommissionCard({
 	commission,
 	artist,
 }: {
-	commission: TCommission;
+	commission: TCommissionDetailResponse;
 	artist: TUserProfile;
 }) {
 	const { t } = useTranslation();
@@ -61,9 +213,8 @@ function CommissionCard({
 	const [hoverPlaying, setHoverPlaying] = useState(false);
 	const [isContentRevealed, setIsContentRevealed] = useState(false);
 
-	// FIXME: use hook for media query
-	const isLgOrLower = useMediaQuery("(max-width: 1279px)");
-	const isPlaying = isLgOrLower || hoverPlaying;
+	const isTablet = useIsTablet();
+	const isPlaying = isTablet || hoverPlaying;
 
 	const status = commission.commissionStatus;
 
@@ -113,11 +264,11 @@ function CommissionCard({
 				surfaceVariants({ variant: "secondary" }),
 			)}
 			onMouseEnter={() => {
-				if (isLgOrLower) return;
+				if (isTablet) return;
 				setHoverPlaying(true);
 			}}
 			onMouseLeave={() => {
-				if (isLgOrLower) return;
+				if (isTablet) return;
 				setHoverPlaying(false);
 				setCurrentImageIndex(0);
 			}}
@@ -197,7 +348,6 @@ function CommissionCard({
 							{t("components.profile.commissions.card.sensitive_content")}
 						</h4>
 						<p className="text-center text-sm text-white/70">
-							{/* TODO: add content for adult only tags */}
 							{hasContentWarnings
 								? t("components.profile.commissions.card.contains_tags", {
 										tags: warningTags.map((tag) => tag.name).join(", "),
@@ -264,7 +414,7 @@ function CommissionCardContent({
 	shouldBlur,
 	setIsContentRevealed,
 }: {
-	item: TCommission;
+	item: TCommissionDetailResponse;
 	status: TCommissionStatus;
 	artist: TUserProfile;
 	discountedPrice: number;
@@ -283,23 +433,11 @@ function CommissionCardContent({
 			<div className="space-y-1 sm:space-y-2">
 				<div className="relative flex gap-10">
 					<div className="flex w-full flex-col gap-2 md:pr-14">
-						<div className="flex items-start justify-between gap-2">
+						<div className="flex items-start gap-2">
 							<h3 className="min-w-0 line-clamp-2 text-start text-lg font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
 								{item.title}
 							</h3>
 						</div>
-
-						{/* <div className="flex flex-wrap items-center gap-2">
-							<Badge variant="secondary">{status}</Badge>
-							{item.category?.name ? (
-								<Badge variant="outline">{item.category.name}</Badge>
-							) : null}
-							{item.tags.map((tag) => (
-								<Badge key={tag.id} variant="outline">
-									{tag.name}
-								</Badge>
-							))}
-						</div> */}
 					</div>
 
 					<Button
@@ -347,6 +485,7 @@ function CommissionCardContent({
 				{status === TCommissionStatus.Active && (
 					<>
 						<Button
+							size={"xl"}
 							className="flex-1"
 							onClick={(e) => {
 								e.stopPropagation();
@@ -368,7 +507,7 @@ function CommissionCardContent({
 
 						<Button
 							variant="secondary"
-							size="icon"
+							size={"icon-xl"}
 							onClick={(e) => e.stopPropagation()}
 						>
 							<OutlineChat />
@@ -376,7 +515,7 @@ function CommissionCardContent({
 
 						<Button
 							variant="secondary"
-							size="icon"
+							size={"icon-xl"}
 							className="xl:hidden"
 							onClick={(e) => e.stopPropagation()}
 						>
@@ -388,6 +527,7 @@ function CommissionCardContent({
 				{status === TCommissionStatus.OnHold && (
 					<>
 						<Button
+							size={"xl"}
 							variant="secondary"
 							className="flex-1"
 							onClick={(e) => e.stopPropagation()}
@@ -405,7 +545,7 @@ function CommissionCardContent({
 
 						<Button
 							variant="secondary"
-							size="icon"
+							size={"icon-xl"}
 							className="xl:hidden"
 							onClick={(e) => e.stopPropagation()}
 						>
@@ -417,6 +557,7 @@ function CommissionCardContent({
 				{status === TCommissionStatus.Paused && (
 					<>
 						<Button
+							size={"xl"}
 							variant="outline"
 							className="flex-1"
 							onClick={(e) => e.stopPropagation()}
@@ -426,7 +567,7 @@ function CommissionCardContent({
 
 						<Button
 							variant="secondary"
-							size="icon"
+							size={"icon-xl"}
 							onClick={(e) => e.stopPropagation()}
 						>
 							<OutlineChat />
@@ -434,7 +575,7 @@ function CommissionCardContent({
 
 						<Button
 							variant="secondary"
-							size="icon"
+							size={"icon-xl"}
 							className="xl:hidden"
 							onClick={(e) => e.stopPropagation()}
 						>
@@ -452,14 +593,249 @@ export function ProfileCommissions({
 	commissions,
 }: ProfileCommissionsProps) {
 	const { t } = useTranslation();
+	const { user: currentUser } = useAuth();
+	const isMe = currentUser?.username === artist.username;
 
-	const sortedCommissions = useMemo(() => {
-		return [...commissions].sort((a, b) => {
-			return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+	const [searchQuery, setSearchQuery] = useState("");
+	const [filterState, setFilterState] =
+		useState<ManagedFiltersState>(INITIAL_FILTER_STATE);
+
+	const visibleCommissions = useMemo(() => {
+		if (isMe) return commissions;
+		return commissions.filter((c) => c.commissionStatus !== TCommissionStatus.Archived);
+	}, [commissions, isMe]);
+
+	const categoryOptions = useMemo(
+		() =>
+			Array.from(
+				new Map(
+					visibleCommissions.map((commission) => {
+						const parentName = commission.category?.parentName;
+						const name = commission.category?.name || "Uncategorized";
+						
+						return [
+							getCommissionCategoryId(commission),
+							{
+								id: getCommissionCategoryId(commission),
+								label: name,
+								parentId: parentName || undefined,
+							},
+						];
+					}),
+				).values(),
+			).sort((a, b) => a.label.localeCompare(b.label)),
+		[visibleCommissions],
+	);
+
+	const statusOptions = useMemo(
+		() =>
+			Array.from(
+				new Map(
+					visibleCommissions.map((commission) => [
+						String(commission.commissionStatus),
+						{
+							id: String(commission.commissionStatus),
+							label: formatCommissionStatus(commission.commissionStatus),
+						},
+					]),
+				).values(),
+			),
+		[visibleCommissions],
+	);
+
+	const tagOptions = useMemo(
+		() =>
+			Array.from(
+				new Map(
+					visibleCommissions.flatMap((commission) =>
+						commission.tags.map((tag) => [
+							tag.id,
+							{ id: tag.id, label: tag.name },
+						]),
+					),
+				).values(),
+			).sort((a, b) => a.label.localeCompare(b.label)),
+		[visibleCommissions],
+	);
+
+	const filterGroups = useMemo<FilterGroup<TCommissionDetailResponse>[]>(
+		() => [
+			{
+				id: "category",
+				label: "Category",
+				type: "select",
+				icon: FolderOpen,
+				getItemValue: (commission) => getCommissionCategoryId(commission),
+				options: categoryOptions,
+			},
+			{
+				id: "status",
+				label: "Status",
+				type: "select",
+				icon: ListFilterIcon,
+				getItemValue: (commission) => String(commission.commissionStatus),
+				options: statusOptions,
+			},
+			{
+				id: "tags",
+				label: "Tags",
+				type: "multiselect",
+				icon: Tag,
+				getItemValue: (commission) => commission.tags.map((tag) => tag.id),
+				options: tagOptions,
+			},
+			{
+				id: "price",
+				label: "Price",
+				type: "range",
+				icon: Wallet,
+				getItemValue: (commission) => commission.basePrice,
+			},
+		],
+		[categoryOptions, statusOptions, tagOptions],
+	);
+
+	const filterValues = useMemo<Record<string, ManagedFilterValue>>(
+		() => ({
+			category: filterState.category,
+			status: filterState.status,
+			tags: filterState.tags,
+			price: filterState.price,
+		}),
+		[filterState],
+	);
+
+	const filteredCommissions = useMemo(() => {
+		const query = searchQuery.trim().toLowerCase();
+		const selectedCategories = getSelectedValues(filterState.category?.value);
+		const selectedStatuses = getSelectedValues(filterState.status?.value);
+		const selectedTags = getSelectedValues(filterState.tags?.value);
+		const selectedPrice = getSelectedNumbers(filterState.price?.value);
+
+		return visibleCommissions.filter((commission) => {
+			const categoryId = getCommissionCategoryId(commission);
+			const categoryLabel = getCommissionCategoryLabel(commission);
+			const tagIds = commission.tags.map((tag) => tag.id);
+			const tagNames = commission.tags.map((tag) => tag.name);
+			const statusValue = String(commission.commissionStatus);
+
+			const matchesSearch = query
+				? [
+						commission.title,
+						commission.description ?? "",
+						categoryLabel,
+						statusValue,
+						...tagNames,
+					]
+						.join(" ")
+						.toLowerCase()
+						.includes(query)
+				: true;
+
+			const matchesCategory =
+				selectedCategories.length === 0
+					? true
+					: matchSingleOrMulti(
+							categoryId,
+							resolveOptionOperator(
+								filterState.category?.operator,
+								selectedCategories.length,
+							),
+							selectedCategories,
+						);
+
+			const matchesStatus =
+				selectedStatuses.length === 0
+					? true
+					: matchSingleOrMulti(
+							statusValue,
+							resolveOptionOperator(
+								filterState.status?.operator,
+								selectedStatuses.length,
+							),
+							selectedStatuses,
+						);
+
+			const matchesTags =
+				selectedTags.length === 0
+					? true
+					: matchSingleOrMulti(
+							tagIds,
+							resolveOptionOperator(
+								filterState.tags?.operator,
+								selectedTags.length,
+							),
+							selectedTags,
+						);
+
+			const matchesPrice = matchNumber(
+				commission.basePrice,
+				selectedPrice,
+				filterState.price?.operator,
+			);
+
+			return (
+				matchesSearch &&
+				matchesCategory &&
+				matchesStatus &&
+				matchesTags &&
+				matchesPrice
+			);
 		});
-	}, [commissions]);
+	}, [visibleCommissions, filterState, searchQuery]);
 
-	if (!sortedCommissions.length) {
+	const groupedCommissions = useMemo<CategoryFolder[]>(() => {
+		const map = new Map<string, CategoryFolder>();
+
+		for (const commission of filteredCommissions) {
+			const categoryLabel = getCommissionCategoryLabel(commission);
+			const folderId = categoryLabel;
+
+			if (!map.has(folderId)) {
+				map.set(folderId, {
+					id: folderId,
+					label: categoryLabel,
+					status: commission.commissionStatus, // will be recalculated below
+					items: [],
+				});
+			}
+
+			map.get(folderId)!.items.push(commission);
+		}
+
+		return Array.from(map.values()).map(folder => {
+			const allPaused = folder.items.length > 0 && folder.items.every(c => c.commissionStatus === TCommissionStatus.Paused);
+			if (allPaused) {
+				// We use a special string for CLOSED or map it if TCommissionStatus doesn't have it
+				// But we must respect the type. We can use a custom logic in render or override status
+				return { ...folder, isClosed: true };
+			}
+			// Otherwise just use the first item's status or active
+			const hasActive = folder.items.some(c => c.commissionStatus === TCommissionStatus.Active);
+			return { ...folder, isClosed: false, status: hasActive ? TCommissionStatus.Active : folder.items[0].commissionStatus };
+		}).sort((a, b) => a.label.localeCompare(b.label));
+	}, [filteredCommissions]);
+
+	function handleFilterChange(
+		groupId: string,
+		value: FilterValue,
+		operator?: ManagedFilterValue["operator"],
+	) {
+		setFilterState((previous) => ({
+			...previous,
+			[groupId]: {
+				value,
+				operator,
+			},
+		}));
+	}
+
+	function clearAllFilters() {
+		setFilterState(INITIAL_FILTER_STATE);
+		setSearchQuery("");
+	}
+
+	if (!visibleCommissions.length) {
 		return (
 			<div className="flex flex-1 flex-col items-center justify-center">
 				<EmptyPage
@@ -473,25 +849,50 @@ export function ProfileCommissions({
 
 	return (
 		<div className="flex w-full flex-col gap-6">
-			<div className="flex flex-col gap-8">
-				{sortedCommissions.length > 0 ? (
-					<div className="grid gap-4">
-						{sortedCommissions.map((commission) => (
-							<CommissionCard
-								key={commission.id}
-								commission={commission}
-								artist={artist}
-							/>
-						))}
-					</div>
-				) : (
-					<EmptyPage
-						icon={OutlineFilter}
-						title="Not found"
-						description="No commissions found matching your filters."
-					/>
-				)}
-			</div>
+			<FilterBar
+				data={visibleCommissions}
+				groups={filterGroups}
+				values={filterValues}
+				onFilterChange={handleFilterChange}
+				searchQuery={searchQuery}
+				onSearchChange={setSearchQuery}
+				searchPlaceholder="Search by title, description, category, tag..."
+				onClearAll={clearAllFilters}
+				// FIXME: clear button do not works
+			/>
+
+			{groupedCommissions.length > 0 ? (
+				<div className="flex flex-col gap-8">
+					{groupedCommissions.map((folder) => (
+						<section key={folder.id} className="space-y-6">
+							<div className="flex items-center gap-2">
+								<h2 className="text-xl font-bold text-foreground">
+									{folder.label}
+								</h2>
+								<Badge variant="secondary" className="whitespace-nowrap">
+									{folder.isClosed ? "Closed" : formatCommissionStatus(folder.status)}
+								</Badge>
+							</div>
+
+							<div className="grid gap-4">
+								{folder.items.map((commission) => (
+									<CommissionCard
+										key={commission.id}
+										commission={commission}
+										artist={artist}
+									/>
+								))}
+							</div>
+						</section>
+					))}
+				</div>
+			) : (
+				<EmptyPage
+					icon={OutlineFilter}
+					title="Not found"
+					description="No commissions found matching your filters."
+				/>
+			)}
 		</div>
 	);
 }

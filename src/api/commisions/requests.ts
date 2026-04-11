@@ -1,5 +1,8 @@
 import { apiFetch } from "@/lib/fetch";
-import type { TCommissionRequestResponse } from "@/types/commissions";
+import type {
+	TCommissionRequest,
+	TCommissionRequestResponse,
+} from "@/types/commissions";
 
 export type TPaginatedCommissionRequestParams = {
 	page?: number;
@@ -29,7 +32,7 @@ export async function getMyCommissionRequests(
 	params?: TPaginatedCommissionRequestParams,
 ) {
 	return apiFetch<TCommissionRequestResponse>(
-		`commissions/requests/my${buildPaginationQuery(params)}`,
+		`/api/commissions/requests/my${buildPaginationQuery(params)}`,
 	);
 }
 
@@ -41,6 +44,58 @@ export async function getIncomingCommissionRequests(
 	params?: TPaginatedCommissionRequestParams,
 ) {
 	return apiFetch<TCommissionRequestResponse>(
-		`commission-requests/incoming${buildPaginationQuery(params)}`,
+		`/api/commission-requests/incoming${buildPaginationQuery(params)}`,
+	);
+}
+
+/**
+ * Accept a commission request (Artist only)
+ */
+export async function acceptCommissionRequest(requestId: string) {
+	return apiFetch<TCommissionRequest>(
+		`/api/commission-requests/${requestId}/accept`,
+		{
+			method: "PATCH",
+		}
+	);
+}
+
+/**
+ * Reject a commission request (Artist only)
+ */
+export async function rejectCommissionRequest(requestId: string) {
+	return apiFetch<TCommissionRequest>(
+		`/api/commission-requests/${requestId}/reject`,
+		{
+			method: "PATCH",
+		}
+	);
+}
+
+/**
+ * Cancel a commission request (Client only)
+ */
+export async function cancelCommissionRequest(requestId: string) {
+	return apiFetch<TCommissionRequest>(
+		`/api/commissions/requests/${requestId}/cancel`,
+		{
+			method: "PATCH",
+		}
+	);
+}
+
+/**
+ * Update multimedia attachments on a commission request
+ */
+export async function updateCommissionRequestMultimedia(
+	requestId: string,
+	multimediaIds: string[],
+) {
+	return apiFetch<TCommissionRequest>(
+		`/api/commissions/requests/${requestId}/multimedia`,
+		{
+			method: "PATCH",
+			body: JSON.stringify({ multimediaIds }),
+		}
 	);
 }

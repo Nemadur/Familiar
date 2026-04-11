@@ -11,11 +11,11 @@ export async function getUsersByFilter({
 	return apiFetch<TUserResponse[]>(`users?page=${page}&pageSize=${pageSize}`);
 }
 
-export async function getUserById({ userId }: { userId: string }) {
+export async function getUserById(userId: string) {
 	return apiFetch<TUserResponse>(`users/id/${userId}`);
 }
 
-export async function getUserByUsername({ username }: { username: string }) {
+export async function getUserByUsername(username: string) {
 	return apiFetch<TUserResponse>(`users/${username}`);
 }
 

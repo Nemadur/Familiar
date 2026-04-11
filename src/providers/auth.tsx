@@ -1,17 +1,17 @@
 import * as React from "react";
+import type { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { getCurrentUser } from "@/api/users";
-import { getMe } from "@/data/user";
-import { apiFetch, getApiBaseUrl } from "@/lib/fetch";
+import { useUserById } from "@/hooks/use-user";
 import i18n from "@/lib/i18n";
-import { getSupabaseStorageKey, supabase } from "@/lib/supabase";
+import { getStoredSupabaseUser, supabase } from "@/lib/supabase";
 import type { LoginData } from "@/types/auth/schema/login";
 import type { RegisterData } from "@/types/auth/schema/register";
 import type { TUserResponse } from "@/types/user";
 
 interface AuthContextValue {
 	user: TUserResponse | null;
-	pending: boolean;
+	isPending: boolean;
+	error: Error | null;
 	refreshSession: () => Promise<void>;
 	login: (data: LoginData) => Promise<void>;
 	register: (data: RegisterData) => Promise<void>;
@@ -25,31 +25,33 @@ const AuthContext = React.createContext<AuthContextValue | undefined>(
 	undefined,
 );
 
+function toOptimisticUser(restoredUser: User): TUserResponse {
+	return {
+		userId: restoredUser.id,
+		username: String(restoredUser.user_metadata?.username ?? ""),
+		displayName: String(
+			restoredUser.user_metadata?.display_name ??
+				restoredUser.user_metadata?.displayName ??
+				"",
+		),
+		pronouns: null,
+		bio: null,
+		avatarPath: null,
+		// coverPath: null,
+		accentColor: null,
+		isVerified: false,
+		isPremium: false,
+		// isPrivate: false,
+		createdAt: restoredUser.created_at ?? new Date().toISOString(),
+		roles: [],
+	};
+}
+
 function getOptimisticUserFromStorage(): TUserResponse | null {
 	try {
-		const storageKey = getSupabaseStorageKey();
-		if (!storageKey) return null;
-
-		const sessionStr = localStorage.getItem(storageKey);
-		if (!sessionStr) return null;
-
-		const parsed = JSON.parse(sessionStr);
-		const restoredUser =
-			parsed?.currentSession?.user ??
-			parsed?.session?.user ??
-			parsed?.user ??
-			null;
-
+		const restoredUser = getStoredSupabaseUser();
 		if (!restoredUser) return null;
-
-		return {
-			uuid: restoredUser.id,
-			username: restoredUser.user_metadata?.username || "",
-			display_name: restoredUser.user_metadata?.display_name || "",
-			email: restoredUser.email || "",
-			role: "user",
-			created_at: restoredUser.created_at,
-		} as unknown as TUserResponse;
+		return toOptimisticUser(restoredUser);
 	} catch (e) {
 		console.error("Failed to parse auth session from storage", e);
 		return null;
@@ -57,13 +59,41 @@ function getOptimisticUserFromStorage(): TUserResponse | null {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [user, setUser] = React.useState<TUserResponse | null>(
-		getOptimisticUserFromStorage(),
+	const [session, setSession] = React.useState<Session | null | undefined>(
+		undefined,
 	);
-	const [pending, setPending] = React.useState(true);
+	const [authBusy, setAuthBusy] = React.useState(true);
 	const listeners = React.useRef<Array<(user: TUserResponse | null) => void>>(
 		[],
 	);
+
+	const sessionUserId = session?.user?.id ?? null;
+	const optimisticUser = React.useMemo(() => {
+		if (session?.user) {
+			return toOptimisticUser(session.user);
+		}
+
+		if (session === undefined) {
+			return getOptimisticUserFromStorage();
+		}
+
+		return null;
+	}, [session]);
+
+	const {
+		user: fetchedUser,
+		isPending: userQueryPending,
+		error: userQueryError,
+	} = useUserById(
+		sessionUserId ?? "",
+		!!sessionUserId && session !== undefined,
+	);
+
+	const user = fetchedUser ?? optimisticUser ?? null;
+	const error = userQueryError instanceof Error ? userQueryError : null;
+	const isPending =
+		authBusy || session === undefined || (!!sessionUserId && userQueryPending);
+	const pending = isPending;
 
 	const notifyListeners = React.useCallback((newUser: TUserResponse | null) => {
 		listeners.current.forEach((listener) => {
@@ -71,71 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		});
 	}, []);
 
-	React.useEffect(() => {
-		try {
-			const storageKey = getSupabaseStorageKey();
-			if (!storageKey) return;
-
-			const sessionStr = localStorage.getItem(storageKey);
-			if (!sessionStr) return;
-
-			const parsed = JSON.parse(sessionStr);
-			const restoredUser =
-				parsed?.currentSession?.user ??
-				parsed?.session?.user ??
-				parsed?.user ??
-				null;
-
-			if (!restoredUser) return;
-
-			setUser({
-				uuid: restoredUser.id,
-				username: restoredUser.user_metadata?.username || "",
-				display_name: restoredUser.user_metadata?.display_name || "",
-				email: restoredUser.email || "",
-				role: "CLIENT",
-				created_at: restoredUser.created_at,
-			} as unknown as TUserResponse);
-		} catch (error) {
-			console.error("Failed to get current user from storage", error);
-		}
-	}, []);
-
 	const refreshSession = React.useCallback(async () => {
-		setPending(true);
+		setAuthBusy(true);
 
 		try {
-			const [
-				{
-					data: { session },
-					error: sessionError,
-				},
-				{
-					data: { user: authUser },
-					error: userError,
-				},
-			] = await Promise.all([
-				supabase.auth.getSession(),
-				supabase.auth.getUser(),
-			]);
-
-			if (sessionError) {
-				throw sessionError;
-			}
-
-			if (userError && userError.message !== "Auth session missing!") {
-				throw userError;
-			}
-
-			if (!authUser || !session?.access_token) {
-				setUser(null);
-				notifyListeners(null);
-				return;
-			}
-
-			const me = await getCurrentUser();
-			setUser(me);
-			notifyListeners(me);
+			const { data, error } = await supabase.auth.getSession();
+			if (error) throw error;
+			setSession(data.session ?? null);
 		} catch (error) {
 			console.error(
 				i18n.t("auth.errors.failed_refresh_session", {
@@ -143,126 +115,101 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				}),
 				error,
 			);
-			setUser(null);
-			notifyListeners(null);
+			setSession(null);
 		} finally {
-			setPending(false);
+			setAuthBusy(false);
 		}
-	}, [notifyListeners]);
+	}, []);
 
-	const login = React.useCallback(
-		async (data: LoginData) => {
-			setPending(true);
+	const login = React.useCallback(async (data: LoginData) => {
+		setAuthBusy(true);
 
-			const promise = (async () => {
-				const { error } = await supabase.auth.signInWithPassword({
+		const promise = (async () => {
+			const { data: signInData, error } =
+				await supabase.auth.signInWithPassword({
 					email: data.email.trim().toLowerCase(),
 					password: data.password,
 				});
 
-				if (error) {
-					throw new Error(i18n.t("auth.errors.invalid_credentials"));
-				}
-
-				await refreshSession();
-			})();
-
-			toast.promise(promise, {
-				loading: i18n.t("auth.login.pending"),
-				success: i18n.t("auth.login.success"),
-				error: (err) => err.message,
-			});
-
-			try {
-				await promise;
-			} catch (error) {
-				console.error(
-					i18n.t("auth.errors.login_failed", {
-						error: (error as Error).message,
-					}),
-					error,
-				);
-				throw error;
-			} finally {
-				setPending(false);
+			if (error) {
+				throw new Error(i18n.t("auth.errors.invalid_credentials"));
 			}
-		},
-		[refreshSession],
-	);
 
-	const register = React.useCallback(
-		async (data: RegisterData) => {
-			setPending(true);
+			setSession(signInData.session ?? null);
+		})();
 
-			const promise = (async () => {
-				const { data: signUpData, error } = await supabase.auth.signUp({
-					email: data.email.trim().toLowerCase(),
-					password: data.password,
-					options: {
-						data: {
-							display_name: data.display_name,
-							username: data.username,
-							account_type: data.account_type,
-							invite_key: data.invite_key,
-						},
+		toast.promise(promise, {
+			loading: i18n.t("auth.login.pending"),
+			success: i18n.t("auth.login.success"),
+			error: (err) => err.message,
+		});
+
+		try {
+			await promise;
+		} catch (error) {
+			console.error(
+				i18n.t("auth.errors.login_failed", {
+					error: (error as Error).message,
+				}),
+				error,
+			);
+			throw error;
+		} finally {
+			setAuthBusy(false);
+		}
+	}, []);
+
+	const register = React.useCallback(async (data: RegisterData) => {
+		setAuthBusy(true);
+
+		const promise = (async () => {
+			const { data: signUpData, error } = await supabase.auth.signUp({
+				email: data.email.trim().toLowerCase(),
+				password: data.password,
+				options: {
+					data: {
+						display_name: data.display_name,
+						username: data.username,
+						account_type: data.account_type,
+						invite_key: data.invite_key,
 					},
-				});
-
-				if (error) {
-					if (error.message?.toLowerCase().includes("rate limit")) {
-						throw new Error(i18n.t("auth.errors.rate_limit"));
-					}
-
-					throw new Error(
-						i18n.t("auth.errors.registration_failed", {
-							error: error.message,
-						}),
-					);
-				}
-
-				if (signUpData.session) {
-					await refreshSession();
-				} else {
-					setUser(null);
-					notifyListeners(null);
-				}
-
-				if (
-					signUpData.session &&
-					(data.avatar_url ||
-						data.cover_url ||
-						data.bio ||
-						(data.socials && data.socials.length > 0))
-				) {
-					// try {
-					// } catch (e) {
-					// 	console.error("Failed to update profile with extra details:", e);
-					// }
-					// TODO: send data to backend
-				}
-			})();
-
-			toast.promise(promise, {
-				loading: i18n.t("auth.register.pending"),
-				success: i18n.t("auth.register.success"),
-				error: (err) => err.message,
+				},
 			});
 
-			try {
-				await promise;
-			} finally {
-				setPending(false);
+			if (error) {
+				if (error.message?.toLowerCase().includes("rate limit")) {
+					throw new Error(i18n.t("auth.errors.rate_limit"));
+				}
+
+				throw new Error(
+					i18n.t("auth.errors.registration_failed", {
+						error: error.message,
+					}),
+				);
 			}
-		},
-		[notifyListeners, refreshSession],
-	);
+
+			setSession(signUpData.session ?? null);
+		})();
+
+		toast.promise(promise, {
+			loading: i18n.t("auth.register.pending"),
+			success: i18n.t("auth.register.success"),
+			error: (err) => err.message,
+		});
+
+		try {
+			await promise;
+		} finally {
+			setAuthBusy(false);
+		}
+	}, []);
 
 	const logout = React.useCallback(async () => {
-		setPending(true);
+		setAuthBusy(true);
 
 		try {
 			await supabase.auth.signOut();
-			setUser(null);
+			setSession(null);
 			notifyListeners(null);
 		} catch (error) {
 			console.error(
@@ -272,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				error,
 			);
 		} finally {
-			setPending(false);
+			setAuthBusy(false);
 		}
 	}, [notifyListeners]);
 
@@ -292,15 +239,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event) => {
+		} = supabase.auth.onAuthStateChange((event, nextSession) => {
 			if (
+				event === "INITIAL_SESSION" ||
 				event === "SIGNED_IN" ||
 				event === "TOKEN_REFRESHED" ||
 				event === "USER_UPDATED"
 			) {
-				void refreshSession();
+				setSession(nextSession ?? null);
+				setAuthBusy(false);
 			} else if (event === "SIGNED_OUT") {
-				setUser(null);
+				setSession(null);
+				setAuthBusy(false);
 				notifyListeners(null);
 			}
 		});
@@ -310,17 +260,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		};
 	}, [notifyListeners, refreshSession]);
 
+	React.useEffect(() => {
+		if (!isPending) {
+			notifyListeners(user);
+		}
+	}, [isPending, notifyListeners, user]);
+
 	const value = React.useMemo<AuthContextValue>(
 		() => ({
 			user,
 			pending,
+			isPending,
+			error,
 			refreshSession,
 			login,
 			register,
 			logout,
 			onAuthStateChange,
 		}),
-		[user, pending, refreshSession, login, register, logout, onAuthStateChange],
+		[
+			user,
+			pending,
+			isPending,
+			error,
+			refreshSession,
+			login,
+			register,
+			logout,
+			onAuthStateChange,
+		],
 	);
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

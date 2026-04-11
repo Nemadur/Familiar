@@ -1,4 +1,3 @@
-// types/commissions/index.ts
 import type { TPagination } from "../pagable";
 import type { TPaymentStatus } from "../payment";
 import type { TTermsOfService, TTermsOfServiceAcceptance } from "../user/tos";
@@ -82,6 +81,7 @@ export type TCommissionDetailResponse = {
 	tags: TTags[];
 	artistId: string;
 	version: number;
+	artistTos: TTermsOfService;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -100,6 +100,8 @@ export type TCommissionResponse = {
 	createdAt: string;
 	updatedAt: string;
 };
+
+export type TCommissionPageResponse = TPagination<TCommission>;
 
 export type TCommissionRequestPaymentSummary = {
 	paymentStatus: TPaymentStatus;

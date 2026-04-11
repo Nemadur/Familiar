@@ -5,8 +5,6 @@ import { toast } from "sonner";
 import {
 	OutlineChat,
 	OutlineChevronRight,
-	OutlineClock03,
-	OutlineGlobe,
 	OutlineListBoxes,
 	OutlineMore,
 	OutlineUser,
@@ -18,9 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAvailableFeeds } from "@/hooks/use-available-feeds";
 import { useBento } from "@/hooks/use-bento";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { type Tile, toPixels } from "@/lib/bento";
-import { userLocalTime } from "@/lib/profile";
 import { useAuth } from "@/providers/auth";
 import type { TUserProfile } from "@/types/user";
 import { TRoles } from "@/types/user/roles";
@@ -30,8 +26,6 @@ import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
 import { ProfileDetailsContent } from "./profile-details";
-import { ProfileSocials } from "./socials";
-import { SpokenLanguageBadge } from "./spoken-languages";
 
 // Temporary stubs for missing components
 const FollowButton = ({
@@ -44,7 +38,12 @@ const FollowButton = ({
 }: any) => {
 	const { t } = useTranslation();
 	return (
-		<Button className={className} disabled={!canFollow} onClick={onToggle}>
+		<Button
+			className={className}
+			disabled={!canFollow || loading}
+			onClick={onToggle}
+			size="xl"
+		>
 			{isFollowing
 				? t("components.profile.actions.unfollow")
 				: t("components.profile.actions.follow")}
@@ -55,20 +54,16 @@ const FollowButton = ({
 export function UserInfoSkeleton() {
 	return (
 		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10">
-			{/* Avatar */}
 			<div className="relative z-10 flex">
 				<Skeleton className="size-24 rounded-full ring-6 ring-background md:size-32" />
 			</div>
 
-			{/* Profile Info */}
 			<div className="space-y-4">
-				{/* Name & Username */}
 				<div>
 					<Skeleton className="mb-2 h-8 w-48" />
 					<Skeleton className="h-5 w-32" />
 				</div>
 
-				{/* Actions */}
 				<div className="flex flex-col gap-3">
 					<div className="flex items-center gap-2">
 						<Skeleton className="h-9 flex-1 rounded-full" />
@@ -78,13 +73,11 @@ export function UserInfoSkeleton() {
 					<Skeleton className="h-9 w-full rounded-full" />
 				</div>
 
-				{/* Location & Lang */}
 				<div className="flex flex-col gap-2 pt-1">
 					<Skeleton className="h-4 w-40" />
 					<Skeleton className="h-4 w-32" />
 				</div>
 
-				{/* Bio */}
 				<div className="space-y-2 pt-2">
 					<Skeleton className="h-4 w-full" />
 					<Skeleton className="h-4 w-[90%]" />
@@ -102,12 +95,11 @@ export function CommissionsContentSkeleton() {
 			<div className="grid gap-4">
 				{[1, 2].map((i) => (
 					<div
-						// eslint-disable-next-line react-doctor/no-array-index-as-key
 						key={`skeleton-feed-${i}`}
-						className="flex flex-col rounded-3xl border border-border/50 p-2 sm:flex-row h-[320px] sm:h-[200px]"
+						className="flex h-[320px] flex-col rounded-3xl border border-border/50 p-2 sm:h-[200px] sm:flex-row"
 					>
-						<Skeleton className="h-[180px] sm:h-full w-full sm:w-2/5 rounded-2xl" />
-						<div className="flex-1 p-3 sm:pl-6 flex flex-col justify-between gap-4">
+						<Skeleton className="h-[180px] w-full rounded-2xl sm:h-full sm:w-2/5" />
+						<div className="flex flex-1 flex-col justify-between gap-4 p-3 sm:pl-6">
 							<div className="space-y-3">
 								<div className="flex justify-between">
 									<Skeleton className="h-6 w-3/4" />
@@ -135,15 +127,8 @@ export function PortfolioContentSkeleton() {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [width, setWidth] = useState(0);
 
-	// Generate deterministic mock tiles for skeleton
 	const tiles = useMemo<Tile[]>(() => {
 		return Array.from({ length: 5 }).map((_, i) => {
-			// Pattern: 2x2, 1x1, 1x1, 1x2, 2x1, ...
-			// 0: 2x2 (Big feature)
-			// 1,2: 1x1
-			// 3: 1x2 (Tall)
-			// 4: 2x1 (Wide)
-			// 5-11: Mix
 			let widthUnit: 1 | 2 = 1;
 			let heightUnit: 1 | 2 = 1;
 
@@ -172,11 +157,13 @@ export function PortfolioContentSkeleton() {
 
 	useEffect(() => {
 		if (!containerRef.current) return;
+
 		const observer = new ResizeObserver((entries) => {
 			if (entries[0].contentRect.width > 0) {
 				setWidth(entries[0].contentRect.width);
 			}
 		});
+
 		observer.observe(containerRef.current);
 		return () => observer.disconnect();
 	}, []);
@@ -187,13 +174,13 @@ export function PortfolioContentSkeleton() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-col gap-2 md:flex-row md:items-center pb-3">
+			<div className="flex flex-col gap-2 pb-3 md:flex-row md:items-center">
 				<div className="flex gap-2 overflow-hidden">
 					<Skeleton className="h-9 w-20 rounded-full" />
 					<Skeleton className="h-9 w-24 rounded-full" />
 					<Skeleton className="h-9 w-16 rounded-full" />
 				</div>
-				<div className="flex w-full items-center gap-2 md:w-auto md:ml-auto">
+				<div className="flex w-full items-center gap-2 md:ml-auto md:w-auto">
 					<Skeleton className="h-9 w-40 rounded-full" />
 					<Skeleton className="size-9 rounded-full" />
 				</div>
@@ -220,9 +207,8 @@ export function CharactersContentSkeleton() {
 	return (
 		<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{Array.from({ length: 10 }).map((_, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 				<div key={i} className="flex flex-col gap-2">
-					<Skeleton className="aspect-[3/4] w-full rounded-xl" />
+					<Skeleton className="aspect-3/4 w-full rounded-xl" />
 					<Skeleton className="h-4 w-3/4" />
 				</div>
 			))}
@@ -238,13 +224,10 @@ export function TabContentSkeleton({ tab }: { tab?: string }) {
 
 export function UserFeedsSkeleton() {
 	return (
-		<div className="flex flex-col w-full">
-			{/* Filter Bar Skeleton */}
+		<div className="flex w-full flex-col">
 			<div className="mb-6 flex gap-2 py-2">
 				<ProfileFeedTabsSkeleton />
 			</div>
-
-			{/* Content Skeletons */}
 			<CommissionsContentSkeleton />
 		</div>
 	);
@@ -254,14 +237,10 @@ export function UserProfileSkeleton() {
 	return (
 		<div className="flex h-full flex-1 flex-col">
 			<ProfileCoverSkeleton />
-			<div className={"container mx-auto flex flex-col flex-1 h-full"}>
-				<div
-					className={
-						"relative flex-1 h-full grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]"
-					}
-				>
+			<div className="container mx-auto flex h-full flex-1 flex-col">
+				<div className="relative grid h-full flex-1 grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]">
 					<UserInfoSkeleton />
-					<div className="min-w-0 pt-0 flex flex-col flex-1 h-full">
+					<div className="flex h-full min-w-0 flex-1 flex-col pt-0">
 						<UserFeedsSkeleton />
 					</div>
 				</div>
@@ -281,23 +260,20 @@ export default function UserProfile({
 	activeTab?: string;
 	onTabChange?: (tab: string) => void;
 }) {
-	const { user: me, pending } = useAuth();
+	const { user: me, isPending } = useAuth();
 	const isMe = me?.username === user.username;
-	// const isSuspended = user.banned_until !== null;
 
-	if (pending) return <UserProfileSkeleton />;
+	if (isPending) return <UserProfileSkeleton />;
 
 	return (
 		<div className="flex flex-1 flex-col">
 			<ProfileCover user={user} />
 			<div className="flex min-h-0 flex-1 flex-col">
-				<div className="flex flex-1 flex-col sm:flex-row gap-4 md:gap-8 max-lg:px-5">
-					{/* Sidebar */}
+				<div className="flex flex-1 flex-col gap-4 sm:flex-row md:gap-8 max-lg:px-5">
 					<div className="shrink-0 md:w-[240px] lg:w-[280px]">
 						<UserProfileSidebar user={user} isMe={isMe} isSuspended={false} />
 					</div>
 
-					{/* Main Content */}
 					<div className="flex min-w-0 flex-1 flex-col">
 						<UserProfileMainContent
 							user={user}
@@ -329,41 +305,37 @@ export function UserProfileSidebar({
 
 	return (
 		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10">
-			{/* Avatar & Actions (Desktop: Stacked, Mobile: Avatar Left, Actions Right) */}
-			<div className="relative z-10 flex gap-4 flex-row items-start justify-between lg:flex-col lg:justify-start">
+			<div className="relative z-10 flex flex-row items-start justify-between gap-4 lg:flex-col lg:justify-start">
 				<UserAvatar user={user} isHuge hasOutline />
-				<div className="flex gap-2 sm:hidden w-fit max-w-full self-end shrink-0">
+				<div className="flex w-fit max-w-full shrink-0 gap-2 self-end sm:hidden">
 					{!isMe ? (
 						<>
 							<FollowButton
-								isFollowing={false} // TODO: Implement follow status
+								isFollowing={false}
 								loading={false}
 								canFollow={true}
 								onToggle={() => {}}
 								showText={true}
 							/>
-							{/* Work Queue Status */}
-							{/* TODO: check if user have queue */}
 							{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button variant="secondary" size={"icon"}>
+								<Button variant="secondary" size={"icon-xl"}>
 									<OutlineListBoxes />
 								</Button>
 							)}
-							{/* disabled for now */}
-							<Button variant="secondary" disabled size="icon">
+							<Button variant="secondary" disabled size="icon-xl">
 								<OutlineChat />
 							</Button>
-							<Button variant="ghost" size="icon">
+							<Button variant="ghost" size="icon-xl">
 								<OutlineMore />
 							</Button>
 						</>
 					) : (
 						<>
-							<Button className="flex-1" onClick={onEditProfile}>
+							<Button className="flex-1" size={"xl"} onClick={onEditProfile}>
 								{t("components.profile.actions.edit_profile")}
 							</Button>
 							{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button variant="secondary" size={"icon"}>
+								<Button variant="secondary" size={"icon-xl"}>
 									<OutlineListBoxes />
 								</Button>
 							)}
@@ -372,10 +344,8 @@ export function UserProfileSidebar({
 				</div>
 			</div>
 
-			{/* Profile Info */}
 			<div className="space-y-4">
-				<h3 className="inline-flex w-full items-center gap-2 font-bold text-2xl text-neutral-950 dark:text-neutral-50">
-					{/* TODO: make auto slide text if too more than 12 characters */}
+				<h3 className="inline-flex w-full items-center gap-2 text-2xl font-bold text-neutral-950 dark:text-neutral-50">
 					<span className="truncate">{user.displayName}</span>
 					<ProfileBadge user={user} />
 				</h3>
@@ -383,42 +353,38 @@ export function UserProfileSidebar({
 					@{user.username}
 				</p>
 
-				{/* Actions */}
-				<div className="gap-2 hidden sm:flex flex-col">
+				<div className="hidden flex-col gap-2 sm:flex">
 					{isMe ? (
 						<div className="flex gap-2">
-							<Button className="flex-1" onClick={onEditProfile}>
+							<Button className="flex-1" size={"xl"} onClick={onEditProfile}>
 								{t("components.profile.actions.edit_profile")}
 							</Button>
 							{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button variant="secondary" size={"icon"}>
+								<Button variant="secondary" size={"icon-xl"}>
 									<OutlineListBoxes />
-									{/* {t("components.profile.actions.work_queue")} */}
 								</Button>
 							)}
 						</div>
 					) : (
 						<div className="flex gap-2">
-							<div className="flex gap-2 w-full">
+							<div className="flex w-full gap-2">
 								<FollowButton
-									isFollowing={false} // TODO: Implement follow status
+									isFollowing={false}
 									loading={false}
 									canFollow={true}
 									onToggle={() => {}}
 									showText={true}
 									className={"flex-1"}
 								/>
-								{/* TODO: check if user have queue */}
 								{user.roles.includes(TRoles.Artist) && user.isVerified && (
-									<Button variant="secondary" size={"icon"}>
+									<Button variant="secondary" size={"icon-xl"}>
 										<OutlineListBoxes />
 									</Button>
 								)}
-								{/* disabled for now */}
-								<Button variant="secondary" disabled size="icon">
+								<Button variant="secondary" disabled size="icon-xl">
 									<OutlineChat />
 								</Button>
-								<Button variant="ghost" size="icon">
+								<Button variant="ghost" size="icon-xl">
 									<OutlineMore />
 								</Button>
 							</div>
@@ -426,68 +392,26 @@ export function UserProfileSidebar({
 					)}
 				</div>
 
-				{/* Followers/Following */}
-				<div className="flex gap-2 text-neutral-500 text-xs">
+				<div className="flex gap-2 text-xs text-neutral-500">
 					<div className="flex items-center gap-2">
-						{/* <OutlineUser size={14} /> */}
 						<span className="flex items-center gap-2">
-							<span className="text-primary font-semibold">0</span>{" "}
+							<span className="font-semibold text-primary">0</span>{" "}
 							{t("components.profile.actions.followers", "followers")}
 						</span>
 					</div>
 					<div className="flex items-center gap-2">
-						{/* <OutlineUser size={14} /> */}
 						<span className="flex items-center gap-2">
-							<span className="text-primary font-semibold">0</span>{" "}
+							<span className="font-semibold text-primary">0</span>{" "}
 							{t("components.profile.actions.following", "following")}
 						</span>
 					</div>
 				</div>
 
-				{/* Time/Lang/Pronounce */}
-				{/* {(user.timezone ||
-					user.pronouns ||
-					(user.spoken_languages && user.spoken_languages.length > 0)) && (
-					<div className="flex flex-col gap-1 text-neutral-500 text-xs">
-						{user.timezone && (
-							<div className="flex items-center gap-2">
-								<OutlineClock03 size={14} />
-								<span>
-									{t("components.profile.info.local_time")}{" "}
-									{userLocalTime({ timeZone: user.timezone })}
-								</span>
-							</div>
-						)}
-						{user.pronouns && (
-							<div className="flex items-center gap-2">
-								<OutlineUser size={14} />
-								<span>{user.pronouns}</span>
-							</div>
-						)}
-						{user.spoken_languages && user.spoken_languages.length > 0 && (
-							<div className="flex items-center gap-2">
-								<OutlineGlobe size={14} />
-								<TooltipProvider delayDuration={100}>
-									<div className="flex items-center gap-1.5 flex-wrap">
-										{user.spoken_languages.map((lang, index, array) => (
-											<SpokenLanguageBadge
-												key={lang.locale}
-												language={lang}
-												showSeparator={index < array.length - 1}
-											/>
-										))}
-									</div>
-								</TooltipProvider>
-							</div>
-						)}
-					</div>
-				)} */}
-
 				{!isSuspended ? (
 					<ProfileBio user={user} isShort />
 				) : (
 					!isMe && (
-						<p className="text-muted-foreground text-sm">
+						<p className="text-sm text-muted-foreground">
 							{t("components.profile.info.suspended")}
 						</p>
 					)
@@ -498,7 +422,7 @@ export function UserProfileSidebar({
 						<Button
 							variant={"link"}
 							size={"sm"}
-							className="h-auto link text-muted-foreground hover:text-foreground text-xs"
+							className="link h-auto text-xs text-muted-foreground hover:text-foreground"
 						>
 							{t("components.profile.info.about_me")}
 							<OutlineChevronRight />
@@ -506,11 +430,6 @@ export function UserProfileSidebar({
 					</DialogTrigger>
 					<ProfileDetailsContent user={user} />
 				</Dialog>
-
-				{/* Social Links (Horizontal on mobile, Vertical on desktop) */}
-				{/* {!isSuspended && user.social_links && user.social_links.length > 0 && (
-					<ProfileSocials links={user.social_links} />
-				)} */}
 			</div>
 		</aside>
 	);
@@ -532,20 +451,24 @@ function UserFeeds({
 	const { t } = useTranslation();
 	const availableFeeds = useAvailableFeeds(user, isMe);
 
-	const [internalTab, setInternalTab] = useState(
-		availableFeeds.length > 0 ? availableFeeds[0].id : "",
-	);
+	const defaultTab = useMemo(() => {
+		return (
+			availableFeeds.find((feed) => feed.id === "commissions")?.id ??
+			availableFeeds[0]?.id ??
+			""
+		);
+	}, [availableFeeds]);
 
-	const currentFeed = activeTab ?? internalTab;
+	const [internalTab, setInternalTab] = useState(defaultTab);
+
+	useEffect(() => {
+		if (!activeTab && defaultTab && internalTab !== defaultTab) {
+			setInternalTab(defaultTab);
+		}
+	}, [activeTab, defaultTab, internalTab]);
+
+	const currentFeed = activeTab ?? internalTab ?? defaultTab;
 	const handleTabChange = onTabChange ?? setInternalTab;
-
-	if (
-		availableFeeds.length > 0 &&
-		!availableFeeds.find((f) => f.id === currentFeed) &&
-		!activeTab
-	) {
-		setInternalTab(availableFeeds[0].id);
-	}
 
 	if (availableFeeds.length === 0) {
 		return (
@@ -561,10 +484,10 @@ function UserFeeds({
 
 	return (
 		<div className="flex h-full flex-1 flex-col">
-			<div className="mb-6 flex justify-start transition-all pt-2 pb-0 shrink-0">
+			<div className="mb-6 shrink-0 justify-start pb-0 pt-2 transition-all">
 				<ScrollShadow
 					orientation="horizontal"
-					className="w-full h-full"
+					className="h-full w-full"
 					hideScrollBar
 				>
 					<div className="w-full border-b">
@@ -578,7 +501,7 @@ function UserFeeds({
 				</ScrollShadow>
 			</div>
 
-			<div className="mt-0 flex-1 flex flex-col pb-24 min-h-0 h-full">
+			<div className="mt-0 flex h-full min-h-0 flex-1 flex-col pb-24">
 				{children}
 			</div>
 		</div>
@@ -601,7 +524,7 @@ function UserProfileMainContent({
 	onTabChange?: (tab: string) => void;
 }) {
 	return (
-		<main className={"min-w-0 pt-0 flex flex-col flex-1 h-full"}>
+		<main className="flex h-full min-w-0 flex-1 flex-col pt-0">
 			{!isSuspended && (
 				<UserFeeds
 					user={user}

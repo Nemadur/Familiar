@@ -57,6 +57,7 @@ export type FilterOption = {
 	value?: string;
 	count?: number;
 	icon?: ColumnOption["icon"];
+	parentId?: string;
 };
 
 export type FilterGroup<TData> = {
@@ -161,6 +162,8 @@ function normalizeColumnOptions(
 		label: option.label,
 		value: option.value ?? option.id,
 		icon: option.icon,
+		parentId: option.parentId,
+		id: option.id,
 	}));
 }
 

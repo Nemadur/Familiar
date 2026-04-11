@@ -1,30 +1,28 @@
 import { Surface } from "@heroui/react";
 import {
 	AlertTriangle,
-	Archive,
-	BadgeCheck,
 	Check,
 	ChevronDown,
-	ChevronUp,
-	Circle,
+	CircleDollarSign,
 	Download,
-	Link2,
-	MessageSquare,
 	Plus,
-	Sparkles,
 	Star,
 	ThumbsUp,
 	X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import Markdown from "react-markdown";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
 import {
+	OutlineAI,
 	OutlineChat,
-	OutlineCircle,
+	OutlineCheck,
+	OutlineClock03,
+	OutlineClose,
+	OutlineFileArchive,
+	OutlineLink,
 	OutlineQestionMarkCrFr,
 } from "@/components/icons/icons";
-import { StatusBadge } from "@/components/layout/my-requests/badges";
+import { StatusBadge } from "@/components/layout/requests/my/badges";
 import {
 	type DetailTab,
 	formatDetailedDate,
@@ -36,8 +34,7 @@ import {
 	type RequestItem,
 	shortId,
 	stageLabel,
-} from "@/components/layout/my-requests/helpers";
-import { Stepper } from "@/components/reui/stepper";
+} from "@/components/layout/requests/my/helpers";
 import {
 	Accordion,
 	AccordionContent,
@@ -46,19 +43,23 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { useCommission } from "@/hooks/use-commisions";
 import { useUserById } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
 import {
 	type TCommission,
+	type TCommissionRequest,
 	TCommissionRequestStatus,
 } from "@/types/commissions";
 import { TPaymentStatus } from "@/types/payment";
 import type { TUserProfile } from "@/types/user";
-import { RequestStatusStepper } from "../../my-requests/stepper";
+import { RequestStatusStepper } from "../../requests/my/stepper";
 import UserAvatar from "../../profile/avatar";
 import { ProfileBadge } from "../../profile/badge";
+import { DangerActionCard, StatusCard } from "./status-card";
+import { HoldToConfirmButton } from "./confim-button";
+import { RequestSectionCard } from "./tabs/request";
+import { DeliveryTab } from "./tabs/delivery";
 
 interface RequestDetailsModalProps {
 	request: RequestItem | null;
@@ -115,7 +116,7 @@ function CardSection({
 	children: React.ReactNode;
 }) {
 	return (
-		<Surface className="p-3 rounded-3xl">
+		<Surface className="p-3 rounded-2xl">
 			<h3 className="mb-3 text-lg font-bold text-foreground">{title}</h3>
 			{children}
 		</Surface>
@@ -170,6 +171,7 @@ function ReviewPlaceholder({
 	);
 }
 
+// TODO: replace with Tab component
 function ModalTabs({
 	activeTab,
 	setActiveTab,
@@ -220,8 +222,6 @@ export function RequestDetailsModal({
 	onOpenChange,
 }: RequestDetailsModalProps) {
 	const [activeTab, setActiveTab] = useState<DetailTab>("details");
-	const [termsExpanded, setTermsExpanded] = useState(false);
-	const [descExpanded, setDescExpanded] = useState(false);
 
 	const commissionId = request?.commissionId ?? "";
 	const { data: commissionData, isError, error } = useCommission(commissionId);
@@ -237,8 +237,6 @@ export function RequestDetailsModal({
 	useEffect(() => {
 		if (!open) {
 			setActiveTab("details");
-			setTermsExpanded(false);
-			setDescExpanded(false);
 		}
 	}, [open]);
 
@@ -294,9 +292,152 @@ export function RequestDetailsModal({
 		return null;
 	}
 
+	const isAccepted = request.status === TCommissionRequestStatus.Accepted;
+	const isPaid = payment === TPaymentStatus.Completed;
+	const isCompleted = request.status === TCommissionRequestStatus.Completed;
+	const shouldShowPayButton = isAccepted && !isPaid;
+	const shouldShowTipButton = isAccepted && isPaid;
+	const isCancelled = request.status === TCommissionRequestStatus.Cancelled;
+	const isDeliveredAndPaid =
+		request.status === TCommissionRequestStatus.Delivered && isPaid;
+
+	const shouldShowArchiveAction = isDeliveredAndPaid || isCancelled;
+	const shouldShowInvoiceButton = isPaid && !isCancelled;
+
+	function getOverviewStatus({
+		isCancelled,
+		shouldShowPayButton,
+		shouldShowTipButton,
+		requestStatus,
+	}: {
+		isCancelled: boolean;
+		shouldShowPayButton: boolean;
+		shouldShowTipButton: boolean;
+		requestStatus: TCommissionRequestStatus;
+	}) {
+		if (isCancelled) {
+			return {
+				icon: OutlineClose,
+				tone: "danger" as const,
+				title: "Request cancelled",
+				description: "This commission request is no longer active.",
+				meta: "Closed",
+			};
+		}
+
+		if (shouldShowPayButton) {
+			return {
+				icon: CircleDollarSign,
+				tone: "warning" as const,
+				title: "Payment required",
+				description:
+					"This request was accepted and is waiting for payment before work begins.",
+				meta: "Pending",
+			};
+		}
+
+		if (requestStatus === TCommissionRequestStatus.Pending) {
+			return {
+				icon: OutlineClock03,
+				tone: "default" as const,
+				title: "Waiting for artist response",
+				description: "The artist has not responded to this request yet.",
+				meta: "Pending",
+			};
+		}
+
+		if (requestStatus === TCommissionRequestStatus.Accepted) {
+			return {
+				icon: OutlineCheck,
+				tone: "success" as const,
+				title: "Accepted",
+				description: "The artist has accepted this request.",
+				meta: "Accepted",
+			};
+		}
+
+		if (requestStatus === TCommissionRequestStatus.In_Progress) {
+			return {
+				icon: OutlineAI,
+				tone: "accent" as const,
+				title: "Work in progress",
+				description: "The artist is currently working on your commission.",
+				meta: "In progress",
+			};
+		}
+
+		if (requestStatus === TCommissionRequestStatus.Delivered) {
+			return {
+				icon: OutlineCheck,
+				tone: "accent" as const,
+				title: "Delivery ready",
+				description: "Your files are ready to review in the delivery tab.",
+				meta: "Delivered",
+			};
+		}
+
+		// if (
+		// 	requestStatus === TCommissionRequestStatus.Completed ||
+		// 	shouldShowTipButton
+		// ) {
+		// 	return {
+		// 		icon: OutlineCheck,
+		// 		tone: "success" as const,
+		// 		title: "Commission completed",
+		// 		description: "Everything is finished and payment has been completed.",
+		// 		meta: "Done",
+		// 	};
+		// }
+
+		return {
+			icon: OutlineClock03,
+			tone: "default" as const,
+			title: "Request updated",
+			description: "Check the latest progress and details below.",
+			meta: undefined,
+		};
+	}
+
+	const overviewStatus = getOverviewStatus({
+		isCancelled,
+		shouldShowPayButton,
+		shouldShowTipButton,
+		requestStatus: request.status,
+	});
+
+	function SecondaryActionCard({
+		title,
+		description,
+		buttonLabel,
+		onClick,
+	}: {
+		title: string;
+		description: string;
+		buttonLabel: string;
+		onClick?: () => void;
+	}) {
+		return (
+			<div className="flex items-center justify-between gap-3 rounded-[20px] border border-border px-3 py-3">
+				<div className="min-w-0">
+					<h6 className="text-sm font-semibold text-foreground">{title}</h6>
+					<p className="text-xs text-muted-foreground">{description}</p>
+				</div>
+
+				<Button
+					variant="outline"
+					size="lg"
+					className="shrink-0"
+					onClick={onClick}
+				>
+					{buttonLabel}
+				</Button>
+			</div>
+		);
+	}
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="!w-[min(96vw,1480px)] !max-w-[1480px] overflow-hidden bg-secondary border-border p-0 text-foreground shadow-2xl sm:rounded-[28px] [&>button]:hidden">
+			<DialogContent className="w-[min(96vw,1480px)]! max-w-[1480px]! overflow-hidden bg-secondary border-border p-0 text-foreground shadow-2xl sm:rounded-[28px] [&>button]:hidden">
 				<DialogTitle className="sr-only">Request details</DialogTitle>
 
 				<div className="flex h-[90vh] w-full overflow-hidden">
@@ -325,91 +466,64 @@ export function RequestDetailsModal({
 							<RequestStatusStepper status={request.status} />
 						</div>
 
-						<div className="flex flex-col gap-2 px-6 pb-6">
-							<Button className="w-full" variant={"secondary"} size={"xl"}>
-								Download invoices
-							</Button>
-							{/* TODO: for danger add (hold to confirm) */}
-							<Button className="w-full" variant={"destructive"} size={"xl"}>
-								Archive (hold to confirm)
-							</Button>
-						</div>
-
 						<div className="flex-1 overflow-y-auto">
 							<SidebarSection title="Overview">
-								{/* TODO: TIP artist */}
 								<Surface
-									variant={"default"}
-									className="p-4 rounded-3xl gap-4 flex flex-col"
+									variant="default"
+									className="flex flex-col gap-3 rounded-3xl p-2"
 								>
-									{request.status === TCommissionRequestStatus.Accepted && (
-										<div className="relative flex flex-col gap-2.5">
-											<div className="flex flex-col">
-												<h6 className="text-md font-semibold text-foreground">
-													Love your commission?
-												</h6>
-												<span className="text-xs leading-relaxed text-muted-foreground">
-													Show your support and leave a TIP!
-												</span>
-											</div>
+									<StatusCard
+										icon={overviewStatus.icon}
+										tone={overviewStatus.tone}
+										title={overviewStatus.title}
+										description={overviewStatus.description}
+										meta={overviewStatus.meta}
+										action={
+											shouldShowPayButton
+												? {
+														label: `Pay ${formatMoney(listingPrice)}`,
+														variant: "default",
+													}
+												: undefined
+										}
+									/>
 
-											<Button className="w-full" size={"xl"}>
-												Leave a TIP
-											</Button>
-											{/* <Button
-												className="w-full"
-												variant={"outline"}
-												size={"xl"}
-											>
-												How TIP works
-											</Button> */}
-										</div>
+									{shouldShowTipButton && !isCancelled && (
+										<SecondaryActionCard
+											title="Enjoyed the result?"
+											description="Leave an optional tip for the artist."
+											buttonLabel="Leave a tip"
+										/>
 									)}
-									<div className="flex flex-col gap-3 rounded-2xl border border-border bg-card py-4">
-										<InfoRow
-											label="Payment"
-											value={paymentLabel(payment)}
-											valueClassName={paymentClass}
+
+									{shouldShowInvoiceButton && (
+										<SecondaryActionCard
+											title="Invoice"
+											description="Download a copy of your payment invoice."
+											buttonLabel="Download invoice"
+											onClick={() => {
+												// TODO: download invoice
+											}}
 										/>
-										<InfoRow
-											label="Total paid"
-											value={formatMoney(totalPaid)}
-											valueClassName="text-sm font-bold text-foreground"
+									)}
+
+									{shouldShowArchiveAction && (
+										<DangerActionCard
+											title="Archive this request"
+											description="Hold the button to archive this completed request."
+											action={
+												<HoldToConfirmButton
+													onComplete={() => {
+														// TODO: call archive mutation here
+													}}
+												>
+													<OutlineFileArchive className="size-4" />
+													Hold to archive
+												</HoldToConfirmButton>
+											}
 										/>
-										<Separator />
-										<InfoRow
-											label="Estimated start"
-											value={stageLabel(request.status)}
-										/>
-										{timeline && (
-											<InfoRow
-												label="Guaranteed by"
-												value={timeline.primary} //TODO: get finish date
-											/>
-										)}
-									</div>
+									)}
 								</Surface>
-
-								{/* <div className="flex flex-col gap-3 rounded-[24px] border border-border/70 bg-card p-4 shadow-sm">
-									<InfoRow
-										label="Payment"
-										value={paymentLabel(payment)}
-										valueClassName={paymentClass}
-									/>
-									<InfoRow
-										label="Total paid"
-										value={formatMoney(totalPaid)}
-										valueClassName="text-sm font-bold text-foreground"
-									/>
-									<div className="h-px bg-border/70" />
-									<InfoRow
-										label="Current stage"
-										value={stageLabel(request.status)}
-									/>
-									{timeline && (
-										<InfoRow label="Timeline" value={timeline.primary} />
-									)}
-								</div> */}
 							</SidebarSection>
 
 							<SidebarSection title="Artist">
@@ -513,202 +627,13 @@ export function RequestDetailsModal({
 
 						<ModalTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-						<div className="min-w-0 flex-1 overflow-y-auto">
+						<div className="min-w-0 flex-1 overflow-y-auto w-full p-6">
+							{/* TODO: get all data from form */}
 							{activeTab === "details" && (
-								<div className="mx-auto flex w-full flex-col gap-8 p-5">
-									{/* TODO: put here all commision request data client selected in request form */}
-									<CardSection title="Request">
-										<Surface
-											variant={"secondary"}
-											className="mb-6 flex items-center gap-4 rounded-2xl p-1 pr-4"
-										>
-											<div className="flex h-full items-center justify-center overflow-hidden rounded-xl border border-border text-sm font-semibold text-foreground">
-												<img
-													src={
-														commission?.multimedia[0]?.sizes?.thumbnail || ""
-													}
-													alt={commissionTitle}
-													className="size-full object-cover"
-												/>
-											</div>
-											<div className="flex min-w-0 flex-1 flex-col">
-												<h4 className="font-semibold">{commission?.title}</h4>
-											</div>
-											{listingPrice > 0 && (
-												<span className="text-sm text-muted-foreground">
-													From {formatMoney(listingPrice)}
-												</span>
-											)}
-										</Surface>
-
-										<div className="mb-5">
-											<span className="mb-3 block text-xs text-muted-foreground">
-												How will you be using this commission?
-											</span>
-											<div className="flex flex-col gap-2.5">
-												{/* TODO: we can re-use components from form component  but disabled inputs*/}
-												<label className="flex items-center gap-3 rounded-xl border border-border/70 bg-background/70 px-3 py-3">
-													<div className="flex size-5 items-center justify-center rounded-full border-2 border-foreground bg-foreground">
-														<div className="size-2 rounded-full bg-background" />
-													</div>
-													<span className="text-sm text-foreground">
-														Personal
-													</span>
-													<span className="ml-auto text-xs text-muted-foreground">
-														Included
-													</span>
-												</label>
-											</div>
-										</div>
-
-										{/* <div className="mb-5">
-											<span className="mb-3 block text-xs text-muted-foreground">
-												Quantity
-											</span>
-											<div className="flex items-center gap-3">
-												<button className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-background text-muted-foreground shadow-sm">
-													-
-												</button>
-												<span className="w-8 text-center text-lg font-semibold text-foreground">
-													1
-												</span>
-												<button className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-background text-muted-foreground shadow-sm">
-													+
-												</button>
-											</div>
-										</div> */}
-
-										<div>
-											<span className="mb-3 block text-xs text-muted-foreground">
-												References and Files
-											</span>
-											{request.multimedia?.length ? (
-												<div className="flex flex-col gap-2">
-													{request.multimedia.map((media) => {
-														const url =
-															media.sizes.thumbnail ||
-															media.sizes.half ||
-															media.sizes.full;
-														return (
-															<div
-																key={media.id}
-																className="flex items-center gap-3 rounded-2xl border border-border/70 bg-muted/40 px-3 py-3"
-															>
-																<Link2 className="size-4 text-violet-500" />
-																<div className="flex min-w-0 flex-1 flex-col">
-																	<span className="truncate text-sm font-medium text-foreground">
-																		Attachment {shortId(media.id, 3, 3)}
-																	</span>
-																	{url && (
-																		<span className="truncate text-[11px] text-muted-foreground">
-																			{url}
-																		</span>
-																	)}
-																</div>
-																<button className="text-muted-foreground hover:text-foreground">
-																	&times;
-																</button>
-															</div>
-														);
-													})}
-												</div>
-											) : (
-												<div className="rounded-2xl border border-border/70 bg-muted/40 px-4 py-4 text-sm text-muted-foreground">
-													No references attached.
-												</div>
-											)}
-										</div>
-									</CardSection>
-
-									<CardSection title="Proposal">
-										<div className="mb-5">
-											<span className="mb-2 block text-xs text-muted-foreground">
-												Scope
-											</span>
-											<div className="rounded-2xl border border-border/70 bg-muted/40 p-4">
-												<p className="text-sm leading-relaxed text-foreground/90">
-													{request.description}
-												</p>
-											</div>
-										</div>
-
-										{/* <div className="mb-5">
-											<span className="mb-3 block text-xs text-muted-foreground">
-												Timeline
-											</span>
-											<div className="flex flex-col gap-3">
-												<div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-background/65 px-4 py-3">
-													<div className="mt-1 size-2 rounded-full bg-emerald-500" />
-													<div className="flex flex-col">
-														<span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-															Current stage
-														</span>
-														<span className="text-[11px] text-muted-foreground">
-															Latest request progress on the platform.
-														</span>
-													</div>
-													<span className="ml-auto text-sm text-foreground">
-														{stageLabel(request.status)}
-													</span>
-												</div>
-												{timeline && (
-													<div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-background/65 px-4 py-3">
-														<div className="mt-1 size-2 rounded-full bg-amber-500" />
-														<div className="flex flex-col">
-															<span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-																Timeline note
-															</span>
-															<span className="text-[11px] text-muted-foreground">
-																Derived from the latest request status.
-															</span>
-														</div>
-														<span className="ml-auto text-sm text-foreground">
-															{timeline.secondary}
-														</span>
-													</div>
-												)}
-											</div>
-										</div> */}
-
-										<div>
-											<span className="mb-3 block text-xs text-muted-foreground">
-												Payment
-											</span>
-											<div className="rounded-2xl border border-border/70 bg-muted/40 p-4">
-												<div className="mb-3 flex items-center justify-between">
-													<span className="text-xs text-muted-foreground">
-														Project subtotal
-													</span>
-													<span className="text-sm text-foreground">
-														{formatMoney(listingPrice)}
-													</span>
-												</div>
-												{payment !== TPaymentStatus.Completed && (
-													<div className="mb-3 flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
-														<div className="size-2 rounded-full bg-amber-500" />
-														<span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-															Payment pending or incomplete
-														</span>
-														<span className="ml-auto text-xs text-muted-foreground">
-															{formatShortDate(request.createdAt)}
-														</span>
-														<button className="rounded-md border border-border/70 bg-background px-2 py-1 text-[10px] font-medium text-foreground shadow-sm">
-															Invoice
-														</button>
-													</div>
-												)}
-												<div className="flex items-center justify-between border-t border-border/70 pt-3">
-													<span className="text-xs text-muted-foreground">
-														Total paid
-													</span>
-													<span className="text-lg font-bold text-foreground">
-														{formatMoney(totalPaid)}
-													</span>
-												</div>
-											</div>
-										</div>
-									</CardSection>
-								</div>
+								<RequestSectionCard
+									request={request as TCommissionRequest}
+									commission={commission as TCommission}
+								/>
 							)}
 
 							{activeTab === "delivery" && (
@@ -872,90 +797,7 @@ export function RequestDetailsModal({
 
 							{/* TODO: Add review (client / artist) */}
 							{activeTab === "review" && (
-								<div className="mx-auto flex w-full max-w-[980px] flex-col gap-6 p-5 md:p-6 xl:p-8">
-									<CardSection title={`${artist?.username} left you a review`}>
-										<p className="mb-5 text-xs text-muted-foreground">
-											This review is now visible to artists when you submit a
-											commission request.
-										</p>
-										<div className="rounded-2xl border border-border/70 bg-muted/40 p-4">
-											<div className="mb-3 flex items-center gap-3">
-												<div className="flex size-8 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-background shadow-sm">
-													<UserAvatar user={artist as TUserProfile} />
-												</div>
-												<div className="flex items-center gap-2">
-													<ThumbsUp className="size-4 text-emerald-600 dark:text-emerald-400" />
-													<span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-														Recommend
-													</span>
-												</div>
-												<span className="ml-auto text-xs text-muted-foreground">
-													Recent
-												</span>
-											</div>
-											<div className="mb-3 flex flex-wrap gap-1.5">
-												{[
-													"Respectful",
-													"Clear requirements",
-													"Helpful feedback",
-													"Very responsive",
-												].map((tag) => (
-													<span
-														key={tag}
-														className="rounded-lg border border-border/70 bg-background px-2.5 py-1 text-xs text-foreground shadow-sm"
-													>
-														{tag}
-													</span>
-												))}
-											</div>
-											<button className="text-xs text-violet-600 hover:underline dark:text-violet-400">
-												Difficulties:
-											</button>
-											<p className="mt-3 text-xs text-muted-foreground">
-												Anonymize semi-public review
-											</p>
-										</div>
-									</CardSection>
-
-									<CardSection
-										title={`Thanks for leaving a review for ${artist?.username}`}
-									>
-										<p className="mb-5 text-xs text-muted-foreground">
-											Your feedback helps make the platform safer for everyone.
-										</p>
-										<div className="rounded-2xl border border-border/70 bg-muted/40 p-4">
-											<div className="mb-3 flex items-center gap-2">
-												<div className="flex items-center gap-0.5">
-													{[1, 2, 3, 4, 5].map((star) => (
-														<Star
-															key={star}
-															className="size-4 fill-amber-400 text-amber-400"
-														/>
-													))}
-												</div>
-												<span className="text-xs text-muted-foreground">
-													Recent
-												</span>
-												<button className="ml-auto text-muted-foreground hover:text-foreground">
-													<ChevronDown className="size-4" />
-												</button>
-											</div>
-											<div className="mb-3 flex flex-wrap gap-1.5">
-												{["Professional", "Clear communication"].map((tag) => (
-													<span
-														key={tag}
-														className="rounded-lg border border-border/70 bg-background px-2.5 py-1 text-xs text-foreground shadow-sm"
-													>
-														{tag}
-													</span>
-												))}
-											</div>
-											<p className="text-xs text-muted-foreground">
-												Anonymize semi-public review
-											</p>
-										</div>
-									</CardSection>
-								</div>
+								<DeliveryTab artist={artist as TUserProfile} />
 							)}
 						</div>
 					</div>

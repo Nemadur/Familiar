@@ -1,11 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
-import { OutlineChevronRight } from "@/components/icons/icons";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
 	Tooltip,
 	TooltipContent,
@@ -13,11 +9,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { User } from "@/types/user";
-import { ProfileDetailsContent } from "../profile-details";
+import type { TUserProfile } from "@/types/user";
 
 interface ProfileBioProps {
-	user: User;
+	user: TUserProfile;
 	isShort?: boolean;
 	className?: string;
 }
