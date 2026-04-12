@@ -1,5 +1,3 @@
-import countries from "i18n-iso-countries";
-import enLocale from "i18n-iso-countries/langs/en.json";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,13 +19,6 @@ import {
 import { languages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { SpokenLanguage } from "@/types/user";
-
-// Register locale safely
-try {
-	countries.registerLocale(enLocale);
-} catch (e) {
-	console.warn("Failed to register countries locale:", e);
-}
 
 export const levelColors: Record<string, string> = {
 	native: "bg-success/12 text-success",
@@ -79,23 +70,7 @@ function getLanguageData(code: string) {
 		const maximized = locale.maximize();
 		if (maximized.region) return { flag: getFlagEmoji(maximized.region), name };
 	} catch {
-		// Ignore errors and try countries fallback
-	}
-
-	// Check countries library (handles "japan" -> "JP", "United States" -> "US")
-	try {
-		const countryCode = countries.getAlpha2Code(code, "en");
-		if (countryCode) {
-			return {
-				flag: getFlagEmoji(countryCode),
-				name:
-					new Intl.DisplayNames([code], { type: "language" }).of(code) ||
-					countries.getName(countryCode, "en") ||
-					code,
-			};
-		}
-	} catch (e) {
-		console.warn("Error looking up country code:", e);
+		// Ignore errors and try fallback
 	}
 
 	return { flag: "🌐", name: code };
