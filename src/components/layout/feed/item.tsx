@@ -53,11 +53,7 @@ export const FeedItem = memo(function FeedItem({
 	const hasContentWarnings =
 		post.contentWarnings && post.contentWarnings.length > 0;
 	const shouldBlur = hasContentWarnings && !isContentRevealed;
-	const blurredImageSrc = useBlurredImage(
-		post.images?.[0]?.path,
-		shouldBlur,
-		post.images?.[0]?.assetId,
-	);
+	const blurredImageSrc = useBlurredImage(post.images?.[0]?.path, shouldBlur);
 
 	const medias = post?.images || [];
 	const hasMultipleImages = medias.length > 1;
@@ -196,6 +192,11 @@ export const FeedItem = memo(function FeedItem({
 			handleBookmark,
 			_animateGate,
 			shouldBlur,
+			post.bookmarkCount,
+			post.commentCount,
+			post.isCommented,
+			post.isReposted,
+			post.repostCount,
 		],
 	);
 

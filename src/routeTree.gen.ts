@@ -14,7 +14,6 @@ import { Route as MainRouteImport } from './routes/_main'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
 import { Route as DashboardCommissionsRouteImport } from './routes/dashboard/commissions'
-import { Route as MainUsersRouteImport } from './routes/_main.users'
 import { Route as MainMyRequestsRouteImport } from './routes/_main.my-requests'
 import { Route as MainLogoutRouteImport } from './routes/_main.logout'
 import { Route as MainUsernameRouteImport } from './routes/_main.$username'
@@ -24,7 +23,6 @@ import { Route as MainAuthLoginIndexRouteImport } from './routes/_main.auth/logi
 import { Route as MainAuthForgotIndexRouteImport } from './routes/_main.auth/forgot/index'
 import { Route as MainUsernameTabCommissionIdIndexRouteImport } from './routes/_main.$username/$tab/$commissionId/index'
 import { Route as MainUsernameTabFolderFolderSlugIndexRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/index'
-import { Route as MainUsernameTabFolderFolderSlugPostIdRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/$postId'
 import { Route as MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
 
 const DashboardRoute = DashboardRouteImport.update({
@@ -50,11 +48,6 @@ const DashboardCommissionsRoute = DashboardCommissionsRouteImport.update({
   id: '/commissions',
   path: '/commissions',
   getParentRoute: () => DashboardRoute,
-} as any)
-const MainUsersRoute = MainUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => MainRoute,
 } as any)
 const MainMyRequestsRoute = MainMyRequestsRouteImport.update({
   id: '/my-requests',
@@ -103,12 +96,6 @@ const MainUsernameTabFolderFolderSlugIndexRoute =
     path: '/folder/$folderSlug/',
     getParentRoute: () => MainUsernameTabRoute,
   } as any)
-const MainUsernameTabFolderFolderSlugPostIdRoute =
-  MainUsernameTabFolderFolderSlugPostIdRouteImport.update({
-    id: '/folder/$folderSlug/$postId',
-    path: '/folder/$folderSlug/$postId',
-    getParentRoute: () => MainUsernameTabRoute,
-  } as any)
 const MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute =
   MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport.update({
     id: '/folder/$folderSlug/$subfolderSlug/$postId',
@@ -122,7 +109,6 @@ export interface FileRoutesByFullPath {
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
-  '/users': typeof MainUsersRoute
   '/dashboard/commissions': typeof DashboardCommissionsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$username/$tab': typeof MainUsernameTabRouteWithChildren
@@ -130,7 +116,6 @@ export interface FileRoutesByFullPath {
   '/auth/login/': typeof MainAuthLoginIndexRoute
   '/auth/register/': typeof MainAuthRegisterIndexRoute
   '/$username/$tab/$commissionId/': typeof MainUsernameTabCommissionIdIndexRoute
-  '/$username/$tab/folder/$folderSlug/$postId': typeof MainUsernameTabFolderFolderSlugPostIdRoute
   '/$username/$tab/folder/$folderSlug/': typeof MainUsernameTabFolderFolderSlugIndexRoute
   '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
@@ -138,7 +123,6 @@ export interface FileRoutesByTo {
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
-  '/users': typeof MainUsersRoute
   '/dashboard/commissions': typeof DashboardCommissionsRoute
   '/': typeof MainIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -147,7 +131,6 @@ export interface FileRoutesByTo {
   '/auth/login': typeof MainAuthLoginIndexRoute
   '/auth/register': typeof MainAuthRegisterIndexRoute
   '/$username/$tab/$commissionId': typeof MainUsernameTabCommissionIdIndexRoute
-  '/$username/$tab/folder/$folderSlug/$postId': typeof MainUsernameTabFolderFolderSlugPostIdRoute
   '/$username/$tab/folder/$folderSlug': typeof MainUsernameTabFolderFolderSlugIndexRoute
   '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
@@ -158,7 +141,6 @@ export interface FileRoutesById {
   '/_main/$username': typeof MainUsernameRouteWithChildren
   '/_main/logout': typeof MainLogoutRoute
   '/_main/my-requests': typeof MainMyRequestsRoute
-  '/_main/users': typeof MainUsersRoute
   '/dashboard/commissions': typeof DashboardCommissionsRoute
   '/_main/': typeof MainIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -167,7 +149,6 @@ export interface FileRoutesById {
   '/_main/auth/login/': typeof MainAuthLoginIndexRoute
   '/_main/auth/register/': typeof MainAuthRegisterIndexRoute
   '/_main/$username/$tab/$commissionId/': typeof MainUsernameTabCommissionIdIndexRoute
-  '/_main/$username/$tab/folder/$folderSlug/$postId': typeof MainUsernameTabFolderFolderSlugPostIdRoute
   '/_main/$username/$tab/folder/$folderSlug/': typeof MainUsernameTabFolderFolderSlugIndexRoute
   '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
@@ -179,7 +160,6 @@ export interface FileRouteTypes {
     | '/$username'
     | '/logout'
     | '/my-requests'
-    | '/users'
     | '/dashboard/commissions'
     | '/dashboard/'
     | '/$username/$tab'
@@ -187,7 +167,6 @@ export interface FileRouteTypes {
     | '/auth/login/'
     | '/auth/register/'
     | '/$username/$tab/$commissionId/'
-    | '/$username/$tab/folder/$folderSlug/$postId'
     | '/$username/$tab/folder/$folderSlug/'
     | '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
   fileRoutesByTo: FileRoutesByTo
@@ -195,7 +174,6 @@ export interface FileRouteTypes {
     | '/$username'
     | '/logout'
     | '/my-requests'
-    | '/users'
     | '/dashboard/commissions'
     | '/'
     | '/dashboard'
@@ -204,7 +182,6 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/$username/$tab/$commissionId'
-    | '/$username/$tab/folder/$folderSlug/$postId'
     | '/$username/$tab/folder/$folderSlug'
     | '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
   id:
@@ -214,7 +191,6 @@ export interface FileRouteTypes {
     | '/_main/$username'
     | '/_main/logout'
     | '/_main/my-requests'
-    | '/_main/users'
     | '/dashboard/commissions'
     | '/_main/'
     | '/dashboard/'
@@ -223,7 +199,6 @@ export interface FileRouteTypes {
     | '/_main/auth/login/'
     | '/_main/auth/register/'
     | '/_main/$username/$tab/$commissionId/'
-    | '/_main/$username/$tab/folder/$folderSlug/$postId'
     | '/_main/$username/$tab/folder/$folderSlug/'
     | '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
   fileRoutesById: FileRoutesById
@@ -269,13 +244,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/commissions'
       preLoaderRoute: typeof DashboardCommissionsRouteImport
       parentRoute: typeof DashboardRoute
-    }
-    '/_main/users': {
-      id: '/_main/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof MainUsersRouteImport
-      parentRoute: typeof MainRoute
     }
     '/_main/my-requests': {
       id: '/_main/my-requests'
@@ -340,13 +308,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainUsernameTabFolderFolderSlugIndexRouteImport
       parentRoute: typeof MainUsernameTabRoute
     }
-    '/_main/$username/$tab/folder/$folderSlug/$postId': {
-      id: '/_main/$username/$tab/folder/$folderSlug/$postId'
-      path: '/folder/$folderSlug/$postId'
-      fullPath: '/$username/$tab/folder/$folderSlug/$postId'
-      preLoaderRoute: typeof MainUsernameTabFolderFolderSlugPostIdRouteImport
-      parentRoute: typeof MainUsernameTabRoute
-    }
     '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': {
       id: '/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
       path: '/folder/$folderSlug/$subfolderSlug/$postId'
@@ -359,15 +320,12 @@ declare module '@tanstack/react-router' {
 
 interface MainUsernameTabRouteChildren {
   MainUsernameTabCommissionIdIndexRoute: typeof MainUsernameTabCommissionIdIndexRoute
-  MainUsernameTabFolderFolderSlugPostIdRoute: typeof MainUsernameTabFolderFolderSlugPostIdRoute
   MainUsernameTabFolderFolderSlugIndexRoute: typeof MainUsernameTabFolderFolderSlugIndexRoute
   MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute: typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
 
 const MainUsernameTabRouteChildren: MainUsernameTabRouteChildren = {
   MainUsernameTabCommissionIdIndexRoute: MainUsernameTabCommissionIdIndexRoute,
-  MainUsernameTabFolderFolderSlugPostIdRoute:
-    MainUsernameTabFolderFolderSlugPostIdRoute,
   MainUsernameTabFolderFolderSlugIndexRoute:
     MainUsernameTabFolderFolderSlugIndexRoute,
   MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute:
@@ -394,7 +352,6 @@ interface MainRouteChildren {
   MainUsernameRoute: typeof MainUsernameRouteWithChildren
   MainLogoutRoute: typeof MainLogoutRoute
   MainMyRequestsRoute: typeof MainMyRequestsRoute
-  MainUsersRoute: typeof MainUsersRoute
   MainIndexRoute: typeof MainIndexRoute
   MainAuthForgotIndexRoute: typeof MainAuthForgotIndexRoute
   MainAuthLoginIndexRoute: typeof MainAuthLoginIndexRoute
@@ -405,7 +362,6 @@ const MainRouteChildren: MainRouteChildren = {
   MainUsernameRoute: MainUsernameRouteWithChildren,
   MainLogoutRoute: MainLogoutRoute,
   MainMyRequestsRoute: MainMyRequestsRoute,
-  MainUsersRoute: MainUsersRoute,
   MainIndexRoute: MainIndexRoute,
   MainAuthForgotIndexRoute: MainAuthForgotIndexRoute,
   MainAuthLoginIndexRoute: MainAuthLoginIndexRoute,

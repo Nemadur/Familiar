@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-router";
 import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form copy";
 import { CommissionModal } from "@/components/layout/profile/modals/commission-modal";
-import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
+// import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
 import { useCommission } from "@/hooks/use-commisions";
 import { useUserByUsername } from "@/hooks/use-user";
 import type { TCommission } from "@/types/commissions";
@@ -18,16 +18,16 @@ function RouteComponent() {
 	const { username, tab, commissionId } = Route.useParams();
 	const { user } = useUserByUsername(username);
 
-	if (tab === "portfolio") {
-		return (
-			<PortfolioPostRoute
-				username={username}
-				tab={tab}
-				postId={commissionId}
-				user={user}
-			/>
-		)
-	}
+	// if (tab === "portfolio") {
+	// 	return (
+	// 		<PortfolioPostRoute
+	// 			username={username}
+	// 			tab={tab}
+	// 			postId={commissionId}
+	// 			user={user}
+	// 		/>
+	// 	);
+	// }
 
 	return (
 		<CommissionRoute
@@ -36,41 +36,41 @@ function RouteComponent() {
 			commissionId={commissionId}
 			user={user}
 		/>
-	)
+	);
 }
 
-function PortfolioPostRoute({
-	username,
-	tab,
-}: {
-	username: string;
-	tab: string;
-	postId: string;
-	user: Awaited<ReturnType<typeof useUserByUsername>>["user"];
-}) {
-	const navigate = useNavigate();
+// function PortfolioPostRoute({
+// 	username,
+// 	tab,
+// }: {
+// 	username: string;
+// 	tab: string;
+// 	postId: string;
+// 	user: Awaited<ReturnType<typeof useUserByUsername>>["user"];
+// }) {
+// 	const navigate = useNavigate();
 
-	const post = null;
+// 	const post = null;
 
-	if (!post) return null;
+// 	if (!post) return null;
 
-	return (
-		<PortfolioPostModal
-			post={post}
-			open={true}
-			onOpenChange={(open) => {
-				if (!open) {
-					navigate({
-						to: `/${username}/${tab}`,
-						replace: true,
-						resetScroll: false,
-						search: (old) => old,
-					})
-				}
-			}}
-		/>
-	)
-}
+// 	return (
+// 		<PortfolioPostModal
+// 			post={post}
+// 			open={true}
+// 			onOpenChange={(open) => {
+// 				if (!open) {
+// 					navigate({
+// 						to: `/${username}/${tab}`,
+// 						replace: true,
+// 						resetScroll: false,
+// 						search: (old) => old,
+// 					})
+// 				}
+// 			}}
+// 		/>
+// 	)
+// }
 
 function CommissionRoute({
 	username,
@@ -91,7 +91,7 @@ function CommissionRoute({
 			replace: true,
 			resetScroll: false,
 			search: (old) => old,
-		})
+		});
 
 	if (commissionId === "new") {
 		if (!user?.userId) return null;
@@ -103,7 +103,7 @@ function CommissionRoute({
 				artistId={user.userId}
 				onClose={handleClose}
 			/>
-		)
+		);
 	}
 
 	return (
@@ -112,7 +112,7 @@ function CommissionRoute({
 			user={user}
 			onClose={handleClose}
 		/>
-	)
+	);
 }
 
 function ExistingCommissionRoute({
@@ -132,5 +132,5 @@ function ExistingCommissionRoute({
 				if (!open) onClose();
 			}}
 		/>
-	)
+	);
 }

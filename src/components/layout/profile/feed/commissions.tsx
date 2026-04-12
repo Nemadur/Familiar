@@ -1,11 +1,6 @@
 import { ScrollShadow, surfaceVariants } from "@heroui/react";
 import { useNavigate } from "@tanstack/react-router";
-import {
-	FolderOpen,
-	ListFilterIcon,
-	Tag,
-	Wallet,
-} from "lucide-react";
+import { FolderOpen, ListFilterIcon, Tag, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
@@ -240,7 +235,7 @@ function CommissionCard({
 		(hasContentWarnings && !isContentRevealed) ||
 		(hasAdultOnly && !isContentRevealed);
 
-	const firstImage = commission.multimedia[0]?.fileName;
+	const firstImage = commission.multimedia[0]?.sizes?.half;
 	const blurredImageSrc = useBlurredImage(firstImage, shouldBlur);
 
 	const {
@@ -602,7 +597,9 @@ export function ProfileCommissions({
 
 	const visibleCommissions = useMemo(() => {
 		if (isMe) return commissions;
-		return commissions.filter((c) => c.commissionStatus !== TCommissionStatus.Archived);
+		return commissions.filter(
+			(c) => c.commissionStatus !== TCommissionStatus.Archived,
+		);
 	}, [commissions, isMe]);
 
 	const categoryOptions = useMemo(
@@ -612,7 +609,7 @@ export function ProfileCommissions({
 					visibleCommissions.map((commission) => {
 						const parentName = commission.category?.parentName;
 						const name = commission.category?.name || "Uncategorized";
-						
+
 						return [
 							getCommissionCategoryId(commission),
 							{
@@ -803,17 +800,31 @@ export function ProfileCommissions({
 			map.get(folderId)!.items.push(commission);
 		}
 
-		return Array.from(map.values()).map(folder => {
-			const allPaused = folder.items.length > 0 && folder.items.every(c => c.commissionStatus === TCommissionStatus.Paused);
-			if (allPaused) {
-				// We use a special string for CLOSED or map it if TCommissionStatus doesn't have it
-				// But we must respect the type. We can use a custom logic in render or override status
-				return { ...folder, isClosed: true };
-			}
-			// Otherwise just use the first item's status or active
-			const hasActive = folder.items.some(c => c.commissionStatus === TCommissionStatus.Active);
-			return { ...folder, isClosed: false, status: hasActive ? TCommissionStatus.Active : folder.items[0].commissionStatus };
-		}).sort((a, b) => a.label.localeCompare(b.label));
+		return Array.from(map.values())
+			.map((folder) => {
+				const allPaused =
+					folder.items.length > 0 &&
+					folder.items.every(
+						(c) => c.commissionStatus === TCommissionStatus.Paused,
+					);
+				if (allPaused) {
+					// We use a special string for CLOSED or map it if TCommissionStatus doesn't have it
+					// But we must respect the type. We can use a custom logic in render or override status
+					return { ...folder, isClosed: true };
+				}
+				// Otherwise just use the first item's status or active
+				const hasActive = folder.items.some(
+					(c) => c.commissionStatus === TCommissionStatus.Active,
+				);
+				return {
+					...folder,
+					isClosed: false,
+					status: hasActive
+						? TCommissionStatus.Active
+						: folder.items[0].commissionStatus,
+				};
+			})
+			.sort((a, b) => a.label.localeCompare(b.label));
 	}, [filteredCommissions]);
 
 	function handleFilterChange(
@@ -870,7 +881,9 @@ export function ProfileCommissions({
 									{folder.label}
 								</h2>
 								<Badge variant="secondary" className="whitespace-nowrap">
-									{folder.isClosed ? "Closed" : formatCommissionStatus(folder.status)}
+									{folder.isClosed
+										? "Closed"
+										: formatCommissionStatus(folder.status)}
 								</Badge>
 							</div>
 

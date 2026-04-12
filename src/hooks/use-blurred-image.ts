@@ -1,34 +1,17 @@
 import { useEffect, useState } from "react";
-import { getBlurredImage } from "@/data/media";
 
-export function useBlurredImage(
-	src: string | undefined,
-	shouldBlur: boolean,
-	assetId?: string,
-) {
+/**
+ * A hook that takes an image URL and generates a low-res blurred base64/blob version of it.
+ * This is fully client-side and can accept an image URL from any source.
+ *
+ * @param src The source URL of the image
+ * @param shouldBlur Whether the blur effect should be generated
+ */
+export function useBlurredImage(src: string | undefined, shouldBlur: boolean) {
 	const [blurredSrc, setBlurredSrc] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (!shouldBlur) {
-			setBlurredSrc(null);
-			return;
-		}
-
-		// Use server-side proxy if assetId is available to hide the real URL
-		if (assetId) {
-			getBlurredImage({ data: { assetId } })
-				.then((res) => {
-					if (res?.data) {
-						setBlurredSrc(res.data);
-					}
-				})
-				.catch((err) => {
-					console.error("Failed to load blurred image", err);
-				});
-			return;
-		}
-
-		if (!src) {
+		if (!shouldBlur || !src) {
 			setBlurredSrc(null);
 			return;
 		}
@@ -67,13 +50,14 @@ export function useBlurredImage(
 			);
 		};
 
+		img.onerror = () => {
+			console.error("Failed to load image for blurring:", src);
+		};
+
 		return () => {
 			isActive = false;
-			// Note: we can't easily revoke the URL here if it was set inside the callback
-			// after unmount, but React handles state updates on unmounted components gracefully (warns).
-			// Ideally we track the url in a ref to revoke it.
 		};
-	}, [src, shouldBlur, assetId]);
+	}, [src, shouldBlur]);
 
 	// Separate effect to cleanup blobs
 	useEffect(() => {

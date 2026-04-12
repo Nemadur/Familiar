@@ -1,13 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
-import {
-	mapCommissionToPostWithAuthor,
-	mapPostToPostWithAuthor,
-} from "@/components/layout/profile/utils";
-import { useSuspenseProfileContent } from "@/hooks/use-profile-content";
+// import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
 import { useUserByUsername } from "@/hooks/use-user";
 import type { TUserProfile } from "@/types/user";
+import { EmptyPage } from "@/components/layout/empty-page";
 
 export const Route = createFileRoute(
 	"/_main/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId",
@@ -26,65 +21,52 @@ function RouteComponent() {
 	}
 
 	return (
-		<PostContent
-			user={user}
-			tab={tab}
-			folderSlug={folderSlug}
-			subfolderSlug={subfolderSlug}
-			postId={postId}
-			navigate={navigate}
-		/>
-	)
+		<EmptyPage title="Post not found" />
+		// <PostContent
+		// 	user={user}
+		// 	tab={tab}
+		// 	folderSlug={folderSlug}
+		// 	subfolderSlug={subfolderSlug}
+		// 	postId={postId}
+		// 	navigate={navigate}
+		// />
+	);
 }
 
-function PostContent({
-	user,
-	tab,
-	folderSlug,
-	subfolderSlug,
-	postId,
-	navigate,
-}: {
-	user: TUserProfile;
-	tab: string;
-	folderSlug: string;
-	subfolderSlug: string;
-	postId: string;
-	navigate: ReturnType<typeof useNavigate>;
-}) {
-	// TODO: fetch post from API
-	// const { posts, categories } = useSuspenseProfileContent(user.uuid);
+// function PostContent({
+// 	user,
+// 	tab,
+// 	folderSlug,
+// 	subfolderSlug,
+// 	postId,
+// 	navigate,
+// }: {
+// 	user: TUserProfile;
+// 	tab: string;
+// 	folderSlug: string;
+// 	subfolderSlug: string;
+// 	postId: string;
+// 	navigate: ReturnType<typeof useNavigate>;
+// }) {
+// 	const post = null;
 
-	// const portfolioPosts = useMemo(
-	// 	() => [
-	// 		...posts.map((post: any) => mapPostToPostWithAuthor(post, user)),
-	// 		...(categories || [])
-	// 			.flatMap((cat: any) => cat.items || [])
-	// 			.map((comm: any) => mapCommissionToPostWithAuthor(comm, user)),
-	// 	],
-	// 	[posts, categories, user],
-	// );
+// 	if (!post) {
+// 		return <div>Post not found</div>;
+// 	}
 
-	// const post = portfolioPosts.find((p) => p.id === postId);
-	const post = null;
-
-	if (!post) {
-		return <div>Post not found</div>;
-	}
-
-	return (
-		<PortfolioPostModal
-			post={post}
-			open={true}
-			onOpenChange={(open) => {
-				if (!open) {
-					navigate({
-						to: "/$username/$tab/folder/$folderSlug",
-						params: { username: user.username, tab, folderSlug },
-						replace: true,
-					})
-				}
-			}}
-		/>
-	)
-}
+// 	return (
+// 		<PortfolioPostModal
+// 			post={post}
+// 			open={true}
+// 			onOpenChange={(open) => {
+// 				if (!open) {
+// 					navigate({
+// 						to: "/$username/$tab/folder/$folderSlug",
+// 						params: { username: user.username, tab, folderSlug },
+// 						replace: true,
+// 					});
+// 				}
+// 			}}
+// 		/>
+// 	);
+// }
