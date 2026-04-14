@@ -1,0 +1,20 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.env
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
+__unconfig*
+todos.json
+/.trae
+# heroui-agents-md
+.heroui-docs/
+/.agents
+skills-lock.json
+boneyard.config.json
+src/api/api-docs.json

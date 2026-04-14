@@ -1,0 +1,289 @@
+import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import {
+	OutlineLogout,
+	OutlineReceipt,
+	OutlineSettings,
+	OutlineUser,
+} from "@/components/icons/icons";
+import { Button } from "@/components/ui/button";
+import {
+	Drawer,
+	DrawerContent,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useIsTablet } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth";
+import type { TUserProfile, TUserResponse } from "@/types/user";
+import UserAvatar from "./avatar";
+
+type UserButtonContentProps = {
+	user: TUserResponse;
+	showInfo?: boolean;
+	showAvatar?: boolean;
+};
+
+function UserButtonContent({
+	user,
+	showInfo = true,
+	showAvatar = true,
+}: UserButtonContentProps) {
+	return (
+		<>
+			{showAvatar && <UserAvatar user={user as TUserProfile} />}
+			{showInfo && (
+				<div className="flex flex-col items-start text-left">
+					<span className="text-sm leading-none font-medium">
+						{user?.displayName || "Unknown"}
+					</span>
+					<span className="mt-1 text-xs leading-none text-muted-foreground">
+						@{user?.username || "Unknown"}
+					</span>
+				</div>
+			)}
+		</>
+	);
+}
+
+type UserProps = {
+	user: TUserResponse;
+	showInfo?: boolean;
+	showAvatar?: boolean;
+	isDropdown?: boolean;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+	buttonClassName?: string;
+	nonDropdownButtonClassName?: string;
+	dropdownContentClassName?: string;
+	drawerTitle?: string;
+};
+
+export default function User({
+	user,
+	showInfo = true,
+	showAvatar = true,
+	isDropdown = false,
+	open: openProp,
+	onOpenChange,
+	buttonClassName,
+	nonDropdownButtonClassName,
+	dropdownContentClassName,
+	drawerTitle = "User Menu",
+}: UserProps) {
+	const { logout } = useAuth();
+	const isTablet = useIsTablet();
+	const [internalOpen, setInternalOpen] = useState(false);
+
+	const open = openProp ?? internalOpen;
+	const setOpen = onOpenChange ?? setInternalOpen;
+
+	const triggerClassName = cn(
+		"flex items-center gap-2 p-0 hover:text-foreground",
+		showInfo
+			? "h-auto w-full justify-start rounded-xl"
+			: "size-10 justify-center rounded-full",
+		isDropdown ? "hover:bg-secondary/80" : "hover:bg-transparent",
+		!isDropdown && nonDropdownButtonClassName,
+		buttonClassName,
+	);
+
+	const triggerContent = (
+		<UserButtonContent
+			user={user}
+			showInfo={showInfo}
+			showAvatar={showAvatar}
+		/>
+	);
+
+	const menuItems = [
+		{
+			label: "Profile",
+			icon: <OutlineUser />,
+			to: "/$username",
+			params: { username: user?.username || "" },
+		},
+		{
+			label: "Requests",
+			icon: <OutlineReceipt />,
+			to: "/my-requests",
+		},
+		{
+			label: "Orders",
+			icon: <OutlineSettings />,
+			to: "/orders" as any,
+		},
+		{
+			label: "Characters",
+			icon: <OutlineSettings />,
+			to: "/$username/$tab",
+			params: { username: user?.username, tab: "characters" },
+		},
+	];
+
+	const secondaryMenuItems = [
+		{
+			label: "Settings",
+			icon: <OutlineSettings />,
+			to: "/settings" as any,
+		},
+		{
+			label: "Help",
+			icon: <OutlineSettings />,
+			to: "https://help.familiar.art" as any,
+			target: "_blank",
+		},
+	];
+
+	const menuItemsContent = (
+		<>
+			<div className="flex flex-col gap-1 p-1">
+				{menuItems.map((item) => (
+					<Button key={item.label} variant="ghost" size="xl" asChild>
+						<Link
+							to={item.to}
+							params={item.params}
+							target={(item as any).target}
+							preload={false}
+							onClick={() => setOpen(false)}
+						>
+							{item.icon}
+							<span>{item.label}</span>
+						</Link>
+					</Button>
+				))}
+			</div>
+			<DropdownMenuSeparator />
+			<div className="flex flex-col gap-1 p-1">
+				{secondaryMenuItems.map((item) => (
+					<Button key={item.label} variant="ghost" size="xl" asChild>
+						<Link
+							to={item.to}
+							target={item.target}
+							preload={false}
+							onClick={() => setOpen(false)}
+						>
+							{item.icon}
+							<span>{item.label}</span>
+						</Link>
+					</Button>
+				))}
+			</div>
+			<DropdownMenuSeparator />
+			<div className="p-1">
+				<Button
+					variant="destructive"
+					className="h-9 w-full cursor-pointer justify-start px-2"
+					onClick={() => {
+						logout();
+						setOpen(false);
+					}}
+				>
+					<OutlineLogout className="mr-2 h-4 w-4" />
+					<span>Logout</span>
+				</Button>
+			</div>
+		</>
+	);
+
+	if (!isDropdown) {
+		return (
+			<Button
+				type="button"
+				variant="ghost"
+				aria-haspopup="true"
+				className={triggerClassName}
+			>
+				{triggerContent}
+			</Button>
+		);
+	}
+
+	if (!isTablet) {
+		return (
+			<DropdownMenu open={open} onOpenChange={setOpen}>
+				<DropdownMenuTrigger asChild>
+					<Button type="button" variant="ghost" className={triggerClassName}>
+						{triggerContent}
+					</Button>
+				</DropdownMenuTrigger>
+
+				<DropdownMenuContent
+					className={cn("w-56", dropdownContentClassName)}
+					align="end"
+				>
+					<DropdownMenuGroup>
+						{menuItems.map((item) => (
+							<DropdownMenuItem key={item.label} asChild>
+								<Link
+									to={item.to}
+									params={item.params}
+									preload={false}
+									className="w-full cursor-pointer"
+									onClick={() => setOpen(false)}
+								>
+									{item.icon}
+									{item.label}
+								</Link>
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuGroup>
+					<DropdownMenuSeparator />
+					<DropdownMenuGroup>
+						{secondaryMenuItems.map((item) => (
+							<DropdownMenuItem key={item.label} asChild>
+								<Link
+									to={item.to}
+									target={item.target}
+									preload={false}
+									className="w-full cursor-pointer"
+									onClick={() => setOpen(false)}
+								>
+									{item.icon}
+									{item.label}
+								</Link>
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuGroup>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem
+						variant="destructive"
+						onClick={() => {
+							logout();
+							setOpen(false);
+						}}
+					>
+						<OutlineLogout />
+						Logout
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		);
+	}
+
+	return (
+		<Drawer open={open} onOpenChange={setOpen}>
+			<DrawerTrigger asChild>
+				<Button type="button" variant="ghost" className={triggerClassName}>
+					{triggerContent}
+				</Button>
+			</DrawerTrigger>
+			<DrawerContent>
+				<DrawerHeader className="text-left">
+					<DrawerTitle>{drawerTitle}</DrawerTitle>
+				</DrawerHeader>
+				<div className="pb-4">{menuItemsContent}</div>
+			</DrawerContent>
+		</Drawer>
+	);
+}
