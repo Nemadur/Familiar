@@ -26,6 +26,8 @@ import {
 	OutlineClock03,
 	OutlineClose,
 } from "@/components/icons/icons";
+import { Plus } from "lucide-react";
+import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form";
 import { TCommissionRequestStatus } from "@/types/commissions";
 import { TPaymentStatus } from "@/types/payment";
 import type { DateFilterOperator } from "@/components/data-table-filter/core/types";
@@ -153,6 +155,8 @@ function DashboardCommissions() {
 	const { user, isPending: userIsPending, error: userError } = useAuth();
 
 	const { t } = useTranslation();
+
+	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
 	const totalPages = Math.max(1, pageData?.totalPages ?? 1);
 	const totalItems = pageData?.totalElements ?? 0;
@@ -391,18 +395,24 @@ function DashboardCommissions() {
 					<h1 className="text-xl font-bold">Commissions</h1>
 				</div>
 
-				{userIsPending ? null : user ? (
-					<User user={user} showInfo={false} isDropdown />
-				) : (
-					<div className="hidden lg:flex items-center gap-2">
-						<Button asChild variant={"secondary"} size={"xl"}>
-							<Link to="/auth/login">{t("auth.login.cta")}</Link>
-						</Button>
-						<Button asChild size={"xl"}>
-							<Link to="/auth/register">{t("auth.register.cta")}</Link>
-						</Button>
-					</div>
-				)}
+				<div className="flex items-center gap-4">
+					<Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+						<Plus className="size-4" />
+						Create Commission
+					</Button>
+					{userIsPending ? null : user ? (
+						<User user={user} showInfo={false} isDropdown />
+					) : (
+						<div className="hidden lg:flex items-center gap-2">
+							<Button asChild variant={"secondary"} size={"xl"}>
+								<Link to="/auth/login">{t("auth.login.cta")}</Link>
+							</Button>
+							<Button asChild size={"xl"}>
+								<Link to="/auth/register">{t("auth.register.cta")}</Link>
+							</Button>
+						</div>
+					)}
+				</div>
 			</header>
 
 			<FilterBar
@@ -435,6 +445,15 @@ function DashboardCommissions() {
 				open={detailsOpen}
 				onOpenChange={setDetailsOpen}
 			/>
+
+			{isCreateModalOpen && user && (
+				<CreateCommissionForm
+					username={user.username || user.id}
+					tab="commissions"
+					artistId={user.id}
+					onClose={() => setIsCreateModalOpen(false)}
+				/>
+			)}
 		</div>
 	);
 }

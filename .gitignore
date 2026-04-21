@@ -18,3 +18,4 @@ todos.json
 skills-lock.json
 boneyard.config.json
 src/api/api-docs.json
+/src/api/docs

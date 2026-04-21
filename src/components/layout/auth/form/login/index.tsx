@@ -29,7 +29,7 @@ import type { LoginData } from "@/types/auth/schema/login";
 
 function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 	const [showPassword, setShowPassword] = useState(false);
-	const { login: authLogin, pending } = useAuth();
+	const { login: authLogin, isPending } = useAuth();
 	const { t } = useTranslation();
 
 	const form = useFormValidation({
@@ -115,34 +115,23 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 					)}
 				/>
 
-				<Button type="submit" disabled={pending} className="w-full" size="lg">
+				<Button
+					type="submit"
+					disabled={isPending}
+					className="w-full"
+					size={"xl"}
+				>
 					{t("auth.login.cta")}
 				</Button>
 
-				<div className="text-center">
-					<Button
-						type="button"
-						onClick={() => onForgot?.()}
-						variant="link"
-						size="sm"
-						className="text-blue-600 text-sm hover:underline dark:text-blue-400"
-					>
-						{t("auth.forgot.cta")}
-					</Button>
-
-					<div className="text-muted-foreground text-sm">
-						{t("auth.forgot.register_question")}{" "}
-						<Button
-							type="button"
-							onClick={() => onModeChange("register")}
-							variant="link"
-							size="sm"
-							className="text-blue-600 hover:underline dark:text-blue-400"
-						>
-							{t("auth.register.cta")}
-						</Button>
-					</div>
-				</div>
+				<Button
+					type="button"
+					onClick={() => onForgot?.()}
+					variant={"link"}
+					className="w-full justify-end"
+				>
+					{t("auth.forgot.cta")}
+				</Button>
 			</form>
 		</Form>
 	);

@@ -3,7 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { OutlineClose, SolidUser } from "@/components/icons/icons";
 import { AnimateChangeInHeight } from "@/components/ui/animate-change-in-height";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
@@ -226,12 +226,12 @@ function TabContent({
 function AuthFooter() {
 	const { t } = useTranslation();
 	return (
-		<p className="mt-3 text-[10px] text-muted-foreground">
+		<p className="mt-3 text-sm text-muted-foreground">
 			{t("auth.terms_agree.label")}{" "}
 			<Link
 				to="/"
 				target="_blank"
-				className={"cursor-pointer text-blue-600 underline dark:text-blue-400"}
+				className={buttonVariants({ variant: "link" })}
 			>
 				{t("auth.terms_agree.terms")}
 			</Link>{" "}
@@ -239,7 +239,7 @@ function AuthFooter() {
 			<Link
 				to="/"
 				target="_blank"
-				className={"cursor-pointer text-blue-600 underline dark:text-blue-400"}
+				className={buttonVariants({ variant: "link" })}
 			>
 				{t("auth.terms_agree.privacy")}
 			</Link>
