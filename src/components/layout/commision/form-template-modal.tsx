@@ -149,20 +149,27 @@ const FieldItem = memo(
 
 				<div className="space-y-4 pl-8">
 					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<div className="space-y-2">
-							<Label>Field Label</Label>
+						<div className="relative">
 							<Input
+								id={`label-${index}`}
 								value={draftField.label}
 								onChange={(e) => updateDraft({ label: e.target.value })}
 								onBlur={() => commitNow()}
-								placeholder="e.g. Character Name"
+								placeholder=" "
 								disabled={isBusy}
+								className="peer pt-5 pb-1 h-12"
 							/>
+							<Label
+								htmlFor={`label-${index}`}
+								className="absolute left-3 top-4 z-10 origin-left -translate-y-2.5 scale-75 transform text-muted-foreground duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2.5 peer-focus:scale-75 cursor-text"
+							>
+								Field Label
+							</Label>
 						</div>
 
-						<div className="space-y-2">
-							<Label>Description / Help Text</Label>
+						<div className="relative">
 							<Input
+								id={`desc-${index}`}
 								value={draftField.description || ""}
 								onChange={(e) =>
 									updateDraft({
@@ -170,17 +177,24 @@ const FieldItem = memo(
 									})
 								}
 								onBlur={() => commitNow()}
-								placeholder="Optional guidance for the client"
+								placeholder=" "
 								disabled={isBusy}
+								className="peer pt-5 pb-1 h-12"
 							/>
+							<Label
+								htmlFor={`desc-${index}`}
+								className="absolute left-3 top-4 z-10 origin-left -translate-y-2.5 scale-75 transform text-muted-foreground duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2.5 peer-focus:scale-75 cursor-text"
+							>
+								Description / Help Text
+							</Label>
 						</div>
 					</div>
 
 					{draftField.type === "NUMBER_INPUT" && (
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-2">
-							<div className="space-y-2">
-								<Label>Minimum Value</Label>
+							<div className="relative">
 								<Input
+									id={`min-${index}`}
 									type="number"
 									value={draftField.minValue ?? ""}
 									onChange={(e) =>
@@ -191,13 +205,20 @@ const FieldItem = memo(
 										})
 									}
 									onBlur={() => commitNow()}
-									placeholder="Optional"
+									placeholder=" "
 									disabled={isBusy}
+									className="peer pt-5 pb-1 h-12"
 								/>
+								<Label
+									htmlFor={`min-${index}`}
+									className="absolute left-3 top-4 z-10 origin-left -translate-y-2.5 scale-75 transform text-muted-foreground duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2.5 peer-focus:scale-75 cursor-text"
+								>
+									Minimum Value
+								</Label>
 							</div>
-							<div className="space-y-2">
-								<Label>Maximum Value</Label>
+							<div className="relative">
 								<Input
+									id={`max-${index}`}
 									type="number"
 									value={draftField.maxValue ?? ""}
 									onChange={(e) =>
@@ -208,9 +229,16 @@ const FieldItem = memo(
 										})
 									}
 									onBlur={() => commitNow()}
-									placeholder="Optional"
+									placeholder=" "
 									disabled={isBusy}
+									className="peer pt-5 pb-1 h-12"
 								/>
+								<Label
+									htmlFor={`max-${index}`}
+									className="absolute left-3 top-4 z-10 origin-left -translate-y-2.5 scale-75 transform text-muted-foreground duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2.5 peer-focus:scale-75 cursor-text"
+								>
+									Maximum Value
+								</Label>
 							</div>
 						</div>
 					)}
@@ -480,27 +508,38 @@ export function FormTemplateModal({
 						</DialogHeader>
 
 						<div className="space-y-6">
-							<div className="space-y-2">
-								<Label htmlFor="template-name">Template Name *</Label>
+							<div className="relative">
 								<Input
 									id="template-name"
 									value={name}
 									onChange={(e) => setName(e.target.value)}
-									placeholder="e.g. Character Reference Form"
+									placeholder=" "
 									disabled={isBusy}
+									className="peer pt-5 pb-1 h-12"
 								/>
+								<Label
+									htmlFor="template-name"
+									className="absolute left-3 top-4 z-10 origin-left -translate-y-2.5 scale-75 transform text-muted-foreground duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2.5 peer-focus:scale-75 cursor-text"
+								>
+									Template Name *
+								</Label>
 							</div>
 
-							<div className="space-y-2">
-								<Label htmlFor="template-desc">Description</Label>
+							<div className="relative">
 								<Textarea
 									id="template-desc"
 									value={description}
 									onChange={(e) => setDescription(e.target.value)}
-									placeholder="Internal description for your reference"
+									placeholder=" "
 									disabled={isBusy}
-									className="min-h-[120px] resize-none"
+									className="peer pt-6 pb-2 min-h-[120px] resize-none"
 								/>
+								<Label
+									htmlFor="template-desc"
+									className="absolute left-3 top-4 z-10 origin-left -translate-y-2.5 scale-75 transform text-muted-foreground duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2.5 peer-focus:scale-75 cursor-text"
+								>
+									Description
+								</Label>
 							</div>
 						</div>
 

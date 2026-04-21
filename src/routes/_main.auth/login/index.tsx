@@ -24,7 +24,7 @@ function LoginPage() {
 						/>
 
 						<div className="mt-6 space-y-4 text-center text-sm">
-							<div className="text-muted-foreground">
+							{/* <div className="text-muted-foreground">
 								{t("auth.forgot.register_question")}{" "}
 								<Button
 									type="button"
@@ -34,16 +34,16 @@ function LoginPage() {
 								>
 									{t("auth.register.cta")}
 								</Button>
-							</div>
+							</div> */}
 
 							<p className="px-8 text-muted-foreground">
 								{t("auth.terms_agree.label")}{" "}
 								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="/terms">{t("auth.terms_agree.terms")}</Link>
+									<Link to="/">{t("auth.terms_agree.terms")}</Link>
 								</Button>{" "}
 								{t("auth.terms_agree.and")}{" "}
 								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="/privacy">{t("auth.terms_agree.privacy")}</Link>
+									<Link to="/">{t("auth.terms_agree.privacy")}</Link>
 								</Button>
 								.
 							</p>
