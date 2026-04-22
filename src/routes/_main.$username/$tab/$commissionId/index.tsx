@@ -1,14 +1,7 @@
-import {
-	createFileRoute,
-	useLocation,
-	useNavigate,
-} from "@tanstack/react-router";
-import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form copy";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form";
 import { CommissionModal } from "@/components/layout/modal/commission";
-// import { PortfolioPostModal } from "@/components/layout/modal/portfolio-post-modal";
-import { useCommission } from "@/hooks/use-commisions";
 import { useUserByUsername } from "@/hooks/use-user";
-import type { TCommission } from "@/types/commissions";
 
 export const Route = createFileRoute("/_main/$username/$tab/$commissionId/")({
 	component: RouteComponent,

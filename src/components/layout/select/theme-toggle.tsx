@@ -55,7 +55,13 @@ export default function ThemeToggle() {
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button variant="secondary" role="combobox" size={"xl"}>
+				<Button
+					variant="secondary"
+					role="combobox"
+					aria-controls="theme-options"
+					aria-expanded={open}
+					size={"xl"}
+				>
 					{selectedTheme ? (
 						<>
 							<selectedTheme.icon className="size-4" />
@@ -71,7 +77,7 @@ export default function ThemeToggle() {
 			</PopoverTrigger>
 			<PopoverContent align="end" className="w-[150px] p-0 overflow-hidden">
 				<Command>
-					<CommandList>
+					<CommandList id="theme-options">
 						<CommandGroup>
 							{themes.map((theme) => (
 								<CommandItem

@@ -251,15 +251,6 @@ function FilterInput<T = unknown>({
 	const [validationMessage, setValidationMessage] = useState("");
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	useEffect(() => {
-		if (props.autoFocus) {
-			const timer = setTimeout(() => {
-				inputRef.current?.focus();
-			}, 300);
-			return () => clearTimeout(timer);
-		}
-	}, [props.autoFocus]);
-
 	// Validation function to check if input matches pattern
 	const validateInput = (value: string, pattern?: string): boolean => {
 		if (!pattern || !value) return true;
@@ -403,12 +394,6 @@ function FilterRemoveButton({
 	...props
 }: FilterRemoveButtonProps) {
 	const context = useFilterContext();
-
-	// const sizeMap = {
-	// 	sm: "sm" as const,
-	// 	default: "sm" as const,
-	// 	lg: "default" as const,
-	// };
 
 	return (
 		<Button
@@ -678,7 +663,6 @@ interface FilterValueSelectorProps<T = unknown> {
 	values: T[];
 	onChange: (values: T[]) => void;
 	operator: string;
-	autoFocus?: boolean;
 }
 
 interface SelectOptionsPopoverProps<T = unknown> {
@@ -994,7 +978,6 @@ function FilterValueSelector<T = unknown>({
 	values,
 	onChange,
 	operator,
-	autoFocus,
 }: FilterValueSelectorProps<T>) {
 	// const context = useFilterContext();
 
@@ -1020,7 +1003,6 @@ function FilterValueSelector<T = unknown>({
 				pattern={field.pattern}
 				field={field}
 				className={cn("w-36", field.className)}
-				autoFocus={autoFocus}
 			/>
 		);
 	}
@@ -1124,7 +1106,6 @@ export const FiltersContent = <T = unknown>({
 							values={filter.values}
 							onChange={(values) => updateFilter(filter.id, { values })}
 							operator={filter.operator}
-							autoFocus={false}
 						/>
 
 						<FilterRemoveButton onClick={() => removeFilter(filter.id)} />
@@ -1579,6 +1560,8 @@ export function Filters<T = unknown>({
 										<Input
 											ref={rootInputRef}
 											role="combobox"
+											aria-expanded={true}
+											aria-haspopup="listbox"
 											aria-controls={`${rootId}-listbox`}
 											aria-activedescendant={
 												highlightedIndex >= 0
@@ -1845,7 +1828,6 @@ export function Filters<T = unknown>({
 								values={filter.values}
 								operator={filter.operator}
 								onChange={(values) => updateFilter(filter.id, { values })}
-								autoFocus={filter.id === lastAddedFilterId}
 							/>
 							<FilterRemoveButton onClick={() => removeFilter(filter.id)} />
 						</ButtonGroup>

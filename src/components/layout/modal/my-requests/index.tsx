@@ -219,6 +219,36 @@ function ModalTabs({
 	);
 }
 
+function SecondaryActionCard({
+	title,
+	description,
+	buttonLabel,
+	onClick,
+}: {
+	title: string;
+	description: string;
+	buttonLabel: string;
+	onClick?: () => void;
+}) {
+	return (
+		<div className="flex items-center justify-between gap-3 rounded-[20px] border border-border px-3 py-3">
+			<div className="min-w-0">
+				<h6 className="text-sm font-semibold text-primary">{title}</h6>
+				<p className="text-xs text-muted-foreground">{description}</p>
+			</div>
+
+			<Button
+				variant="outline"
+				size="lg"
+				className="shrink-0"
+				onClick={onClick}
+			>
+				{buttonLabel}
+			</Button>
+		</div>
+	);
+}
+
 export function RequestDetailsModal({
 	request,
 	open,
@@ -445,36 +475,6 @@ export function RequestDetailsModal({
 		requestStatus: request.status,
 		viewType,
 	});
-
-	function SecondaryActionCard({
-		title,
-		description,
-		buttonLabel,
-		onClick,
-	}: {
-		title: string;
-		description: string;
-		buttonLabel: string;
-		onClick?: () => void;
-	}) {
-		return (
-			<div className="flex items-center justify-between gap-3 rounded-[20px] border border-border px-3 py-3">
-				<div className="min-w-0">
-					<h6 className="text-sm font-semibold text-primary">{title}</h6>
-					<p className="text-xs text-muted-foreground">{description}</p>
-				</div>
-
-				<Button
-					variant="outline"
-					size="lg"
-					className="shrink-0"
-					onClick={onClick}
-				>
-					{buttonLabel}
-				</Button>
-			</div>
-		);
-	}
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
