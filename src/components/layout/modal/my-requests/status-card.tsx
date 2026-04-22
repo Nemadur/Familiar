@@ -35,14 +35,14 @@ export function StatusCard({
 			meta: "text-emerald-600 dark:text-emerald-400",
 		},
 		warning: {
-			wrap: "border-border",
-			iconWrap: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-			meta: "text-violet-600 dark:text-violet-400",
+			wrap: "border-warning/60 dark:border-warning/40",
+			iconWrap: "bg-warning/10 text-warning dark:text-warning",
+			meta: "text-warning dark:text-warning",
 		},
 		danger: {
-			wrap: "border-red-200/60 dark:border-red-900/40",
-			iconWrap: "bg-red-500/10 text-red-600 dark:text-red-400",
-			meta: "text-red-600 dark:text-red-400",
+			wrap: "border-destructive/60 dark:border-destructive/40",
+			iconWrap: "bg-destructive/10 text-destructive dark:text-destructive",
+			meta: "text-destructive dark:text-destructive",
 		},
 		accent: {
 			wrap: "border-border",
@@ -52,7 +52,7 @@ export function StatusCard({
 	}[tone];
 
 	return (
-		<div className={cn("rounded-[20px] border px-3 py-3", toneStyles.wrap)}>
+		<div className={cn("rounded-[24px] border p-2", toneStyles.wrap)}>
 			<div className="flex items-start gap-3">
 				<div
 					className={cn(
@@ -66,7 +66,7 @@ export function StatusCard({
 				<div className="min-w-0 flex-1">
 					<div className="flex items-start justify-between gap-3">
 						<div className="min-w-0">
-							<h6 className="text-sm font-semibold text-foreground">{title}</h6>
+							<h6 className="text-sm font-semibold text-primary">{title}</h6>
 							{description ? (
 								<p className="mt-1 text-xs leading-relaxed text-muted-foreground">
 									{description}
@@ -74,16 +74,9 @@ export function StatusCard({
 							) : null}
 						</div>
 
-						{meta ? (
-							<span
-								className={cn(
-									"shrink-0 text-[11px] font-medium",
-									toneStyles.meta,
-								)}
-							>
-								{meta}
-							</span>
-						) : null}
+						{/* {meta ? (
+							<span className={cn("text-[11px]", toneStyles.meta)}>{meta}</span>
+						) : null} */}
 					</div>
 
 					{action ? (
@@ -112,14 +105,14 @@ export function DangerActionCard({
 	action: React.ReactNode;
 }) {
 	return (
-		<div className="rounded-[20px] border border-destructive/20 bg-card px-3 py-3">
+		<div className="rounded-[24px] border border-destructive/60 dark:border-destructive/40 bg-card p-2">
 			<div className="flex items-start gap-3">
 				<div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
 					<OutlineWarning className="size-4" />
 				</div>
 
 				<div className="min-w-0 flex-1">
-					<h6 className="text-sm font-semibold text-foreground">{title}</h6>
+					<h6 className="text-sm font-semibold text-primary">{title}</h6>
 					<p className="mt-1 text-xs leading-relaxed text-muted-foreground">
 						{description}
 					</p>

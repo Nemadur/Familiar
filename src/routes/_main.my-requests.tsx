@@ -494,9 +494,10 @@ function RouteComponent() {
 			</div>
 
 			<RequestDetailsModal
-				request={selectedRequest}
+				request={selectedRequest as any}
 				open={detailsOpen}
 				onOpenChange={setDetailsOpen}
+				viewType="client"
 			/>
 		</Skeleton>
 	)

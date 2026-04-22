@@ -47,14 +47,18 @@ export default function Header() {
 
 				<div className="flex shrink-0 items-center gap-2">
 					<NavWrapper>
-						<ThemeToggle />
+						{/* <ThemeToggle /> */}
 						<LanguageSelect />
 						{/* <Skeleton loading={isPending}> */}
-						{isPending ? null : user?.roles?.includes(TRoles.Artist) && (
-							<Button size={"xl"} asChild>
-								<Link to="/dashboard">{t("header.artist-dashboard", "Artist Dashboard")}</Link>
-							</Button>
-						)}
+						{isPending
+							? null
+							: user?.roles?.includes(TRoles.Artist) && (
+									<Button size={"xl"} asChild>
+										<Link to="/dashboard">
+											{t("header.artist-dashboard", "Artist Dashboard")}
+										</Link>
+									</Button>
+								)}
 						{isPending ? null : user ? (
 							<User user={user} showInfo={false} isDropdown />
 						) : (

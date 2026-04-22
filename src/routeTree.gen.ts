@@ -14,7 +14,7 @@ import { Route as MainRouteImport } from './routes/_main'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
 import { Route as DashboardFormsRouteImport } from './routes/dashboard/forms'
-import { Route as DashboardCommissionsRouteImport } from './routes/dashboard/commissions'
+import { Route as DashboardCommissions_requestsRouteImport } from './routes/dashboard/commissions_requests'
 import { Route as MainMyRequestsRouteImport } from './routes/_main.my-requests'
 import { Route as MainLogoutRouteImport } from './routes/_main.logout'
 import { Route as MainUsernameRouteImport } from './routes/_main.$username'
@@ -50,11 +50,12 @@ const DashboardFormsRoute = DashboardFormsRouteImport.update({
   path: '/forms',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardCommissionsRoute = DashboardCommissionsRouteImport.update({
-  id: '/commissions',
-  path: '/commissions',
-  getParentRoute: () => DashboardRoute,
-} as any)
+const DashboardCommissions_requestsRoute =
+  DashboardCommissions_requestsRouteImport.update({
+    id: '/commissions_requests',
+    path: '/commissions_requests',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const MainMyRequestsRoute = MainMyRequestsRouteImport.update({
   id: '/my-requests',
   path: '/my-requests',
@@ -115,7 +116,7 @@ export interface FileRoutesByFullPath {
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
-  '/dashboard/commissions': typeof DashboardCommissionsRoute
+  '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms': typeof DashboardFormsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$username/$tab': typeof MainUsernameTabRouteWithChildren
@@ -130,7 +131,7 @@ export interface FileRoutesByTo {
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
-  '/dashboard/commissions': typeof DashboardCommissionsRoute
+  '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms': typeof DashboardFormsRoute
   '/': typeof MainIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -149,7 +150,7 @@ export interface FileRoutesById {
   '/_main/$username': typeof MainUsernameRouteWithChildren
   '/_main/logout': typeof MainLogoutRoute
   '/_main/my-requests': typeof MainMyRequestsRoute
-  '/dashboard/commissions': typeof DashboardCommissionsRoute
+  '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms': typeof DashboardFormsRoute
   '/_main/': typeof MainIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -169,7 +170,7 @@ export interface FileRouteTypes {
     | '/$username'
     | '/logout'
     | '/my-requests'
-    | '/dashboard/commissions'
+    | '/dashboard/commissions_requests'
     | '/dashboard/forms'
     | '/dashboard/'
     | '/$username/$tab'
@@ -184,7 +185,7 @@ export interface FileRouteTypes {
     | '/$username'
     | '/logout'
     | '/my-requests'
-    | '/dashboard/commissions'
+    | '/dashboard/commissions_requests'
     | '/dashboard/forms'
     | '/'
     | '/dashboard'
@@ -202,7 +203,7 @@ export interface FileRouteTypes {
     | '/_main/$username'
     | '/_main/logout'
     | '/_main/my-requests'
-    | '/dashboard/commissions'
+    | '/dashboard/commissions_requests'
     | '/dashboard/forms'
     | '/_main/'
     | '/dashboard/'
@@ -257,11 +258,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardFormsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/commissions': {
-      id: '/dashboard/commissions'
-      path: '/commissions'
-      fullPath: '/dashboard/commissions'
-      preLoaderRoute: typeof DashboardCommissionsRouteImport
+    '/dashboard/commissions_requests': {
+      id: '/dashboard/commissions_requests'
+      path: '/commissions_requests'
+      fullPath: '/dashboard/commissions_requests'
+      preLoaderRoute: typeof DashboardCommissions_requestsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_main/my-requests': {
@@ -390,13 +391,13 @@ const MainRouteChildren: MainRouteChildren = {
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
 interface DashboardRouteChildren {
-  DashboardCommissionsRoute: typeof DashboardCommissionsRoute
+  DashboardCommissions_requestsRoute: typeof DashboardCommissions_requestsRoute
   DashboardFormsRoute: typeof DashboardFormsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardCommissionsRoute: DashboardCommissionsRoute,
+  DashboardCommissions_requestsRoute: DashboardCommissions_requestsRoute,
   DashboardFormsRoute: DashboardFormsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

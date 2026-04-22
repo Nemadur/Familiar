@@ -22,13 +22,13 @@ function useFormValidation<T extends FieldValues>({
 		setValue,
 		watch,
 		control,
+		getValues,
+		reset,
 		...rest
 	} = useForm<T>({
 		resolver: zodResolver(schema as any) as Resolver<T>,
 		defaultValues: initialData as any,
 	});
-
-	const formData = watch();
 
 	const handleInputChange =
 		(field: keyof T) =>
@@ -55,14 +55,12 @@ function useFormValidation<T extends FieldValues>({
 	};
 
 	const setFormData = (updater: (prev: T) => T) => {
-		const newData = updater(formData);
-		Object.entries(newData).forEach(([key, value]) => {
-			setValue(key as any, value as any, { shouldValidate: true });
-		});
+		const newData = updater(getValues());
+		reset(newData);
 	};
 
 	return {
-		formData,
+		formData: getValues(),
 		errors: Object.keys(errors).reduce(
 			(acc, key) => {
 				const error = errors[key as keyof T];

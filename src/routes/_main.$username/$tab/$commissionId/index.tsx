@@ -4,8 +4,8 @@ import {
 	useNavigate,
 } from "@tanstack/react-router";
 import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form copy";
-import { CommissionModal } from "@/components/layout/profile/modals/commission-modal";
-// import { PortfolioPostModal } from "@/components/layout/profile/modals/portfolio-post-modal";
+import { CommissionModal } from "@/components/layout/modal/commission";
+// import { PortfolioPostModal } from "@/components/layout/modal/portfolio-post-modal";
 import { useCommission } from "@/hooks/use-commisions";
 import { useUserByUsername } from "@/hooks/use-user";
 import type { TCommission } from "@/types/commissions";

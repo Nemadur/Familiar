@@ -25,9 +25,11 @@ import {
 	OutlineCheck,
 	OutlineClock03,
 	OutlineClose,
+	OutlinePlus,
 } from "@/components/icons/icons";
 import { Plus } from "lucide-react";
 import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form";
+import { DashboardHeader } from "@/components/layout/dashboard/header";
 import { TCommissionRequestStatus } from "@/types/commissions";
 import { TPaymentStatus } from "@/types/payment";
 import type { DateFilterOperator } from "@/components/data-table-filter/core/types";
@@ -37,8 +39,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-export const Route = createFileRoute("/dashboard/commissions")({
-	component: DashboardCommissions,
+export const Route = createFileRoute("/dashboard/commissions_requests")({
+	component: DashboardCommissionsRequests,
 });
 
 type ManagedFilterEntry = ManagedFilterValue;
@@ -132,7 +134,7 @@ export function getSelectedValues(value: FilterValue | undefined): string[] {
 	return [];
 }
 
-function DashboardCommissions() {
+function DashboardCommissionsRequests() {
 	const [page, setPage] = useState(1);
 	const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
 		null,
@@ -388,34 +390,19 @@ function DashboardCommissions() {
 	}, [filterState, requests, searchQuery]);
 
 	return (
-		<div className="flex flex-1 flex-col gap-4 p-4 pt-0 h-full">
-			<header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 justify-between">
-				<div className="flex items-center gap-2">
-					<SidebarTrigger className="-ml-1" />
-					<h1 className="text-xl font-bold">Commissions</h1>
-				</div>
-
-				<div className="flex items-center gap-4">
-					<Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
-						<Plus className="size-4" />
-						Create Commission
+		<div className="flex flex-1 flex-col h-full bg-muted/40">
+			<DashboardHeader
+				title="Commissions Requests"
+				actions={
+					<Button size={"xl"} onClick={() => setIsCreateModalOpen(true)}>
+						<OutlinePlus />
+						<span className="hidden sm:inline">Create Commission</span>
 					</Button>
-					{userIsPending ? null : user ? (
-						<User user={user} showInfo={false} isDropdown />
-					) : (
-						<div className="hidden lg:flex items-center gap-2">
-							<Button asChild variant={"secondary"} size={"xl"}>
-								<Link to="/auth/login">{t("auth.login.cta")}</Link>
-							</Button>
-							<Button asChild size={"xl"}>
-								<Link to="/auth/register">{t("auth.register.cta")}</Link>
-							</Button>
-						</div>
-					)}
-				</div>
-			</header>
+				}
+			/>
 
-			<FilterBar
+			<div className="flex flex-1 flex-col gap-4 p-6">
+				<FilterBar
 				data={requests}
 				groups={filterGroups}
 				values={filterValues}
@@ -437,13 +424,26 @@ function DashboardCommissions() {
 				startItem={startItem}
 				endItem={endItem}
 				isRefreshing={isPending}
+				viewType="artist"
 				onPageChange={setPage}
+				onAction={(action, request) => {
+					if (action === "review") {
+						openDetails(request.id);
+					} else if (action === "set_wip") {
+						// TODO: Implement API call to set status to IN_PROGRESS
+						console.log("Set WIP clicked for", request.id);
+					} else if (action === "final_delivery") {
+						// TODO: Implement final delivery modal
+						console.log("Final delivery clicked for", request.id);
+					}
+				}}
 			/>
 
 			<RequestDetailsModal
 				request={selectedRequest as any}
 				open={detailsOpen}
 				onOpenChange={setDetailsOpen}
+				viewType="artist"
 			/>
 
 			{isCreateModalOpen && user && (
@@ -455,5 +455,6 @@ function DashboardCommissions() {
 				/>
 			)}
 		</div>
+	</div>
 	);
 }

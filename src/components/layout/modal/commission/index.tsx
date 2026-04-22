@@ -37,10 +37,10 @@ import {
 } from "@/lib/commission-utils";
 import type { TCommission } from "@/types/commissions";
 import type { TUserProfile, TUserResponse } from "@/types/user";
-import { CommissionRequestModal } from "./commission-request-modal";
-import { InfoSelectionModal } from "./info-selection-modal";
-import { TermsModal } from "./terms-modal";
-import { UniversalModalLayout } from "./universal-modal-layout";
+import { CommissionRequestModal } from "../commission-request/modal";
+import { InfoSelectionModal } from "../info-selection";
+import { TermsModal } from "../terms";
+import { UniversalModalLayout } from "../universal-modal-layout";
 
 interface CommissionModalProps {
 	commissionId: string;

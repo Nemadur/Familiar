@@ -15,17 +15,9 @@ export function StatusBadge({
 	const tone = statusTone(status);
 
 	return (
-		<span
-			className={cn(
-				"inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold",
-				tone.bg,
-				tone.text,
-				tone.border,
-				className,
-			)}
-		>
+		<Badge variant={tone} className={className}>
 			{stageLabel(status)}
-		</span>
+		</Badge>
 	);
 }
 
@@ -36,11 +28,7 @@ export function PaymentText({
 	status: TPaymentStatus;
 	className?: string;
 }) {
-	return (
-		<span className={cn("text-sm font-medium", paymentTone(status), className)}>
-			{paymentLabel(status)}
-		</span>
-	);
+	return <Badge variant={paymentTone(status)}>{paymentLabel(status)}</Badge>;
 }
 
 export function SoftMetaBadge({

@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
-import type * as React from "react";
+import * as React from "react";
 
 import { cn } from "src/lib/utils";
 
@@ -49,21 +49,179 @@ function Button({
 	variant = "default",
 	size = "default",
 	asChild = false,
+	onHold,
+	holdDuration = 3000,
+	onHoldCompleted,
+	onClick,
+	onPointerDown,
+	onPointerUp,
+	onPointerLeave,
+	children,
 	...props
 }: React.ComponentProps<"button"> &
 	VariantProps<typeof buttonVariants> & {
 		asChild?: boolean;
+		onHold?: () => void;
+		holdDuration?: number;
+		onHoldCompleted?: (completed: boolean) => void;
 	}) {
 	const Comp = asChild ? Slot.Root : "button";
+
+	const [isHolding, setIsHolding] = React.useState(false);
+	const [holdCompleted, setHoldCompleted] = React.useState(false);
+	const holdTimer = React.useRef<NodeJS.Timeout | null>(null);
+	const visualTimer = React.useRef<NodeJS.Timeout | null>(null);
+	const pointerDownTime = React.useRef<number>(0);
+	const isTap = React.useRef<boolean>(true);
+
+	// Sync holdCompleted state with external callback if provided
+	React.useEffect(() => {
+		if (onHoldCompleted) {
+			onHoldCompleted(holdCompleted);
+		}
+	}, [holdCompleted, onHoldCompleted]);
+
+	const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+		if (props.disabled || !onHold) {
+			onPointerDown?.(e);
+			return;
+		}
+		if (e.button !== 0) {
+			onPointerDown?.(e);
+			return;
+		}
+
+		isTap.current = true;
+		setHoldCompleted(false);
+		pointerDownTime.current = Date.now();
+
+		if (visualTimer.current) clearTimeout(visualTimer.current);
+		visualTimer.current = setTimeout(() => {
+			setIsHolding(true);
+		}, 150);
+
+		if (holdTimer.current) clearTimeout(holdTimer.current);
+		holdTimer.current = setTimeout(() => {
+			setIsHolding(false);
+			setHoldCompleted(true);
+			onHold();
+		}, holdDuration);
+
+		onPointerDown?.(e);
+	};
+
+	const cancelHold = () => {
+		if (visualTimer.current) clearTimeout(visualTimer.current);
+		if (holdTimer.current) clearTimeout(holdTimer.current);
+		setIsHolding(false);
+	};
+
+	const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+		if (!onHold) {
+			onPointerUp?.(e);
+			return;
+		}
+		cancelHold();
+		const duration = Date.now() - pointerDownTime.current;
+		isTap.current = duration <= 200;
+		onPointerUp?.(e);
+	};
+
+	const handlePointerLeave = (e: React.PointerEvent<HTMLButtonElement>) => {
+		if (!onHold) {
+			onPointerLeave?.(e);
+			return;
+		}
+		cancelHold();
+		isTap.current = false;
+		onPointerLeave?.(e);
+	};
+
+	const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+		if (onHold) {
+			if (!isTap.current || holdCompleted) {
+				e.preventDefault();
+				e.stopPropagation();
+				return;
+			}
+		}
+		onClick?.(e);
+	};
+
+	const getFillStyles = (v: string) => {
+		switch (v) {
+			case "destructive":
+				return "bg-destructive !text-white [&_svg]:!text-white";
+			case "secondary":
+			case "outline":
+			case "ghost":
+				return "bg-foreground !text-background [&_svg]:!text-background";
+			case "link":
+			case "link_ghost":
+				return "bg-accent !text-accent-foreground [&_svg]:!text-accent-foreground";
+			default:
+				return "bg-primary !text-primary-foreground [&_svg]:!text-primary-foreground";
+		}
+	};
+
+	if (asChild) {
+		return (
+			<Comp
+				data-slot="button"
+				data-variant={variant}
+				data-size={size}
+				className={cn(buttonVariants({ variant, size, className }))}
+				onClick={onClick}
+				onPointerDown={onPointerDown}
+				onPointerUp={onPointerUp}
+				onPointerLeave={onPointerLeave}
+				{...props}
+			>
+				{children}
+			</Comp>
+		);
+	}
 
 	return (
 		<Comp
 			data-slot="button"
 			data-variant={variant}
 			data-size={size}
-			className={cn(buttonVariants({ variant, size, className }))}
+			className={cn(
+				buttonVariants({ variant, size, className }),
+				onHold && "relative overflow-hidden",
+			)}
+			onPointerDown={onHold ? handlePointerDown : onPointerDown}
+			onPointerUp={onHold ? handlePointerUp : onPointerUp}
+			onPointerLeave={onHold ? handlePointerLeave : onPointerLeave}
+			onClick={onHold ? handleClick : onClick}
 			{...props}
-		/>
+		>
+			{onHold && (
+				<span
+					className={cn(
+						// Don't spread full buttonVariants here — it pulls in the base text color
+						"absolute inset-0 z-10 pointer-events-none border-transparent transition-all ease-linear",
+						"inline-flex items-center justify-center gap-1.5 text-sm font-medium whitespace-nowrap rounded-full",
+						"flex items-center justify-center",
+						getFillStyles(variant as string),
+					)}
+					style={{
+						clipPath: isHolding ? "inset(0 0 0 0)" : "inset(0 100% 0 0)",
+						transitionDuration: isHolding ? `${holdDuration - 150}ms` : "0ms",
+						transitionProperty: "clip-path",
+						transitionTimingFunction: "linear",
+					}}
+				>
+					{typeof children === "function"
+						? (children as any)(holdCompleted)
+						: children}
+				</span>
+			)}
+			{typeof children === "function"
+				? (children as any)(holdCompleted)
+				: children}
+		</Comp>
 	);
 }
 

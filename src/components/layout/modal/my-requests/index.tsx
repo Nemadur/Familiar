@@ -60,11 +60,18 @@ import { DangerActionCard, StatusCard } from "./status-card";
 import { HoldToConfirmButton } from "./confim-button";
 import { RequestSectionCard } from "./tabs/request";
 import { DeliveryTab } from "./tabs/delivery";
+import {
+	type TabItem,
+	TabSelector,
+} from "@/components/layout/profile/feed/selector";
+import { Link } from "@tanstack/react-router";
+import User from "../../profile/user";
 
 interface RequestDetailsModalProps {
 	request: RequestItem | null;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	viewType?: "client" | "artist";
 }
 
 function getRecordString(
@@ -117,7 +124,7 @@ function CardSection({
 }) {
 	return (
 		<Surface className="p-3 rounded-2xl">
-			<h3 className="mb-3 text-lg font-bold text-foreground">{title}</h3>
+			<h3 className="mb-3 text-lg font-bold text-prmiary">{title}</h3>
 			{children}
 		</Surface>
 	);
@@ -135,9 +142,7 @@ function InfoRow({
 	return (
 		<div className="flex items-center justify-between gap-3 px-4">
 			<span className="text-xs text-muted-foreground">{label}</span>
-			<span
-				className={cn("text-xs font-medium text-foreground", valueClassName)}
-			>
+			<span className={cn("text-xs font-medium text-prmiary", valueClassName)}>
 				{value}
 			</span>
 		</div>
@@ -171,47 +176,45 @@ function ReviewPlaceholder({
 	);
 }
 
-// TODO: replace with Tab component
 function ModalTabs({
 	activeTab,
 	setActiveTab,
+	onOpenChange,
 }: {
 	activeTab: DetailTab;
 	setActiveTab: (tab: DetailTab) => void;
+	onOpenChange: (open: boolean) => void;
 }) {
+	const tabs: TabItem<DetailTab>[] = [
+		{ id: "details", label: "Details" },
+		{ id: "delivery", label: "Final delivery" },
+		{ id: "review", label: "Review" },
+	];
+
 	return (
-		<div className="flex items-center justify-between border-b border-border/70 px-6">
-			<div className="flex">
-				{(["details", "delivery", "review"] as const).map((tab) => (
-					<button
-						key={tab}
-						onClick={() => setActiveTab(tab)}
-						className={cn(
-							"relative px-5 py-4 text-sm font-medium transition-colors",
-							activeTab === tab
-								? "text-foreground"
-								: "text-muted-foreground hover:text-foreground",
-						)}
-					>
-						{tab === "details"
-							? "Details"
-							: tab === "delivery"
-								? "Final delivery"
-								: "Review"}
-						{activeTab === tab && (
-							<div className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground" />
-						)}
-					</button>
-				))}
+		<div className="flex items-center justify-between border-b border-border/70 px-6 pt-2 pb-[0.15rem]">
+			<TabSelector
+				items={tabs}
+				value={activeTab}
+				onValueChange={setActiveTab}
+				className="-mb-px"
+				size={"default"}
+				// size="sm"
+			/>
+			<div className="flex items-center gap-2">
+				<Button variant="ghost">
+					<OutlineQestionMarkCrFr />
+					Help
+				</Button>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="hidden lg:flex"
+					onClick={() => onOpenChange(false)}
+				>
+					<OutlineClose />
+				</Button>
 			</div>
-			<Button variant="ghost">
-				<OutlineQestionMarkCrFr />
-				Help
-			</Button>
-			{/* <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-				<Circle className="size-3.5" />
-				Help
-			</button> */}
 		</div>
 	);
 }
@@ -220,6 +223,7 @@ export function RequestDetailsModal({
 	request,
 	open,
 	onOpenChange,
+	viewType = "client",
 }: RequestDetailsModalProps) {
 	const [activeTab, setActiveTab] = useState<DetailTab>("details");
 
@@ -309,11 +313,13 @@ export function RequestDetailsModal({
 		shouldShowPayButton,
 		shouldShowTipButton,
 		requestStatus,
+		viewType,
 	}: {
 		isCancelled: boolean;
 		shouldShowPayButton: boolean;
 		shouldShowTipButton: boolean;
 		requestStatus: TCommissionRequestStatus;
+		viewType: "client" | "artist";
 	}) {
 		if (isCancelled) {
 			return {
@@ -331,7 +337,9 @@ export function RequestDetailsModal({
 				tone: "warning" as const,
 				title: "Payment required",
 				description:
-					"This request was accepted and is waiting for payment before work begins.",
+					viewType === "artist"
+						? "You have accepted this request and are waiting for the client to complete payment before work begins."
+						: "This request was accepted and is waiting for payment before work begins.",
 				meta: "Pending",
 			};
 		}
@@ -340,9 +348,25 @@ export function RequestDetailsModal({
 			return {
 				icon: OutlineClock03,
 				tone: "default" as const,
-				title: "Waiting for artist response",
-				description: "The artist has not responded to this request yet.",
+				title:
+					viewType === "artist"
+						? "Pending response"
+						: "Waiting for artist response",
+				description:
+					viewType === "artist"
+						? "You have a new commission request waiting for your response."
+						: "The artist has not responded to this request yet.",
 				meta: "Pending",
+				action:
+					viewType === "artist"
+						? {
+								label: "Accept request",
+								variant: "default" as const,
+								onClick: () => {
+									// TODO: handle accept request
+								},
+							}
+						: undefined,
 			};
 		}
 
@@ -351,8 +375,21 @@ export function RequestDetailsModal({
 				icon: OutlineCheck,
 				tone: "success" as const,
 				title: "Accepted",
-				description: "The artist has accepted this request.",
+				description:
+					viewType === "artist"
+						? "You have accepted this request."
+						: "The artist has accepted this request.",
 				meta: "Accepted",
+				action:
+					viewType === "artist" && isPaid
+						? {
+								label: "Set to WIP",
+								variant: "secondary" as const,
+								onClick: () => {
+									// TODO: handle set WIP
+								},
+							}
+						: undefined,
 			};
 		}
 
@@ -361,8 +398,21 @@ export function RequestDetailsModal({
 				icon: OutlineAI,
 				tone: "accent" as const,
 				title: "Work in progress",
-				description: "The artist is currently working on your commission.",
+				description:
+					viewType === "artist"
+						? "You are currently working on this commission."
+						: "The artist is currently working on your commission.",
 				meta: "In progress",
+				action:
+					viewType === "artist"
+						? {
+								label: "Final Delivery",
+								variant: "secondary" as const,
+								onClick: () => {
+									// TODO: handle final delivery
+								},
+							}
+						: undefined,
 			};
 		}
 
@@ -370,24 +420,14 @@ export function RequestDetailsModal({
 			return {
 				icon: OutlineCheck,
 				tone: "accent" as const,
-				title: "Delivery ready",
-				description: "Your files are ready to review in the delivery tab.",
+				title: viewType === "artist" ? "Delivery sent" : "Delivery ready",
+				description:
+					viewType === "artist"
+						? "You have sent the final delivery to the client for review."
+						: "Your files are ready to review in the delivery tab.",
 				meta: "Delivered",
 			};
 		}
-
-		// if (
-		// 	requestStatus === TCommissionRequestStatus.Completed ||
-		// 	shouldShowTipButton
-		// ) {
-		// 	return {
-		// 		icon: OutlineCheck,
-		// 		tone: "success" as const,
-		// 		title: "Commission completed",
-		// 		description: "Everything is finished and payment has been completed.",
-		// 		meta: "Done",
-		// 	};
-		// }
 
 		return {
 			icon: OutlineClock03,
@@ -403,6 +443,7 @@ export function RequestDetailsModal({
 		shouldShowPayButton,
 		shouldShowTipButton,
 		requestStatus: request.status,
+		viewType,
 	});
 
 	function SecondaryActionCard({
@@ -419,7 +460,7 @@ export function RequestDetailsModal({
 		return (
 			<div className="flex items-center justify-between gap-3 rounded-[20px] border border-border px-3 py-3">
 				<div className="min-w-0">
-					<h6 className="text-sm font-semibold text-foreground">{title}</h6>
+					<h6 className="text-sm font-semibold text-primary">{title}</h6>
 					<p className="text-xs text-muted-foreground">{description}</p>
 				</div>
 
@@ -437,7 +478,7 @@ export function RequestDetailsModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="w-[min(96vw,1480px)]! max-w-[1480px]! overflow-hidden bg-secondary border-border p-0 text-foreground shadow-2xl sm:rounded-[28px] [&>button]:hidden">
+			<DialogContent className="w-[min(96vw,1480px)]! max-w-[1480px]! overflow-hidden bg-secondary border-border p-0 text-prmiary shadow-2xl sm:rounded-[28px] [&>button]:hidden">
 				<DialogTitle className="sr-only">Request details</DialogTitle>
 
 				<div className="flex h-[90vh] w-full overflow-hidden">
@@ -447,13 +488,15 @@ export function RequestDetailsModal({
 							{/* TODO: stepper */}
 							{/* <RequestStatusStepper status={request.status} /> */}
 							<div className="flex flex-col gap-1.5">
-								{/* <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-									COM#{request.id}
-								</span> */}
-								<h2 className="text-2xl font-bold leading-tight text-foreground">
-									{/* TODO: get client displayName */}
-									{client?.displayName?.trim() || "Unknown client"}'s{" "}
-									{commissionTitle}
+								<h2 className="text-2xl font-bold leading-tight text-primary">
+									{viewType === "artist" ? (
+										<>
+											{client?.displayName?.trim() || "Unknown client"}'s{" "}
+											{commissionTitle}
+										</>
+									) : (
+										<>{commissionTitle}</>
+									)}
 								</h2>
 								<span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 									COM#{request.id}
@@ -470,7 +513,7 @@ export function RequestDetailsModal({
 							<SidebarSection title="Overview">
 								<Surface
 									variant="default"
-									className="flex flex-col gap-3 rounded-3xl p-2"
+									className="flex flex-col gap-3 rounded-3xl p-1"
 								>
 									<StatusCard
 										icon={overviewStatus.icon}
@@ -479,24 +522,27 @@ export function RequestDetailsModal({
 										description={overviewStatus.description}
 										meta={overviewStatus.meta}
 										action={
-											shouldShowPayButton
+											overviewStatus.action ||
+											(shouldShowPayButton && viewType === "client"
 												? {
 														label: `Pay ${formatMoney(listingPrice)}`,
 														variant: "default",
 													}
-												: undefined
+												: undefined)
 										}
 									/>
 
-									{shouldShowTipButton && !isCancelled && (
-										<SecondaryActionCard
-											title="Enjoyed the result?"
-											description="Leave an optional tip for the artist."
-											buttonLabel="Leave a tip"
-										/>
-									)}
+									{shouldShowTipButton &&
+										!isCancelled &&
+										viewType === "client" && (
+											<SecondaryActionCard
+												title="Enjoyed the result?"
+												description="Leave an optional tip for the artist."
+												buttonLabel="Leave a tip"
+											/>
+										)}
 
-									{shouldShowInvoiceButton && (
+									{shouldShowInvoiceButton && viewType === "client" && (
 										<SecondaryActionCard
 											title="Invoice"
 											description="Download a copy of your payment invoice."
@@ -526,27 +572,39 @@ export function RequestDetailsModal({
 								</Surface>
 							</SidebarSection>
 
-							<SidebarSection title="Artist">
-								<Surface className="flex items-start gap-3 p-1 rounded-3xl">
+							<SidebarSection
+								title={viewType === "artist" ? "Client" : "Artist"}
+							>
+								<Surface className="flex items-center gap-1 p-1 rounded-3xl">
 									{/* TODO: make layout component with avatar and user info */}
-									<UserAvatar user={artist as TUserProfile} />
-									<div className="flex flex-1 flex-col">
-										<h3 className="inline-flex w-full gap-2 font-bold text-sm">
-											{/* TODO: make auto slide text if too more than 12 characters */}
-											<span className="truncate">{artist?.displayName}</span>
-											<ProfileBadge user={artist as TUserProfile} />
-										</h3>
-										<p className="text-xs text-muted-foreground">
-											@{artist?.username}
-										</p>
-									</div>
-									<Button
-										variant="secondary"
-										size={"icon-lg"}
-										aria-haspopup="false"
+									<Link
+										to={
+											`/${viewType === "artist" ? client?.username : artist?.username}` as string
+										}
+										className="flex items-start gap-3 w-full hover:bg-muted/50 rounded-2xl transition-colors"
 									>
-										<OutlineChat />
-									</Button>{" "}
+										<User
+											user={
+												viewType === "artist"
+													? (client as TUserProfile)
+													: (artist as TUserProfile)
+											}
+										/>
+									</Link>
+									{request.status === TCommissionRequestStatus.In_Progress && (
+										<Button
+											variant="secondary"
+											size={"icon-lg"}
+											aria-haspopup="false"
+											className={"mr-1"}
+											onClick={(e) => {
+												e.preventDefault();
+												// TODO: handle chat
+											}}
+										>
+											<OutlineChat />
+										</Button>
+									)}
 									{/* TODO: Wrap around div and below give social links */}
 								</Surface>
 							</SidebarSection>
@@ -559,7 +617,11 @@ export function RequestDetailsModal({
 								className="[&>div]:px-6 mb-2"
 							>
 								<AccordionItem value="terms">
-									<AccordionTrigger>Accepted Terms</AccordionTrigger>
+									<AccordionTrigger>
+										{viewType === "artist"
+											? "Client Accepted Terms"
+											: "Accepted Terms"}
+									</AccordionTrigger>
 									<AccordionContent>
 										<MarkdownDisplay
 											content={commission?.artistTos.tosText || ""}
@@ -575,7 +637,7 @@ export function RequestDetailsModal({
 							</Accordion>
 							{/* <button
 								onClick={() => setTermsExpanded(!termsExpanded)}
-								className="flex items-center justify-between px-6 py-4 text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+								className="flex items-center justify-between px-6 py-4 text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-prmiary"
 							>
 								<span>Accepted Terms</span>
 								{termsExpanded ? (
@@ -586,7 +648,7 @@ export function RequestDetailsModal({
 							</button>
 							<button
 								onClick={() => setDescExpanded(!descExpanded)}
-								className="flex items-center justify-between px-6 py-4 text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+								className="flex items-center justify-between px-6 py-4 text-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-prmiary"
 							>
 								<span>{commissionTitle} description</span>
 								{descExpanded ? (
@@ -615,8 +677,15 @@ export function RequestDetailsModal({
 									<p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
 										{request.id}
 									</p>
-									<h2 className="mt-1 text-lg font-bold text-foreground">
-										{commissionTitle}
+									<h2 className="mt-1 text-lg font-bold text-prmiary">
+										{viewType === "artist" ? (
+											<>
+												{client?.displayName?.trim() || "Unknown client"}'s{" "}
+												{commissionTitle}
+											</>
+										) : (
+											<>{commissionTitle}</>
+										)}
 									</h2>
 									<p className="mt-1 text-sm text-muted-foreground">
 										Submitted {formatDetailedDate(request.createdAt)}
@@ -625,7 +694,11 @@ export function RequestDetailsModal({
 							</div>
 						</div>
 
-						<ModalTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+						<ModalTabs
+							activeTab={activeTab}
+							setActiveTab={setActiveTab}
+							onOpenChange={onOpenChange}
+						/>
 
 						<div className="min-w-0 flex-1 overflow-y-auto w-full p-6">
 							{/* TODO: get all data from form */}
@@ -640,7 +713,7 @@ export function RequestDetailsModal({
 								<div className="mx-auto flex w-full max-w-[980px] flex-col gap-6 p-5 md:p-6 xl:p-8">
 									<CardSection title="Final Delivery">
 										<div className="mb-1 flex items-center justify-between gap-4">
-											<h4 className="text-lg font-bold text-foreground">
+											<h4 className="text-lg font-bold text-prmiary">
 												Delivery update
 											</h4>
 											<span className="text-xs text-muted-foreground">
@@ -649,16 +722,29 @@ export function RequestDetailsModal({
 										</div>
 
 										<div className="mb-6 rounded-2xl border border-border/70 bg-muted/40 p-4">
-											<p className="text-sm leading-relaxed text-foreground/90">
+											<p className="text-sm leading-relaxed text-prmiary/90">
 												{request.status ===
 													TCommissionRequestStatus.Delivered ||
 												request.status === TCommissionRequestStatus.Completed
-													? "Your commission has a delivery-stage update. Review the attached files and contact the artist if anything needs correction."
-													: "There is no final delivery message attached yet. This section can be used later for files and delivery instructions."}
+													? viewType === "artist"
+														? "You have submitted the final delivery. The client is currently reviewing the attached files."
+														: "Your commission has a delivery-stage update. Review the attached files and contact the artist if anything needs correction."
+													: viewType === "artist"
+														? "You haven't attached a final delivery message yet. You can use this section later to upload files and provide delivery instructions to the client."
+														: "There is no final delivery message attached yet. This section can be used later for files and delivery instructions."}
 											</p>
 											<div className="mt-3 flex flex-col gap-1 text-xs text-muted-foreground">
-												<span>{artist?.displayName}</span>
-												<span>@{artist?.username}</span>
+												<span>
+													{viewType === "artist"
+														? client?.displayName
+														: artist?.displayName}
+												</span>
+												<span>
+													@
+													{viewType === "artist"
+														? client?.username
+														: artist?.username}
+												</span>
 											</div>
 										</div>
 
@@ -688,7 +774,7 @@ export function RequestDetailsModal({
 															className={cn(
 																"text-sm",
 																item.allowed
-																	? "text-foreground"
+																	? "text-prmiary"
 																	: "text-muted-foreground line-through",
 															)}
 														>
@@ -715,13 +801,13 @@ export function RequestDetailsModal({
 																	Attached media · ready to preview
 																</span>
 															</div>
-															<button className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground">
+															<button className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-prmiary">
 																<Download className="size-4" />
 															</button>
 														</div>
 													))}
 												</div>
-												<button className="mt-3 w-full rounded-2xl border border-border/70 bg-background py-3 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground">
+												<button className="mt-3 w-full rounded-2xl border border-border/70 bg-background py-3 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-prmiary">
 													Download all files
 												</button>
 											</div>
@@ -768,13 +854,14 @@ export function RequestDetailsModal({
 										<div className="mb-4 flex items-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
 											<AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
 											<span className="text-xs text-amber-700 dark:text-amber-400">
-												Please report if the media misrepresents the work
-												completed.
+												{viewType === "artist"
+													? "Only upload media that accurately represents the work completed for this client."
+													: "Please report if the media misrepresents the work completed."}
 											</span>
 										</div>
 
-										<button className="w-full rounded-2xl border border-border/70 bg-background py-3 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground">
-											Report issue
+										<button className="w-full rounded-2xl border border-border/70 bg-background py-3 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-prmiary">
+											{viewType === "artist" ? "Manage media" : "Report issue"}
 										</button>
 									</CardSection>
 
@@ -783,7 +870,7 @@ export function RequestDetailsModal({
 											Your commission&apos;s verified media may be publicly
 											featured in the gallery of the characters you tag.
 										</p>
-										<button className="flex items-center gap-2 rounded-xl border border-border/70 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted">
+										<button className="flex items-center gap-2 rounded-xl border border-border/70 bg-background px-4 py-2.5 text-sm font-medium text-prmiary shadow-sm transition-colors hover:bg-muted">
 											<Plus className="size-4" />
 											Add
 										</button>

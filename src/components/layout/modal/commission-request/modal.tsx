@@ -11,11 +11,11 @@ import { useUserById } from "@/hooks/use-user";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
 import type { TCommission } from "@/types/commissions";
 import type { TUserResponse } from "@/types/user";
-import { CommissionRequestFields } from "./commission-request/fields";
-import { CommissionRequestFooter } from "./commission-request/footer";
-import { CommissionRequestHeader } from "./commission-request/header";
-import { CommissionRequestIntroBox } from "./commission-request/intro-box";
-import { type FormValues, formSchema } from "./commission-request/types";
+import { CommissionRequestFields } from "./fields";
+import { CommissionRequestFooter } from "./footer";
+import { CommissionRequestHeader } from "./header";
+import { CommissionRequestIntroBox } from "./intro-box";
+import { type FormValues, formSchema } from "./types";
 
 // FIXME: OPTIMZE RERENDERING ISSUES
 

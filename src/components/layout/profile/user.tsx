@@ -21,12 +21,23 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
+	DropdownMenuSub,
+	DropdownMenuSubTrigger,
+	DropdownMenuPortal,
+	DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { useIsTablet } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
+import { useTheme } from "@/providers/theme";
 import type { TUserProfile, TUserResponse } from "@/types/user";
 import UserAvatar from "./avatar";
+import {
+	OutlineMonitor,
+	OutlineSunny,
+	OutlineClearNight,
+	OutlineCheck,
+} from "@/components/icons/icons";
 
 type UserButtonContentProps = {
 	user: TUserResponse;
@@ -84,9 +95,17 @@ export default function User({
 	const { logout } = useAuth();
 	const isTablet = useIsTablet();
 	const [internalOpen, setInternalOpen] = useState(false);
+	const { userTheme, setTheme } = useTheme();
 
 	const open = openProp ?? internalOpen;
 	const setOpen = onOpenChange ?? setInternalOpen;
+
+	const themes = [
+		{ value: "light", label: "Light", icon: OutlineSunny },
+		{ value: "dark", label: "Dark", icon: OutlineClearNight },
+		{ value: "oled", label: "OLED", icon: OutlineClearNight },
+		{ value: "system", label: "System", icon: OutlineMonitor },
+	] as const;
 
 	const triggerClassName = cn(
 		"flex items-center gap-2 p-0 hover:text-foreground",
@@ -180,6 +199,27 @@ export default function User({
 				))}
 			</div>
 			<DropdownMenuSeparator />
+			<div className="flex flex-col gap-2 p-2 px-3">
+				<span className="text-xs font-medium text-muted-foreground">Theme</span>
+				<div className="flex gap-2">
+					{themes.map((theme) => (
+						<Button
+							key={theme.value}
+							variant={userTheme === theme.value ? "secondary" : "ghost"}
+							size="icon"
+							className="flex-1"
+							onClick={() => {
+								setTheme(theme.value);
+								setOpen(false);
+							}}
+							title={theme.label}
+						>
+							<theme.icon className="size-4" />
+						</Button>
+					))}
+				</div>
+			</div>
+			<DropdownMenuSeparator />
 			<div className="p-1">
 				<Button
 					variant="destructive"
@@ -254,6 +294,34 @@ export default function User({
 								</Link>
 							</DropdownMenuItem>
 						))}
+					</DropdownMenuGroup>
+					<DropdownMenuSeparator />
+					<DropdownMenuGroup>
+						<DropdownMenuSub>
+							<DropdownMenuSubTrigger>
+								<OutlineMonitor />
+								Theme
+							</DropdownMenuSubTrigger>
+							<DropdownMenuPortal>
+								<DropdownMenuSubContent>
+									{themes.map((theme) => (
+										<DropdownMenuItem
+											key={theme.value}
+											onClick={() => {
+												setTheme(theme.value);
+												setOpen(false);
+											}}
+										>
+											<theme.icon />
+											{theme.label}
+											{userTheme === theme.value && (
+												<OutlineCheck className="ml-auto size-4" />
+											)}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuSubContent>
+							</DropdownMenuPortal>
+						</DropdownMenuSub>
 					</DropdownMenuGroup>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem

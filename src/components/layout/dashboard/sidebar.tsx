@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth";
+import { OutlineListBoxes } from "@/components/icons/icons";
 
 const topNav = [
 	{
@@ -50,9 +51,9 @@ const topNav = [
 
 const commissionsNav = [
 	{
-		title: "Commissions",
-		url: "/dashboard/commissions",
-		icon: Sparkles,
+		title: "Commissions Requests",
+		url: "/dashboard/commissions_requests",
+		icon: OutlineListBoxes,
 	},
 	{
 		title: "Services",
@@ -103,7 +104,7 @@ export function DashboardSidebar() {
 			<SidebarContent>
 				<div className="px-4 py-2">
 					<Button asChild size={"xl"} className="w-full">
-						<Link to={`/${user?.username || user?.id}/commissions`}>
+						<Link to={`/user/${user?.username}` as string}>
 							Go to my profile
 						</Link>
 					</Button>

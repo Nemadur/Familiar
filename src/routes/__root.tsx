@@ -16,8 +16,8 @@ import i18n, { setSSRLanguage } from "@/lib/i18n";
 import { seo } from "@/lib/seo";
 import { AbilityProvider } from "@/providers/ability";
 import { ThemeProvider } from "@/providers/theme";
-import Header from "../components/layout/header";
-import { AuthProvider } from "../providers/auth";
+import Header from "@/components/layout/header";
+import { AuthProvider } from "@/providers/auth";
 import appCss from "../styles.css?url";
 // import "../bones/registry";
 

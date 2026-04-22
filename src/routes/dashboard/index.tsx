@@ -9,7 +9,7 @@ function DashboardIndexRedirect() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		navigate({ to: "/dashboard/commissions", replace: true });
+		navigate({ to: "/dashboard/commissions_requests", replace: true });
 	}, [navigate]);
 
 	return null;
