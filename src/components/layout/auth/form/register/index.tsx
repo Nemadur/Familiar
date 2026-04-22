@@ -229,6 +229,7 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 										onClick={goBack}
 										disabled={isPending}
 										className="w-1/3"
+										size={"xl"}
 									>
 										{t("auth.back", "Back")}
 									</Button>
@@ -239,55 +240,12 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 									onClick={handleContinue}
 									disabled={(step === 0 && !isStep0Valid) || isPending}
 									className="flex-1 w-full"
-									size={"lg"}
+									size={"xl"}
 								>
 									{step === LAST_STEP
 										? t("auth.register.submit", "Submit")
 										: t("auth.continue", "Continue")}
 								</Button>
-							</div>
-						</div>
-
-						<div className="space-y-5 pb-2 text-center">
-							<div className="text-xs text-muted-foreground">
-								{t(
-									"auth.register.already_have_account",
-									"Already have an account?",
-								)}{" "}
-								<Button
-									type="button"
-									variant="link"
-									onClick={() => {
-										resetToStep0();
-										onModeChange("login");
-									}}
-									className="h-auto text-xs p-0 text-blue-600 hover:underline dark:text-blue-400"
-								>
-									{t("auth.login.cta", "Login")}
-								</Button>
-							</div>
-
-							<div className="w-full text-xs leading-6 text-muted-foreground">
-								{t(
-									"auth.terms_agree.label",
-									"Registering on Familiar you agree to our",
-								)}
-								<Button
-									type="button"
-									variant="link"
-									className="h-auto p-0 text-xs"
-								>
-									{t("auth.terms_agree.terms", "Terms of Service")}
-								</Button>
-								{t("auth.terms_agree.and", "and")}
-								<Button
-									type="button"
-									variant="link"
-									className="h-auto p-0 text-xs"
-								>
-									{t("auth.terms_agree.privacy", "Privacy Policy")}
-								</Button>
-								.
 							</div>
 						</div>
 					</div>

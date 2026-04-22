@@ -421,7 +421,10 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 }
 
 interface OptionItemProps {
-	option: ColumnOptionExtended & { initialSelected: boolean; isFolder?: boolean };
+	option: ColumnOptionExtended & {
+		initialSelected: boolean;
+		isFolder?: boolean;
+	};
 	onToggle: (value: string, checked: boolean) => void;
 	onFolderClick?: (id: string) => void;
 }
@@ -432,7 +435,7 @@ const OptionItem = memo(function OptionItem({
 	onFolderClick,
 }: OptionItemProps) {
 	const { value, label, icon: Icon, selected, count, isFolder, id } = option;
-	
+
 	const handleSelect = useCallback(() => {
 		if (isFolder && onFolderClick && id) {
 			onFolderClick(id);
@@ -523,9 +526,9 @@ export function FilterValueOptionController<TData>({
 	const { folders, visibleOptions } = useMemo(() => {
 		const f: typeof options = [];
 		const v: typeof options = [];
-		
+
 		const foldersMap = new Map<string, string>();
-		
+
 		for (const o of options) {
 			if (o.parentId) {
 				if (!foldersMap.has(o.parentId)) {
@@ -538,7 +541,7 @@ export function FilterValueOptionController<TData>({
 						isFolder: true,
 					});
 				}
-				
+
 				if (activeFolder === o.parentId) {
 					v.push(o);
 				}
@@ -546,7 +549,7 @@ export function FilterValueOptionController<TData>({
 				v.push(o);
 			}
 		}
-		
+
 		return { folders: activeFolder ? [] : f, visibleOptions: v };
 	}, [options, activeFolder]);
 
@@ -562,7 +565,7 @@ export function FilterValueOptionController<TData>({
 
 	return (
 		<Command loop>
-			<CommandInput autoFocus placeholder={t("search", locale)} />
+			<CommandInput placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
 			<CommandList className="max-h-fit">
 				{/* {activeFolder && (
@@ -589,7 +592,9 @@ export function FilterValueOptionController<TData>({
 						/>
 					))}
 				</CommandGroup>
-				{folders.length > 0 && selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
+				{folders.length > 0 && selectedOptions.length > 0 && (
+					<CommandSeparator className={"my-1"} />
+				)}
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem
@@ -660,9 +665,9 @@ export function FilterValueMultiOptionController<TData>({
 	const { folders, visibleOptions } = useMemo(() => {
 		const f: typeof options = [];
 		const v: typeof options = [];
-		
+
 		const foldersMap = new Map<string, string>();
-		
+
 		for (const o of options) {
 			if (o.parentId) {
 				if (!foldersMap.has(o.parentId)) {
@@ -675,7 +680,7 @@ export function FilterValueMultiOptionController<TData>({
 						isFolder: true,
 					});
 				}
-				
+
 				if (activeFolder === o.parentId) {
 					v.push(o);
 				}
@@ -683,7 +688,7 @@ export function FilterValueMultiOptionController<TData>({
 				v.push(o);
 			}
 		}
-		
+
 		return { folders: activeFolder ? [] : f, visibleOptions: v };
 	}, [options, activeFolder]);
 
@@ -699,7 +704,7 @@ export function FilterValueMultiOptionController<TData>({
 
 	return (
 		<Command loop>
-			<CommandInput autoFocus placeholder={t("search", locale)} />
+			<CommandInput placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
 			<CommandList className="max-h-[300px]">
 				{activeFolder && (
@@ -723,7 +728,9 @@ export function FilterValueMultiOptionController<TData>({
 						/>
 					))}
 				</CommandGroup>
-				{folders.length > 0 && selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
+				{folders.length > 0 && selectedOptions.length > 0 && (
+					<CommandSeparator className={"my-1"} />
+				)}
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem
@@ -810,7 +817,6 @@ export function FilterValueTextController<TData>({
 					<CommandItem>
 						<DebouncedInput
 							placeholder={t("search", locale)}
-							autoFocus
 							value={filter?.values[0] ?? ""}
 							onChange={changeText}
 						/>

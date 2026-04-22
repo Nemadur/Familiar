@@ -70,7 +70,7 @@ const en: Locale = {
 			pending: "Creating account...",
 		},
 		forgot: {
-			cta: "Reset Password",
+			cta: "Forgot your password?",
 			title: "Forgot password?",
 			register_question: "Don't have an account?",
 			description: "Enter your email to reset your password",

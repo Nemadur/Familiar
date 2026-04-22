@@ -69,6 +69,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
+import {
+	useFormTemplates,
+	useAssignFormTemplate,
+} from "@/hooks/use-form-templates";
+
 type UploadStatus = "pending" | "uploading" | "done" | "error";
 type EditorTab = "details" | "workflow" | "request-form" | "publish";
 
@@ -281,6 +286,10 @@ export function CreateCommissionForm({
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 
+	const { data: formTemplates, isPending: isFormTemplatesPending } =
+		useFormTemplates();
+	const assignTemplateMutation = useAssignFormTemplate();
+
 	const [activeTab, setActiveTab] = useState<EditorTab>("details");
 
 	const [title, setTitle] = useState("");
@@ -298,6 +307,9 @@ export function CreateCommissionForm({
 	>("custom_proposal");
 	const [tagsInput, setTagsInput] = useState("");
 	const [contentWarningsInput, setContentWarningsInput] = useState("");
+	const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+		null,
+	);
 	const [uploads, setUploads] = useState<UploadQueueItem[]>([]);
 	const [createdListingId, setCreatedListingId] = useState<string | null>(null);
 	const [isCreating, setIsCreating] = useState(false);
@@ -554,6 +566,13 @@ export function CreateCommissionForm({
 			}
 
 			setCreatedListingId(listingId);
+
+			if (selectedTemplateId) {
+				await assignTemplateMutation.mutateAsync({
+					commissionId: listingId,
+					templateId: selectedTemplateId,
+				});
+			}
 
 			if (queuedFilesSnapshot.length > 0) {
 				await startUploadQueue(
@@ -975,9 +994,39 @@ export function CreateCommissionForm({
 									<div className="space-y-8">
 										<FlatSection
 											title="Request form"
-											description="Help clients understand and filter the listing."
+											description="Help clients understand and filter the listing, and assign a form template."
 										>
 											<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+												<FieldGroup
+													label="Form Template"
+													hint="Custom form for clients to fill"
+												>
+													<Select
+														value={selectedTemplateId || "none"}
+														onValueChange={(val) =>
+															setSelectedTemplateId(val === "none" ? null : val)
+														}
+														disabled={isBusy || isFormTemplatesPending}
+													>
+														<SelectTrigger className="rounded-xl">
+															<SelectValue placeholder="Select template..." />
+														</SelectTrigger>
+														<SelectContent>
+															<SelectItem value="none">
+																None (Default form)
+															</SelectItem>
+															{formTemplates?.map((template) => (
+																<SelectItem
+																	key={template.id}
+																	value={template.id}
+																>
+																	{template.name}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												</FieldGroup>
+
 												<FieldGroup
 													label="Tags"
 													htmlFor="commission-tags"

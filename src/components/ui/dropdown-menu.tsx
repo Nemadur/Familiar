@@ -341,13 +341,58 @@ function DropdownMenuSubContent({
 			data-slot="dropdown-menu-sub-content"
 			style={
 				{
-					"--dropdown-menu-radius": "0.75rem",
+					"--dropdown-menu-radius": "1.25rem",
 					"--dropdown-menu-padding": "0.25rem",
 					...style,
 				} as React.CSSProperties
 			}
 			className={cn(
-				"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-(--dropdown-menu-radius) border p-(--dropdown-menu-padding) shadow-lg",
+				"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-(--dropdown-menu-radius) border p-(--dropdown-menu-padding) shadow-lg",
+				// Direct children: big outer top/bottom radius
+				"[&>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				// Group-aware: only the first item in the first group and last item in the last group get big outer radius
+				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				// If the group is not first/last, keep inner radius only
+				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
+				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
+				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
+				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
+				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
+				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
+				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
+				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
+				// Separator behavior around direct children
+				"[&>[data-slot=dropdown-menu-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+				"[&>[data-slot=dropdown-menu-checkbox-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+				"[&>[data-slot=dropdown-menu-radio-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+				"[&>[data-slot=dropdown-menu-sub-trigger]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-item]]:rounded-t-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-checkbox-item]]:rounded-t-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-radio-item]]:rounded-t-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-sub-trigger]]:rounded-t-lg!",
+				// Separator behavior around grouped items
+				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
+				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
+				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
+				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
+				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
 				className,
 			)}
 			{...props}

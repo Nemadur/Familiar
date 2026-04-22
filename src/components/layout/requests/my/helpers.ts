@@ -94,56 +94,33 @@ export function paymentLabel(payment: TPaymentStatus): string {
 export function statusTone(stage: TCommissionRequestStatus) {
 	switch (stage) {
 		case TCommissionRequestStatus.Pending:
-			return {
-				bg: "bg-amber-500/15",
-				text: "text-amber-400",
-				border: "border-amber-500/20",
-			};
+			return "warning_ghost";
 		case TCommissionRequestStatus.Accepted:
-			return {
-				bg: "bg-sky-500/15",
-				text: "text-sky-400",
-				border: "border-sky-500/20",
-			};
+			return "success_ghost";
 		case TCommissionRequestStatus.In_Progress:
-			return {
-				bg: "bg-violet-500/15",
-				text: "text-violet-400",
-				border: "border-violet-500/20",
-			};
+			return "info_ghost";
 		case TCommissionRequestStatus.Delivered:
-			return {
-				bg: "bg-teal-500/15",
-				text: "text-teal-400",
-				border: "border-teal-500/20",
-			};
+			return "info_ghost";
 		case TCommissionRequestStatus.Completed:
-			return {
-				bg: "bg-emerald-500",
-				text: "text-white",
-				border: "border-emerald-500",
-			};
+			return "success_ghost";
+
 		case TCommissionRequestStatus.Cancelled:
-			return {
-				bg: "bg-zinc-700",
-				text: "text-zinc-300",
-				border: "border-zinc-700",
-			};
+			return "danger_ghost";
 	}
 }
 
 export function paymentTone(payment: TPaymentStatus) {
 	switch (payment) {
 		case TPaymentStatus.Completed:
-			return "text-emerald-400";
+			return "success_ghost";
 		case TPaymentStatus.Pending:
-			return "text-amber-400";
+			return "warning_ghost";
 		case TPaymentStatus.Failed:
-			return "text-rose-400";
+			return "danger_ghost";
 		case TPaymentStatus.Refunded:
-			return "text-zinc-400";
+			return "info_ghost";
 		default:
-			return "text-amber-400";
+			return "warning_ghost";
 	}
 }
 

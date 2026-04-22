@@ -1,8 +1,4 @@
-import {
-	createFileRoute,
-	Outlet,
-	useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/layout/dashboard/sidebar";
 import { useAuth } from "@/providers/auth";
@@ -18,6 +14,8 @@ function DashboardLayout() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
+		if (isPending) return;
+
 		if (!user) {
 			navigate({ to: "/auth/login", replace: true });
 			return;
@@ -26,7 +24,7 @@ function DashboardLayout() {
 		if (!user.roles?.includes(TRoles.Artist)) {
 			navigate({ to: "/", replace: true });
 		}
-	}, [user, navigate]);
+	}, [user, isPending, navigate]);
 
 	if (isPending || !user || !user.roles?.includes(TRoles.Artist)) {
 		return null; // Or a loading spinner

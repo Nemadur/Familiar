@@ -22,17 +22,32 @@ function LoginPage() {
 							onModeChange={() => navigate({ to: "/auth/register" })}
 							onForgot={() => navigate({ to: "/auth/forgot" })}
 						/>
-						<p className="px-8 text-center text-sm text-muted-foreground mt-4">
-							{t("auth.terms_agree.label")}{" "}
-							<Button asChild variant={"link"}>
-								<Link to="/terms">{t("auth.terms_agree.terms")}</Link>
-							</Button>{" "}
-							{t("auth.terms_agree.and")}{" "}
-							<Button asChild variant={"link"}>
-								<Link to="/privacy">{t("auth.terms_agree.privacy")}</Link>
-							</Button>
-							.
-						</p>
+
+						<div className="mt-6 space-y-4 text-center text-sm">
+							{/* <div className="text-muted-foreground">
+								{t("auth.forgot.register_question")}{" "}
+								<Button
+									type="button"
+									onClick={() => navigate({ to: "/auth/register" })}
+									variant={"link"}
+									className="p-0 h-auto"
+								>
+									{t("auth.register.cta")}
+								</Button>
+							</div> */}
+
+							<p className="px-8 text-muted-foreground">
+								{t("auth.terms_agree.label")}{" "}
+								<Button asChild variant={"link"} className="p-0 h-auto">
+									<Link to="/">{t("auth.terms_agree.terms")}</Link>
+								</Button>{" "}
+								{t("auth.terms_agree.and")}{" "}
+								<Button asChild variant={"link"} className="p-0 h-auto">
+									<Link to="/">{t("auth.terms_agree.privacy")}</Link>
+								</Button>
+								.
+							</p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -44,5 +59,5 @@ function LoginPage() {
 				/>
 			</div>
 		</div>
-	)
+	);
 }

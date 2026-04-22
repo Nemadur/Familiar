@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import type { TCommission } from "@/types/commissions";
 import type { TUserProfile, TUserResponse } from "@/types/user";
-import UserAvatar from "../../avatar";
+import UserAvatar from "../../profile/avatar";
 
 interface CommissionRequestIntroBoxProps {
 	artist: TUserResponse;

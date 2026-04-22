@@ -3,6 +3,7 @@ import { Surface } from "@heroui/react";
 import { Download, ExternalLink } from "lucide-react";
 import { OutlineClose } from "@/components/icons/icons";
 import type { TCommission, TCommissionRequest } from "@/types/commissions";
+import { Link } from "@tanstack/react-router";
 
 export type RequestSectionMedia = {
 	id: string;
@@ -118,7 +119,7 @@ export function RequestSectionCard({
 					variant="secondary"
 					className="rounded-2xl border border-border px-4 py-3"
 				>
-					<p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+					<p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-primary">
 						Licence
 					</p>
 					<p className="text-sm font-medium text-foreground">
@@ -131,17 +132,15 @@ export function RequestSectionCard({
 					variant="secondary"
 					className="rounded-2xl border border-border px-4 py-3"
 				>
-					<p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+					<p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-primary">
 						Request ID
 					</p>
-					<p className="text-sm font-medium text-foreground">
-						{shortId(request.id, 4, 4)}
-					</p>
+					<p className="text-sm font-medium text-foreground">{request.id}</p>
 				</Surface>
 			</div>
 
 			<div>
-				<span className="mb-3 block text-xs text-muted-foreground">
+				<span className="mb-3 block text-xs font-medium uppercase tracking-wide text-primary">
 					Client brief
 				</span>
 
@@ -156,7 +155,7 @@ export function RequestSectionCard({
 			</div>
 
 			<div>
-				<span className="mb-3 block text-xs text-muted-foreground">
+				<span className="mb-3 block text-xs font-medium uppercase tracking-wide text-primary">
 					References and Files
 				</span>
 
@@ -172,11 +171,11 @@ export function RequestSectionCard({
 									key={media.id}
 									className="overflow-hidden rounded-2xl border border-border"
 								>
-									<div className="relative aspect-[4/3] w-full bg-muted">
+									<div className="relative aspect-4/3 w-full bg-muted">
 										{previewUrl ? (
 											<img
 												src={previewUrl}
-												alt={`Attachment ${shortId(media.id, 3, 3)}`}
+												alt={`Attachment ${media.id}`}
 												className="h-full w-full object-cover"
 											/>
 										) : (
@@ -187,26 +186,25 @@ export function RequestSectionCard({
 
 										<div className="absolute right-2 top-2 flex items-center gap-2">
 											{originalUrl ? (
-												<a
-													href={originalUrl}
-													target="_blank"
-													rel="noreferrer"
-													className="inline-flex size-9 items-center justify-center rounded-xl border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
+												<Button
+													size={"icon-lg"}
 													aria-label="Open original file"
+													asChild
 												>
-													<ExternalLink className="size-4" />
-												</a>
+													<Link
+														to={originalUrl}
+														target="_blank"
+														rel="noreferrer"
+													>
+														<ExternalLink className="size-4" />
+													</Link>
+												</Button>
 											) : null}
 
 											{originalUrl ? (
-												<a
-													href={originalUrl}
-													download
-													className="inline-flex size-9 items-center justify-center rounded-xl border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition hover:bg-background"
-													aria-label="Download file"
-												>
+												<Button size={"icon-lg"} aria-label="Download file">
 													<Download className="size-4" />
-												</a>
+												</Button>
 											) : null}
 
 											{onRemoveMedia ? (
@@ -222,27 +220,24 @@ export function RequestSectionCard({
 										</div>
 									</div>
 
-									<div className="flex items-center gap-3 px-3 py-3">
-										<div className="min-w-0 flex-1">
+									{/* <div className="flex items-center gap-3 px-3 py-3"> */}
+									{/* <div className="min-w-0 flex-1">
 											<p className="truncate text-sm font-medium text-foreground">
-												Attachment {shortId(media.id, 3, 3)}
+												Attachment {media.id}
 											</p>
 											<p className="truncate text-[11px] text-muted-foreground">
 												{originalUrl || "No file source"}
 											</p>
-										</div>
+										</div> */}
 
-										{originalUrl ? (
-											<a
-												href={originalUrl}
-												target="_blank"
-												rel="noreferrer"
-												className="text-xs font-medium text-violet-600 transition hover:text-violet-500 dark:text-violet-400"
-											>
-												Open
-											</a>
-										) : null}
-									</div>
+									{/* {originalUrl ? (
+											<Button asChild variant={"link"}>
+												<Link to={originalUrl} target="_blank" rel="noreferrer">
+													Open
+												</Link>
+											</Button>
+										) : null} */}
+									{/* </div> */}
 								</Surface>
 							);
 						})}
@@ -252,9 +247,7 @@ export function RequestSectionCard({
 						variant="secondary"
 						className="rounded-2xl border border-border px-4 py-4"
 					>
-						<p className="text-sm text-muted-foreground">
-							No references attached.
-						</p>
+						<p className="text-sm text-foreground">No references attached.</p>
 					</Surface>
 				)}
 			</div>

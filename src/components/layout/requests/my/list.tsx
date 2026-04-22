@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 import { surfaceVariants } from "@heroui/styles";
 import {
 	type ColumnDef,
@@ -6,7 +8,7 @@ import {
 } from "@tanstack/react-table";
 import { Download, Flag } from "lucide-react";
 import { useMemo } from "react";
-import { OutlineChat } from "@/components/icons/icons";
+import { OutlineChat, OutlineFileArchive } from "@/components/icons/icons";
 import { DataGrid } from "@/components/reui/data-grid/data-grid";
 import { DataGridColumnHeader } from "@/components/reui/data-grid/data-grid-column-header";
 import { DataGridScrollArea } from "@/components/reui/data-grid/data-grid-scroll-area";
@@ -35,8 +37,12 @@ import {
 	type RequestItem,
 } from "./helpers";
 import { EmptyPage } from "../../empty-page";
+import UserAvatar from "../../profile/avatar";
+import User from "../../profile/user";
+import { TCommissionRequestStatus } from "@/types/commissions";
+import { TPaymentStatus } from "@/types/payment";
 
-export type ArtistPreview = Partial<TUserProfile> & {
+export type UserPreview = Partial<TUserProfile> & {
 	userId: string;
 	username?: string | null;
 	displayName?: string | null;
@@ -59,53 +65,12 @@ export type CommissionPreview = {
 
 export type RequestListItem = RequestItem & {
 	commission?: CommissionPreview | null;
-	artist?: ArtistPreview | null;
+	artist?: UserPreview | null;
+	client?: UserPreview | null;
 };
 
-function ArtistIdentity({ artist }: { artist?: ArtistPreview | null }) {
-	const displayName =
-		artist?.displayName || artist?.username || "Unknown artist";
-	const username = artist?.username ? `@${artist.username}` : null;
-	const initials = (displayName || "U")
-		.split(" ")
-		.map((part) => part[0])
-		.join("")
-		.slice(0, 2)
-		.toUpperCase();
-
-	return (
-		<div className="flex min-w-0 items-center gap-2.5">
-			<div className="size-8 shrink-0 overflow-hidden rounded-full bg-muted">
-				{artist?.avatarPath ? (
-					<img
-						src={artist.avatarPath}
-						alt={displayName}
-						className="h-full w-full object-cover"
-					/>
-				) : (
-					<div className="flex h-full w-full items-center justify-center text-[10px] font-semibold text-muted-foreground">
-						{initials}
-					</div>
-				)}
-			</div>
-
-			<div className="min-w-0">
-				<div className="flex min-w-0 items-center gap-1.5">
-					<p className="truncate text-sm font-medium leading-4 text-foreground">
-						{displayName}
-					</p>
-					{artist?.isVerified ? (
-						<span className="shrink-0 text-[10px] text-sky-500">●</span>
-					) : null}
-					{username ? (
-						<p className="truncate text-sm leading-4 text-muted-foreground">
-							{username}
-						</p>
-					) : null}
-				</div>
-			</div>
-		</div>
-	);
+function UserIdentity({ user }: { user?: UserPreview | null }) {
+	return <User user={user as TUserProfile} />;
 }
 
 function RequestIdentityCell({ request }: { request: RequestListItem }) {
@@ -113,7 +78,7 @@ function RequestIdentityCell({ request }: { request: RequestListItem }) {
 	const artistQuery = useUserById(request.artistId);
 
 	const commission = request.commission ?? commissionQuery.data ?? null;
-	const artist = request.artist ?? artistQuery.user ?? null;
+	const me = request.artist ?? artistQuery.user ?? null;
 
 	const coverImage =
 		commission?.multimedia?.[0]?.sizes?.half ||
@@ -149,15 +114,35 @@ function RequestIdentityCell({ request }: { request: RequestListItem }) {
 				</p>
 
 				<div className="mt-2">
-					{artistQuery.isPending && !artist ? (
+					{artistQuery.isPending && !me ? (
 						<span className="text-sm text-muted-foreground">
 							Loading artist...
 						</span>
 					) : (
-						<ArtistIdentity artist={artist} />
+						<UserIdentity user={me} />
 					)}
 				</div>
 			</div>
+		</div>
+	);
+}
+
+function ArtistRequestIdentityCell({ request }: { request: RequestListItem }) {
+	const commissionQuery = useCommission(request.commissionId);
+
+	const commission = request.commission ?? commissionQuery.data ?? null;
+
+	const commissionTitle =
+		commission?.title ||
+		(commissionQuery.isLoading
+			? "Loading commission..."
+			: "Untitled commission");
+
+	return (
+		<div className="flex min-w-0 flex-col justify-center h-full">
+			<p className="truncate text-[15px] font-semibold text-foreground">
+				{commissionTitle}
+			</p>
 		</div>
 	);
 }
@@ -202,7 +187,9 @@ export function RequestList({
 	startItem = 0,
 	endItem = 0,
 	isRefreshing = false,
+	viewType = "client",
 	onPageChange,
+	onAction,
 }: {
 	requests: RequestListItem[];
 	onRequestClick: (requestId: string) => void;
@@ -214,15 +201,31 @@ export function RequestList({
 	startItem?: number;
 	endItem?: number;
 	isRefreshing?: boolean;
+	viewType?: "client" | "artist";
 	onPageChange?: (page: number) => void;
+	onAction?: (
+		action: "review" | "set_wip" | "final_delivery" | "chat",
+		request: RequestListItem,
+	) => void;
 }) {
-	const columns = useMemo<ColumnDef<RequestListItem>[]>(
-		() => [
+	const columns = useMemo<ColumnDef<RequestListItem>[]>(() => {
+		const allColumns: ColumnDef<RequestListItem>[] = [
 			{
 				accessorKey: "id",
-				id: "artist",
-				header: () => null,
-				cell: ({ row }) => <RequestIdentityCell request={row.original} />,
+				id: "identity",
+				header: ({ column }) => (
+					<DataGridColumnHeader
+						title="Commission"
+						visibility={true}
+						column={column}
+					/>
+				),
+				cell: ({ row }) =>
+					viewType === "artist" ? (
+						<ArtistRequestIdentityCell request={row.original} />
+					) : (
+						<RequestIdentityCell request={row.original} />
+					),
 				size: 360,
 				enableSorting: false,
 			},
@@ -234,9 +237,14 @@ export function RequestList({
 						title="Status"
 						visibility={true}
 						column={column}
+						className={viewType === "artist" ? "pl-2" : undefined}
 					/>
 				),
-				cell: ({ row }) => <StatusBadge status={row.original.status} />,
+				cell: ({ row }) => (
+					<div className={viewType === "artist" ? "pl-2" : undefined}>
+						<StatusBadge status={row.original.status} />
+					</div>
+				),
 				size: 140,
 				enableSorting: false,
 			},
@@ -285,27 +293,108 @@ export function RequestList({
 			{
 				id: "actions",
 				header: () => null,
-				cell: () => (
-					<div
-						className="flex items-center justify-end gap-2"
-						onClick={(e) => e.stopPropagation()}
-					>
-						<Button size="lg">
-							<Download />
-							Invoice
-						</Button>
+				cell: ({ row }) => {
+					const request = row.original;
+					const status = request.status;
+					const payment = getPaymentStatus(request);
+					const isAcceptedPaid =
+						status === TCommissionRequestStatus.Accepted &&
+						payment === TPaymentStatus.Completed;
 
-						<Button size="icon-lg" variant="outline">
-							<OutlineChat />
-						</Button>
-					</div>
-				),
-				size: 160,
+					return (
+						<div className="flex items-center justify-end gap-2">
+							{viewType === "client" ? (
+								<Button
+									size="lg"
+									onClick={(e) => {
+										e.stopPropagation();
+										// onAction?.("invoice", request);
+									}}
+								>
+									<Download />
+									Invoice
+								</Button>
+							) : (
+								<>
+									{status === TCommissionRequestStatus.Pending && (
+										<Button
+											size="lg"
+											variant={"secondary"}
+											onClick={(e) => {
+												e.stopPropagation();
+												// onAction?.("review", request);
+											}}
+										>
+											Review
+										</Button>
+									)}
+									{isAcceptedPaid && (
+										<Button
+											size="lg"
+											variant={"secondary"}
+											onClick={(e) => {
+												e.stopPropagation();
+												// onAction?.("set_wip", request);
+											}}
+										>
+											Set to WIP
+										</Button>
+									)}
+									{status === TCommissionRequestStatus.In_Progress && (
+										<Button
+											size="lg"
+											variant={"secondary"}
+											onClick={(e) => {
+												e.stopPropagation();
+												// onAction?.("final_delivery", request);
+											}}
+										>
+											Final Delivery
+										</Button>
+									)}
+								</>
+							)}
+							{status !== TCommissionRequestStatus.Pending &&
+								status !== TCommissionRequestStatus.Cancelled && (
+									<Button
+										size={"icon-lg"}
+										variant={"secondary"}
+										onClick={(e) => {
+											e.stopPropagation();
+											// onAction?.("chat", request);
+										}}
+									>
+										<OutlineChat />
+									</Button>
+								)}
+
+							{/* TODO: add archive if cancelled */}
+							{status === TCommissionRequestStatus.Cancelled && (
+								<Button
+									size={"icon-lg"}
+									variant={"destructive"}
+									onClick={(e) => {
+										e.stopPropagation();
+										// onAction?.("archive", request);
+									}}
+								>
+									<OutlineFileArchive />
+								</Button>
+							)}
+						</div>
+					);
+				},
+				size: viewType === "client" ? 160 : 200,
 				enableSorting: false,
 			},
-		],
-		[],
-	);
+		];
+
+		if (viewType === "artist") {
+			return allColumns.filter((col) => col.id !== "identity");
+		}
+
+		return allColumns;
+	}, [viewType, onAction]);
 
 	const table = useReactTable({
 		columns,

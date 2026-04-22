@@ -1,4 +1,4 @@
-import { domAnimation, LazyMotion, m } from "framer-motion";
+import { domAnimation, LazyMotion, m, useReducedMotion } from "framer-motion";
 import { useId } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +13,7 @@ function ProfileFeedTabs<T extends string>({
 	size = "lg",
 }: FeedTabSelectorProps<T>) {
 	const id = useId();
+	const prefersReducedMotion = useReducedMotion();
 
 	return (
 		<LazyMotion features={domAnimation}>
@@ -45,7 +46,7 @@ function ProfileFeedTabs<T extends string>({
 										transition={{
 											type: "tween",
 											ease: "easeInOut",
-											duration: 0.25,
+											duration: prefersReducedMotion ? 0 : 0.25,
 										}}
 									/>
 								)}

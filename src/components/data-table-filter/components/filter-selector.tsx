@@ -45,9 +45,11 @@ interface FilterSelectorProps<TData> {
 	locale?: Locale;
 }
 
-export const FilterSelector = memo(__FilterSelector) as typeof __FilterSelector;
+export const FilterSelector = memo(
+	FilterSelectorInner,
+) as typeof FilterSelectorInner;
 
-function __FilterSelector<TData>({
+function FilterSelectorInner<TData>({
 	filters,
 	columns,
 	actions,
@@ -238,10 +240,10 @@ interface QuickSearchFiltersProps<TData> {
 }
 
 export const QuickSearchFilters = memo(
-	__QuickSearchFilters,
-) as typeof __QuickSearchFilters;
+	QuickSearchFiltersComponent,
+) as typeof QuickSearchFiltersComponent;
 
-function __QuickSearchFilters<TData>({
+function QuickSearchFiltersComponent<TData>({
 	search,
 	filters,
 	columns,
@@ -249,8 +251,6 @@ function __QuickSearchFilters<TData>({
 	strategy,
 	locale = "en",
 }: QuickSearchFiltersProps<TData>) {
-	if (!search || search.trim().length < 2) return null;
-
 	const cols = useMemo(
 		() =>
 			columns.filter((c) =>
@@ -258,6 +258,8 @@ function __QuickSearchFilters<TData>({
 			),
 		[columns],
 	);
+
+	if (!search || search.trim().length < 2) return null;
 
 	return (
 		<>

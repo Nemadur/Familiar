@@ -1,4 +1,4 @@
-import { domAnimation, LazyMotion, m } from "framer-motion";
+import { domAnimation, LazyMotion, m, useReducedMotion } from "framer-motion";
 import { type ElementType, useId } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ export function TabSelector<T extends string>({
 	size = "lg",
 }: TabSelectorProps<T>) {
 	const id = useId();
+	const prefersReducedMotion = useReducedMotion();
 
 	// Map size to icon dimensions
 	const iconSize = {
@@ -56,7 +57,7 @@ export function TabSelector<T extends string>({
 								value={item.id}
 								size={size}
 								className={cn(
-									"gap-2",
+									"gap-2 bg-transparent!",
 									item.disabled &&
 										"pointer-events-none cursor-not-allowed opacity-50",
 								)}
@@ -72,7 +73,7 @@ export function TabSelector<T extends string>({
 										transition={{
 											type: "tween",
 											ease: "easeInOut",
-											duration: 0.25,
+											duration: prefersReducedMotion ? 0 : 0.25,
 										}}
 									/>
 								)}

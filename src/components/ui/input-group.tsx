@@ -1,28 +1,47 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import { NumericFormat, type NumericFormatProps } from "react-number-format";
 import * as React from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { cn } from "src/lib/utils";
+import { OutlineChevronDown, OutlineChevronUp } from "../icons/icons";
 
-function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
+const inputGroupVariants = cva(
+	"group/input-group relative flex w-full items-center border border-input outline-none transition-[color,box-shadow]",
+	{
+		variants: {
+			variant: {
+				default: "rounded-full bg-muted/30",
+				floating: "rounded-xl bg-background",
+			},
+		},
+		defaultVariants: {
+			variant: "default",
+		},
+	},
+);
+
+export interface InputGroupProps
+	extends React.ComponentProps<"fieldset">,
+		VariantProps<typeof inputGroupVariants> {}
+
+function InputGroup({ className, variant, ...props }: InputGroupProps) {
 	return (
 		<fieldset
 			data-slot="input-group"
+			data-variant={variant || "default"}
 			className={cn(
-				"group/input-group relative flex w-full items-center rounded-full border border-input bg-muted/30 outline-none transition-[color,box-shadow]",
-				"h-10 min-w-0 has-[>textarea]:h-auto",
-
-				// Variants based on alignment.
-				"has-[>[data-align=inline-start]]:[&>input]:pl-2",
-				"has-[>[data-align=inline-end]]:[&>input]:pr-2",
-				"has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
-				"has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
+				inputGroupVariants({ variant }),
+				"h-10 min-w-0 has-[>textarea]:h-auto peer",
 
 				// Focus state.
 				"has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
 
 				// Error state.
 				"has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
+
+				// Variant-specific overrides
+				// variant === "floating" && "h-10",
 
 				className,
 			)}
@@ -149,7 +168,10 @@ function InputGroupInput({
 		<Input
 			data-slot="input-group-control"
 			className={cn(
-				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent",
+				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary",
+				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1 group-data-[variant=floating]/input-group:h-10",
+				// Fix for floating labels: ensure the input acts as the peer correctly and handles placeholders
+				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
 				className,
 			)}
 			{...props}
@@ -157,10 +179,177 @@ function InputGroupInput({
 	);
 }
 
+export interface NumberInputProps
+	extends Omit<
+		NumericFormatProps,
+		"value" | "onValueChange" | "defaultValue" | "min" | "max"
+	> {
+	stepper?: number;
+	thousandSeparator?: string;
+	placeholder?: string;
+	defaultValue?: number;
+	min?: number;
+	max?: number;
+	value?: number; // Controlled value
+	suffix?: string;
+	prefix?: string;
+	onValueChange?: (value: number | undefined) => void;
+	fixedDecimalScale?: boolean;
+	decimalScale?: number;
+}
+
+const InputGroupNumberInput = React.forwardRef<
+	HTMLInputElement,
+	NumberInputProps
+>(
+	(
+		{
+			stepper,
+			thousandSeparator,
+			placeholder,
+			defaultValue,
+			min = -Infinity,
+			max = Infinity,
+			onValueChange,
+			fixedDecimalScale = false,
+			decimalScale = 0,
+			suffix,
+			prefix,
+			value: controlledValue,
+			...props
+		},
+		ref,
+	) => {
+		const [value, setValue] = React.useState<number | undefined>(
+			controlledValue ?? defaultValue,
+		);
+
+		const handleIncrement = React.useCallback(() => {
+			setValue((prev) =>
+				prev === undefined
+					? (stepper ?? 1)
+					: Math.min(prev + (stepper ?? 1), max),
+			);
+		}, [stepper, max]);
+
+		const handleDecrement = React.useCallback(() => {
+			setValue((prev) =>
+				prev === undefined
+					? -(stepper ?? 1)
+					: Math.max(prev - (stepper ?? 1), min),
+			);
+		}, [stepper, min]);
+
+		React.useEffect(() => {
+			const handleKeyDown = (e: KeyboardEvent) => {
+				if (
+					document.activeElement ===
+					(ref as React.RefObject<HTMLInputElement>).current
+				) {
+					if (e.key === "ArrowUp") {
+						handleIncrement();
+					} else if (e.key === "ArrowDown") {
+						handleDecrement();
+					}
+				}
+			};
+
+			window.addEventListener("keydown", handleKeyDown);
+
+			return () => {
+				window.removeEventListener("keydown", handleKeyDown);
+			};
+		}, [handleIncrement, handleDecrement, ref]);
+
+		React.useEffect(() => {
+			if (controlledValue !== undefined) {
+				setValue(controlledValue);
+			}
+		}, [controlledValue]);
+
+		const handleChange = (values: {
+			value: string;
+			floatValue: number | undefined;
+		}) => {
+			const newValue =
+				values.floatValue === undefined ? undefined : values.floatValue;
+			setValue(newValue);
+			if (onValueChange) {
+				onValueChange(newValue);
+			}
+		};
+
+		const handleBlur = () => {
+			if (value !== undefined) {
+				if (value < min) {
+					setValue(min);
+					(ref as React.RefObject<HTMLInputElement>).current!.value =
+						String(min);
+				} else if (value > max) {
+					setValue(max);
+					(ref as React.RefObject<HTMLInputElement>).current!.value =
+						String(max);
+				}
+			}
+		};
+
+		return (
+			<div className="flex w-full items-center">
+				<NumericFormat
+					value={value}
+					onValueChange={handleChange}
+					thousandSeparator={thousandSeparator}
+					decimalScale={decimalScale}
+					fixedDecimalScale={fixedDecimalScale}
+					allowNegative={min < 0}
+					valueIsNumericString
+					onBlur={handleBlur}
+					max={max}
+					min={min}
+					suffix={suffix}
+					prefix={prefix}
+					customInput={InputGroupInput}
+					placeholder={placeholder}
+					className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative text-primary"
+					getInputRef={ref}
+					{...props}
+				/>
+
+				<div className="flex flex-col overflow-hidden rounded-r-xl border-l">
+					<Button
+						type="button"
+						size={"icon-xs"}
+						aria-label="Increase value"
+						className="h-5 rounded-none border-0 border-b border-border"
+						variant="ghost"
+						onClick={handleIncrement}
+						disabled={value === max}
+					>
+						<OutlineChevronUp />
+					</Button>
+					<Button
+						type="button"
+						size={"icon-xs"}
+						aria-label="Decrease value"
+						className="h-5 rounded-none border-0"
+						variant="ghost"
+						onClick={handleDecrement}
+						disabled={value === min}
+					>
+						<OutlineChevronDown />
+					</Button>
+				</div>
+			</div>
+		);
+	},
+);
+
 export {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
+	InputGroupNumberInput,
 	InputGroupButton,
 	InputGroupText,
+	inputGroupVariants,
 };

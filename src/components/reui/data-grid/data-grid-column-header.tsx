@@ -83,7 +83,6 @@ function DataGridColumnHeaderInner<TData, TValue>({
 
 	const headerButtonClassName = cn(
 		"text-secondary-foreground/80 hover:bg-secondary data-[state=open]:bg-secondary hover:text-foreground data-[state=open]:text-foreground -ms-2 px-2 font-normal h-6 rounded-lg",
-		className,
 	);
 
 	const sortIcon =
@@ -283,7 +282,12 @@ function DataGridColumnHeaderInner<TData, TValue>({
 
 	if (hasControls) {
 		return (
-			<div className="flex h-full items-center justify-between gap-1.5">
+			<div
+				className={cn(
+					"flex h-full items-center justify-between gap-1.5",
+					className,
+				)}
+			>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button
@@ -318,7 +322,7 @@ function DataGridColumnHeaderInner<TData, TValue>({
 
 	if (canSort || (props.tableLayout?.columnsResizable && canResize)) {
 		return (
-			<div className="flex h-full items-center">
+			<div className={cn("flex h-full items-center", className)}>
 				<Button
 					variant="ghost"
 					className={headerButtonClassName}
