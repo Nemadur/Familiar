@@ -80,6 +80,8 @@ function useFormValidation<T extends FieldValues>({
 		setFormData,
 		register,
 		setValue,
+		getValues,
+		reset,
 		control,
 		watch,
 		formState: { errors, ...formState },

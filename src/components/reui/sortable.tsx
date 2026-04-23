@@ -295,7 +295,10 @@ function SortableItem({
 				"data-slot": "sortable-item",
 				"data-value": value,
 				"data-dragging": true,
-				className: cn(className, "opacity-100! drop-shadow-2xl"),
+				className: cn(
+					className,
+					"opacity-1-shadow-2xl rotate-1 transition-all duration-150",
+				),
 				children: props.children,
 			}
 		: {

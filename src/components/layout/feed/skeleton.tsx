@@ -145,6 +145,7 @@ export function BentoSkeleton({
 						<div
 							key={`skeleton-${placedTile.tile.id}`}
 							className="absolute bg-muted rounded-xl animate-pulse"
+							data-boneyard-content="true"
 							style={{
 								top: `${top}px`,
 								left: `${left}px`,

@@ -107,7 +107,8 @@ const FieldItem = memo(function FieldItem({
 	isBusy: boolean;
 	onRemove: (index: number) => void;
 }) {
-	const { control } = useFormContext<FormTemplateData>();
+	const form = useFormContext<FormTemplateData>();
+	const { control } = form;
 	const fieldType = field.type;
 
 	const {
@@ -316,6 +317,11 @@ const FieldItem = memo(function FieldItem({
 								<div key={opt.id} className="flex items-start gap-2">
 									<FormField
 										control={control}
+										name={`fields.${index}.options.${optIndex}.value`}
+										render={({ field }) => <input type="hidden" {...field} />}
+									/>
+									<FormField
+										control={control}
 										name={`fields.${index}.options.${optIndex}.label`}
 										render={({ field: labelField }) => (
 											<FormItem className="flex-1 relative space-y-0">
@@ -390,11 +396,38 @@ const FieldItem = memo(function FieldItem({
 																		{...valField}
 																		value={valField.value ?? ""}
 																		min={0}
-																		onValueChange={(val) => {
-																			const numericVal = val || 0;
+																		onChange={(e) => {
+																			const val = e.target.value;
+																			const numericVal =
+																				typeof val === "string"
+																					? Number(val)
+																					: val || 0;
+
 																			valField.onChange(
 																				numericVal < 0 ? 0 : numericVal,
 																			);
+
+																			if (numericVal === 0) {
+																				// When changing value to 0, automatically reset the type to NONE
+																				const currentOptions =
+																					form.getValues(
+																						`fields.${index}.options`,
+																					) || [];
+																				const newOptions = [...currentOptions];
+																				newOptions[optIndex] = {
+																					...newOptions[optIndex],
+																					priceModifier: {
+																						...newOptions[optIndex]
+																							?.priceModifier,
+																						type: "NONE",
+																						value: 0,
+																					},
+																				};
+																				form.setValue(
+																					`fields.${index}.options`,
+																					newOptions,
+																				);
+																			}
 																		}}
 																	/>
 																</InputGroup>
@@ -482,7 +515,8 @@ export function FormTemplateModal({
 		},
 	});
 
-	const { handleSubmit, control, setFormData, formState } = form;
+	const { handleSubmit, control, setFormData, formState, getValues, reset } =
+		form;
 
 	const {
 		fields: fieldItems,
@@ -524,16 +558,18 @@ export function FormTemplateModal({
 					maxValue: f.maxValue ?? undefined,
 					systemKey: f.systemKey || undefined,
 					priceModifier: f.priceModifier || { type: "NONE", value: 0 },
-					options: f.options?.length
-						? f.options.map((o: any) => ({
-								label: o.label,
-								value: o.value,
-								priceModifier: o.priceModifier || { type: "NONE", value: 0 },
-								hasFollowupText: o.hasFollowupText ?? false,
-								followupLabel: o.followupLabel ?? undefined,
-								followupRequired: o.followupRequired ?? false,
-							}))
-						: undefined,
+					options:
+						["RADIO", "CHECKBOX", "SELECT"].includes(f.type) &&
+						f.options?.length
+							? f.options.map((o: any) => ({
+									label: o.label,
+									value: o.value,
+									priceModifier: o.priceModifier || { type: "NONE", value: 0 },
+									hasFollowupText: o.hasFollowupText ?? false,
+									followupLabel: o.followupLabel ?? undefined,
+									followupRequired: o.followupRequired ?? false,
+								}))
+							: undefined,
 				})),
 			};
 
@@ -573,6 +609,26 @@ export function FormTemplateModal({
 		});
 	};
 
+	const handleFormSubmit = (e?: React.BaseSyntheticEvent) => {
+		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+
+		handleSubmit(
+			(data) => {
+				onSubmit(data);
+			},
+			(errors) => {
+				console.error("Form validation failed:", errors);
+				console.error(
+					"Detailed validation errors:",
+					JSON.stringify(errors, null, 2),
+				);
+			},
+		)(e);
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={(val) => !val && !isBusy && onClose()}>
 			<DialogContent
@@ -581,7 +637,7 @@ export function FormTemplateModal({
 			>
 				<Form {...form}>
 					<form
-						onSubmit={handleSubmit(onSubmit)}
+						onSubmit={handleFormSubmit}
 						className="flex h-full min-h-[600px] overflow-hidden"
 					>
 						<div className="flex w-[320px] shrink-0 flex-col border-r bg-muted/20 p-6">
@@ -652,7 +708,8 @@ export function FormTemplateModal({
 								</Button>
 
 								<Button
-									type="submit"
+									type="button"
+									onClick={handleFormSubmit}
 									size="xl"
 									disabled={isBusy}
 									className="flex-1"

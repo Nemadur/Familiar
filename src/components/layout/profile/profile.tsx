@@ -195,6 +195,7 @@ export function PortfolioContentSkeleton() {
 					<Skeleton
 						key={node.key}
 						className="absolute rounded-3xl"
+						data-boneyard-content="true"
 						style={node.style}
 					/>
 				))}

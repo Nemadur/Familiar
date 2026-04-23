@@ -395,7 +395,7 @@ function DashboardForms() {
 															<Badge
 																size={"sm"}
 																variant={"secondary"}
-																key={field.id || "${template.id}-${index}"}
+																key={field.id || `${template.id}-${index}`}
 															>
 																{getFieldPreviewLabel(field, index)}
 															</Badge>
