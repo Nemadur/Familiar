@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import {
 	type FieldValues,
 	type Resolver,
@@ -37,27 +37,30 @@ function useFormValidation<T extends FieldValues>({
 			setValue(field as any, value as any, { shouldValidate: true });
 		};
 
-	const handleSubmit = (
-		onValid: SubmitHandler<T>,
-		onInvalid?: SubmitErrorHandler<T>,
-	) => {
-		return rhfHandleSubmit(async (data, e) => {
-			if (isSubmittingRef.current) return;
-			isSubmittingRef.current = true;
-			setIsPending(true);
-			try {
-				await onValid(data, e);
-			} finally {
-				isSubmittingRef.current = false;
-				setIsPending(false);
-			}
-		}, onInvalid);
-	};
+	const handleSubmit = useCallback(
+		(onValid: SubmitHandler<T>, onInvalid?: SubmitErrorHandler<T>) => {
+			return rhfHandleSubmit(async (data, e) => {
+				if (isSubmittingRef.current) return;
+				isSubmittingRef.current = true;
+				setIsPending(true);
+				try {
+					await onValid(data, e);
+				} finally {
+					isSubmittingRef.current = false;
+					setIsPending(false);
+				}
+			}, onInvalid);
+		},
+		[rhfHandleSubmit],
+	);
 
-	const setFormData = (updater: (prev: T) => T) => {
-		const newData = updater(getValues());
-		reset(newData);
-	};
+	const setFormData = useCallback(
+		(updater: (prev: T) => T) => {
+			const newData = updater(getValues());
+			reset(newData);
+		},
+		[getValues, reset],
+	);
 
 	return {
 		formData: getValues(),

@@ -1,4 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
+import type { AnyRoute, LinkProps } from "@tanstack/react-router";
 import {
 	Briefcase,
 	Wallet,
@@ -27,29 +28,39 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth";
 import { OutlineListBoxes } from "@/components/icons/icons";
+import type { FileRoutesByTo } from "@/routeTree.gen";
 
-const topNav = [
+type ValidRoute = keyof FileRoutesByTo;
+
+interface NavItem {
+	title: string;
+	url: ValidRoute | `#${string}` | `http${string}`;
+	icon: React.ElementType;
+	badge?: string;
+}
+
+const topNav: NavItem[] = [
 	{
 		title: "Portfolio",
-		url: "/dashboard/portfolio",
+		url: "#",
 		icon: Briefcase,
 		badge: "Coming soon",
 	},
 	{
 		title: "Wallet",
-		url: "/dashboard/wallet",
+		url: "#",
 		icon: Wallet,
 		badge: "Coming soon",
 	},
 	{
 		title: "Quests",
-		url: "/dashboard/quests",
+		url: "#",
 		icon: Target,
 		badge: "Coming soon",
 	},
 ];
 
-const commissionsNav = [
+const commissionsNav: NavItem[] = [
 	{
 		title: "Commissions Requests",
 		url: "/dashboard/commissions_requests",
@@ -57,33 +68,33 @@ const commissionsNav = [
 	},
 	{
 		title: "Services",
-		url: "/dashboard/services",
+		url: "#",
 		icon: Settings,
 		badge: "Coming soon",
 	},
 	{
 		title: "Forms",
-		url: "/dashboard/forms",
+		url: "/dashboard/forms_templates",
 		icon: FileText,
 	},
 	{
 		title: "Policies",
-		url: "/dashboard/policies",
+		url: "#",
 		icon: ShieldCheck,
 		badge: "Coming soon",
 	},
 ];
 
-const pipelineNav = [
+const pipelineNav: NavItem[] = [
 	{
 		title: "Queue",
-		url: "/dashboard/queue",
+		url: "#",
 		icon: Clock,
 		badge: "Coming soon",
 	},
 	{
 		title: "Shop",
-		url: "/dashboard/shop",
+		url: "#",
 		icon: ShoppingBag,
 		badge: "Coming soon",
 	},
@@ -114,7 +125,9 @@ export function DashboardSidebar() {
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{topNav.map((item) => {
-								const isActive = location.pathname.startsWith(item.url);
+								const isActive = location.pathname.startsWith(
+									item.url as string,
+								);
 
 								return (
 									<SidebarMenuItem key={item.title}>
@@ -124,7 +137,7 @@ export function DashboardSidebar() {
 											className={item.badge ? "opacity-70" : ""}
 										>
 											<Link
-												to={item.badge ? "#" : item.url}
+												to={item.badge ? "#" : (item.url as any)}
 												className={`flex items-center justify-between ${item.badge ? "pointer-events-none" : ""}`}
 											>
 												<div className="flex items-center gap-2">
@@ -150,7 +163,9 @@ export function DashboardSidebar() {
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{commissionsNav.map((item) => {
-								const isActive = location.pathname.startsWith(item.url);
+								const isActive = location.pathname.startsWith(
+									item.url as string,
+								);
 
 								return (
 									<SidebarMenuItem key={item.title}>
@@ -160,7 +175,7 @@ export function DashboardSidebar() {
 											className={item.badge ? "opacity-70" : ""}
 										>
 											<Link
-												to={item.badge ? "#" : item.url}
+												to={item.badge ? "#" : (item.url as any)}
 												className={`relative flex items-center justify-between ${item.badge ? "pointer-events-none" : ""}`}
 											>
 												<div className="flex items-center gap-2">
@@ -196,7 +211,7 @@ export function DashboardSidebar() {
 											className={item.badge ? "opacity-70" : ""}
 										>
 											<Link
-												to={item.badge ? "#" : item.url}
+												to={item.badge ? "#" : (item.url as any)}
 												className={`flex items-center justify-between ${item.badge ? "pointer-events-none" : ""}`}
 											>
 												<div className="flex items-center gap-2">

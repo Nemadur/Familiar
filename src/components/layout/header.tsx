@@ -23,8 +23,8 @@ import {
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import LanguageSelect from "./select/language";
-import ThemeToggle from "./select/theme-toggle";
 import { TRoles } from "@/types/user/roles";
+import { Skeleton } from "boneyard-js/react";
 
 export default function Header() {
 	const { t } = useTranslation();
@@ -49,29 +49,34 @@ export default function Header() {
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
 						<LanguageSelect />
-						{/* <Skeleton loading={isPending}> */}
-						{isPending
-							? null
-							: user?.roles?.includes(TRoles.Artist) && (
-									<Button size={"xl"} asChild>
-										<Link to="/dashboard">
-											{t("header.artist-dashboard", "Artist Dashboard")}
-										</Link>
+						<Skeleton name="header-artist_dashboard" loading={isPending}>
+							{isPending
+								? null
+								: user?.roles?.includes(TRoles.Artist) && (
+										<Button size={"xl"} asChild>
+											<Link to="/dashboard">
+												{t("header.artist-dashboard", "Artist Dashboard")}
+											</Link>
+										</Button>
+									)}
+						</Skeleton>
+
+						<Skeleton name="header-user_menu" loading={isPending}>
+							{isPending ? null : user ? (
+								<Skeleton name="header-user_menu" loading={isPending}>
+									<User user={user} showInfo={false} isDropdown />
+								</Skeleton>
+							) : (
+								<div className="hidden lg:flex items-center gap-2">
+									<Button asChild variant={"secondary"} size={"xl"}>
+										<Link to="/auth/login">{t("auth.login.cta")}</Link>
 									</Button>
-								)}
-						{isPending ? null : user ? (
-							<User user={user} showInfo={false} isDropdown />
-						) : (
-							<div className="hidden lg:flex items-center gap-2">
-								<Button asChild variant={"secondary"} size={"xl"}>
-									<Link to="/auth/login">{t("auth.login.cta")}</Link>
-								</Button>
-								<Button asChild size={"xl"}>
-									<Link to="/auth/register">{t("auth.register.cta")}</Link>
-								</Button>
-							</div>
-						)}
-						{/* </Skeleton> */}
+									<Button asChild size={"xl"}>
+										<Link to="/auth/register">{t("auth.register.cta")}</Link>
+									</Button>
+								</div>
+							)}
+						</Skeleton>
 					</NavWrapper>
 				</div>
 			</div>
@@ -161,8 +166,8 @@ const NavLinks = memo(() => {
 	const navigationLinks = [
 		{ path: "/", label: t("header.navigation.home") },
 		{ path: "/shop", label: t("header.navigation.shop") },
-		{ path: "/blog", label: t("header.navigation.blog") },
-		{ path: "/users", label: t("header.navigation.users") },
+		// { path: "/blog", label: t("header.navigation.blog") },
+		// { path: "/users", label: t("header.navigation.users") },
 	];
 
 	return (

@@ -58,12 +58,13 @@ function Button({
 	onPointerLeave,
 	children,
 	...props
-}: React.ComponentProps<"button"> &
+}: Omit<React.ComponentProps<"button">, "children"> &
 	VariantProps<typeof buttonVariants> & {
 		asChild?: boolean;
 		onHold?: () => void;
 		holdDuration?: number;
 		onHoldCompleted?: (completed: boolean) => void;
+		children?: React.ReactNode | ((completed: boolean) => React.ReactNode);
 	}) {
 	const Comp = asChild ? Slot.Root : "button";
 
@@ -139,11 +140,9 @@ function Button({
 
 	const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
 		if (onHold) {
-			if (!isTap.current || holdCompleted) {
-				e.preventDefault();
-				e.stopPropagation();
-				return;
-			}
+			e.preventDefault();
+			e.stopPropagation();
+			return;
 		}
 		onClick?.(e);
 	};
@@ -177,7 +176,7 @@ function Button({
 				onPointerLeave={onPointerLeave}
 				{...props}
 			>
-				{children}
+				{typeof children === "function" ? children(holdCompleted) : children}
 			</Comp>
 		);
 	}

@@ -8,9 +8,6 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Analytics } from "@vercel/analytics/react";
-import { Container } from "@/components/layout/container";
-import Footer from "@/components/layout/footer";
-
 import { Toaster } from "@/components/ui/sonner";
 import TanStackQueryDevtools from "@/integrations/tanstack-query/devtools";
 import i18n, { setSSRLanguage } from "@/lib/i18n";
@@ -19,7 +16,7 @@ import { AbilityProvider } from "@/providers/ability";
 import { ThemeProvider } from "@/providers/theme";
 import { AuthProvider } from "@/providers/auth";
 import appCss from "../styles.css?url";
-// import "../bones/registry";
+import "@/bones/registry";
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;

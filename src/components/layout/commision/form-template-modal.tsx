@@ -1,4 +1,4 @@
-import { useEffect, memo } from "react";
+import { useEffect, memo, useState } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import {
 	Dialog,
@@ -8,7 +8,6 @@ import {
 	DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
 	Form,
@@ -66,6 +65,12 @@ import {
 import { Surface } from "@heroui/react";
 import { Badge } from "@/components/ui/badge";
 import useFormValidation from "@/hooks/use-form-validation";
+import { ConfirmDialog } from "@/components/layout/confirm-dialog";
+import {
+	Sortable,
+	SortableItem,
+	SortableItemHandle,
+} from "@/components/reui/sortable";
 import {
 	formTemplateSchema,
 	type FormTemplateData,
@@ -92,53 +97,86 @@ const TYPE_ICONS: Record<string, any> = {
 };
 
 const FieldItem = memo(function FieldItem({
+	field,
 	index,
 	isBusy,
 	onRemove,
 }: {
+	field: any;
 	index: number;
 	isBusy: boolean;
 	onRemove: (index: number) => void;
 }) {
 	const { control } = useFormContext<FormTemplateData>();
-	const fieldType = useWatch({
-		control,
-		name: `fields.${index}.type` as const,
-	}) as string;
-	const fieldOptions =
-		useWatch({
-			control,
-			name: `fields.${index}.options` as const,
-		}) || [];
-	const { append, remove } = useFieldArray({
+	const fieldType = field.type;
+
+	const {
+		fields: optionFields,
+		append,
+		remove,
+	} = useFieldArray({
 		control,
 		name: `fields.${index}.options`,
 	});
 
+	const [isDeleteFieldOpen, setIsDeleteFieldOpen] = useState(false);
+	const [optionToDelete, setOptionToDelete] = useState<number | null>(null);
+
 	const Icon = TYPE_ICONS[fieldType] || Type;
 
 	return (
-		<Surface className="flex flex-col gap-4 rounded-3xl border p-4">
+		// TODO: use sortable component
+		<Surface className="flex flex-col gap-4 rounded-3xl border p-3">
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-3">
-					<div className="cursor-grab text-muted-foreground hover:text-foreground">
+					<SortableItemHandle className="cursor-grab text-muted-foreground hover:text-foreground">
 						<GripVertical className="size-4" />
-					</div>
-					<Badge variant={"secondary"} size={"sm"} className="gap-1.5">
+					</SortableItemHandle>
+					<Badge variant={"secondary"} size={"sm"}>
 						<Icon className="size-3" />
 						{TYPE_LABELS[fieldType] || fieldType}
 					</Badge>
+					<FormField
+						control={control}
+						name={`fields.${index}.required`}
+						render={({ field }) => (
+							<FormItem className="flex flex-row items-center gap-3 space-y-0">
+								<FormControl>
+									<Switch
+										checked={field.value || false}
+										onCheckedChange={field.onChange}
+										disabled={isBusy}
+									/>
+								</FormControl>
+								<FormLabel className="cursor-pointer text-sm font-medium">
+									Required field
+								</FormLabel>
+							</FormItem>
+						)}
+					/>
 				</div>
 				<Button
 					variant={"destructive"}
-					size={"icon-lg"}
-					onClick={() => onRemove(index)}
+					size={"icon-xl"}
+					onClick={() => setIsDeleteFieldOpen(true)}
 					disabled={isBusy}
 					type="button"
 				>
 					<OutlineTrash />
 				</Button>
 			</div>
+
+			<ConfirmDialog
+				open={isDeleteFieldOpen}
+				onOpenChange={setIsDeleteFieldOpen}
+				title="Delete Field"
+				description="Are you sure you want to delete this field? This action cannot be undone."
+				onConfirm={() => {
+					setIsDeleteFieldOpen(false);
+					onRemove(index);
+				}}
+				confirmText="Delete"
+			/>
 
 			<div className="space-y-4">
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -248,7 +286,7 @@ const FieldItem = memo(function FieldItem({
 					</div>
 				)}
 
-				<FormField
+				{/* <FormField
 					control={control}
 					name={`fields.${index}.required`}
 					render={({ field }) => (
@@ -265,17 +303,17 @@ const FieldItem = memo(function FieldItem({
 							</FormLabel>
 						</FormItem>
 					)}
-				/>
+				/> */}
 
 				{["RADIO", "CHECKBOX", "SELECT"].includes(fieldType) && (
-					<div className="mt-4 space-y-4 rounded-xl border p-4">
+					<div className="mt-4 space-y-4 rounded-2xl border p-3">
 						<FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 							Options
 						</FormLabel>
 
 						<div className="space-y-4">
-							{fieldOptions.map((opt, optIndex) => (
-								<div key={optIndex} className="flex items-start gap-2">
+							{optionFields.map((opt, optIndex) => (
+								<div key={opt.id} className="flex items-start gap-2">
 									<FormField
 										control={control}
 										name={`fields.${index}.options.${optIndex}.label`}
@@ -346,17 +384,18 @@ const FieldItem = memo(function FieldItem({
 																	variant="floating"
 																	className="w-28 peer"
 																>
-																	<InputGroupInput
-																		type="number"
+																	<InputGroupNumberInput
 																		placeholder=" "
 																		disabled={isBusy}
 																		{...valField}
 																		value={valField.value ?? ""}
-																		onChange={(e) =>
+																		min={0}
+																		onValueChange={(val) => {
+																			const numericVal = val || 0;
 																			valField.onChange(
-																				parseFloat(e.target.value) || 0,
-																			)
-																		}
+																				numericVal < 0 ? 0 : numericVal,
+																			);
+																		}}
 																	/>
 																</InputGroup>
 															</FormControl>
@@ -375,13 +414,27 @@ const FieldItem = memo(function FieldItem({
 										variant={"destructive"}
 										size={"icon-xl"}
 										type="button"
-										onClick={() => remove(optIndex)}
+										onClick={() => setOptionToDelete(optIndex)}
 										disabled={isBusy}
 									>
 										<OutlineTrash />
 									</Button>
 								</div>
 							))}
+
+							<ConfirmDialog
+								open={optionToDelete !== null}
+								onOpenChange={(open) => !open && setOptionToDelete(null)}
+								title="Delete Option"
+								description="Are you sure you want to delete this option? This action cannot be undone."
+								onConfirm={() => {
+									if (optionToDelete !== null) {
+										remove(optionToDelete);
+										setOptionToDelete(null);
+									}
+								}}
+								confirmText="Delete"
+							/>
 						</div>
 
 						<Button
@@ -389,8 +442,8 @@ const FieldItem = memo(function FieldItem({
 							type="button"
 							onClick={() => {
 								append({
-									label: `Option ${fieldOptions.length + 1}`,
-									value: `opt_${fieldOptions.length + 1}`,
+									label: `Option ${optionFields.length + 1}`,
+									value: `opt_${optionFields.length + 1}`,
 									priceModifier: { type: "NONE", value: 0 },
 								});
 							}}
@@ -435,6 +488,7 @@ export function FormTemplateModal({
 		fields: fieldItems,
 		append: appendField,
 		remove: removeField,
+		move: moveField,
 	} = useFieldArray({
 		control,
 		name: "fields",
@@ -454,21 +508,46 @@ export function FormTemplateModal({
 				fields: [],
 			}));
 		}
-	}, [template]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [template, setFormData]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const onSubmit = async (data: FormTemplateData) => {
 		try {
+			const cleanData = {
+				name: data.name,
+				description: data.description || undefined,
+				fields: data.fields.map((f: any) => ({
+					type: f.type,
+					label: f.label,
+					description: f.description || undefined,
+					required: f.required || false,
+					minValue: f.minValue ?? undefined,
+					maxValue: f.maxValue ?? undefined,
+					systemKey: f.systemKey || undefined,
+					priceModifier: f.priceModifier || { type: "NONE", value: 0 },
+					options: f.options?.length
+						? f.options.map((o: any) => ({
+								label: o.label,
+								value: o.value,
+								priceModifier: o.priceModifier || { type: "NONE", value: 0 },
+								hasFollowupText: o.hasFollowupText ?? false,
+								followupLabel: o.followupLabel ?? undefined,
+								followupRequired: o.followupRequired ?? false,
+							}))
+						: undefined,
+				})),
+			};
+
 			if (template) {
 				await updateMutation.mutateAsync({
 					templateId: template.id,
 					data: {
 						version: template.version,
-						...data,
+						...cleanData,
 					},
 				});
 				toast.success("Template updated successfully");
 			} else {
-				await createMutation.mutateAsync(data as any);
+				await createMutation.mutateAsync(cleanData as any);
 				toast.success("Template created successfully");
 			}
 			onClose();
@@ -668,16 +747,26 @@ export function FormTemplateModal({
 										<p>Click "Add Field" to start building your form.</p>
 									</div>
 								) : (
-									<div className="mx-auto max-w-3xl space-y-4">
+									<Sortable
+										value={fieldItems as any[]}
+										onValueChange={() => {}}
+										getItemValue={(item) => item.id}
+										onMove={({ activeIndex, overIndex }) => {
+											moveField(activeIndex, overIndex);
+										}}
+										className="mx-auto max-w-3xl space-y-4"
+									>
 										{fieldItems.map((field, index) => (
-											<FieldItem
-												key={field.id}
-												index={index}
-												isBusy={isBusy}
-												onRemove={removeField}
-											/>
+											<SortableItem key={field.id} value={field.id}>
+												<FieldItem
+													field={field}
+													index={index}
+													isBusy={isBusy}
+													onRemove={removeField}
+												/>
+											</SortableItem>
 										))}
-									</div>
+									</Sortable>
 								)}
 							</div>
 						</div>

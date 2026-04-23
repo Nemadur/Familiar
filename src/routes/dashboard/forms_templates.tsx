@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/layout/dashboard/header";
 import { FormTemplateModal } from "@/components/layout/commision/form-template-modal";
+import { ConfirmDialog } from "@/components/layout/confirm-dialog";
 import {
 	OutlineClock03,
 	OutlineEdit,
@@ -44,7 +45,7 @@ import {
 import type { DateFilterOperator } from "@/components/data-table-filter/core/types";
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/dashboard/forms")({
+export const Route = createFileRoute("/dashboard/forms_templates")({
 	component: DashboardForms,
 });
 
@@ -276,13 +277,12 @@ function DashboardForms() {
 		return result;
 	}, [typedTemplates, searchQuery, filterState]);
 
-	const performDelete = async (id: string) => {
-		try {
-			await deleteMutation.mutateAsync(id);
-			toast.success("Template deleted successfully");
-		} catch (e: any) {
-			toast.error(e.message || "Failed to delete template");
-		}
+	const performDelete = (id: string) => {
+		toast.promise(deleteMutation.mutateAsync(id), {
+			loading: "Deleting template...",
+			success: "Template deleted successfully",
+			error: (e: any) => e.message || "Failed to delete template",
+		});
 		setTemplateToDelete(null);
 	};
 
@@ -395,7 +395,7 @@ function DashboardForms() {
 															<Badge
 																size={"sm"}
 																variant={"secondary"}
-																key={field.id || `${template.id}-${index}`}
+																key={field.id || "${template.id}-${index}"}
 															>
 																{getFieldPreviewLabel(field, index)}
 															</Badge>
@@ -427,25 +427,13 @@ function DashboardForms() {
 													size={"xl"}
 													variant="destructive"
 													onClick={() => setTemplateToDelete(template.id)}
-													onHold={() => performDelete(template.id)}
 													disabled={
 														deleteMutation.isPending &&
 														templateToDelete === template.id
 													}
 												>
-													{(isHoldCompleted: any) =>
-														isHoldCompleted ? (
-															<>
-																<Loader2 className="size-4 animate-spin" />
-																Deleting
-															</>
-														) : (
-															<>
-																<OutlineTrash />
-																Delete
-															</>
-														)
-													}
+													<OutlineTrash />
+													Delete
 												</Button>
 											</div>
 										</Surface>
@@ -465,46 +453,15 @@ function DashboardForms() {
 				/>
 			)}
 
-			<Dialog
+			<ConfirmDialog
 				open={!!templateToDelete}
 				onOpenChange={(open) => !open && setTemplateToDelete(null)}
-			>
-				<DialogContent className="max-w-md p-6">
-					<DialogHeader className="gap-2">
-						<DialogTitle className="text-xl">Delete Template</DialogTitle>
-						<DialogDescription className="text-base">
-							Are you sure you want to delete this template? This action cannot
-							be undone.
-						</DialogDescription>
-					</DialogHeader>
-					<DialogFooter className="mt-4 gap-2">
-						<Button
-							size="xl"
-							variant="outline"
-							onClick={() => setTemplateToDelete(null)}
-						>
-							Cancel
-						</Button>
-						<Button
-							size="xl"
-							variant="destructive"
-							onClick={() =>
-								templateToDelete && performDelete(templateToDelete)
-							}
-							disabled={deleteMutation.isPending}
-						>
-							{deleteMutation.isPending ? (
-								<>
-									<Loader2 className="size-4 animate-spin mr-2" />
-									Deleting
-								</>
-							) : (
-								"Delete"
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+				title="Delete Template"
+				description="Are you sure you want to delete this template? This action cannot be undone."
+				onConfirm={() => templateToDelete && performDelete(templateToDelete)}
+				confirmText="Delete"
+				isPending={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }
