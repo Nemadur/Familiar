@@ -51,7 +51,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import {
+	OutlineCalendar,
+	OutlineCheck,
 	OutlineClose,
+	OutlineListBoxes,
 	OutlinePlus,
 	OutlineTrash,
 } from "@/components/icons/icons";
@@ -133,10 +136,6 @@ const FieldItem = memo(function FieldItem({
 					<SortableItemHandle className="cursor-grab text-muted-foreground hover:text-foreground">
 						<GripVertical className="size-4" />
 					</SortableItemHandle>
-					<Badge variant={"secondary"} size={"sm"}>
-						<Icon className="size-3" />
-						{TYPE_LABELS[fieldType] || fieldType}
-					</Badge>
 					<FormField
 						control={control}
 						name={`fields.${index}.required`}
@@ -155,6 +154,10 @@ const FieldItem = memo(function FieldItem({
 							</FormItem>
 						)}
 					/>
+					<Badge variant={"secondary"} size={"sm"}>
+						<Icon className="size-3" />
+						{TYPE_LABELS[fieldType] || fieldType}
+					</Badge>
 				</div>
 				<Button
 					variant={"destructive"}
@@ -195,7 +198,7 @@ const FieldItem = memo(function FieldItem({
 										/>
 									</InputGroup>
 								</FormControl>
-								<FormLabel className="absolute left-3 top-3 z-10 bg-background origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
+								<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
 									Field Label
 								</FormLabel>
 								<FormMessage />
@@ -286,25 +289,6 @@ const FieldItem = memo(function FieldItem({
 						/>
 					</div>
 				)}
-
-				{/* <FormField
-					control={control}
-					name={`fields.${index}.required`}
-					render={({ field }) => (
-						<FormItem className="flex flex-row items-center gap-3 space-y-0 pt-1">
-							<FormControl>
-								<Switch
-									checked={field.value || false}
-									onCheckedChange={field.onChange}
-									disabled={isBusy}
-								/>
-							</FormControl>
-							<FormLabel className="cursor-pointer text-sm font-medium">
-								Required field
-							</FormLabel>
-						</FormItem>
-					)}
-				/> */}
 
 				{["RADIO", "CHECKBOX", "SELECT"].includes(fieldType) && (
 					<div className="mt-4 space-y-4 rounded-2xl border p-3">
@@ -734,12 +718,7 @@ export function FormTemplateModal({
 								<div className="flex gap-2">
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>
-											<Button
-												variant="outline"
-												disabled={isBusy}
-												className="gap-2"
-												type="button"
-											>
+											<Button variant="outline" disabled={isBusy} type="button">
 												<OutlinePlus />
 												Add Field
 											</Button>
@@ -764,7 +743,7 @@ export function FormTemplateModal({
 											<DropdownMenuItem
 												onClick={() => handleAddField("DATE_INPUT")}
 											>
-												<Calendar /> Date
+												<OutlineCalendar /> Date
 											</DropdownMenuItem>
 											<DropdownMenuItem onClick={() => handleAddField("RADIO")}>
 												<CircleDot /> Radio Buttons
@@ -772,12 +751,12 @@ export function FormTemplateModal({
 											<DropdownMenuItem
 												onClick={() => handleAddField("CHECKBOX")}
 											>
-												<CheckSquare /> Checkboxes
+												<OutlineCheck /> Checkboxes
 											</DropdownMenuItem>
 											<DropdownMenuItem
 												onClick={() => handleAddField("SELECT")}
 											>
-												<List /> Dropdown
+												<OutlineListBoxes /> Dropdown
 											</DropdownMenuItem>
 										</DropdownMenuContent>
 									</DropdownMenu>

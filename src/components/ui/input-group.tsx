@@ -7,12 +7,12 @@ import { cn } from "src/lib/utils";
 import { OutlineChevronDown, OutlineChevronUp } from "../icons/icons";
 
 const inputGroupVariants = cva(
-	"group/input-group relative flex w-full items-center border border-input outline-none transition-[color,box-shadow]",
+	"group/input-group relative flex w-full items-center border border-input outline-none transition-[color,box-shadow] bg-input",
 	{
 		variants: {
 			variant: {
-				default: "rounded-full bg-muted/30",
-				floating: "rounded-xl bg-background",
+				default: "rounded-full",
+				floating: "rounded-2xl",
 			},
 		},
 		defaultVariants: {
