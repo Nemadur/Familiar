@@ -7,7 +7,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@familiar/api": ["./src/api-index.ts"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],

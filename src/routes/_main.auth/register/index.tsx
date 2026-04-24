@@ -1,5 +1,4 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { GalleryVerticalEnd } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import RegisterForm from "@/components/layout/auth/form/register";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,7 @@ function SignupPage() {
 								onModeChange={() => navigate({ to: "/auth/login" })}
 							/>
 						</div>
-						
+
 						<div className="mt-auto pt-6 space-y-4 text-center text-sm">
 							<div className="text-muted-foreground">
 								{t("auth.register.already_have_account")}{" "}
@@ -40,11 +39,11 @@ function SignupPage() {
 							<p className="px-8 text-muted-foreground">
 								{t("auth.terms_agree.label")}{" "}
 								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="/terms">{t("auth.terms_agree.terms")}</Link>
+									<Link to="#">{t("auth.terms_agree.terms")}</Link>
 								</Button>{" "}
 								{t("auth.terms_agree.and")}{" "}
 								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="/privacy">{t("auth.terms_agree.privacy")}</Link>
+									<Link to="#">{t("auth.terms_agree.privacy")}</Link>
 								</Button>
 								.
 							</p>
@@ -60,5 +59,5 @@ function SignupPage() {
 				/>
 			</div>
 		</div>
-	)
+	);
 }
