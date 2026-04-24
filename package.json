@@ -82,6 +82,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
+    "@rsbuild/core": "^1.1.13",
     "@tanstack/devtools-vite": "^0.6.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",

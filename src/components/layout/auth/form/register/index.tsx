@@ -169,7 +169,7 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 					handleSubmit(onFinalSubmit)(e);
 				}}
 				onKeyDown={handleKeyDown}
-				className="flex min-h-[720px] h-full flex-col"
+				className="flex flex-col h-full min-h-[450px]"
 			>
 				<div className="flex flex-1 flex-col">
 					<div className="flex flex-1 flex-col">

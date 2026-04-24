@@ -15,15 +15,17 @@ function LoginPage() {
 	return (
 		<div className="grid h-[calc(100vh-6rem)] mt-2 lg:grid-cols-2">
 			<div className="flex flex-col gap-4 p-6 md:p-10">
-				<div className="flex flex-1 items-center justify-center">
-					<div className="w-full max-w-md">
-						<LoginForm
-							onSuccess={() => navigate({ to: "/" })}
-							onModeChange={() => navigate({ to: "/auth/register" })}
-							onForgot={() => navigate({ to: "/auth/forgot" })}
-						/>
+				<div className="flex flex-1 flex-col lg:items-center lg:justify-center">
+					<div className="w-full flex flex-col h-full lg:max-w-md">
+						<div className="flex-1 flex flex-col pt-8">
+							<LoginForm
+								onSuccess={() => navigate({ to: "/" })}
+								onModeChange={() => navigate({ to: "/auth/register" })}
+								onForgot={() => navigate({ to: "/auth/forgot" })}
+							/>
+						</div>
 
-						<div className="mt-6 space-y-4 text-center text-sm">
+						<div className="mt-auto pt-6 space-y-4 text-center text-sm">
 							{/* <div className="text-muted-foreground">
 								{t("auth.forgot.register_question")}{" "}
 								<Button

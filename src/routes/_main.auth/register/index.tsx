@@ -15,14 +15,16 @@ function SignupPage() {
 	return (
 		<div className="grid sm:w-full lg:w-full md:w-xl md:mx-auto h-full min-h-[calc(100dvh-6rem)] lg:grid-cols-2">
 			<div className="flex flex-col gap-4 p-6 md:p-10">
-				<div className="flex flex-1 lg:items-center lg:justify-center">
-					<div className="w-full h-full lg:max-w-md">
-						<RegisterForm
-							onSuccess={() => navigate({ to: "/" })}
-							onModeChange={() => navigate({ to: "/auth/login" })}
-						/>
+				<div className="flex flex-1 flex-col lg:items-center lg:justify-center">
+					<div className="w-full flex flex-col h-full lg:max-w-md">
+						<div className="flex-1 flex flex-col pt-8">
+							<RegisterForm
+								onSuccess={() => navigate({ to: "/" })}
+								onModeChange={() => navigate({ to: "/auth/login" })}
+							/>
+						</div>
 						
-						<div className="mt-6 space-y-4 text-center text-sm">
+						<div className="mt-auto pt-6 space-y-4 text-center text-sm">
 							<div className="text-muted-foreground">
 								{t("auth.register.already_have_account")}{" "}
 								<Button

@@ -53,85 +53,89 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-1">
-				<FormField
-					control={control}
-					name="email"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>{t("auth.email.label")}</FormLabel>
-							<FormControl>
-								<InputGroup>
-									<InputGroupAddon>
-										<OutlineMail />
-									</InputGroupAddon>
-									<InputGroupInput
-										placeholder={t("auth.email.placeholder")}
-										type="email"
-										autoComplete="email"
-										{...field}
-									/>
-								</InputGroup>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+			<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full min-h-[300px]">
+				<div className="flex flex-col space-y-4 px-1 flex-1">
+					<FormField
+						control={control}
+						name="email"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>{t("auth.email.label")}</FormLabel>
+								<FormControl>
+									<InputGroup>
+										<InputGroupAddon>
+											<OutlineMail />
+										</InputGroupAddon>
+										<InputGroupInput
+											placeholder={t("auth.email.placeholder")}
+											type="email"
+											autoComplete="email"
+											{...field}
+										/>
+									</InputGroup>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
-				<FormField
-					control={control}
-					name="password"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>{t("auth.password.label")}</FormLabel>
-							<FormControl>
-								<InputGroup>
-									<InputGroupAddon>
-										<OutlineLock />
-									</InputGroupAddon>
-									<InputGroupInput
-										placeholder={t("auth.password.placeholder")}
-										type={showPassword ? "text" : "password"}
-										autoComplete="current-password"
-										{...field}
-									/>
-									<InputGroupAddon align="inline-end">
-										<InputGroupButton
-											type="button"
-											variant="ghost"
-											size="icon-xs"
-											onClick={() => setShowPassword((prev) => !prev)}
-										>
-											{showPassword ? <OutlineEyeOff /> : <OutlineEye />}
-											<span className="sr-only">
-												{showPassword ? "Hide password" : "Show password"}
-											</span>
-										</InputGroupButton>
-									</InputGroupAddon>
-								</InputGroup>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+					<FormField
+						control={control}
+						name="password"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>{t("auth.password.label")}</FormLabel>
+								<FormControl>
+									<InputGroup>
+										<InputGroupAddon>
+											<OutlineLock />
+										</InputGroupAddon>
+										<InputGroupInput
+											placeholder={t("auth.password.placeholder")}
+											type={showPassword ? "text" : "password"}
+											autoComplete="current-password"
+											{...field}
+										/>
+										<InputGroupAddon align="inline-end">
+											<InputGroupButton
+												type="button"
+												variant="ghost"
+												size="icon-xs"
+												onClick={() => setShowPassword((prev) => !prev)}
+											>
+												{showPassword ? <OutlineEyeOff /> : <OutlineEye />}
+												<span className="sr-only">
+													{showPassword ? "Hide password" : "Show password"}
+												</span>
+											</InputGroupButton>
+										</InputGroupAddon>
+									</InputGroup>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
 
-				<Button
-					type="submit"
-					disabled={isPending}
-					className="w-full"
-					size={"xl"}
-				>
-					{t("auth.login.cta")}
-				</Button>
+				<div className="mt-auto shrink-0 space-y-2 px-1">
+					<Button
+						type="submit"
+						disabled={isPending}
+						className="w-full"
+						size={"xl"}
+					>
+						{t("auth.login.cta")}
+					</Button>
 
-				<Button
-					type="button"
-					onClick={() => onForgot?.()}
-					variant={"link"}
-					className="w-full justify-end"
-				>
-					{t("auth.forgot.cta")}
-				</Button>
+					<Button
+						type="button"
+						onClick={() => onForgot?.()}
+						variant={"link"}
+						className="w-full justify-center"
+					>
+						{t("auth.forgot.cta")}
+					</Button>
+				</div>
 			</form>
 		</Form>
 	);
