@@ -425,8 +425,9 @@ export function RequestList({
 							headerRow: "bg-transparent",
 							body: "bg-transparent",
 							bodyRow: cn(
-								"group",
-								"[&>td]:bg-surface [&>td]:align-middle",
+								"group hover:bg-transparent data-[state=selected]:bg-transparent",
+								"[&>td]:bg-surface [&>td]:align-middle [&>td]:transition-colors",
+								"hover:[&>td]:bg-muted/40 data-[state=selected]:[&>td]:bg-muted/50",
 								"[&>td:first-child]:rounded-l-2xl [&>td:last-child]:rounded-r-2xl",
 								"[&>td:first-child]:pl-1 [&>td:last-child]:pr-4 [&>td]:py-1",
 							),

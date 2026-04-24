@@ -181,21 +181,6 @@ const OptionItem = memo(function OptionItem({
 													typeof val === "string" ? Number(val) : val || 0;
 
 												valField.onChange(numericVal < 0 ? 0 : numericVal);
-
-												if (numericVal === 0) {
-													const currentOptions =
-														getValues(`fields.${index}.options`) || [];
-													const newOptions = [...currentOptions];
-													newOptions[optIndex] = {
-														...newOptions[optIndex],
-														priceModifier: {
-															...newOptions[optIndex]?.priceModifier,
-															type: "NONE",
-															value: 0,
-														},
-													};
-													setValue(`fields.${index}.options`, newOptions);
-												}
 											}}
 										/>
 									</InputGroup>
