@@ -5,11 +5,13 @@ import { useAuth } from "@/providers/auth";
 interface CommissionRequestFooterProps {
 	onBack: () => void;
 	totalPrice: number;
+	isPreview?: boolean;
 }
 
 export function CommissionRequestFooter({
 	onBack,
 	totalPrice,
+	isPreview = false,
 }: CommissionRequestFooterProps) {
 	const { user: currentUser } = useAuth();
 
@@ -64,9 +66,9 @@ export function CommissionRequestFooter({
 							size="xl"
 							variant="outline"
 							className="flex-1"
-							type="submit"
+							type={isPreview ? "button" : "submit"}
 						>
-							Request as Guest
+							{isPreview ? "Preview Mode" : "Request as Guest"}
 						</Button>
 					</>
 				) : (
@@ -75,8 +77,8 @@ export function CommissionRequestFooter({
 							<OutlineArrowLeft />
 							Back
 						</Button>
-						<Button size="xl" className="flex-1" type="button">
-							Request commission
+						<Button size="xl" className="flex-1" type={isPreview ? "button" : "submit"}>
+							{isPreview ? "Preview Mode" : "Request commission"}
 						</Button>
 					</>
 				)}

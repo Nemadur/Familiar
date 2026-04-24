@@ -49,6 +49,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { FormValues } from "./types";
+import type { FormFieldDto } from "@/types/commissions/templates";
+import { PreviewCustomFields } from "./preview-custom-fields";
 
 interface CommissionRequestFieldsProps {
 	control: Control<FormValues>;
@@ -56,6 +58,7 @@ interface CommissionRequestFieldsProps {
 	customOptions: Option[];
 	sharingOptions: Option[];
 	artistName: string;
+	previewFields?: FormFieldDto[];
 }
 
 export function CommissionRequestFields({
@@ -64,92 +67,179 @@ export function CommissionRequestFields({
 	customOptions,
 	sharingOptions,
 	artistName,
+	previewFields,
 }: CommissionRequestFieldsProps) {
+	const hasCustomFields = previewFields && previewFields.length > 0;
+
 	return (
 		<div className="space-y-10">
-			{/* Name */}
-			<FormField
-				control={control}
-				name="name"
-				render={({ field, fieldState }) => (
-					<Field>
-						<FieldLabel htmlFor={field.name} className="w-full justify-between">
+			{hasCustomFields ? (
+				<PreviewCustomFields fields={previewFields} />
+			) : (
+				<>
+					{/* Name */}
+					<FormField
+						control={control}
+						name="name"
+						render={({ field, fieldState }) => (
+							<Field>
+								<FieldLabel
+									htmlFor={field.name}
+									className="w-full justify-between"
+								>
+									{/* TODO: add translation + check if it's required */}
+									<span className="flex-1 w-full">Your name</span>
+									<span className="w-fit text-destructive">Required *</span>
+								</FieldLabel>
+								<InputGroup className="h-12">
+									<InputGroupAddon>
+										<OutlineUser />
+									</InputGroupAddon>
+									<InputGroupInput
+										id={field.name}
+										placeholder="Name / nickname"
+										{...field}
+									/>
+								</InputGroup>
+								<FieldError errors={[fieldState.error]} />
+							</Field>
+						)}
+					/>
+
+					{/* Contact Information */}
+					<Field className="space-y-4">
+						<FieldLabel className="w-full justify-between">
+							<span className="flex-1 w-full">Your email</span>
 							{/* TODO: add translation + check if it's required */}
-							<span className="flex-1 w-full">Your name</span>
 							<span className="w-fit text-destructive">Required *</span>
 						</FieldLabel>
-						<InputGroup className="h-12">
-							<InputGroupAddon>
-								<OutlineUser />
-							</InputGroupAddon>
-							<InputGroupInput
-								id={field.name}
-								placeholder="Name / nickname"
-								{...field}
+						<FormField
+							control={control}
+							name="email"
+							render={({ field, fieldState }) => (
+								<Field>
+									<InputGroup className="h-12 bg-secondary/30">
+										<InputGroupAddon>
+											<OutlineMail />
+										</InputGroupAddon>
+										<InputGroupInput
+											placeholder="your@email.com"
+											className="placeholder:text-foreground"
+											{...field}
+										/>
+										<InputGroupButton
+											variant="secondary"
+											className="mr-1.5 px-4 font-medium"
+										>
+											Verify email
+										</InputGroupButton>
+									</InputGroup>
+									<FieldError errors={[fieldState.error]} />
+								</Field>
+							)}
+						/>
+
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<FormField
+								control={control}
+								name="discord"
+								render={({ field, fieldState }) => (
+									<Field>
+										<InputGroup className="h-12">
+											<InputGroupAddon>
+												<OutlineDiscord />
+											</InputGroupAddon>
+											<InputGroupInput placeholder="username" {...field} />
+										</InputGroup>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
+								)}
 							/>
-						</InputGroup>
-						<FieldError errors={[fieldState.error]} />
+							<FormField
+								control={control}
+								name="twitter"
+								render={({ field, fieldState }) => (
+									<Field>
+										<InputGroup className="h-12">
+											<InputGroupAddon>
+												<OutlineTwitter />
+											</InputGroupAddon>
+											<InputGroupInput placeholder="Twitter" {...field} />
+										</InputGroup>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
+								)}
+							/>
+							<FormField
+								control={control}
+								name="instagram"
+								render={({ field, fieldState }) => (
+									<Field>
+										<InputGroup className="h-12">
+											<InputGroupAddon>
+												<OutlineInstagram />
+											</InputGroupAddon>
+											<InputGroupInput placeholder="Instagram" {...field} />
+										</InputGroup>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
+								)}
+							/>
+							<FormField
+								control={control}
+								name="telegram"
+								render={({ field, fieldState }) => (
+									<Field>
+										<InputGroup className="h-12">
+											<InputGroupAddon>
+												<OutlineSend className="-mt-1" />
+											</InputGroupAddon>
+											<InputGroupInput placeholder="Telegram" {...field} />
+										</InputGroup>
+										<FieldError errors={[fieldState.error]} />
+									</Field>
+								)}
+							/>
+						</div>
 					</Field>
-				)}
-			/>
 
-			{/* Contact Details */}
-			<div className="space-y-4">
-				{/* <div className="flex items-center justify-between">
-					<Label>Your contact details</Label>
-					<span className="text-muted-foreground text-xs">Required</span>
-				</div> */}
-
-				<FormField
-					control={control}
-					name="email"
-					render={({ field, fieldState }) => (
-						<Field>
-							<FieldLabel
-								htmlFor={field.name}
-								className="w-full justify-between"
-							>
-								{/* TODO: add translation + check if it's required */}
-								<span className="flex-1 w-full">Your email</span>
-								<span className="w-fit text-destructive">Required *</span>
+					{/* References and files */}
+					<Field className="space-y-4">
+						<div className="space-y-2">
+							<FieldLabel className="font-medium text-base">
+								References and files
 							</FieldLabel>
-							<InputGroup className="h-12">
-								<InputGroupAddon>
-									<OutlineMail />
-								</InputGroupAddon>
-								<InputGroupInput
-									id={field.name}
-									placeholder="your@email.com"
-									{...field}
-								/>
+							<FieldDescription>
+								Character reference sheets, PSD for rigging, mood boards, etc.
+							</FieldDescription>
+						</div>
 
-								<InputGroupAddon align="inline-end">
-									<InputGroupButton
-										variant="secondary"
-										className="h-10 rounded-full px-4"
-									>
-										Verify email
-									</InputGroupButton>
-								</InputGroupAddon>
-							</InputGroup>
-							<FieldError errors={[fieldState.error]} />
-						</Field>
-					)}
-				/>
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<div className="flex h-12 items-center justify-center gap-2 rounded-full border border-dashed text-muted-foreground text-sm hover:bg-muted/50 cursor-pointer">
+								<OutlineLink className="size-4" /> Link a file
+							</div>
+							<div className="flex h-12 items-center justify-center gap-2 rounded-full border border-dashed text-muted-foreground text-sm hover:bg-muted/50 cursor-pointer">
+								<Upload className="size-4" /> Upload file
+							</div>
+						</div>
+					</Field>
 
-				<div className="grid grid-cols-2 gap-4">
+					{/* Extra Info */}
 					<FormField
 						control={control}
-						name="discord"
+						name="extraInfo"
 						render={({ field, fieldState }) => (
-							<Field>
-								<InputGroup className="h-12">
-									<InputGroupAddon>
-										<OutlineDiscord />
-									</InputGroupAddon>
-									<InputGroupInput
-										id={field.name}
-										placeholder="username"
+							<Field className="space-y-2">
+								<FieldLabel className="font-medium text-base">
+									Extra info
+								</FieldLabel>
+								<FieldDescription>
+									Pose, traits, multiple characters, add-ons, etc.
+								</FieldDescription>
+								<InputGroup className="rounded-xl">
+									<Textarea
+										placeholder="Your answer"
+										className="min-h-[100px] w-full resize-none"
 										{...field}
 									/>
 								</InputGroup>
@@ -157,183 +247,8 @@ export function CommissionRequestFields({
 							</Field>
 						)}
 					/>
-					<FormField
-						control={control}
-						name="twitter"
-						render={({ field, fieldState }) => (
-							<Field>
-								<InputGroup className="h-12">
-									<InputGroupAddon>
-										<OutlineTwitter />
-									</InputGroupAddon>
-									<InputGroupInput
-										id={field.name}
-										placeholder="Twitter"
-										{...field}
-									/>
-								</InputGroup>
-								<FieldError errors={[fieldState.error]} />
-							</Field>
-						)}
-					/>
-					<FormField
-						control={control}
-						name="instagram"
-						render={({ field, fieldState }) => (
-							<Field>
-								<InputGroup className="h-12">
-									<InputGroupAddon>
-										<OutlineInstagram />
-									</InputGroupAddon>
-									<InputGroupInput
-										id={field.name}
-										placeholder="Instagram"
-										{...field}
-									/>
-								</InputGroup>
-								<FieldError errors={[fieldState.error]} />
-							</Field>
-						)}
-					/>
-					<FormField
-						control={control}
-						name="telegram"
-						render={({ field, fieldState }) => (
-							<Field>
-								<InputGroup className="h-12">
-									<InputGroupAddon>
-										<OutlineSend />
-									</InputGroupAddon>
-									<InputGroupInput
-										id={field.name}
-										placeholder="Telegram"
-										{...field}
-									/>
-								</InputGroup>
-								<FieldError errors={[fieldState.error]} />
-							</Field>
-						)}
-					/>
-				</div>
-			</div>
-
-			{/* Usage / License */}
-			<FormCheckboxGroup
-				control={control}
-				name="licenses"
-				label="How will you be using this commission?"
-				description="Choose the licenses you need."
-				required
-				options={licenseOptions}
-			/>
-
-			{/* Custom Options Example */}
-			{customOptions && (
-				<FormRadioGroup
-					control={control}
-					name="customOption"
-					label="Background choice"
-					description="make sure the self-provide background is public use art or an art you own for monetized use"
-					options={customOptions}
-					required
-				/>
+				</>
 			)}
-
-			{/* References */}
-			<div className="space-y-3">
-				<Label className="font-medium text-base">References and files</Label>
-				<p className="text-muted-foreground text-sm">
-					Character reference sheets, PSD for rigging, mood boards, etc.
-				</p>
-				<div className="flex flex-wrap gap-2">
-					<Button variant="outline" type="button">
-						<OutlineFaceSmilling /> <span>Tag character profile</span>
-					</Button>
-					<Button variant="outline" type="button">
-						<Upload /> <span>Upload file</span>
-					</Button>
-					<Button variant="outline" type="button">
-						<OutlineLink /> <span>Add link</span>
-					</Button>
-					<Button variant="outline" type="button">
-						<OutlineEdit /> <span>description</span>
-					</Button>
-				</div>
-			</div>
-
-			{/* Streaming/Sharing */}
-			<FormRadioGroup
-				control={control}
-				name="sharing"
-				label="May I publicly stream / share the work with credit?"
-				required
-				otherFieldName="sharingOther"
-				options={sharingOptions}
-			/>
-
-			{/* Deadline */}
-			<FormField
-				control={control}
-				name="deadline"
-				render={({ field, fieldState }) => (
-					<Field className="space-y-3">
-						<FieldLabel className="font-medium text-base">
-							Do you have a hard deadline?
-						</FieldLabel>
-						<FieldDescription>Rush order fees may apply.</FieldDescription>
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button
-									variant={"outline"}
-									className={cn(
-										"h-12 w-full justify-between",
-										!field.value && "text-muted-foreground",
-									)}
-								>
-									<span>
-										{field.value
-											? format(field.value, "PPP")
-											: "mm / dd / yyyy"}
-									</span>
-									<CalendarIcon className="mr-2 h-4 w-4" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-auto p-0">
-								<Calendar
-									mode="single"
-									selected={field.value}
-									onSelect={field.onChange}
-								/>
-							</PopoverContent>
-						</Popover>
-						<FieldError errors={[fieldState.error]} />
-					</Field>
-				)}
-			/>
-
-			{/* Extra Info */}
-			<FormField
-				control={control}
-				name="extraInfo"
-				render={({ field, fieldState }) => (
-					<Field className="space-y-2">
-						<FieldLabel className="font-medium text-base">
-							Extra info
-						</FieldLabel>
-						<FieldDescription>
-							Pose, traits, multiple characters, add-ons, etc.
-						</FieldDescription>
-						<InputGroup className="rounded-xl">
-							<Textarea
-								placeholder="Your answer"
-								className="min-h-[100px] w-full resize-none"
-								{...field}
-							/>
-						</InputGroup>
-						<FieldError errors={[fieldState.error]} />
-					</Field>
-				)}
-			/>
 
 			{/* Footer Checkboxes */}
 			<div className="space-y-3">

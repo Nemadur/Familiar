@@ -65,6 +65,8 @@ export type TCommission = {
 	artistId: string;
 	version: number;
 	artistTos: TTermsOfService;
+	formTemplateId?: string;
+	formTemplateName?: string;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -82,6 +84,8 @@ export type TCommissionDetailResponse = {
 	artistId: string;
 	version: number;
 	artistTos: TTermsOfService;
+	formTemplateId?: string;
+	formTemplateName?: string;
 	createdAt: string;
 	updatedAt: string;
 };

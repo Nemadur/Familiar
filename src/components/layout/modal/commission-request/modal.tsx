@@ -7,10 +7,12 @@ import { QuickMath } from "@/components/layout/commision/quick-math";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { useCommission } from "@/hooks/use-commisions";
+import { useFormTemplate } from "@/hooks/use-form-templates";
 import { useUserById } from "@/hooks/use-user";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
 import type { TCommission } from "@/types/commissions";
 import type { TUserResponse } from "@/types/user";
+import type { FormFieldDto } from "@/types/commissions/templates";
 import { CommissionRequestFields } from "./fields";
 import { CommissionRequestFooter } from "./footer";
 import { CommissionRequestHeader } from "./header";
@@ -25,6 +27,8 @@ interface CommissionRequestModalProps {
 	onBack: () => void;
 	commissionId: string;
 	initialLicenses?: string[];
+	previewFields?: FormFieldDto[];
+	isPreview?: boolean;
 }
 
 export function CommissionRequestModal({
@@ -33,6 +37,8 @@ export function CommissionRequestModal({
 	onBack,
 	commissionId,
 	initialLicenses = ["personal"],
+	previewFields,
+	isPreview = false,
 }: CommissionRequestModalProps) {
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -78,7 +84,7 @@ export function CommissionRequestModal({
 		user: artist,
 		isPending: isArtistPending,
 		error: artistError,
-	} = useUserById(commission?.artistId);
+	} = useUserById(commission?.artistId || "");
 
 	useEffect(() => {
 		if (artistError) {
@@ -88,6 +94,13 @@ export function CommissionRequestModal({
 			);
 		}
 	}, [artistError]);
+
+	// Fetch Form Template if assigned
+	const { data: formTemplate } = useFormTemplate(
+		commission?.formTemplateId || undefined,
+	);
+
+	const templateFieldsToUse = previewFields || formTemplate?.fields;
 
 	const { basePrice, originalPrice } = calculateCommissionPricing(
 		commission?.basePrice || 0,
@@ -217,16 +230,19 @@ export function CommissionRequestModal({
 						<CommissionRequestHeader
 							onBack={onBack}
 							artistName={artist?.displayName || ""}
+							isPreview={isPreview}
 						/>
 
 						<ScrollShadow className="flex-1 overflow-y-auto">
 							<div className="space-y-8 p-6">
-								<CommissionRequestIntroBox
-									artist={artist as TUserResponse}
-									commission={commission as TCommission}
-									basePrice={basePrice}
-									originalPrice={originalPrice}
-								/>
+								{commission && (
+									<CommissionRequestIntroBox
+										artist={artist as TUserResponse}
+										commission={commission as TCommission}
+										basePrice={basePrice}
+										originalPrice={originalPrice}
+									/>
+								)}
 
 								<CommissionRequestFields
 									control={control}
@@ -234,11 +250,16 @@ export function CommissionRequestModal({
 									customOptions={customOptions}
 									sharingOptions={sharingOptions}
 									artistName={artist?.displayName || ""}
+									previewFields={templateFieldsToUse}
 								/>
 							</div>
 						</ScrollShadow>
 
-						<CommissionRequestFooter onBack={onBack} totalPrice={totalPrice} />
+						<CommissionRequestFooter
+							onBack={onBack}
+							totalPrice={totalPrice}
+							isPreview={isPreview}
+						/>
 					</form>
 					<QuickMath
 						basePrice={basePrice}

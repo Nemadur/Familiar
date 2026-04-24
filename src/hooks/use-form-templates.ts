@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { FormTemplateResponse } from "@/types/commissions/templates";
 import {
 	getFormTemplates,
+	getFormTemplateById,
 	createFormTemplate,
 	assignFormTemplate,
 	deleteFormTemplate,
@@ -15,6 +16,17 @@ export function useFormTemplates() {
 			const data = await getFormTemplates();
 			return data || [];
 		},
+	});
+}
+
+export function useFormTemplate(templateId?: string) {
+	return useQuery({
+		queryKey: ["form-template", templateId],
+		queryFn: async (): Promise<FormTemplateResponse | null> => {
+			if (!templateId) return null;
+			return await getFormTemplateById(templateId);
+		},
+		enabled: !!templateId,
 	});
 }
 

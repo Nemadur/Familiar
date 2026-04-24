@@ -42,6 +42,7 @@ import {
 	CircleDot,
 	CheckSquare,
 	List,
+	Eye,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -54,6 +55,7 @@ import {
 	OutlineCalendar,
 	OutlineCheck,
 	OutlineClose,
+	OutlineEye,
 	OutlineListBoxes,
 	OutlinePlus,
 	OutlineTrash,
@@ -78,6 +80,10 @@ import {
 	formTemplateSchema,
 	type FormTemplateData,
 } from "@/schemas/commissions/templates";
+import { CommissionRequestModal } from "@/components/layout/modal/commission-request/modal";
+
+const FLOATING_LABEL_CLASSES =
+	"absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none";
 
 const TYPE_LABELS: Record<string, string> = {
 	TEXT_INPUT: "Short Text",
@@ -99,6 +105,171 @@ const TYPE_ICONS: Record<string, any> = {
 	SELECT: List,
 };
 
+const OptionItem = memo(function OptionItem({
+	index,
+	optIndex,
+	opt,
+	isBusy,
+	onRemove,
+}: {
+	index: number;
+	optIndex: number;
+	opt: any;
+	isBusy: boolean;
+	onRemove: (index: number) => void;
+}) {
+	const form = useFormContext<FormTemplateData>();
+	const { control, getValues, setValue } = form;
+
+	const priceModType = useWatch({
+		control,
+		name: `fields.${index}.options.${optIndex}.priceModifier.type`,
+	});
+
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+	return (
+		<SortableItem value={opt.id} className="outline-none" tabIndex={-1}>
+			<div className="flex items-start gap-2">
+				<SortableItemHandle className="mt-3 cursor-grab text-muted-foreground hover:text-foreground">
+					<GripVertical className="size-4" />
+				</SortableItemHandle>
+				<FormField
+					control={control}
+					name={`fields.${index}.options.${optIndex}.value`}
+					render={({ field }) => <input type="hidden" {...field} />}
+				/>
+				<FormField
+					control={control}
+					name={`fields.${index}.options.${optIndex}.label`}
+					render={({ field: labelField }) => (
+						<FormItem className="flex-1 relative space-y-0">
+							<FormControl>
+								<InputGroup variant="floating" className="peer">
+									<InputGroupInput
+										placeholder=" "
+										disabled={isBusy}
+										{...labelField}
+									/>
+								</InputGroup>
+							</FormControl>
+							<FormLabel className={FLOATING_LABEL_CLASSES}>
+								Option Label
+							</FormLabel>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				{priceModType && priceModType !== "NONE" && (
+					<FormField
+						control={control}
+						name={`fields.${index}.options.${optIndex}.priceModifier.value`}
+						render={({ field: valField }) => (
+							<FormItem className="relative space-y-0">
+								<FormControl>
+									<InputGroup variant="floating" className="w-28 peer">
+										<InputGroupNumberInput
+											placeholder=" "
+											disabled={isBusy}
+											{...valField}
+											value={valField.value ?? undefined}
+											min={0}
+											onChange={(e) => {
+												const val = e.target.value;
+												const numericVal =
+													typeof val === "string" ? Number(val) : val || 0;
+
+												valField.onChange(numericVal < 0 ? 0 : numericVal);
+
+												if (numericVal === 0) {
+													const currentOptions =
+														getValues(`fields.${index}.options`) || [];
+													const newOptions = [...currentOptions];
+													newOptions[optIndex] = {
+														...newOptions[optIndex],
+														priceModifier: {
+															...newOptions[optIndex]?.priceModifier,
+															type: "NONE",
+															value: 0,
+														},
+													};
+													setValue(`fields.${index}.options`, newOptions);
+												}
+											}}
+										/>
+									</InputGroup>
+								</FormControl>
+								<FormLabel className={FLOATING_LABEL_CLASSES}>Value</FormLabel>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				)}
+
+				<FormField
+					control={control}
+					name={`fields.${index}.options.${optIndex}.priceModifier.type`}
+					render={({ field: typeField }) => (
+						<FormItem>
+							<Select
+								value={typeField.value || "NONE"}
+								onValueChange={(val) => typeField.onChange(val)}
+								disabled={isBusy}
+							>
+								<FormControl>
+									<SelectTrigger className="w-[130px] text-sm">
+										<SelectValue placeholder="Price Mod" />
+									</SelectTrigger>
+								</FormControl>
+								<SelectContent>
+									<SelectItem value="NONE">No Price</SelectItem>
+									<SelectItem value="FIXED">Fixed (+)</SelectItem>
+									<SelectItem value="PERCENT">Percent (+%)</SelectItem>
+								</SelectContent>
+							</Select>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+
+				<Button
+					variant={"destructive"}
+					size={"icon-xl"}
+					type="button"
+					onClick={() => setIsDeleteOpen(true)}
+					disabled={isBusy}
+				>
+					<OutlineTrash />
+				</Button>
+
+				<ConfirmDialog
+					open={isDeleteOpen}
+					onOpenChange={setIsDeleteOpen}
+					title="Delete Option"
+					description={
+						<>
+							Are you sure you want to delete the option{" "}
+							<span className="font-semibold text-foreground">
+								"
+								{getValues(`fields.${index}.options.${optIndex}.label`) ||
+									"Unnamed Option"}
+								"
+							</span>
+							? This action cannot be undone.
+						</>
+					}
+					onConfirm={() => {
+						onRemove(optIndex);
+						setIsDeleteOpen(false);
+					}}
+					confirmText="Delete"
+				/>
+			</div>
+		</SortableItem>
+	);
+});
+
 const FieldItem = memo(function FieldItem({
 	field,
 	index,
@@ -118,18 +289,17 @@ const FieldItem = memo(function FieldItem({
 		fields: optionFields,
 		append,
 		remove,
+		move,
 	} = useFieldArray({
 		control,
 		name: `fields.${index}.options`,
 	});
 
 	const [isDeleteFieldOpen, setIsDeleteFieldOpen] = useState(false);
-	const [optionToDelete, setOptionToDelete] = useState<number | null>(null);
 
 	const Icon = TYPE_ICONS[fieldType] || Type;
 
 	return (
-		// TODO: use sortable component
 		<Surface className="flex flex-col gap-4 rounded-3xl border p-3">
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-3">
@@ -198,7 +368,7 @@ const FieldItem = memo(function FieldItem({
 										/>
 									</InputGroup>
 								</FormControl>
-								<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
+								<FormLabel className={FLOATING_LABEL_CLASSES}>
 									Field Label
 								</FormLabel>
 								<FormMessage />
@@ -221,7 +391,7 @@ const FieldItem = memo(function FieldItem({
 										/>
 									</InputGroup>
 								</FormControl>
-								<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
+								<FormLabel className={FLOATING_LABEL_CLASSES}>
 									Description / Help Text
 								</FormLabel>
 								<FormMessage />
@@ -252,7 +422,7 @@ const FieldItem = memo(function FieldItem({
 											/>
 										</InputGroup>
 									</FormControl>
-									<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
+									<FormLabel className={FLOATING_LABEL_CLASSES}>
 										Minimum Value
 									</FormLabel>
 									<FormMessage />
@@ -280,7 +450,7 @@ const FieldItem = memo(function FieldItem({
 											/>
 										</InputGroup>
 									</FormControl>
-									<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
+									<FormLabel className={FLOATING_LABEL_CLASSES}>
 										Maximum Value
 									</FormLabel>
 									<FormMessage />
@@ -297,161 +467,26 @@ const FieldItem = memo(function FieldItem({
 						</FormLabel>
 
 						<div className="space-y-4">
-							{optionFields.map((opt, optIndex) => (
-								<div key={opt.id} className="flex items-start gap-2">
-									<FormField
-										control={control}
-										name={`fields.${index}.options.${optIndex}.value`}
-										render={({ field }) => <input type="hidden" {...field} />}
-									/>
-									<FormField
-										control={control}
-										name={`fields.${index}.options.${optIndex}.label`}
-										render={({ field: labelField }) => (
-											<FormItem className="flex-1 relative space-y-0">
-												<FormControl>
-													<InputGroup variant="floating" className="peer">
-														<InputGroupInput
-															placeholder=" "
-															disabled={isBusy}
-															{...labelField}
-														/>
-													</InputGroup>
-												</FormControl>
-												<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
-													Option Label
-												</FormLabel>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={control}
-										name={`fields.${index}.options.${optIndex}.priceModifier.type`}
-										render={({ field: typeField }) => (
-											<FormItem>
-												<Select
-													value={typeField.value || "NONE"}
-													onValueChange={(val) => typeField.onChange(val)}
-													disabled={isBusy}
-												>
-													<FormControl>
-														<SelectTrigger className="w-[130px] text-sm">
-															<SelectValue placeholder="Price Mod" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														<SelectItem value="NONE">No Price</SelectItem>
-														<SelectItem value="FIXED">Fixed (+)</SelectItem>
-														<SelectItem value="PERCENT">
-															Percent (+%)
-														</SelectItem>
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={control}
-										name={`fields.${index}.options.${optIndex}.priceModifier.type`}
-										render={({ field: watchedTypeField }) => {
-											if (
-												watchedTypeField.value === "NONE" ||
-												!watchedTypeField.value
-											)
-												return null;
-											return (
-												<FormField
-													control={control}
-													name={`fields.${index}.options.${optIndex}.priceModifier.value`}
-													render={({ field: valField }) => (
-														<FormItem className="relative space-y-0">
-															<FormControl>
-																<InputGroup
-																	variant="floating"
-																	className="w-28 peer"
-																>
-																	<InputGroupNumberInput
-																		placeholder=" "
-																		disabled={isBusy}
-																		{...valField}
-																		value={valField.value ?? ""}
-																		min={0}
-																		onChange={(e) => {
-																			const val = e.target.value;
-																			const numericVal =
-																				typeof val === "string"
-																					? Number(val)
-																					: val || 0;
-
-																			valField.onChange(
-																				numericVal < 0 ? 0 : numericVal,
-																			);
-
-																			if (numericVal === 0) {
-																				// When changing value to 0, automatically reset the type to NONE
-																				const currentOptions =
-																					form.getValues(
-																						`fields.${index}.options`,
-																					) || [];
-																				const newOptions = [...currentOptions];
-																				newOptions[optIndex] = {
-																					...newOptions[optIndex],
-																					priceModifier: {
-																						...newOptions[optIndex]
-																							?.priceModifier,
-																						type: "NONE",
-																						value: 0,
-																					},
-																				};
-																				form.setValue(
-																					`fields.${index}.options`,
-																					newOptions,
-																				);
-																			}
-																		}}
-																	/>
-																</InputGroup>
-															</FormControl>
-															<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-placeholder-shown:translate-y-0 peer-has-placeholder-shown:scale-100 peer-focus-within:-translate-y-2! peer-focus-within:scale-75! cursor-text pointer-events-none">
-																Value
-															</FormLabel>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-											);
-										}}
-									/>
-
-									<Button
-										variant={"destructive"}
-										size={"icon-xl"}
-										type="button"
-										onClick={() => setOptionToDelete(optIndex)}
-										disabled={isBusy}
-									>
-										<OutlineTrash />
-									</Button>
-								</div>
-							))}
-
-							<ConfirmDialog
-								open={optionToDelete !== null}
-								onOpenChange={(open) => !open && setOptionToDelete(null)}
-								title="Delete Option"
-								description="Are you sure you want to delete this option? This action cannot be undone."
-								onConfirm={() => {
-									if (optionToDelete !== null) {
-										remove(optionToDelete);
-										setOptionToDelete(null);
-									}
+							<Sortable
+								value={optionFields as any[]}
+								onValueChange={() => {}}
+								getItemValue={(item) => item.id}
+								onMove={({ activeIndex, overIndex }) => {
+									move(activeIndex, overIndex);
 								}}
-								confirmText="Delete"
-							/>
+								className="space-y-4"
+							>
+								{optionFields.map((opt, optIndex) => (
+									<OptionItem
+										key={opt.id}
+										index={index}
+										optIndex={optIndex}
+										opt={opt}
+										isBusy={isBusy}
+										onRemove={remove}
+									/>
+								))}
+							</Sortable>
 						</div>
 
 						<Button
@@ -526,7 +561,7 @@ export function FormTemplateModal({
 				fields: [],
 			}));
 		}
-	}, [template, setFormData]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [template, setFormData]);
 
 	const onSubmit = async (data: FormTemplateData) => {
 		try {
@@ -576,6 +611,8 @@ export function FormTemplateModal({
 		}
 	};
 
+	const [previewOpen, setPreviewOpen] = useState(false);
+
 	const handleAddField = (type: FormFieldDto["type"]) => {
 		appendField({
 			type,
@@ -614,201 +651,238 @@ export function FormTemplateModal({
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={(val) => !val && !isBusy && onClose()}>
-			<DialogContent
-				showCloseButton={false}
-				className="flex max-h-[70vh] min-w-5xl w-[95vw] flex-col overflow-hidden p-0"
-			>
-				<Form {...form}>
-					<form
-						onSubmit={handleFormSubmit}
-						className="flex h-full min-h-[600px] overflow-hidden"
-					>
-						<div className="flex w-[320px] shrink-0 flex-col border-r bg-muted/20 p-6">
-							<DialogHeader className="mb-6 space-y-1 text-left">
-								<DialogTitle>
-									{template ? "Edit Form Template" : "Create Form Template"}
-								</DialogTitle>
-								<DialogDescription className="text-xs">
-									Define the fields that clients must fill out when requesting a
-									commission.
-								</DialogDescription>
-							</DialogHeader>
+		<>
+			<Dialog open={open} onOpenChange={(val) => !val && !isBusy && onClose()}>
+				<DialogContent
+					showCloseButton={false}
+					className="flex max-h-[70vh] min-w-5xl w-[95vw] flex-col overflow-hidden p-0"
+				>
+					<Form {...form}>
+						<form
+							onSubmit={handleFormSubmit}
+							className="flex h-full min-h-[600px] overflow-hidden"
+						>
+							<div className="flex w-[320px] shrink-0 flex-col border-r bg-muted/20 p-6">
+								<DialogHeader className="mb-6 space-y-1 text-left">
+									<DialogTitle>
+										{template ? "Edit Form Template" : "Create Form Template"}
+									</DialogTitle>
+									<DialogDescription className="text-xs">
+										Define the fields that clients must fill out when requesting
+										a commission.
+									</DialogDescription>
+								</DialogHeader>
 
-							<div className="space-y-6">
-								<FormField
-									control={control}
-									name="name"
-									render={({ field }) => (
-										<FormItem className="relative space-y-0">
-											<FormControl>
-												<InputGroup variant="floating">
-													<InputGroupInput disabled={isBusy} {...field} />
-												</InputGroup>
-											</FormControl>
-											<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-[:placeholder-shown]:translate-y-0 peer-has-[:placeholder-shown]:scale-100 peer-focus-within:!-translate-y-2 peer-focus-within:!scale-75 cursor-text pointer-events-none">
-												Template Name{" "}
-												<span className="text-destructive">*</span>
-											</FormLabel>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+								<div className="space-y-6">
+									<FormField
+										control={control}
+										name="name"
+										render={({ field }) => (
+											<FormItem className="relative space-y-0">
+												<FormControl>
+													<InputGroup variant="floating">
+														<InputGroupInput disabled={isBusy} {...field} />
+													</InputGroup>
+												</FormControl>
+												<FormLabel className={FLOATING_LABEL_CLASSES}>
+													Template Name{" "}
+													<span className="text-destructive">*</span>
+												</FormLabel>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
 
-								<FormField
-									control={control}
-									name="description"
-									render={({ field }) => (
-										<FormItem className="relative space-y-0">
-											<FormControl>
-												<InputGroup variant="floating" className="peer">
-													<Textarea
-														placeholder=" "
-														disabled={isBusy}
-														className="peer pt-6 pb-2 min-h-[120px] resize-none border-none"
-														{...field}
-														value={field.value || ""}
-													/>
-												</InputGroup>
-											</FormControl>
-											<FormLabel className="absolute left-3 top-3 z-10 origin-left -translate-y-2 scale-75 transform text-muted-foreground duration-200 peer-has-[:placeholder-shown]:translate-y-0 peer-has-[:placeholder-shown]:scale-100 peer-focus-within:!-translate-y-2 peer-focus-within:!scale-75 cursor-text pointer-events-none">
-												Description
-											</FormLabel>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
+									<FormField
+										control={control}
+										name="description"
+										render={({ field }) => (
+											<FormItem className="relative space-y-0">
+												<FormControl>
+													<InputGroup variant="floating" className="peer">
+														<Textarea
+															placeholder=" "
+															disabled={isBusy}
+															className="peer pt-6 pb-2 min-h-[120px] resize-none border-none"
+															{...field}
+															value={field.value || ""}
+														/>
+													</InputGroup>
+												</FormControl>
+												<FormLabel className={FLOATING_LABEL_CLASSES}>
+													Description
+												</FormLabel>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
 
-							<div className="mt-auto flex gap-2 pt-6">
-								<Button
-									variant="outline"
-									onClick={onClose}
-									disabled={isBusy}
-									size="xl"
-									type="button"
-								>
-									Cancel
-								</Button>
-
-								<Button
-									type="button"
-									onClick={handleFormSubmit}
-									size="xl"
-									disabled={isBusy}
-									className="flex-1"
-								>
-									{isBusy ? (
-										<span className="flex items-center gap-2">
-											<Loader2 className="size-4 animate-spin" /> Saving...
-										</span>
-									) : (
-										"Save"
-									)}
-								</Button>
-							</div>
-						</div>
-
-						<div className="flex flex-1 flex-col overflow-hidden bg-background">
-							<div className="flex h-16 shrink-0 items-center justify-between border-b px-6">
-								<h3 className="text-sm font-semibold">
-									Form Fields ({fieldItems.length})
-								</h3>
-
-								<div className="flex gap-2">
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button variant="outline" disabled={isBusy} type="button">
-												<OutlinePlus />
-												Add Field
-											</Button>
-										</DropdownMenuTrigger>
-
-										<DropdownMenuContent align="end" className="w-48">
-											<DropdownMenuItem
-												onClick={() => handleAddField("TEXT_INPUT")}
-											>
-												<Type /> Short Text
-											</DropdownMenuItem>
-											<DropdownMenuItem
-												onClick={() => handleAddField("TEXTAREA")}
-											>
-												<AlignLeft /> Long Text
-											</DropdownMenuItem>
-											<DropdownMenuItem
-												onClick={() => handleAddField("NUMBER_INPUT")}
-											>
-												<Hash /> Number
-											</DropdownMenuItem>
-											<DropdownMenuItem
-												onClick={() => handleAddField("DATE_INPUT")}
-											>
-												<OutlineCalendar /> Date
-											</DropdownMenuItem>
-											<DropdownMenuItem onClick={() => handleAddField("RADIO")}>
-												<CircleDot /> Radio Buttons
-											</DropdownMenuItem>
-											<DropdownMenuItem
-												onClick={() => handleAddField("CHECKBOX")}
-											>
-												<OutlineCheck /> Checkboxes
-											</DropdownMenuItem>
-											<DropdownMenuItem
-												onClick={() => handleAddField("SELECT")}
-											>
-												<OutlineListBoxes /> Dropdown
-											</DropdownMenuItem>
-										</DropdownMenuContent>
-									</DropdownMenu>
-
+								<div className="mt-auto flex gap-2 pt-6">
 									<Button
-										variant="ghost"
-										size="icon"
-										disabled={isBusy}
+										variant="outline"
 										onClick={onClose}
+										disabled={isBusy}
+										size="xl"
 										type="button"
 									>
-										<OutlineClose />
+										Cancel
+									</Button>
+
+									<Button
+										type="button"
+										onClick={handleFormSubmit}
+										size="xl"
+										disabled={isBusy}
+										className="flex-1"
+									>
+										{isBusy ? (
+											<span className="flex items-center gap-2">
+												<Loader2 className="size-4 animate-spin" /> Saving...
+											</span>
+										) : (
+											"Save"
+										)}
 									</Button>
 								</div>
 							</div>
 
-							<div className="flex-1 overflow-y-auto bg-muted/5 p-6">
-								{fieldItems.length === 0 ? (
-									<div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-										<div className="mb-4 rounded-full bg-muted p-3">
-											<Plus className="size-6" />
-										</div>
-										<p>No fields added yet.</p>
-										<p>Click "Add Field" to start building your form.</p>
+							<div className="flex flex-1 flex-col overflow-hidden bg-background">
+								<div className="flex h-16 shrink-0 items-center justify-between border-b px-6">
+									<h3 className="text-sm font-semibold">
+										Form Fields ({fieldItems.length})
+									</h3>
+
+									<div className="flex gap-2">
+										<Button
+											variant="secondary"
+											disabled={isBusy}
+											type="button"
+											onClick={() => setPreviewOpen(true)}
+										>
+											<OutlineEye />
+											Preview
+										</Button>
+
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<Button
+													variant={"secondary"}
+													disabled={isBusy}
+													type="button"
+												>
+													<OutlinePlus />
+													Add Field
+												</Button>
+											</DropdownMenuTrigger>
+
+											<DropdownMenuContent align="end" className="w-48">
+												<DropdownMenuItem
+													onClick={() => handleAddField("TEXT_INPUT")}
+												>
+													<Type /> Short Text
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => handleAddField("TEXTAREA")}
+												>
+													<AlignLeft /> Long Text
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => handleAddField("NUMBER_INPUT")}
+												>
+													<Hash /> Number
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => handleAddField("DATE_INPUT")}
+												>
+													<OutlineCalendar /> Date
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => handleAddField("RADIO")}
+												>
+													<CircleDot /> Radio Buttons
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => handleAddField("CHECKBOX")}
+												>
+													<OutlineCheck /> Checkboxes
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => handleAddField("SELECT")}
+												>
+													<OutlineListBoxes /> Dropdown
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
+
+										<Button
+											variant="ghost"
+											size="icon"
+											disabled={isBusy}
+											onClick={onClose}
+											type="button"
+										>
+											<OutlineClose />
+										</Button>
 									</div>
-								) : (
-									<Sortable
-										value={fieldItems as any[]}
-										onValueChange={() => {}}
-										getItemValue={(item) => item.id}
-										onMove={({ activeIndex, overIndex }) => {
-											moveField(activeIndex, overIndex);
-										}}
-										className="mx-auto max-w-3xl space-y-4"
-									>
-										{fieldItems.map((field, index) => (
-											<SortableItem key={field.id} value={field.id}>
-												<FieldItem
-													field={field}
-													index={index}
-													isBusy={isBusy}
-													onRemove={removeField}
-												/>
-											</SortableItem>
-										))}
-									</Sortable>
-								)}
+								</div>
+
+								<div
+									className="flex-1 overflow-y-auto bg-muted/5 p-6 outline-none"
+									tabIndex={-1}
+								>
+									{fieldItems.length === 0 ? (
+										<div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+											<div className="mb-4 rounded-full bg-muted p-3">
+												<Plus className="size-6" />
+											</div>
+											<p>No fields added yet.</p>
+											<p>Click "Add Field" to start building your form.</p>
+										</div>
+									) : (
+										<Sortable
+											value={fieldItems as any[]}
+											onValueChange={() => {}}
+											getItemValue={(item) => item.id}
+											onMove={({ activeIndex, overIndex }) => {
+												moveField(activeIndex, overIndex);
+											}}
+											className="mx-auto max-w-3xl space-y-4"
+										>
+											{fieldItems.map((field, index) => (
+												<SortableItem
+													key={field.id}
+													value={field.id}
+													className="outline-none"
+													tabIndex={-1}
+												>
+													<FieldItem
+														field={field}
+														index={index}
+														isBusy={isBusy}
+														onRemove={removeField}
+													/>
+												</SortableItem>
+											))}
+										</Sortable>
+									)}
+								</div>
 							</div>
-						</div>
-					</form>
-				</Form>
-			</DialogContent>
-		</Dialog>
+						</form>
+					</Form>
+				</DialogContent>
+			</Dialog>
+
+			{previewOpen && (
+				<CommissionRequestModal
+					open={previewOpen}
+					onOpenChange={setPreviewOpen}
+					onBack={() => setPreviewOpen(false)}
+					commissionId=""
+					previewFields={form.getValues("fields") as FormFieldDto[]}
+					isPreview={true}
+				/>
+			)}
+		</>
 	);
 }

@@ -26,6 +26,12 @@ import LanguageSelect from "./select/language";
 import { TRoles } from "@/types/user/roles";
 import { Skeleton } from "boneyard-js/react";
 
+function ClientOnly({ children }: { children: React.ReactNode }) {
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+	return mounted ? children : null;
+}
+
 export default function Header() {
 	const { t } = useTranslation();
 	const { user, isPending } = useAuth();
@@ -49,34 +55,36 @@ export default function Header() {
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
 						<LanguageSelect />
-						<Skeleton name="header-artist_dashboard" loading={isPending}>
-							{isPending
-								? null
-								: user?.roles?.includes(TRoles.Artist) && (
-										<Button size={"xl"} asChild>
-											<Link to="/dashboard">
-												{t("header.artist-dashboard", "Artist Dashboard")}
-											</Link>
-										</Button>
-									)}
-						</Skeleton>
+						<ClientOnly>
+							<Skeleton name="header-artist_dashboard" loading={isPending}>
+								{isPending
+									? null
+									: user?.roles?.includes(TRoles.Artist) && (
+											<Button size={"xl"} asChild>
+												<Link to="/dashboard">
+													{t("header.artist-dashboard", "Artist Dashboard")}
+												</Link>
+											</Button>
+										)}
+							</Skeleton>
+						</ClientOnly>
 
-						<Skeleton name="header-user_menu" loading={isPending}>
-							{isPending ? null : user ? (
-								<Skeleton name="header-user_menu" loading={isPending}>
+						<ClientOnly>
+							<Skeleton name="header-user_menu" loading={isPending}>
+								{isPending ? null : user ? (
 									<User user={user} showInfo={false} isDropdown />
-								</Skeleton>
-							) : (
-								<div className="hidden lg:flex items-center gap-2">
-									<Button asChild variant={"secondary"} size={"xl"}>
-										<Link to="/auth/login">{t("auth.login.cta")}</Link>
-									</Button>
-									<Button asChild size={"xl"}>
-										<Link to="/auth/register">{t("auth.register.cta")}</Link>
-									</Button>
-								</div>
-							)}
-						</Skeleton>
+								) : (
+									<div className="hidden lg:flex items-center gap-2">
+										<Button asChild variant={"secondary"} size={"xl"}>
+											<Link to="/auth/login">{t("auth.login.cta")}</Link>
+										</Button>
+										<Button asChild size={"xl"}>
+											<Link to="/auth/register">{t("auth.register.cta")}</Link>
+										</Button>
+									</div>
+								)}
+							</Skeleton>
+						</ClientOnly>
 					</NavWrapper>
 				</div>
 			</div>
