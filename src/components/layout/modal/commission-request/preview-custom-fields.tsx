@@ -106,8 +106,8 @@ export function PreviewCustomFields({ fields }: { fields: FormFieldDto[] }) {
 								label={field.label || "Untitled Field"}
 								description={field.description}
 								required={field.required}
-								min={field.min ?? undefined}
-								max={field.max ?? undefined}
+								min={field.minValue ?? undefined}
+								max={field.maxValue ?? undefined}
 							/>
 						)}
 
@@ -116,6 +116,7 @@ export function PreviewCustomFields({ fields }: { fields: FormFieldDto[] }) {
 								label={field.label || "Untitled Field"}
 								description={field.description}
 								required={field.required}
+								minDate={new Date()}
 							/>
 						)}
 

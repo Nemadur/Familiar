@@ -170,7 +170,7 @@ function InputGroupInput({
 		<Input
 			data-slot="input-group-control"
 			className={cn(
-				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary",
+				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive",
 				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1 group-data-[variant=floating]/input-group:h-10",
 				// Fix for floating labels: ensure the input acts as the peer correctly and handles placeholders
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
@@ -282,17 +282,9 @@ const InputGroupNumberInput = React.forwardRef<
 			}
 		};
 
-		const handleBlur = () => {
-			if (value !== undefined) {
-				if (value < min) {
-					setValue(min);
-					(ref as React.RefObject<HTMLInputElement>).current!.value =
-						String(min);
-				} else if (value > max) {
-					setValue(max);
-					(ref as React.RefObject<HTMLInputElement>).current!.value =
-						String(max);
-				}
+		const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+			if (props.onBlur) {
+				props.onBlur(e);
 			}
 		};
 
@@ -356,6 +348,8 @@ export interface DateInputProps
 	value?: Date;
 	onValueChange?: (date: Date | undefined) => void;
 	disabled?: boolean;
+	minDate?: Date;
+	maxDate?: Date;
 }
 
 interface DateSegmentProps {
@@ -364,6 +358,7 @@ interface DateSegmentProps {
 	placeholder: string;
 	focused: boolean;
 	disabled?: boolean;
+	"aria-invalid"?: boolean | "true" | "false";
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 	onFocus: () => void;
@@ -377,6 +372,7 @@ const DateSegment = React.forwardRef<HTMLInputElement, DateSegmentProps>(
 			placeholder,
 			focused,
 			disabled,
+			"aria-invalid": ariaInvalid,
 			onChange,
 			onKeyDown,
 			onFocus,
@@ -399,11 +395,12 @@ const DateSegment = React.forwardRef<HTMLInputElement, DateSegmentProps>(
 				<input
 					ref={ref}
 					data-slot="input-group-control"
+					aria-invalid={ariaInvalid}
 					type="text"
 					inputMode="numeric"
 					placeholder={placeholder}
 					disabled={disabled}
-					className="absolute inset-0 w-full bg-transparent p-0 text-center text-sm leading-normal outline-none caret-transparent placeholder:text-muted-foreground/70 focus-visible:ring-0 selection:bg-transparent selection:text-primary"
+					className="absolute inset-0 w-full bg-transparent p-0 text-center text-sm leading-normal outline-none caret-transparent placeholder:text-muted-foreground/70 focus-visible:ring-0 selection:bg-transparent selection:text-primary aria-invalid:text-destructive"
 					value={val}
 					onChange={onChange}
 					onKeyDown={onKeyDown}
@@ -423,294 +420,379 @@ DateSegment.displayName = "DateSegment";
 const InputGroupDateInput = React.forwardRef<
 	HTMLFieldSetElement,
 	DateInputProps
->(({ className, value, onValueChange, disabled, ...props }, ref) => {
-	const { i18n } = useTranslation();
-	const lang = i18n.language || "en";
-	// Determine the order based on the current locale
-	// By parsing a known date (e.g. 2023-11-22), we can check where the month/day/year end up
-	const parts = new Intl.DateTimeFormat(lang).formatToParts(
-		new Date(2023, 10, 22),
-	);
-	const order = parts
-		.filter((p) => p.type === "day" || p.type === "month" || p.type === "year")
-		.map((p) => p.type) as ("month" | "day" | "year")[];
+>(
+	(
+		{ className, value, onValueChange, disabled, minDate, maxDate, ...props },
+		ref,
+	) => {
+		const { i18n } = useTranslation();
+		const lang = i18n.language || "en";
+		// Determine the order based on the current locale
+		// By parsing a known date (e.g. 2023-11-22), we can check where the month/day/year end up
+		const parts = new Intl.DateTimeFormat(lang).formatToParts(
+			new Date(2023, 10, 22),
+		);
+		const order = parts
+			.filter(
+				(p) => p.type === "day" || p.type === "month" || p.type === "year",
+			)
+			.map((p) => p.type) as ("month" | "day" | "year")[];
 
-	// Fallback to MM/DD/YYYY if format is somehow missing all parts
-	const dateOrder = order.length === 3 ? order : ["month", "day", "year"];
+		// Fallback to MM/DD/YYYY if format is somehow missing all parts
+		const dateOrder = order.length === 3 ? order : ["month", "day", "year"];
 
-	const [month, setMonth] = React.useState("");
-	const [day, setDay] = React.useState("");
-	const [year, setYear] = React.useState("");
-	const [focused, setFocused] = React.useState<"month" | "day" | "year" | null>(
-		null,
-	);
+		const [month, setMonth] = React.useState("");
+		const [day, setDay] = React.useState("");
+		const [year, setYear] = React.useState("");
+		const [focused, setFocused] = React.useState<
+			"month" | "day" | "year" | null
+		>(null);
 
-	const monthRef = React.useRef<HTMLInputElement>(null);
-	const dayRef = React.useRef<HTMLInputElement>(null);
-	const yearRef = React.useRef<HTMLInputElement>(null);
+		const monthRef = React.useRef<HTMLInputElement>(null);
+		const dayRef = React.useRef<HTMLInputElement>(null);
+		const yearRef = React.useRef<HTMLInputElement>(null);
 
-	// Refs to always have fresh values inside event handlers (avoids stale closures)
-	const monthVal = React.useRef(month);
-	const dayVal = React.useRef(day);
-	const yearVal = React.useRef(year);
+		// Refs to always have fresh values inside event handlers (avoids stale closures)
+		const monthVal = React.useRef(month);
+		const dayVal = React.useRef(day);
+		const yearVal = React.useRef(year);
 
-	React.useEffect(() => {
-		monthVal.current = month;
-	}, [month]);
-	React.useEffect(() => {
-		dayVal.current = day;
-	}, [day]);
-	React.useEffect(() => {
-		yearVal.current = year;
-	}, [year]);
+		React.useEffect(() => {
+			monthVal.current = month;
+		}, [month]);
+		React.useEffect(() => {
+			dayVal.current = day;
+		}, [day]);
+		React.useEffect(() => {
+			yearVal.current = year;
+		}, [year]);
 
-	React.useEffect(() => {
-		if (value === undefined) {
-			// Don't reset internal state if value is explicitly set to undefined
-			// This prevents clearing all segments when only one segment is invalid/incomplete
-			return;
-		}
-		if (value && !Number.isNaN(value.getTime())) {
-			setMonth(String(value.getMonth() + 1).padStart(2, "0"));
-			setDay(String(value.getDate()).padStart(2, "0"));
-			setYear(String(value.getFullYear()));
-		} else {
-			setMonth("");
-			setDay("");
-			setYear("");
-		}
-	}, [value]);
-
-	const updateDate = (m: string, d: string, y: string) => {
-		if (m.length === 2 && d.length === 2 && y.length === 4) {
-			const date = new Date(Number(y), Number(m) - 1, Number(d));
-			if (!Number.isNaN(date.getTime())) {
-				onValueChange?.(date);
+		React.useEffect(() => {
+			if (value === undefined) {
+				// Don't reset internal state if value is explicitly set to undefined
+				// This prevents clearing all segments when only one segment is invalid/incomplete
 				return;
 			}
-		}
-		onValueChange?.(undefined);
-	};
+			if (value && !Number.isNaN(value.getTime())) {
+				setMonth(String(value.getMonth() + 1).padStart(2, "0"));
+				setDay(String(value.getDate()).padStart(2, "0"));
+				setYear(String(value.getFullYear()));
+			} else {
+				setMonth("");
+				setDay("");
+				setYear("");
+			}
+		}, [value]);
 
-	const getNextSegment = (
-		current: "month" | "day" | "year",
-	): "month" | "day" | "year" | null => {
-		const idx = dateOrder.indexOf(current);
-		return idx < 2 ? (dateOrder[idx + 1] as "month" | "day" | "year") : null;
-	};
+		const updateDate = (m: string, d: string, y: string) => {
+			if (m.length === 2 && d.length === 2 && y.length === 4) {
+				const date = new Date(Number(y), Number(m) - 1, Number(d));
+				if (!Number.isNaN(date.getTime())) {
+					const newM = String(date.getMonth() + 1).padStart(2, "0");
+					const newD = String(date.getDate()).padStart(2, "0");
+					const newY = String(date.getFullYear());
 
-	const getPrevSegment = (
-		current: "month" | "day" | "year",
-	): "month" | "day" | "year" | null => {
-		const idx = dateOrder.indexOf(current);
-		return idx > 0 ? (dateOrder[idx - 1] as "month" | "day" | "year") : null;
-	};
+					if (m !== newM) setMonth(newM);
+					if (d !== newD) setDay(newD);
+					if (y !== newY) setYear(newY);
 
-	const focusSegment = (type: "month" | "day" | "year" | null) => {
-		if (type === "month") monthRef.current?.focus();
-		else if (type === "day") dayRef.current?.focus();
-		else if (type === "year") yearRef.current?.focus();
-	};
-
-	const handleKeyDown = (
-		e: React.KeyboardEvent<HTMLInputElement>,
-		type: "month" | "day" | "year",
-	) => {
-		if (e.key === "Backspace") {
-			// If input is empty OR cursor is at the very beginning (selection start/end is 0)
-			if (
-				e.currentTarget.value === "" ||
-				(e.currentTarget.selectionStart === 0 &&
-					e.currentTarget.selectionEnd === 0)
-			) {
-				e.preventDefault();
-				focusSegment(getPrevSegment(type));
-			} else if (
-				e.currentTarget.selectionStart !== e.currentTarget.selectionEnd &&
-				e.currentTarget.selectionStart === 0 &&
-				e.currentTarget.selectionEnd === e.currentTarget.value.length
-			) {
-				// If ALL text is fully selected and backspace is pressed, clear the input
-				e.preventDefault();
-				if (type === "month") {
-					setMonth("");
-					updateDate("", dayVal.current, yearVal.current);
-				} else if (type === "day") {
-					setDay("");
-					updateDate(monthVal.current, "", yearVal.current);
-				} else if (type === "year") {
-					setYear("");
-					updateDate(monthVal.current, dayVal.current, "");
+					onValueChange?.(date);
+					return;
 				}
 			}
-		} else if (e.key === "ArrowRight") {
-			if (e.currentTarget.selectionStart === e.currentTarget.value.length)
-				focusSegment(getNextSegment(type));
-		} else if (e.key === "ArrowLeft") {
-			if (e.currentTarget.selectionStart === 0)
-				focusSegment(getPrevSegment(type));
-		}
-	};
+			onValueChange?.(undefined);
+		};
 
-	return (
-		<fieldset
-			ref={ref}
-			className={cn(
-				"flex min-h-9 flex-1 cursor-text select-none items-center bg-transparent px-3 text-sm text-primary",
-				disabled && "cursor-not-allowed opacity-50",
-				className,
-			)}
-			onMouseDown={(e) => {
-				if ((e.target as HTMLElement).tagName === "INPUT") return;
-				e.preventDefault();
-				if (!monthVal.current) focusSegment("month");
-				else if (!dayVal.current) focusSegment("day");
-				else focusSegment("year");
-			}}
-			{...props}
-		>
-			{dateOrder.map((segmentType, index) => {
-				const isLast = index === dateOrder.length - 1;
+		const getNextSegment = (
+			current: "month" | "day" | "year",
+		): "month" | "day" | "year" | null => {
+			const idx = dateOrder.indexOf(current);
+			return idx < 2 ? (dateOrder[idx + 1] as "month" | "day" | "year") : null;
+		};
 
-				if (segmentType === "month") {
-					return (
-						<React.Fragment key="month">
-							<DateSegment
-								ref={monthRef}
-								type="month"
-								val={month}
-								placeholder="mm"
-								focused={focused === "month"}
-								disabled={disabled}
-								onChange={(e) => {
-									let val = e.target.value.replace(/\D/g, "");
-									const isFullySelected =
-										e.target.selectionStart === 1 &&
-										e.target.selectionEnd === 1;
-									if (isFullySelected && val.length > 2) {
-										val = val.slice(0, 1);
-									} else if (val.length > 2) {
-										val = val.slice(-1);
-									}
-									if (val.length === 1 && Number(val) > 1) val = "0" + val;
-									if (val.length === 2 && Number(val) > 12) val = "12";
-									if (val.length === 2 && Number(val) < 1) val = "01";
-									setMonth(val);
-									if (
-										val.length === 2 &&
-										dayVal.current.length === 2 &&
-										yearVal.current.length === 4
-									) {
-										updateDate(val, dayVal.current, yearVal.current);
-									} else {
-										onValueChange?.(undefined);
-									}
-									if (val.length === 2 && val !== monthVal.current)
-										focusSegment(getNextSegment("month"));
-								}}
-								onKeyDown={(e) => handleKeyDown(e, "month")}
-								onFocus={() => setFocused("month")}
-								onBlur={() => setFocused(null)}
-							/>
-							{!isLast && (
-								<span className="select-none text-muted-foreground/50">/</span>
-							)}
-						</React.Fragment>
-					);
+		const getPrevSegment = (
+			current: "month" | "day" | "year",
+		): "month" | "day" | "year" | null => {
+			const idx = dateOrder.indexOf(current);
+			return idx > 0 ? (dateOrder[idx - 1] as "month" | "day" | "year") : null;
+		};
+
+		const focusSegment = (type: "month" | "day" | "year" | null) => {
+			if (type === "month") monthRef.current?.focus();
+			else if (type === "day") dayRef.current?.focus();
+			else if (type === "year") yearRef.current?.focus();
+		};
+
+		const handleKeyDown = (
+			e: React.KeyboardEvent<HTMLInputElement>,
+			type: "month" | "day" | "year",
+		) => {
+			if (e.key === "Backspace") {
+				// If input is empty OR cursor is at the very beginning (selection start/end is 0)
+				if (
+					e.currentTarget.value === "" ||
+					(e.currentTarget.selectionStart === 0 &&
+						e.currentTarget.selectionEnd === 0)
+				) {
+					e.preventDefault();
+					focusSegment(getPrevSegment(type));
+				} else if (
+					e.currentTarget.selectionStart !== e.currentTarget.selectionEnd &&
+					e.currentTarget.selectionStart === 0 &&
+					e.currentTarget.selectionEnd === e.currentTarget.value.length
+				) {
+					// If ALL text is fully selected and backspace is pressed, clear the input
+					e.preventDefault();
+					if (type === "month") {
+						setMonth("");
+						updateDate("", dayVal.current, yearVal.current);
+					} else if (type === "day") {
+						setDay("");
+						updateDate(monthVal.current, "", yearVal.current);
+					} else if (type === "year") {
+						setYear("");
+						updateDate(monthVal.current, dayVal.current, "");
+					}
 				}
-				if (segmentType === "day") {
-					return (
-						<React.Fragment key="day">
-							<DateSegment
-								ref={dayRef}
-								type="day"
-								val={day}
-								placeholder="dd"
-								focused={focused === "day"}
-								disabled={disabled}
-								onChange={(e) => {
-									let val = e.target.value.replace(/\D/g, "");
-									const isFullySelected =
-										e.target.selectionStart === 1 &&
-										e.target.selectionEnd === 1;
-									if (isFullySelected && val.length > 2) {
-										val = val.slice(0, 1);
-									} else if (val.length > 2) {
-										val = val.slice(-1);
-									}
-									if (val.length === 1 && Number(val) > 3) val = `0${val}`;
-									if (val.length === 2 && Number(val) > 31) val = "31";
-									if (val.length === 2 && Number(val) < 1) val = "01";
-									setDay(val);
-									if (
-										monthVal.current.length === 2 &&
-										val.length === 2 &&
-										yearVal.current.length === 4
-									) {
-										updateDate(monthVal.current, val, yearVal.current);
-									} else {
-										onValueChange?.(undefined);
-									}
-									if (val.length === 2 && val !== dayVal.current)
-										focusSegment(getNextSegment("day"));
-								}}
-								onKeyDown={(e) => handleKeyDown(e, "day")}
-								onFocus={() => setFocused("day")}
-								onBlur={() => setFocused(null)}
-							/>
-							{!isLast && (
-								<span className="select-none text-muted-foreground/50">/</span>
-							)}
-						</React.Fragment>
-					);
-				}
-				if (segmentType === "year") {
-					return (
-						<React.Fragment key="year">
-							<DateSegment
-								ref={yearRef}
-								type="year"
-								val={year}
-								placeholder="yyyy"
-								focused={focused === "year"}
-								disabled={disabled}
-								onChange={(e) => {
-									let val = e.target.value.replace(/\D/g, "");
-									const isFullySelected =
-										e.target.selectionStart === 1 &&
-										e.target.selectionEnd === 1;
-									if (isFullySelected && val.length > 4) {
-										val = val.slice(0, 1);
-									} else if (val.length > 4) {
-										val = val.slice(-1);
-									}
-									setYear(val);
-									if (
-										monthVal.current.length === 2 &&
-										dayVal.current.length === 2 &&
-										val.length === 4
-									) {
-										updateDate(monthVal.current, dayVal.current, val);
-									} else {
-										onValueChange?.(undefined);
-									}
-									if (val.length === 4 && val !== yearVal.current)
-										focusSegment(getNextSegment("year"));
-								}}
-								onKeyDown={(e) => handleKeyDown(e, "year")}
-								onFocus={() => setFocused("year")}
-								onBlur={() => setFocused(null)}
-							/>
-							{!isLast && (
-								<span className="select-none text-muted-foreground/50">/</span>
-							)}
-						</React.Fragment>
-					);
-				}
-			})}
-		</fieldset>
-	);
-});
+			} else if (e.key === "ArrowRight") {
+				if (e.currentTarget.selectionStart === e.currentTarget.value.length)
+					focusSegment(getNextSegment(type));
+			} else if (e.key === "ArrowLeft") {
+				if (e.currentTarget.selectionStart === 0)
+					focusSegment(getPrevSegment(type));
+			}
+		};
+
+		const isDateInvalid = React.useMemo(() => {
+			if (props["aria-invalid"]) return true;
+			if (!value) return false;
+			const date = new Date(value);
+			date.setHours(0, 0, 0, 0);
+			if (minDate) {
+				const min = new Date(minDate);
+				min.setHours(0, 0, 0, 0);
+				if (date < min) return true;
+			}
+			if (maxDate) {
+				const max = new Date(maxDate);
+				max.setHours(0, 0, 0, 0);
+				if (date > max) return true;
+			}
+			return false;
+		}, [value, minDate, maxDate, props["aria-invalid"]]);
+
+		return (
+			<fieldset
+				ref={ref}
+				aria-invalid={isDateInvalid}
+				className={cn(
+					"flex min-h-9 flex-1 cursor-text select-none items-center bg-transparent px-3 text-sm text-primary",
+					disabled && "cursor-not-allowed opacity-50",
+					className,
+				)}
+				onMouseDown={(e) => {
+					if ((e.target as HTMLElement).tagName === "INPUT") return;
+					e.preventDefault();
+
+					// Focus the first empty segment based on the locale's order, or the first segment if all are empty
+					if (!monthVal.current && !dayVal.current && !yearVal.current) {
+						focusSegment(dateOrder[0] as "month" | "day" | "year");
+					} else {
+						for (const type of dateOrder) {
+							if (type === "month" && !monthVal.current) {
+								focusSegment("month");
+								return;
+							}
+							if (type === "day" && !dayVal.current) {
+								focusSegment("day");
+								return;
+							}
+							if (type === "year" && !yearVal.current) {
+								focusSegment("year");
+								return;
+							}
+						}
+						// If all are filled, focus the last one
+						focusSegment(dateOrder[2] as "month" | "day" | "year");
+					}
+				}}
+				{...props}
+			>
+				{dateOrder.map((segmentType, index) => {
+					const isLast = index === dateOrder.length - 1;
+
+					if (segmentType === "month") {
+						return (
+							<React.Fragment key="month">
+								<DateSegment
+									ref={monthRef}
+									type="month"
+									val={month}
+									placeholder="mm"
+									focused={focused === "month"}
+									disabled={disabled}
+									aria-invalid={isDateInvalid}
+									onChange={(e) => {
+										let val = e.target.value.replace(/\D/g, "");
+										const isFullySelected =
+											e.target.selectionStart === 1 &&
+											e.target.selectionEnd === 1;
+										if (isFullySelected && val.length > 2) {
+											val = val.slice(0, 1);
+										} else if (val.length > 2) {
+											val = val.slice(-1);
+										}
+										if (val.length === 1 && Number(val) > 1) val = "0" + val;
+										if (val.length === 2 && Number(val) > 12) val = "12";
+										if (val.length === 2 && Number(val) < 1) val = "01";
+										setMonth(val);
+										if (
+											val.length === 2 &&
+											dayVal.current.length === 2 &&
+											yearVal.current.length === 4
+										) {
+											updateDate(val, dayVal.current, yearVal.current);
+										} else {
+											onValueChange?.(undefined);
+										}
+										if (val.length === 2 && val !== monthVal.current)
+											focusSegment(getNextSegment("month"));
+									}}
+									onKeyDown={(e) => handleKeyDown(e, "month")}
+									onFocus={() => setFocused("month")}
+									onBlur={() => setFocused(null)}
+								/>
+								{!isLast && (
+									<span
+										className={cn(
+											"select-none",
+											isDateInvalid
+												? "text-destructive"
+												: "text-muted-foreground/50",
+										)}
+									>
+										/
+									</span>
+								)}
+							</React.Fragment>
+						);
+					}
+					if (segmentType === "day") {
+						return (
+							<React.Fragment key="day">
+								<DateSegment
+									ref={dayRef}
+									type="day"
+									val={day}
+									placeholder="dd"
+									focused={focused === "day"}
+									disabled={disabled}
+									aria-invalid={isDateInvalid}
+									onChange={(e) => {
+										let val = e.target.value.replace(/\D/g, "");
+										const isFullySelected =
+											e.target.selectionStart === 1 &&
+											e.target.selectionEnd === 1;
+										if (isFullySelected && val.length > 2) {
+											val = val.slice(0, 1);
+										} else if (val.length > 2) {
+											val = val.slice(-1);
+										}
+										if (val.length === 1 && Number(val) > 3) val = `0${val}`;
+										if (val.length === 2 && Number(val) > 31) val = "31";
+										if (val.length === 2 && Number(val) < 1) val = "01";
+										setDay(val);
+										if (
+											monthVal.current.length === 2 &&
+											val.length === 2 &&
+											yearVal.current.length === 4
+										) {
+											updateDate(monthVal.current, val, yearVal.current);
+										} else {
+											onValueChange?.(undefined);
+										}
+										if (val.length === 2 && val !== dayVal.current)
+											focusSegment(getNextSegment("day"));
+									}}
+									onKeyDown={(e) => handleKeyDown(e, "day")}
+									onFocus={() => setFocused("day")}
+									onBlur={() => setFocused(null)}
+								/>
+								{!isLast && (
+									<span
+										className={cn(
+											"select-none",
+											isDateInvalid
+												? "text-destructive"
+												: "text-muted-foreground/50",
+										)}
+									>
+										/
+									</span>
+								)}
+							</React.Fragment>
+						);
+					}
+					if (segmentType === "year") {
+						return (
+							<React.Fragment key="year">
+								<DateSegment
+									ref={yearRef}
+									type="year"
+									val={year}
+									placeholder="yyyy"
+									focused={focused === "year"}
+									disabled={disabled}
+									aria-invalid={isDateInvalid}
+									onChange={(e) => {
+										let val = e.target.value.replace(/\D/g, "");
+										const isFullySelected =
+											e.target.selectionStart === 1 &&
+											e.target.selectionEnd === 1;
+										if (isFullySelected && val.length > 4) {
+											val = val.slice(0, 1);
+										} else if (val.length > 4) {
+											val = val.slice(-1);
+										}
+										setYear(val);
+										if (
+											monthVal.current.length === 2 &&
+											dayVal.current.length === 2 &&
+											val.length === 4
+										) {
+											updateDate(monthVal.current, dayVal.current, val);
+										} else {
+											onValueChange?.(undefined);
+										}
+										if (val.length === 4 && val !== yearVal.current)
+											focusSegment(getNextSegment("year"));
+									}}
+									onKeyDown={(e) => handleKeyDown(e, "year")}
+									onFocus={() => setFocused("year")}
+									onBlur={() => setFocused(null)}
+								/>
+								{!isLast && (
+									<span
+										className={cn(
+											"select-none",
+											isDateInvalid
+												? "text-destructive"
+												: "text-muted-foreground/50",
+										)}
+									>
+										/
+									</span>
+								)}
+							</React.Fragment>
+						);
+					}
+
+					return null;
+				})}
+			</fieldset>
+		);
+	},
+);
 InputGroupDateInput.displayName = "InputGroupDateInput";
 
 export {

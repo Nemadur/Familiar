@@ -22,6 +22,7 @@ import {
 	InputGroupAddon,
 	InputGroupButton,
 	InputGroupDateInput,
+	InputGroupNumberInput,
 } from "@/components/ui/input-group";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +36,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import * as React from "react";
+import { z } from "zod";
 import {
 	Select,
 	SelectContent,
@@ -66,6 +68,8 @@ export interface StaticFormBlockProps {
 	placeholder?: string;
 	min?: number;
 	max?: number;
+	minDate?: Date;
+	maxDate?: Date;
 }
 
 export function StaticNumberInput({
@@ -78,10 +82,38 @@ export function StaticNumberInput({
 	min,
 	max,
 }: StaticFormBlockProps) {
+	const [value, setValue] = React.useState<number | undefined>(undefined);
+
+	const { isInvalid, errorMessage } = React.useMemo(() => {
+		if (value === undefined) return { isInvalid: false, errorMessage: null };
+
+		let schema = z.number();
+		if (min !== undefined) {
+			schema = schema.min(min, `Value must be at least ${min}.`);
+		}
+		if (max !== undefined) {
+			schema = schema.max(max, `Value must be at most ${max}.`);
+		}
+
+		const result = schema.safeParse(value);
+		if (!result.success) {
+			return {
+				isInvalid: true,
+				errorMessage: result.error.issues[0]?.message ?? "Invalid value",
+			};
+		}
+		return { isInvalid: false, errorMessage: null };
+	}, [value, min, max]);
+
 	return (
 		<FieldSet className={className}>
 			<div className="flex items-center justify-between">
-				<FieldLabel className="w-full justify-between">
+				<FieldLabel
+					className={cn(
+						"w-full justify-between",
+						isInvalid && "text-destructive",
+					)}
+				>
 					<span className="flex-1 w-full">{label}</span>
 					{required && (
 						<span className="w-fit text-destructive">Required *</span>
@@ -90,18 +122,21 @@ export function StaticNumberInput({
 			</div>
 			{description && <FieldDescription>{description}</FieldDescription>}
 			<InputGroup className="h-10 w-full">
-				<InputGroupInput
-					type="number"
+				<InputGroupNumberInput
+					placeholder={placeholder}
+					disabled={disabled}
 					min={min}
 					max={max}
-					placeholder={
-						min !== undefined && max !== undefined
-							? `${min} - ${max}`
-							: placeholder
-					}
-					disabled={disabled}
+					value={value}
+					onValueChange={setValue}
+					aria-invalid={isInvalid}
 				/>
 			</InputGroup>
+			{isInvalid && errorMessage && (
+				<p className="text-[0.8rem] font-medium text-destructive mt-2">
+					{errorMessage}
+				</p>
+			)}
 		</FieldSet>
 	);
 }
@@ -112,15 +147,56 @@ export function StaticDateInput({
 	required,
 	className,
 	disabled = false,
+	minDate,
+	maxDate,
 }: StaticFormBlockProps) {
 	const [open, setOpen] = React.useState(false);
 	const [date, setDate] = React.useState<Date | undefined>(undefined);
 	const [month, setMonth] = React.useState<Date | undefined>(date);
 
+	const { isInvalid, errorMessage } = React.useMemo(() => {
+		if (!date) return { isInvalid: false, errorMessage: null };
+		const d = new Date(date);
+		d.setHours(0, 0, 0, 0);
+
+		let schema = z.date();
+		if (minDate) {
+			const min = new Date(minDate);
+			min.setHours(0, 0, 0, 0);
+			schema = schema.min(min, `Date must be ${format(min, "PP")} or later.`);
+		}
+		if (maxDate) {
+			const max = new Date(maxDate);
+			max.setHours(0, 0, 0, 0);
+			schema = schema.max(max, `Date must be ${format(max, "PP")} or earlier.`);
+		}
+
+		const result = schema.safeParse(d);
+		if (!result.success) {
+			return {
+				isInvalid: true,
+				errorMessage: result.error.issues[0]?.message ?? "Invalid value",
+			};
+		}
+		return { isInvalid: false, errorMessage: null };
+	}, [date, minDate, maxDate]);
+
+	const disabledDays = React.useMemo(() => {
+		const rules: any[] = [];
+		if (minDate) rules.push({ before: minDate });
+		if (maxDate) rules.push({ after: maxDate });
+		return rules.length > 0 ? rules : undefined;
+	}, [minDate, maxDate]);
+
 	return (
 		<FieldSet className={className}>
 			<div className="flex items-center justify-between">
-				<FieldLabel className="w-full justify-between">
+				<FieldLabel
+					className={cn(
+						"w-full justify-between",
+						isInvalid && "text-destructive",
+					)}
+				>
 					<span className="flex-1 w-full">{label}</span>
 					{required && (
 						<span className="w-fit text-destructive">Required *</span>
@@ -132,6 +208,9 @@ export function StaticDateInput({
 				<InputGroupDateInput
 					value={date}
 					disabled={disabled}
+					minDate={minDate}
+					maxDate={maxDate}
+					aria-invalid={isInvalid}
 					onValueChange={(d) => {
 						setDate(d);
 						setMonth(d);
@@ -169,6 +248,7 @@ export function StaticDateInput({
 								selected={date}
 								month={month}
 								onMonthChange={setMonth}
+								disabled={disabledDays}
 								onSelect={(d) => {
 									setDate(d);
 									setOpen(false);
@@ -179,6 +259,11 @@ export function StaticDateInput({
 					</Popover>
 				</InputGroupAddon>
 			</InputGroup>
+			{isInvalid && errorMessage && (
+				<p className="text-[0.8rem] font-medium text-destructive mt-2">
+					{errorMessage}
+				</p>
+			)}
 		</FieldSet>
 	);
 }
@@ -248,6 +333,8 @@ export function StaticRadioGroup({
 	disabled = false,
 	currencyCode = "USD",
 }: StaticFormBlockProps) {
+	const [value, setValue] = React.useState<string | undefined>(undefined);
+
 	return (
 		<FieldSet className={className}>
 			<div className="flex items-center justify-between">
@@ -260,7 +347,12 @@ export function StaticRadioGroup({
 				</FieldLabel>
 			</div>
 			{description && <FieldDescription>{description}</FieldDescription>}
-			<RadioGroup disabled={disabled} className="flex flex-col gap-3">
+			<RadioGroup
+				disabled={disabled}
+				className="flex flex-col gap-3"
+				value={value}
+				onValueChange={setValue}
+			>
 				{options.map((option) => (
 					<Field
 						key={option.id}
@@ -271,38 +363,48 @@ export function StaticRadioGroup({
 							value={option.id}
 							id={`static-${option.id}`}
 							disabled={disabled || option.disabled}
+							onClick={(e) => {
+								if (value === option.id) {
+									setValue("");
+								}
+							}}
 						/>
 						<FieldContent className="flex-1 gap-2">
-							<div className="flex items-start justify-between">
-								<FieldLabel
-									htmlFor={`static-${option.id}`}
-									className={cn(
-										"cursor-pointer font-normal leading-tight",
-										(disabled || option.disabled) && "text-muted-foreground/70",
+							<label
+								htmlFor={`static-${option.id}`}
+								className="cursor-pointer block w-full"
+							>
+								<div className="flex items-start justify-between">
+									<span
+										className={cn(
+											"font-normal leading-tight",
+											(disabled || option.disabled) &&
+												"text-muted-foreground/70",
+										)}
+									>
+										{option.label}
+									</span>
+									{option.price !== undefined && (
+										<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
+											{option.price > 0
+												? `+${currencyCode} ${option.price.toFixed(2)}`
+												: "Free"}
+										</span>
 									)}
-								>
-									{option.label}
-								</FieldLabel>
-								{option.price !== undefined && (
-									<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
-										{option.price > 0
-											? `+${currencyCode} ${option.price.toFixed(2)}`
-											: "Free"}
-									</span>
+									{option.pricePercentage !== undefined && (
+										<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
+											{option.pricePercentage > 0
+												? `+${option.pricePercentage}%`
+												: "Free"}
+										</span>
+									)}
+								</div>
+								{option.description && (
+									<FieldDescription className="text-xs mt-1">
+										{option.description}
+									</FieldDescription>
 								)}
-								{option.pricePercentage !== undefined && (
-									<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
-										{option.pricePercentage > 0
-											? `+${option.pricePercentage}%`
-											: "Free"}
-									</span>
-								)}
-							</div>
-							{option.description && (
-								<FieldDescription className="text-xs">
-									{option.description}
-								</FieldDescription>
-							)}
+							</label>
 						</FieldContent>
 					</Field>
 				))}
@@ -379,7 +481,7 @@ export function StaticCheckboxGroup({
 	label,
 	description,
 	required,
-	options,
+	options = [],
 	className,
 	disabled = false,
 	currencyCode = "USD",
@@ -458,7 +560,7 @@ export function StaticSelect({
 	label,
 	description,
 	required,
-	options,
+	options = [],
 	className,
 	disabled = false,
 	currencyCode = "USD",
@@ -524,7 +626,7 @@ export function FormRadioGroup<T extends FieldValues>({
 	label,
 	description,
 	required,
-	options,
+	options = [],
 	className,
 	otherFieldName,
 	currencyCode = "USD",
@@ -550,7 +652,7 @@ export function FormRadioGroup<T extends FieldValues>({
 					{description && <FieldDescription>{description}</FieldDescription>}
 					<RadioGroup
 						onValueChange={field.onChange}
-						defaultValue={field.value}
+						value={field.value}
 						className="flex flex-col gap-3"
 					>
 						{options.map((option) => (
@@ -563,39 +665,48 @@ export function FormRadioGroup<T extends FieldValues>({
 									value={option.id}
 									id={`${name}-${option.id}`}
 									disabled={option.disabled}
+									onClick={(e) => {
+										if (field.value === option.id) {
+											field.onChange(undefined);
+										}
+									}}
 								/>
 								<FieldContent className="flex-1 gap-2">
-									<div className="flex items-start justify-between">
-										<FieldLabel
-											htmlFor={`${name}-${option.id}`}
-											className={cn(
-												"cursor-pointer font-normal leading-tight",
-												option.disabled && "text-muted-foreground/70",
+									<label
+										htmlFor={`${name}-${option.id}`}
+										className="cursor-pointer block w-full"
+									>
+										<div className="flex items-start justify-between">
+											<span
+												className={cn(
+													"font-normal leading-tight",
+													option.disabled && "text-muted-foreground/70",
+												)}
+											>
+												{option.label}
+											</span>
+											{option.price !== undefined && (
+												// TODO: use commission currency or user preferendce surrency
+												<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
+													{option.price > 0
+														? `+${currencyCode} ${option.price.toFixed(2)}`
+														: "Free"}
+												</span>
 											)}
-										>
-											{option.label}
-										</FieldLabel>
-										{option.price !== undefined && (
-											// TODO: use commission currency or user preferendce surrency
-											<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
-												{option.price > 0
-													? `+${currencyCode} ${option.price.toFixed(2)}`
-													: "Free"}
-											</span>
+											{option.pricePercentage !== undefined && (
+												<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
+													{option.pricePercentage > 0
+														? `+${option.pricePercentage}%`
+														: "Free"}
+												</span>
+											)}
+										</div>
+										{option.description && (
+											<FieldDescription className="text-xs mt-1">
+												{option.description}
+											</FieldDescription>
 										)}
-										{option.pricePercentage !== undefined && (
-											<span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
-												{option.pricePercentage > 0
-													? `+${option.pricePercentage}%`
-													: "Free"}
-											</span>
-										)}
-									</div>
-									{option.description && (
-										<FieldDescription className="text-xs">
-											{option.description}
-										</FieldDescription>
-									)}
+									</label>
 									{option.hasInput &&
 										field.value === option.id &&
 										otherFieldName && (
@@ -628,7 +739,7 @@ export function FormCheckboxGroup<T extends FieldValues>({
 	label,
 	description,
 	required,
-	options,
+	options = [],
 	className,
 	otherFieldName,
 	currencyCode = "USD",
