@@ -1,6 +1,13 @@
 import { ScrollShadow, surfaceVariants } from "@heroui/react";
 import { useNavigate } from "@tanstack/react-router";
-import { FolderOpen, ListFilterIcon, Tag, Wallet } from "lucide-react";
+import {
+	FolderOpen,
+	ListFilterIcon,
+	Tag,
+	Wallet,
+	Play,
+	Pause,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
@@ -14,6 +21,8 @@ import {
 import {
 	OutlineBookmark,
 	OutlineChat,
+	OutlineChevronLeft,
+	OutlineChevronRight,
 	OutlineEyeOff,
 	OutlineFilter,
 	OutlineUser,
@@ -36,6 +45,7 @@ import {
 import { useBlurredImage } from "@/hooks/use-blurred-image";
 import { useIsTablet } from "@/hooks/use-mobile";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
+import { useCurrencyConversion } from "@/hooks/use-currency-conversion";
 import { cn } from "@/lib/utils";
 import {
 	type TCommissionDetailResponse,
@@ -207,9 +217,10 @@ function CommissionCard({
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [hoverPlaying, setHoverPlaying] = useState(false);
 	const [isContentRevealed, setIsContentRevealed] = useState(false);
+	const [isAutoPlayPaused, setIsAutoPlayPaused] = useState(false);
 
 	const isTablet = useIsTablet();
-	const isPlaying = isTablet || hoverPlaying;
+	const isPlaying = (isTablet || hoverPlaying) && !isAutoPlayPaused;
 
 	const status = commission.commissionStatus;
 
@@ -244,7 +255,14 @@ function CommissionCard({
 		discountRate,
 	} = calculateCommissionPricing(commission.basePrice, 0);
 
-	const handleNavigate = () => {
+	const handleNavigate = (e?: React.MouseEvent | React.KeyboardEvent) => {
+		if (shouldBlur) {
+			e?.preventDefault();
+			e?.stopPropagation();
+			setIsContentRevealed(true);
+			return;
+		}
+
 		if (status !== TCommissionStatus.Active) return;
 
 		navigate({
@@ -277,7 +295,7 @@ function CommissionCard({
 		>
 			<div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-2xl bg-muted xl:w-2/5">
 				{shouldBlur ? (
-					<div className="h-full w-full overflow-hidden bg-zinc-900">
+					<div className="h-full w-full bg-zinc-900">
 						{blurredImageSrc ? (
 							<div
 								className="h-full w-full bg-cover bg-center opacity-80 blur-xl filter transition-all duration-500 hover:scale-110 hover:opacity-100"
@@ -293,9 +311,9 @@ function CommissionCard({
 						)}
 					</div>
 				) : (
-					<div className="h-full w-full transition-all duration-500">
+					<div className="h-full w-full transition-all duration-500 overflow-hidden rounded-2xl">
 						<Reel
-							className="aspect-video h-full w-full"
+							className="aspect-video h-full w-full rounded-2xl overflow-hidden"
 							data={reelItems}
 							index={currentImageIndex}
 							onIndexChange={setCurrentImageIndex}
@@ -328,10 +346,66 @@ function CommissionCard({
 										alt={reelItem.alt || ""}
 										duration={reelItem.duration}
 										src={reelItem.src}
-										className="h-full w-full object-cover"
+										className="h-full w-full object-cover rounded-2xl"
 									/>
 								)}
 							</ReelContent>
+
+							{hasMultipleImages && (
+								<>
+									<div className="absolute top-1/2 left-2 z-20 -translate-y-1/2">
+										<Button
+											size="icon"
+											variant="blur_dark"
+											onClick={(e) => {
+												e.stopPropagation();
+												setCurrentImageIndex((prev) =>
+													prev > 0 ? prev - 1 : reelItems.length - 1,
+												);
+											}}
+										>
+											<span className="sr-only">Previous image</span>
+											<OutlineChevronLeft />
+										</Button>
+									</div>
+									<div className="absolute top-1/2 right-2 z-20 -translate-y-1/2">
+										<Button
+											size="icon"
+											variant="blur_dark"
+											onClick={(e) => {
+												e.stopPropagation();
+												setCurrentImageIndex((prev) =>
+													prev < reelItems.length - 1 ? prev + 1 : 0,
+												);
+											}}
+										>
+											<span className="sr-only">Next image</span>
+											<OutlineChevronRight />
+										</Button>
+									</div>
+									{isTablet && (
+										<div className="absolute top-2 left-2 z-20">
+											<Button
+												size="icon"
+												variant="blur_dark"
+												onClick={(e) => {
+													e.stopPropagation();
+													setIsAutoPlayPaused((prev) => !prev);
+												}}
+											>
+												<span className="sr-only">
+													{isAutoPlayPaused ? "Play auto" : "Pause auto"}
+												</span>
+												{isAutoPlayPaused ? (
+													<Play className="size-4" />
+												) : (
+													<Pause className="size-4" />
+												)}
+											</Button>
+										</div>
+									)}
+								</>
+							)}
 						</Reel>
 					</div>
 				)}
@@ -420,6 +494,7 @@ function CommissionCardContent({
 }) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+	const { convertAndFormat } = useCurrencyConversion();
 
 	const currency = item.currencyCode || "USD";
 
@@ -436,7 +511,7 @@ function CommissionCardContent({
 					</div>
 
 					<Button
-						size="icon"
+						size="icon-xl"
 						className="absolute top-0 right-0 z-0 hidden shrink-0 bg-transparent text-primary shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:bg-primary/6 before:transition-all hover:bg-transparent hover:before:translate-y-1.5 hover:before:bg-primary/10 hover:[&>svg]:translate-y-1.5 xl:flex [&>svg]:transition-transform"
 						onClick={(e) => e.stopPropagation()}
 					>
@@ -451,12 +526,12 @@ function CommissionCardContent({
 								{t("components.profile.commissions.card.from")}
 							</span>
 							<span className="font-semibold text-primary">
-								{currency} {discountedPrice.toFixed(2)}
+								{convertAndFormat(discountedPrice, currency)}
 							</span>
 							{discountRate > 0 && (
 								<span className="flex gap-2 text-xs text-muted-foreground opacity-70">
 									<span className="line-through">
-										{currency} {originalPrice.toFixed(2)}
+										{convertAndFormat(originalPrice, currency)}
 									</span>
 									<span>(-{Math.round(discountRate * 100)}%)</span>
 								</span>
@@ -590,17 +665,25 @@ export function ProfileCommissions({
 	const { t } = useTranslation();
 	const { user: currentUser } = useAuth();
 	const isMe = currentUser?.username === artist.username;
+	const { convert, userCurrency } = useCurrencyConversion();
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filterState, setFilterState] =
 		useState<ManagedFiltersState>(INITIAL_FILTER_STATE);
 
 	const visibleCommissions = useMemo(() => {
-		if (isMe) return commissions;
-		return commissions.filter(
-			(c) => c.commissionStatus !== TCommissionStatus.Archived,
-		);
-	}, [commissions, isMe]);
+		const filtered = isMe
+			? commissions
+			: commissions.filter(
+					(c) => c.commissionStatus !== TCommissionStatus.Archived,
+				);
+
+		return filtered.map((c) => ({
+			...c,
+			basePrice: convert(c.basePrice, c.currencyCode || "USD"),
+			currencyCode: userCurrency,
+		}));
+	}, [commissions, isMe, convert, userCurrency]);
 
 	const categoryOptions = useMemo(
 		() =>

@@ -151,7 +151,7 @@ export const Reel = ({
 		>
 			<div
 				className={cn(
-					"relative isolate h-full w-auto overflow-hidden bg-black",
+					"relative isolate h-full w-auto overflow-hidden transform-[translateZ(0)]",
 					"aspect-9/16",
 					className,
 				)}
@@ -177,13 +177,13 @@ export const ReelContent = ({
 
 	return (
 		<div
-			className={cn("relative size-full", className)}
+			className={cn("relative size-full overflow-hidden", className)}
 			data-reel-content
 			{...props}
 		>
 			<div
 				key={currentIndex}
-				className="absolute inset-0 animate-in fade-in duration-300 fill-mode-forwards"
+				className="absolute inset-0 overflow-hidden animate-in fade-in duration-300 fill-mode-forwards"
 				onAnimationEnd={() => setIsTransitioning(false)}
 			>
 				<ReelContentItem currentItem={currentItem} currentIndex={currentIndex}>

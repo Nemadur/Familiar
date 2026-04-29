@@ -68,9 +68,8 @@ const commissionsNav: NavItem[] = [
 	},
 	{
 		title: "Services",
-		url: "#",
+		url: "/dashboard/services",
 		icon: Settings,
-		badge: "Coming soon",
 	},
 	{
 		title: "Forms",

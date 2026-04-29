@@ -91,19 +91,14 @@ export function UniversalModalLayout({
 								{showBookmark && (
 									<Button
 										variant="ghost"
-										size="icon"
-										onClick={handleBookmarkClick}
+										size="icon-xl"
 										className={cn(
-											"bg-transparent shadow-none",
-											bookmarked &&
-												"drop-shadow-[0_0px_10px_rgba(137,75,0)] dark:drop-shadow-[0_0px_10px_rgba(255,240,133)]",
+											"hidden xl:flex text-muted-foreground",
+											bookmarked && "text-white bg-white/10 hover:bg-white/20",
 										)}
+										onClick={handleBookmarkClick}
 									>
-										{bookmarked ? (
-											<SolidBookmark className="text-yellow-700 dark:text-yellow-200" />
-										) : (
-											<OutlineBookmark />
-										)}
+										{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 									</Button>
 								)}
 								<Button variant="ghost" size="icon">
@@ -153,20 +148,16 @@ export function UniversalModalLayout({
 						<div className="sticky top-0 z-20 hidden lg:flex shrink-0 items-center justify-end gap-2 border-b bg-background p-4">
 							{showBookmark && (
 								<Button
-									size={"icon"}
+									size="icon-xl"
 									className={cn(
 										"relative z-0 hidden shrink-0 bg-transparent shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:transition-all hover:bg-transparent hover:before:translate-y-1.5 lg:flex [&>svg]:transition-transform hover:[&>svg]:translate-y-1.5",
 										bookmarked
-											? "text-yellow-500 drop-shadow-[0_0px_10px_rgba(137,75,0)] dark:drop-shadow-[0_0px_10px_rgba(255,240,133)] before:bg-yellow-500/10 hover:before:bg-yellow-500/20"
+											? "text-white before:bg-white/10 hover:before:bg-white/20"
 											: "text-primary hover:before:bg-primary/10 before:bg-primary/6",
 									)}
 									onClick={handleBookmarkClick}
 								>
-									{bookmarked ? (
-										<SolidBookmark className=" text-yellow-800 dark:text-yellow-200" />
-									) : (
-										<OutlineBookmark />
-									)}
+									{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 								</Button>
 							)}
 							<div className="flex items-center flex-1 w-full justify-end gap-2">
@@ -174,15 +165,11 @@ export function UniversalModalLayout({
 									/* Mobile/Tablet Bookmark (Standard) */
 									<Button
 										variant="ghost"
-										size="icon"
+										size="icon-xl"
 										onClick={handleBookmarkClick}
-										className="lg:hidden"
+										className={cn("lg:hidden", bookmarked && "text-white")}
 									>
-										{bookmarked ? (
-											<SolidBookmark className="text-yellow-500" />
-										) : (
-											<OutlineBookmark />
-										)}
+										{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 									</Button>
 								)}
 								<Button variant="ghost" size="icon">

@@ -95,15 +95,15 @@ function CommandList({
 		<CommandPrimitive.List
 			data-slot="command-list"
 			className={cn(
-				"max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto p-(--command-content-padding) overflow-hidden group/list",
+				"max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto p-(--command-content-padding) group/list",
 
 				// First item styling (Grouped & Direct) - Default to Large Top Rounding
 				"[&_[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
 				"[&_[data-slot=command-group]:first-child_[data-slot=command-item]:first-child]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
 
 				// Reset First item to Small Rounding if Command has Input
-				"peer-[[data-slot=command-input-wrapper]]:[&_[data-slot=command-item]:first-child]:rounded-t-lg!",
-				"peer-[[data-slot=command-input-wrapper]]:[&_[data-slot=command-group]:first-child_[data-slot=command-item]:first-child]:rounded-t-lg!",
+				"peer-data-[slot=command-input-wrapper]:[&_[data-slot=command-item]:first-child]:rounded-t-lg!",
+				"peer-data-[slot=command-input-wrapper]:[&_[data-slot=command-group]:first-child_[data-slot=command-item]:first-child]:rounded-t-lg!",
 
 				// Last item styling (Grouped & Direct) - Always applies Large Bottom Rounding
 				"[&_[data-slot=command-item]:last-child]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]!",

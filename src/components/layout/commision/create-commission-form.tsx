@@ -1,5 +1,3 @@
-"use client";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -7,31 +5,25 @@ import {
 	Check,
 	CheckCircle2,
 	ClipboardList,
-	CloudUpload,
-	DollarSign,
 	ExternalLink,
 	FileImage,
 	Loader2,
 	MessageCircle,
 	Send,
-	Settings2,
-	Sparkles,
-	Tag,
 	Type,
-	X,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import {
+	type ChangeEvent,
+	type ComponentType,
+	type DragEvent,
+	type ReactNode,
+	useMemo,
+	useState,
+} from "react";
 import { toast } from "sonner";
+import CurrencySelect from "@/components/layout/select/currency";
 import { OutlineClose } from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -43,12 +35,14 @@ import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
+	InputGroupNumberInput,
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import {
 	Select,
 	SelectContent,
+	SelectGroup,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
@@ -64,18 +58,34 @@ import {
 	SidebarMenuItem,
 	SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/lib/supabase";
-import { cn } from "@/lib/utils";
-
 import {
-	useFormTemplates,
+	useCommissionCategories,
+	useCreateCommission,
+	usePublishCommission,
+	useTags,
+	useUploadCommissionMedia,
+} from "@/hooks/use-commisions";
+import {
 	useAssignFormTemplate,
+	useFormTemplates,
 } from "@/hooks/use-form-templates";
+import { cn } from "@/lib/utils";
+import {
+	commissionMediaFileSchema,
+	createCommissionFormSchema,
+	createCommissionRequestSchema,
+	toCreateCommissionRequest,
+} from "@/schemas/commissions";
+import type {
+	TCommissionCategoryResponse,
+	TCommissionResponse,
+	TTagResponse,
+} from "@/types/commissions";
+import { TCommissionStatus } from "@/types/commissions";
 
 type UploadStatus = "pending" | "uploading" | "done" | "error";
-type EditorTab = "details" | "workflow" | "request-form" | "publish";
+type EditorTab = "details" | "media" | "request-form" | "publish";
 
 interface UploadQueueItem {
 	id: string;
@@ -92,22 +102,36 @@ interface CreateCommissionFormProps {
 	onClose: () => void;
 }
 
-interface CreateCommissionResponse {
-	id?: string;
-	listingId?: string;
-	commissionId?: string;
-	data?: {
-		id?: string;
-		listingId?: string;
-		commissionId?: string;
-	};
+interface FlatCategory {
+	id: string;
+	label: string;
+	depth: number;
 }
 
-const splitCsv = (value: string) =>
-	value
-		.split(",")
-		.map((item) => item.trim())
-		.filter(Boolean);
+function flattenCategories(categories: TCommissionCategoryResponse[]) {
+	const seen = new Set<string>();
+	const rows: FlatCategory[] = [];
+
+	const walk = (items: TCommissionCategoryResponse[], depth = 0) => {
+		for (const item of items) {
+			if (seen.has(item.id)) continue;
+
+			seen.add(item.id);
+			rows.push({
+				id: item.id,
+				label: `${depth > 0 ? `${"— ".repeat(depth)}` : ""}${item.name}`,
+				depth,
+			});
+
+			if (item.subcategories?.length) walk(item.subcategories, depth + 1);
+		}
+	};
+
+	const roots = categories.filter((category) => !category.parentId);
+	walk(roots.length > 0 ? roots : categories);
+
+	return rows;
+}
 
 const toUploadId = () =>
 	typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -123,33 +147,15 @@ const formatBytes = (bytes: number) => {
 	return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 };
 
-const statusConfig = {
-	open: {
-		label: "Published",
-		color:
-			"border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400",
-	},
-	waitlist: {
-		label: "Waitlist",
-		color:
-			"border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400",
-	},
-	closed: {
-		label: "Closed",
-		color:
-			"border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400",
-	},
-} as const;
-
 const navItems = [
 	{ key: "details", name: "Details", icon: ClipboardList },
-	{ key: "workflow", name: "Workflow", icon: Settings2 },
+	{ key: "media", name: "Media", icon: FileImage },
 	{ key: "request-form", name: "Request Form", icon: MessageCircle },
 	{ key: "publish", name: "Publish", icon: Send },
 ] as const satisfies ReadonlyArray<{
 	key: EditorTab;
 	name: string;
-	icon: React.ComponentType<{ className?: string }>;
+	icon: ComponentType<{ className?: string }>;
 }>;
 
 function FlatSection({
@@ -162,8 +168,8 @@ function FlatSection({
 	children: ReactNode;
 }) {
 	return (
-		<section className="space-y-5">
-			<div className="space-y-1">
+		<section className="flex flex-col gap-5">
+			<div className="flex flex-col gap-1">
 				<h3 className="text-sm font-semibold text-foreground">{title}</h3>
 				{description && (
 					<p className="text-sm text-muted-foreground">{description}</p>
@@ -178,32 +184,39 @@ function FieldGroup({
 	label,
 	htmlFor,
 	hint,
+	error,
 	children,
 }: {
 	label: string;
 	htmlFor?: string;
 	hint?: string;
+	error?: string;
 	children: ReactNode;
 }) {
 	return (
-		<div className="space-y-2.5">
+		<div
+			className="flex flex-col gap-2.5"
+			data-invalid={Boolean(error) || undefined}
+		>
 			<div className="flex items-center justify-between gap-3">
 				<Label htmlFor={htmlFor} className="text-sm font-medium">
 					{label}
 				</Label>
-				{hint && (
-					<span className="text-[11px] text-muted-foreground">{hint}</span>
-				)}
+				{hint && <span className="text-xs text-muted-foreground">{hint}</span>}
 			</div>
 			{children}
+			{error && <p className="text-xs text-destructive">{error}</p>}
 		</div>
 	);
 }
 
-function StatusPill({ status }: { status: "open" | "closed" | "waitlist" }) {
+function StatusPill({ status }: { status: TCommissionStatus }) {
 	return (
-		<Badge className={cn("text-[11px]", statusConfig[status].color)}>
-			{statusConfig[status].label}
+		<Badge
+			size="sm"
+			variant={status === TCommissionStatus.Active ? "default" : "secondary"}
+		>
+			{status}
 		</Badge>
 	);
 }
@@ -227,40 +240,37 @@ function FileRow({
 	disabled: boolean;
 }) {
 	return (
-		<div className="flex items-start gap-3 rounded-xl border border-border/70 px-3 py-3">
+		<div className="flex items-start gap-3 rounded-xl border border-border px-3 py-3">
 			<div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
 				<FileImage className="size-4 text-muted-foreground" />
 			</div>
 
-			<div className="min-w-0 flex-1 space-y-1.5">
+			<div className="flex min-w-0 flex-1 flex-col gap-1.5">
 				<div className="flex items-start justify-between gap-3">
 					<div className="min-w-0">
 						<p className="truncate text-sm font-medium">{item.file.name}</p>
-						<p className="text-[11px] text-muted-foreground">
+						<p className="text-xs text-muted-foreground">
 							{formatBytes(item.file.size)}
 						</p>
 					</div>
 
 					<div className="flex shrink-0 items-center gap-1">
-						{item.status === "done" && (
-							<CheckCircle2 className="size-4 text-emerald-500" />
-						)}
+						{item.status === "done" && <CheckCircle2 className="size-4" />}
 						{item.status === "error" && (
 							<AlertCircle className="size-4 text-destructive" />
 						)}
 						{item.status === "uploading" && (
-							<Loader2 className="size-4 animate-spin text-primary" />
+							<Loader2 className="size-4 animate-spin text-muted-foreground" />
 						)}
 
 						<Button
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="size-7 rounded-lg"
 							onClick={() => onRemove(item.id)}
 							disabled={disabled}
 						>
-							<X className="size-3.5" />
+							<OutlineClose />
 						</Button>
 					</div>
 				</div>
@@ -268,12 +278,45 @@ function FileRow({
 				{item.status !== "pending" && (
 					<Progress value={item.progress} className="h-1.5 rounded-full" />
 				)}
-
-				{item.error && (
-					<p className="text-[11px] text-destructive">{item.error}</p>
-				)}
+				{item.error && <p className="text-xs text-destructive">{item.error}</p>}
 			</div>
 		</div>
+	);
+}
+
+function TagToggleButton({
+	tag,
+	selected,
+	onToggle,
+	disabled,
+}: {
+	tag: TTagResponse;
+	selected: boolean;
+	onToggle: (tagId: string) => void;
+	disabled: boolean;
+}) {
+	const isWarning = tag.hasContentWarning || tag.isAdultOnly;
+
+	return (
+		<Button
+			type="button"
+			variant={isWarning ? "destructive" : selected ? "default" : "outline"}
+			size="sm"
+			aria-pressed={selected}
+			onClick={() => onToggle(tag.id)}
+			disabled={disabled}
+			className={cn(
+				"rounded-full",
+				isWarning &&
+					!selected &&
+					"bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive",
+				isWarning &&
+					selected &&
+					"bg-destructive text-(--color-red-50) hover:bg-destructive/90",
+			)}
+		>
+			{tag.name}
+		</Button>
 	);
 }
 
@@ -289,47 +332,70 @@ export function CreateCommissionForm({
 	const { data: formTemplates, isPending: isFormTemplatesPending } =
 		useFormTemplates();
 	const assignTemplateMutation = useAssignFormTemplate();
+	const createCommissionMutation = useCreateCommission();
+	const publishCommissionMutation = usePublishCommission();
+	const uploadMediaMutation = useUploadCommissionMedia();
+
+	const {
+		data: categories,
+		isPending: isCategoriesPending,
+		error: categoriesError,
+	} = useCommissionCategories();
+
+	const { data: tags, isPending: isTagsPending } = useTags(false);
 
 	const [activeTab, setActiveTab] = useState<EditorTab>("details");
-
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
-	const [basePriceUsd, setBasePriceUsd] = useState("50");
-	const [status, setStatus] = useState<"open" | "closed" | "waitlist">("open");
-	const [serviceType, setServiceType] = useState<
-		"custom_service" | "personalized_ych" | ""
-	>("custom_service");
-	const [communicationType, setCommunicationType] = useState<
-		"open_communication" | "surprise_me" | ""
-	>("open_communication");
-	const [requestingProcess, setRequestingProcess] = useState<
-		"custom_proposal" | "instant_order" | ""
-	>("custom_proposal");
-	const [tagsInput, setTagsInput] = useState("");
-	const [contentWarningsInput, setContentWarningsInput] = useState("");
+	const [categoryId, setCategoryId] = useState("");
+	const [basePrice, setBasePrice] = useState(50);
+	const [currencyCode, setCurrencyCode] = useState("USD");
+	const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 	const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
 		null,
 	);
 	const [uploads, setUploads] = useState<UploadQueueItem[]>([]);
-	const [createdListingId, setCreatedListingId] = useState<string | null>(null);
-	const [isCreating, setIsCreating] = useState(false);
+	const [createdCommission, setCreatedCommission] =
+		useState<TCommissionResponse | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
+	const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
 
-	const [linkCommissionService, setLinkCommissionService] = useState(false);
-	const [markAsMature, setMarkAsMature] = useState(false);
+	const normalizedTags = useMemo(() => (tags ?? []) as TTagResponse[], [tags]);
 
-	const apiBaseUrl = import.meta.env.VITE_API_URL as string | undefined;
-	const createCommissionUrl = import.meta.env.VITE_COMMISSIONS_CREATE_URL as
-		| string
-		| undefined;
-	const uploadCommissionUrlTemplate = import.meta.env
-		.VITE_COMMISSIONS_UPLOAD_URL_TEMPLATE as string | undefined;
+	const flatCategories = useMemo(
+		() => flattenCategories(categories ?? []),
+		[categories],
+	);
+	const selectedCategory = useMemo(
+		() => flatCategories.find((category) => category.id === categoryId),
+		[categoryId, flatCategories],
+	);
 
-	const parsedTags = useMemo(() => splitCsv(tagsInput), [tagsInput]);
-	const parsedWarnings = useMemo(
-		() => splitCsv(contentWarningsInput),
-		[contentWarningsInput],
+	const selectedTags = useMemo(
+		() => normalizedTags.filter((tag) => selectedTagIds.includes(tag.id)),
+		[normalizedTags, selectedTagIds],
+	);
+
+	const regularTags = useMemo(
+		() =>
+			normalizedTags.filter(
+				(tag) => !tag.hasContentWarning && !tag.isAdultOnly,
+			),
+		[normalizedTags],
+	);
+
+	const contentWarningTags = useMemo(
+		() =>
+			normalizedTags.filter((tag) => tag.hasContentWarning || tag.isAdultOnly),
+		[normalizedTags],
+	);
+
+	const selectedContentWarningCount = useMemo(
+		() =>
+			contentWarningTags.filter((tag) => selectedTagIds.includes(tag.id))
+				.length,
+		[contentWarningTags, selectedTagIds],
 	);
 
 	const doneCount = useMemo(
@@ -343,28 +409,110 @@ export function CreateCommissionForm({
 		return Math.round(sum / uploads.length);
 	}, [uploads]);
 
-	const isBusy = isCreating || isUploading;
-	const hasCreated = Boolean(createdListingId);
+	const isBusy =
+		createCommissionMutation.isPending ||
+		publishCommissionMutation.isPending ||
+		uploadMediaMutation.isPending ||
+		assignTemplateMutation.isPending ||
+		isUploading;
+	const hasCreated = Boolean(createdCommission?.id);
 
-	const numericPrice = Number(basePriceUsd);
-	const isPriceValid =
-		basePriceUsd.trim().length > 0 &&
-		Number.isFinite(numericPrice) &&
-		numericPrice >= 0;
+	const priceNumber = Number(basePrice);
+	const normalizedCurrency = currencyCode.trim().toUpperCase();
+	const mediaFiles = useMemo(() => uploads.map((item) => item.file), [uploads]);
 
-	const detailsReady =
-		title.trim().length >= 3 && description.trim().length >= 10 && isPriceValid;
+	const createRequestInput = useMemo(
+		() => ({
+			title,
+			description,
+			categoryId,
+			basePrice,
+			currencyCode: normalizedCurrency,
+			tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+			commissionStatus: TCommissionStatus.Draft,
+		}),
+		[
+			title,
+			description,
+			categoryId,
+			basePrice,
+			normalizedCurrency,
+			selectedTagIds,
+		],
+	);
 
-	const workflowReady =
-		Boolean(serviceType) &&
-		Boolean(communicationType) &&
-		Boolean(requestingProcess);
+	const formInput = useMemo(
+		() => ({
+			title,
+			description,
+			categoryId,
+			basePrice,
+			currencyCode: normalizedCurrency,
+			tagIds: selectedTagIds,
+			templateId: selectedTemplateId ?? undefined,
+			mediaFiles,
+		}),
+		[
+			title,
+			description,
+			categoryId,
+			basePrice,
+			normalizedCurrency,
+			selectedTagIds,
+			selectedTemplateId,
+			mediaFiles,
+		],
+	);
 
-	const canPublish = detailsReady && workflowReady && !isBusy && !hasCreated;
+	const createRequestValidation = useMemo(
+		() => createCommissionRequestSchema.safeParse(createRequestInput),
+		[createRequestInput],
+	);
 
-	const updateUpload = (id: string, next: Partial<UploadQueueItem>) => {
+	const formValidation = useMemo(
+		() => createCommissionFormSchema.safeParse(formInput),
+		[formInput],
+	);
+
+	const requestFieldErrors = useMemo(
+		() =>
+			createRequestValidation.success
+				? {}
+				: createRequestValidation.error.flatten().fieldErrors,
+		[createRequestValidation],
+	);
+
+	const formFieldErrors = useMemo(
+		() =>
+			formValidation.success ? {} : formValidation.error.flatten().fieldErrors,
+		[formValidation],
+	);
+
+	const detailsReady = createRequestValidation.success;
+	const requestFormReady = Boolean(selectedTemplateId);
+	const hasInvalidUploads = uploads.some((item) => item.status === "error");
+	const canSubmit = !isBusy && !hasCreated;
+
+	const titleError = hasTriedSubmit ? requestFieldErrors.title?.[0] : undefined;
+	const categoryError = hasTriedSubmit
+		? requestFieldErrors.categoryId?.[0]
+		: undefined;
+	const priceError = hasTriedSubmit
+		? requestFieldErrors.basePrice?.[0]
+		: undefined;
+	const currencyError = hasTriedSubmit
+		? requestFieldErrors.currencyCode?.[0]
+		: undefined;
+	const descriptionError = hasTriedSubmit
+		? requestFieldErrors.description?.[0]
+		: undefined;
+	const mediaError = hasTriedSubmit
+		? formFieldErrors.mediaFiles?.[0]
+		: undefined;
+
+	const updateUploads = (ids: string[], next: Partial<UploadQueueItem>) => {
 		setUploads((prev) =>
-			prev.map((item) => (item.id === id ? { ...item, ...next } : item)),
+			prev.map((item) => (ids.includes(item.id) ? { ...item, ...next } : item)),
 		);
 	};
 
@@ -372,37 +520,6 @@ export function CreateCommissionForm({
 		if (isUploading) return;
 		setUploads((prev) => prev.filter((item) => item.id !== id));
 	};
-
-	const getAuthHeaders = (token?: string): Headers => {
-		const headers = new Headers();
-		if (token) headers.set("Authorization", `Bearer ${token}`);
-		return headers;
-	};
-
-	const resolveCreateUrl = () => {
-		if (createCommissionUrl) return createCommissionUrl;
-		if (apiBaseUrl) return `${apiBaseUrl.replace(/\/$/, "")}/commissions`;
-		throw new Error("Missing API URL.");
-	};
-
-	const resolveUploadUrl = (listingId: string) => {
-		if (uploadCommissionUrlTemplate) {
-			return uploadCommissionUrlTemplate.replace("{listingId}", listingId);
-		}
-		if (apiBaseUrl) {
-			return `${apiBaseUrl.replace(/\/$/, "")}/commissions/${listingId}/files`;
-		}
-		throw new Error("Missing upload URL.");
-	};
-
-	const extractListingId = (response: CreateCommissionResponse) =>
-		response.listingId ||
-		response.id ||
-		response.commissionId ||
-		response.data?.listingId ||
-		response.data?.id ||
-		response.data?.commissionId ||
-		null;
 
 	const addFiles = (files: File[]) => {
 		if (files.length === 0) return;
@@ -416,11 +533,16 @@ export function CreateCommissionForm({
 				if (existing.has(key)) continue;
 				existing.add(key);
 
+				const validation = commissionMediaFileSchema.safeParse(file);
+
 				next.push({
 					id: toUploadId(),
 					file,
-					progress: 0,
-					status: "pending",
+					progress: validation.success ? 0 : 100,
+					status: validation.success ? "pending" : "error",
+					error: validation.success
+						? undefined
+						: validation.error.issues[0]?.message || "Unsupported file.",
 				});
 			}
 
@@ -428,177 +550,127 @@ export function CreateCommissionForm({
 		});
 	};
 
-	const startUploadQueue = async (
-		listingId: string,
+	const toggleTag = (tagId: string) => {
+		setSelectedTagIds((prev) => {
+			if (prev.includes(tagId)) return prev.filter((id) => id !== tagId);
+			if (prev.length >= 20) {
+				toast.error("You can select up to 20 tags.");
+				return prev;
+			}
+			return [...prev, tagId];
+		});
+	};
+
+	const uploadQueuedMedia = async (
+		commissionId: string,
 		items: UploadQueueItem[],
-		token?: string,
 	) => {
-		if (items.length === 0) {
-			return { successCount: 0, failureCount: 0 };
-		}
+		if (items.length === 0) return;
 
-		let successCount = 0;
-		let failureCount = 0;
-
+		const ids = items.map((item) => item.id);
 		setIsUploading(true);
+		updateUploads(ids, {
+			status: "uploading",
+			progress: 25,
+			error: undefined,
+		});
 
 		try {
-			for (const item of items) {
-				updateUpload(item.id, {
-					status: "uploading",
-					progress: 20,
-					error: undefined,
-				});
-
-				try {
-					updateUpload(item.id, { progress: 60 });
-
-					const formData = new FormData();
-					formData.append("file", item.file);
-					formData.append("listingId", listingId);
-					formData.append("fileName", item.file.name);
-					formData.append(
-						"mimeType",
-						item.file.type || "application/octet-stream",
-					);
-					formData.append("sizeBytes", String(item.file.size));
-
-					const response = await fetch(resolveUploadUrl(listingId), {
-						method: "POST",
-						headers: getAuthHeaders(token),
-						body: formData,
-					});
-
-					if (!response.ok) {
-						const message = await response.text();
-						failureCount += 1;
-						updateUpload(item.id, {
-							status: "error",
-							progress: 100,
-							error: message || "Upload failed",
-						});
-					} else {
-						successCount += 1;
-						updateUpload(item.id, {
-							status: "done",
-							progress: 100,
-						});
-					}
-				} catch (error) {
-					failureCount += 1;
-					updateUpload(item.id, {
-						status: "error",
-						progress: 100,
-						error: error instanceof Error ? error.message : "Upload failed",
-					});
-				}
-			}
+			updateUploads(ids, { progress: 60 });
+			await uploadMediaMutation.mutateAsync({
+				commissionId,
+				files: items.map((item) => item.file),
+			});
+			updateUploads(ids, { status: "done", progress: 100 });
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "Upload failed";
+			updateUploads(ids, { status: "error", progress: 100, error: message });
+			throw error;
 		} finally {
 			setIsUploading(false);
-			queryClient.invalidateQueries({
-				queryKey: ["profile-content", artistId, "commissions"],
-			});
 		}
-
-		return { successCount, failureCount };
 	};
 
 	const handlePublish = async () => {
-		if (!canPublish) {
-			if (!detailsReady) {
-				toast.error("Fill title, description, and valid base price first.");
-				setActiveTab("details");
-				return;
-			}
+		setHasTriedSubmit(true);
 
-			if (!workflowReady) {
-				toast.error("Finish the workflow section first.");
-				setActiveTab("workflow");
-				return;
+		const parsedForm = createCommissionFormSchema.safeParse(formInput);
+
+		if (!parsedForm.success) {
+			const flattenedErrors = parsedForm.error.flatten().fieldErrors;
+			const firstError = Object.values(flattenedErrors).flat()[0];
+
+			toast.error(firstError || "Fill the required commission fields first.");
+
+			if (flattenedErrors.mediaFiles?.length) {
+				setActiveTab("media");
+			} else {
+				setActiveTab("details");
 			}
 
 			return;
 		}
 
+		if (hasInvalidUploads) {
+			toast.error("Remove invalid media files before publishing.");
+			setActiveTab("media");
+			return;
+		}
+
+		if (!detailsReady) {
+			toast.error("Fill the required commission fields first.");
+			setActiveTab("details");
+			return;
+		}
+
+		if (!canSubmit) return;
+
 		try {
-			setIsCreating(true);
-
-			const {
-				data: { session },
-			} = await supabase.auth.getSession();
-
-			const headers = getAuthHeaders(session?.access_token);
-			headers.set("Content-Type", "application/json");
-
 			const queuedFilesSnapshot = [...uploads];
+			const createRequest = toCreateCommissionRequest(parsedForm.data);
 
-			const response = await fetch(resolveCreateUrl(), {
-				method: "POST",
-				headers,
-				body: JSON.stringify({
-					artistId,
-					title: title.trim(),
-					description: description.trim(),
-					basePriceUsd: Number(basePriceUsd),
-					status,
-					serviceType: serviceType || undefined,
-					communicationType: communicationType || undefined,
-					requestingProcess: requestingProcess || undefined,
-					tags: parsedTags,
-					contentWarnings: markAsMature
-						? Array.from(new Set([...parsedWarnings, "mature"]))
-						: parsedWarnings,
-					filesCount: queuedFilesSnapshot.length,
-					linkCommissionService,
-				}),
-			});
+			const created = await createCommissionMutation.mutateAsync(createRequest);
+			setCreatedCommission(created);
 
-			if (!response.ok) {
-				const message = await response.text();
-				throw new Error(message || "Failed to create commission");
-			}
-
-			const payload = (await response.json()) as CreateCommissionResponse;
-			const listingId = extractListingId(payload);
-
-			if (!listingId) {
-				throw new Error("Create response does not contain commission ID");
-			}
-
-			setCreatedListingId(listingId);
-
-			if (selectedTemplateId) {
+			if (parsedForm.data.templateId) {
 				await assignTemplateMutation.mutateAsync({
-					commissionId: listingId,
-					templateId: selectedTemplateId,
+					commissionId: created.id,
+					templateId: parsedForm.data.templateId,
 				});
 			}
 
-			if (queuedFilesSnapshot.length > 0) {
-				await startUploadQueue(
-					listingId,
-					queuedFilesSnapshot,
-					session?.access_token,
-				);
-			}
+			await uploadQueuedMedia(created.id, queuedFilesSnapshot);
 
-			toast.success("Commission created successfully.");
+			const published = await publishCommissionMutation.mutateAsync(created.id);
+			setCreatedCommission(published);
+
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: ["profile-content", artistId, "commissions"],
+				}),
+				queryClient.invalidateQueries({
+					queryKey: ["commissions", "artist", artistId],
+				}),
+				queryClient.invalidateQueries({
+					queryKey: ["commissions", created.id],
+				}),
+			]);
+
+			toast.success("Commission created and published.");
 			setActiveTab("publish");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Failed to create commission",
 			);
-		} finally {
-			setIsCreating(false);
 		}
 	};
 
-	const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFilesChange = (event: ChangeEvent<HTMLInputElement>) => {
 		addFiles(Array.from(event.target.files || []));
 		event.currentTarget.value = "";
 	};
 
-	const handleDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+	const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
 		event.preventDefault();
 		setIsDragging(false);
 		addFiles(Array.from(event.dataTransfer.files));
@@ -606,6 +678,8 @@ export function CreateCommissionForm({
 
 	const currentTabLabel =
 		navItems.find((item) => item.key === activeTab)?.name ?? "Details";
+	const currentStatus =
+		createdCommission?.commissionStatus ?? TCommissionStatus.Draft;
 
 	return (
 		<Dialog open={true} onOpenChange={(open) => !open && !isBusy && onClose()}>
@@ -615,114 +689,47 @@ export function CreateCommissionForm({
 			>
 				<DialogTitle className="sr-only">Create commission</DialogTitle>
 				<DialogDescription className="sr-only">
-					Create and publish a commission listing.
+					Create and publish a commission offering.
 				</DialogDescription>
 
-				<SidebarProvider className="items-start min-h-full!">
+				<SidebarProvider className="min-h-full items-start">
 					<Sidebar
 						collapsible="none"
 						className="hidden border-r bg-background md:flex"
 					>
 						<SidebarContent>
 							<SidebarGroup>
-								<SidebarGroupContent className="space-y-6 p-3">
-									<div className="space-y-1">
+								<SidebarGroupContent className="flex flex-col gap-6 p-3">
+									<div className="flex flex-col gap-1">
 										<p className="text-sm font-semibold">New Commission</p>
 										<p className="text-xs text-muted-foreground">
-											Unpublished draft
+											{hasCreated
+												? "Created from API"
+												: "Draft until published"}
 										</p>
 									</div>
-									{/* <StatusPill status={status} /> */}
+
+									<StatusPill status={currentStatus} />
 
 									<SidebarMenu>
 										{navItems.map((item) => (
 											<SidebarMenuItem key={item.key}>
 												<SidebarMenuButton
-													// asChild
 													onClick={() => setActiveTab(item.key)}
 													isActive={activeTab === item.key}
 												>
 													<item.icon />
 													{item.name}
 													{item.key === "details" && detailsReady && (
-														<Check className="ml-auto size-4 text-emerald-500" />
+														<Check className="ml-auto" />
 													)}
-													{item.key === "workflow" && workflowReady && (
-														<Check className="ml-auto size-4 text-emerald-500" />
+													{item.key === "request-form" && requestFormReady && (
+														<Check className="ml-auto" />
 													)}
 												</SidebarMenuButton>
 											</SidebarMenuItem>
 										))}
 									</SidebarMenu>
-
-									{/* <div className="space-y-4">
-										<div className="space-y-2">
-											<p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-												Status
-											</p>
-											<Select
-												value={status}
-												onValueChange={(value) =>
-													setStatus(value as typeof status)
-												}
-												disabled={isBusy}
-											>
-												<SelectTrigger className="h-10 rounded-xl">
-													<StatusPill status={status} />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="open">
-														<StatusPill status="open" />
-													</SelectItem>
-													<SelectItem value="waitlist">
-														<StatusPill status="waitlist" />
-													</SelectItem>
-													<SelectItem value="closed">
-														<StatusPill status="closed" />
-													</SelectItem>
-												</SelectContent>
-											</Select>
-										</div>
-									</div> */}
-
-									{/* <Separator /> */}
-								</SidebarGroupContent>
-							</SidebarGroup>
-							<SidebarGroup className="flex-1 h-full justify-end">
-								<SidebarGroupContent className="space-y-6 p-3">
-									<div className="space-y-4">
-										<div className="flex items-start justify-between gap-4">
-											<div className="space-y-1">
-												<p className="text-sm font-medium">
-													Link commission service
-												</p>
-												<p className="text-xs leading-relaxed text-muted-foreground">
-													Link visitors to request this listing.
-												</p>
-											</div>
-											<Switch
-												checked={linkCommissionService}
-												onCheckedChange={setLinkCommissionService}
-												disabled={isBusy}
-											/>
-										</div>
-
-										<div className="flex items-start justify-between gap-4">
-											<div className="space-y-1">
-												<p className="text-sm font-medium">
-													Mark as Mature Content
-												</p>
-												<p className="text-xs leading-relaxed text-muted-foreground">
-													Not suitable for all audiences.
-												</p>
-											</div>
-											<Switch
-												checked={markAsMature}
-												onCheckedChange={setMarkAsMature}
-												disabled={isBusy}
-											/>
-										</div>
-									</div>
 								</SidebarGroupContent>
 							</SidebarGroup>
 						</SidebarContent>
@@ -730,44 +737,60 @@ export function CreateCommissionForm({
 
 					<main className="flex h-[720px] flex-1 flex-col overflow-hidden bg-background">
 						<header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b pl-6 pr-4">
-							<Button onClick={() => onClose()} size={"icon"} variant={"ghost"}>
-								<OutlineClose />
-							</Button>
+							<div className="flex items-center gap-3">
+								<Button
+									onClick={onClose}
+									size="icon"
+									variant="ghost"
+									disabled={isBusy}
+								>
+									<OutlineClose />
+								</Button>
+								<div className="hidden flex-col md:flex">
+									<p className="text-sm font-medium">{currentTabLabel}</p>
+								</div>
+							</div>
 
-							<div className="flex gap-2">
-								<StatusPill status={status} />
-								{createdListingId && (
+							<div className="flex items-center gap-2">
+								<StatusPill status={currentStatus} />
+
+								{createdCommission?.id && (
 									<Button
 										variant="outline"
-										size="sm"
 										onClick={() =>
 											navigate({
-												to: `/${username}/${tab}/${createdListingId}`,
+												to: `/${username}/${tab}/${createdCommission.id}`,
 												replace: true,
 											})
 										}
-										className="gap-2 rounded-full"
+										className="rounded-full"
 									>
-										<ExternalLink className="size-4" />
+										<ExternalLink data-icon="inline-start" />
 										Open
 									</Button>
 								)}
 
 								<Button
-									size="sm"
 									onClick={handlePublish}
-									disabled={!canPublish}
-									className="rounded-full"
+									size={"lg"}
+									disabled={!canSubmit}
 								>
 									{isBusy ? (
-										<span className="inline-flex items-center gap-2">
-											<Loader2 className="size-4 animate-spin" />
-											{isCreating ? "Publishing..." : "Uploading..."}
-										</span>
+										<>
+											<Loader2
+												data-icon="inline-start"
+												className="animate-spin"
+											/>
+											{createCommissionMutation.isPending
+												? "Creating..."
+												: isUploading || uploadMediaMutation.isPending
+													? "Uploading..."
+													: "Publishing..."}
+										</>
 									) : hasCreated ? (
 										"Published"
 									) : (
-										"Publish"
+										"Create & publish"
 									)}
 								</Button>
 							</div>
@@ -776,13 +799,17 @@ export function CreateCommissionForm({
 						<div className="flex-1 overflow-y-auto">
 							<div className="mx-auto w-full px-6 py-8">
 								{activeTab === "details" && (
-									<div className="space-y-8">
+									<div className="flex flex-col gap-8">
 										<FlatSection
-											title="Basic information"
-											description="This is what the client sees first."
+											title="Commission details"
+											description="Only fields supported by the commission API are included here."
 										>
-											<div className="space-y-6">
-												<FieldGroup label="Title" htmlFor="commission-title">
+											<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+												<FieldGroup
+													label="Title"
+													htmlFor="commission-title"
+													error={titleError}
+												>
 													<InputGroup>
 														<InputGroupAddon>
 															<Type className="size-4" />
@@ -791,99 +818,262 @@ export function CreateCommissionForm({
 															id="commission-title"
 															value={title}
 															onChange={(event) => setTitle(event.target.value)}
-															placeholder="New commission"
+															placeholder="Portrait commission"
 															disabled={isBusy}
+															aria-invalid={Boolean(titleError) || undefined}
+															maxLength={255}
 														/>
 													</InputGroup>
 												</FieldGroup>
 
-												<FieldGroup
-													label="Media"
-													hint="Max 8 files. JPG, PNG, GIF, WEBP, PDF"
-												>
-													<label
-														htmlFor="commission-files"
-														onDragOver={(event) => {
-															event.preventDefault();
-															setIsDragging(true);
-														}}
-														onDragLeave={() => setIsDragging(false)}
-														onDrop={handleDrop}
-														className={cn(
-															"flex min-h-44 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed px-6 py-8 text-center transition-colors",
-															isDragging
-																? "border-primary bg-primary/5"
-																: "border-border hover:border-primary/40 hover:bg-muted/20",
-															isBusy && "pointer-events-none opacity-50",
-														)}
-													>
-														<input
-															id="commission-files"
-															type="file"
-															multiple
-															onChange={handleFilesChange}
-															disabled={isBusy}
-															className="sr-only"
-														/>
-
-														<div className="flex size-12 items-center justify-center rounded-2xl border bg-background">
-															<FileImage className="size-5 text-muted-foreground" />
-														</div>
-
-														<div>
-															<p className="text-sm font-medium">
-																{isDragging
-																	? "Drop files here"
-																	: "Drag and drop or click to upload"}
-															</p>
-															<p className="mt-1 text-sm text-muted-foreground">
-																Optional reference files
-															</p>
-														</div>
-													</label>
-												</FieldGroup>
-
-												<FieldGroup
-													label="Description"
-													htmlFor="commission-description"
-												>
-													<Textarea
-														id="commission-description"
-														value={description}
-														onChange={(event) =>
-															setDescription(event.target.value)
+												<FieldGroup label="Category" error={categoryError}>
+													<Select
+														value={categoryId}
+														onValueChange={setCategoryId}
+														disabled={
+															isBusy ||
+															isCategoriesPending ||
+															Boolean(categoriesError)
 														}
-														placeholder="Add a backstory, caption, details, or whatever else you'd like to include."
-														disabled={isBusy}
-														className="min-h-40 resize-none rounded-2xl"
-													/>
+													>
+														<SelectTrigger
+															className="rounded-xl"
+															aria-invalid={Boolean(categoryError) || undefined}
+														>
+															<SelectValue
+																placeholder={
+																	isCategoriesPending
+																		? "Loading categories..."
+																		: "Select category"
+																}
+															/>
+														</SelectTrigger>
+														<SelectContent>
+															<SelectGroup>
+																{flatCategories.map((category) => (
+																	<SelectItem
+																		key={category.id}
+																		value={category.id}
+																	>
+																		{category.label}
+																	</SelectItem>
+																))}
+															</SelectGroup>
+														</SelectContent>
+													</Select>
+													{categoriesError && (
+														<p className="text-xs text-destructive">
+															{categoriesError instanceof Error
+																? categoriesError.message
+																: "Failed to load categories"}
+														</p>
+													)}
 												</FieldGroup>
 
 												<FieldGroup
 													label="Base price"
 													htmlFor="commission-price"
+													error={priceError}
 												>
-													<div className="max-w-xs">
-														<InputGroup>
-															<InputGroupAddon>
-																<DollarSign className="size-4" />
-															</InputGroupAddon>
-															<InputGroupInput
-																id="commission-price"
-																type="number"
-																min={0}
-																step={1}
-																value={basePriceUsd}
-																onChange={(event) =>
-																	setBasePriceUsd(event.target.value)
-																}
-																disabled={isBusy}
-																placeholder="50"
-															/>
-														</InputGroup>
-													</div>
+													<InputGroup>
+														<InputGroupAddon>
+															{normalizedCurrency}
+														</InputGroupAddon>
+														<InputGroupNumberInput
+															id="commission-price"
+															min={0}
+															decimalScale={2}
+															stepper={0.01}
+															value={basePrice}
+															onChange={(event) =>
+																setBasePrice(event.target.valueAsNumber)
+															}
+															disabled={isBusy}
+															placeholder="50.00"
+															aria-invalid={Boolean(priceError) || undefined}
+														/>
+													</InputGroup>
+												</FieldGroup>
+
+												<FieldGroup
+													label="Currency"
+													htmlFor="commission-currency"
+													error={currencyError}
+												>
+													<CurrencySelect
+														id="commission-currency"
+														display="field"
+														value={normalizedCurrency}
+														onValueChange={setCurrencyCode}
+														disabled={isBusy}
+														aria-invalid={Boolean(currencyError)}
+													/>
 												</FieldGroup>
 											</div>
+										</FlatSection>
+
+										<Separator />
+
+										<FlatSection
+											title="Description"
+											description="Optional, up to 5000 characters."
+										>
+											<FieldGroup
+												label="Description"
+												htmlFor="commission-description"
+												error={descriptionError}
+											>
+												<Textarea
+													id="commission-description"
+													value={description}
+													onChange={(event) =>
+														setDescription(event.target.value)
+													}
+													placeholder="Describe what the client receives, boundaries, turnaround, and notes."
+													disabled={isBusy}
+													className="min-h-40 resize-none rounded-2xl"
+													aria-invalid={Boolean(descriptionError) || undefined}
+													maxLength={5000}
+												/>
+											</FieldGroup>
+										</FlatSection>
+
+										<FlatSection
+											title="Tags"
+											description="Choose regular tags and content warnings separately."
+										>
+											{isTagsPending ? (
+												<p className="text-sm text-muted-foreground">
+													Loading tags...
+												</p>
+											) : normalizedTags.length > 0 ? (
+												<div className="flex flex-col gap-6">
+													{regularTags.length > 0 && (
+														<div className="flex flex-col gap-3">
+															<div className="flex items-center justify-between gap-3">
+																<p className="text-sm font-medium">
+																	General tags
+																</p>
+																<Badge size="sm" variant="secondary">
+																	{regularTags.length}
+																</Badge>
+															</div>
+
+															<div className="flex flex-wrap gap-2">
+																{regularTags.map((tag) => (
+																	<TagToggleButton
+																		key={tag.id}
+																		tag={tag}
+																		selected={selectedTagIds.includes(tag.id)}
+																		onToggle={toggleTag}
+																		disabled={isBusy}
+																	/>
+																))}
+															</div>
+														</div>
+													)}
+
+													{contentWarningTags.length > 0 && (
+														<div className="flex flex-col gap-3 rounded-2xl border border-destructive bg-destructive/10 p-4">
+															<div className="flex items-start justify-between gap-3">
+																<div className="flex items-start gap-2">
+																	<AlertCircle className="mt-0.5 size-4 text-destructive" />
+																	<div className="flex flex-col gap-1">
+																		<p className="text-sm font-medium text-destructive">
+																			Content warnings
+																		</p>
+																		<p className="text-xs text-destructive/80">
+																			These tags are shown as warning-sensitive
+																			metadata on the listing.
+																		</p>
+																	</div>
+																</div>
+
+																<Badge size="sm" variant="destructive">
+																	{selectedContentWarningCount > 0
+																		? `${selectedContentWarningCount} selected`
+																		: "CW"}
+																</Badge>
+															</div>
+
+															<div className="flex flex-wrap gap-2">
+																{contentWarningTags.map((tag) => (
+																	<TagToggleButton
+																		key={tag.id}
+																		tag={tag}
+																		selected={selectedTagIds.includes(tag.id)}
+																		onToggle={toggleTag}
+																		disabled={isBusy}
+																	/>
+																))}
+															</div>
+														</div>
+													)}
+												</div>
+											) : (
+												<p className="text-sm text-muted-foreground">
+													No tags configured yet.
+												</p>
+											)}
+										</FlatSection>
+									</div>
+								)}
+
+								{activeTab === "media" && (
+									<div className="flex flex-col gap-8">
+										<FlatSection
+											title="Commission media"
+											description="Files are uploaded to /api/commissions/{commissionId}/media after the commission is created."
+										>
+											<FieldGroup
+												label="Media"
+												hint="Images, GIFs, and videos"
+												error={mediaError}
+											>
+												<label
+													htmlFor="commission-files"
+													onDragOver={(event) => {
+														event.preventDefault();
+														setIsDragging(true);
+													}}
+													onDragLeave={() => setIsDragging(false)}
+													onDrop={handleDrop}
+													className={cn(
+														"flex min-h-44 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed px-6 py-8 text-center transition-colors",
+														isDragging
+															? "border-primary bg-primary/5"
+															: "border-border hover:border-primary/40 hover:bg-muted/20",
+														(isBusy || hasInvalidUploads) &&
+															"border-destructive/40",
+														isBusy && "pointer-events-none opacity-50",
+													)}
+												>
+													<input
+														id="commission-files"
+														type="file"
+														multiple
+														accept="image/*,video/*,.gif"
+														onChange={handleFilesChange}
+														disabled={isBusy}
+														className="sr-only"
+													/>
+
+													<div className="flex size-12 items-center justify-center rounded-2xl border bg-background">
+														<FileImage className="size-5 text-muted-foreground" />
+													</div>
+
+													<div>
+														<p className="text-sm font-medium">
+															{isDragging
+																? "Drop files here"
+																: "Drag and drop or click to upload"}
+														</p>
+														<p className="mt-1 text-sm text-muted-foreground">
+															Optional gallery media for the commission listing
+														</p>
+													</div>
+												</label>
+											</FieldGroup>
 										</FlatSection>
 
 										{uploads.length > 0 && (
@@ -891,9 +1081,22 @@ export function CreateCommissionForm({
 												<Separator />
 												<FlatSection
 													title="Queued files"
-													description="Remove anything you do not want to upload."
+													description="The API returns processing job IDs after upload, so conversion continues asynchronously."
 												>
-													<div className="space-y-2.5">
+													<div className="flex flex-col gap-3">
+														{isUploading && (
+															<div className="flex flex-col gap-2">
+																<div className="flex justify-between text-xs text-muted-foreground">
+																	<span>Uploading</span>
+																	<span>{totalProgress}%</span>
+																</div>
+																<Progress
+																	value={totalProgress}
+																	className="h-1.5 rounded-full"
+																/>
+															</div>
+														)}
+
 														{uploads.map((item) => (
 															<FileRow
 																key={item.id}
@@ -909,190 +1112,40 @@ export function CreateCommissionForm({
 									</div>
 								)}
 
-								{activeTab === "workflow" && (
-									<div className="space-y-8">
-										<FlatSection
-											title="Workflow"
-											description="Define how the commission works."
-										>
-											<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-												<FieldGroup label="Service type">
-													<Select
-														value={serviceType}
-														onValueChange={(value) =>
-															setServiceType(value as typeof serviceType)
-														}
-														disabled={isBusy}
-													>
-														<SelectTrigger className="rounded-xl">
-															<SelectValue placeholder="Select..." />
-														</SelectTrigger>
-														<SelectContent>
-															<SelectItem value="custom_service">
-																Custom service
-															</SelectItem>
-															<SelectItem value="personalized_ych">
-																Personalized YCH
-															</SelectItem>
-														</SelectContent>
-													</Select>
-												</FieldGroup>
-
-												<FieldGroup label="Communication">
-													<Select
-														value={communicationType}
-														onValueChange={(value) =>
-															setCommunicationType(
-																value as typeof communicationType,
-															)
-														}
-														disabled={isBusy}
-													>
-														<SelectTrigger className="rounded-xl">
-															<SelectValue placeholder="Select..." />
-														</SelectTrigger>
-														<SelectContent>
-															<SelectItem value="open_communication">
-																Open communication
-															</SelectItem>
-															<SelectItem value="surprise_me">
-																Surprise me
-															</SelectItem>
-														</SelectContent>
-													</Select>
-												</FieldGroup>
-
-												<FieldGroup label="Request process">
-													<Select
-														value={requestingProcess}
-														onValueChange={(value) =>
-															setRequestingProcess(
-																value as typeof requestingProcess,
-															)
-														}
-														disabled={isBusy}
-													>
-														<SelectTrigger className="rounded-xl">
-															<SelectValue placeholder="Select..." />
-														</SelectTrigger>
-														<SelectContent>
-															<SelectItem value="custom_proposal">
-																Custom proposal
-															</SelectItem>
-															<SelectItem value="instant_order">
-																Instant order
-															</SelectItem>
-														</SelectContent>
-													</Select>
-												</FieldGroup>
-											</div>
-										</FlatSection>
-									</div>
-								)}
-
 								{activeTab === "request-form" && (
-									<div className="space-y-8">
+									<div className="flex flex-col gap-8">
 										<FlatSection
 											title="Request form"
-											description="Help clients understand and filter the listing, and assign a form template."
+											description="Optional form template assignment supported by the API."
 										>
-											<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-												<FieldGroup
-													label="Form Template"
-													hint="Custom form for clients to fill"
-												>
+											<div className="max-w-xl">
+												<FieldGroup label="Form template" hint="Optional">
 													<Select
 														value={selectedTemplateId || "none"}
-														onValueChange={(val) =>
-															setSelectedTemplateId(val === "none" ? null : val)
+														onValueChange={(value) =>
+															setSelectedTemplateId(
+																value === "none" ? null : value,
+															)
 														}
 														disabled={isBusy || isFormTemplatesPending}
 													>
 														<SelectTrigger className="rounded-xl">
-															<SelectValue placeholder="Select template..." />
+															<SelectValue placeholder="Select template" />
 														</SelectTrigger>
 														<SelectContent>
-															<SelectItem value="none">
-																None (Default form)
-															</SelectItem>
-															{formTemplates?.map((template) => (
-																<SelectItem
-																	key={template.id}
-																	value={template.id}
-																>
-																	{template.name}
-																</SelectItem>
-															))}
+															<SelectGroup>
+																<SelectItem value="none">None</SelectItem>
+																{formTemplates?.map((template) => (
+																	<SelectItem
+																		key={template.id}
+																		value={template.id}
+																	>
+																		{template.name}
+																	</SelectItem>
+																))}
+															</SelectGroup>
 														</SelectContent>
 													</Select>
-												</FieldGroup>
-
-												<FieldGroup
-													label="Tags"
-													htmlFor="commission-tags"
-													hint="comma separated"
-												>
-													<InputGroup>
-														<InputGroupAddon>
-															<Tag className="size-4" />
-														</InputGroupAddon>
-														<InputGroupInput
-															id="commission-tags"
-															value={tagsInput}
-															onChange={(event) =>
-																setTagsInput(event.target.value)
-															}
-															placeholder="portrait, fantasy, sfw"
-															disabled={isBusy}
-														/>
-													</InputGroup>
-
-													{parsedTags.length > 0 && (
-														<div className="flex flex-wrap gap-1.5 pt-1">
-															{parsedTags.map((tag) => (
-																<span
-																	key={tag}
-																	className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary"
-																>
-																	{tag}
-																</span>
-															))}
-														</div>
-													)}
-												</FieldGroup>
-
-												<FieldGroup
-													label="Content warnings"
-													htmlFor="commission-cw"
-													hint="comma separated"
-												>
-													<InputGroup>
-														<InputGroupAddon>
-															<AlertCircle className="size-4" />
-														</InputGroupAddon>
-														<InputGroupInput
-															id="commission-cw"
-															value={contentWarningsInput}
-															onChange={(event) =>
-																setContentWarningsInput(event.target.value)
-															}
-															placeholder="nsfw, blood"
-															disabled={isBusy}
-														/>
-													</InputGroup>
-
-													{parsedWarnings.length > 0 && (
-														<div className="flex flex-wrap gap-1.5 pt-1">
-															{parsedWarnings.map((warning) => (
-																<span
-																	key={warning}
-																	className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-1 text-[11px] font-medium text-destructive"
-																>
-																	{warning}
-																</span>
-															))}
-														</div>
-													)}
 												</FieldGroup>
 											</div>
 										</FlatSection>
@@ -1100,64 +1153,81 @@ export function CreateCommissionForm({
 								)}
 
 								{activeTab === "publish" && (
-									<div className="space-y-8">
+									<div className="flex flex-col gap-8">
 										<FlatSection
-											title="Publish"
-											description="Final review before creating the listing."
+											title="Review"
+											description="This is the API payload summary before publishing."
 										>
-											<div className="space-y-6">
-												<div className="space-y-2">
+											<div className="flex flex-col gap-6">
+												<div className="flex flex-col gap-2">
 													<p className="text-sm font-medium">
 														{title.trim() || "Untitled commission"}
 													</p>
 													<p className="text-sm leading-relaxed text-muted-foreground">
-														{description.trim() || "No description yet."}
+														{description.trim() || "No description."}
 													</p>
 												</div>
 
 												<div className="flex flex-wrap items-center gap-2">
-													<StatusPill status={status} />
-													{markAsMature && (
-														<span className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium">
-															Mature
-														</span>
+													<StatusPill status={currentStatus} />
+													<Badge variant="outline">
+														{Number.isFinite(priceNumber) && priceNumber >= 0
+															? `${priceNumber.toFixed(2)} ${normalizedCurrency}`
+															: "Invalid price"}
+													</Badge>
+													{selectedCategory && (
+														<Badge variant="secondary">
+															{selectedCategory.label}
+														</Badge>
 													)}
-													<span className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium">
-														{isPriceValid
-															? `$${Number(basePriceUsd)}`
-															: "No price"}
-													</span>
+													{selectedContentWarningCount > 0 && (
+														<Badge variant="destructive">
+															{selectedContentWarningCount} CW
+														</Badge>
+													)}
 												</div>
 
 												<div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
 													<SidebarInfoRow
-														label="Service type"
-														value={serviceType || "—"}
+														label="Category ID"
+														value={categoryId || "—"}
 													/>
 													<SidebarInfoRow
-														label="Communication"
-														value={communicationType || "—"}
+														label="Currency"
+														value={normalizedCurrency || "—"}
 													/>
 													<SidebarInfoRow
-														label="Process"
-														value={requestingProcess || "—"}
+														label="Tags"
+														value={selectedTags.length || "—"}
+													/>
+													<SidebarInfoRow
+														label="Content warnings"
+														value={selectedContentWarningCount || "—"}
 													/>
 													<SidebarInfoRow
 														label="Files"
 														value={uploads.length}
 													/>
+													<SidebarInfoRow
+														label="Uploaded"
+														value={`${doneCount}/${uploads.length}`}
+													/>
+													<SidebarInfoRow
+														label="Form template"
+														value={selectedTemplateId ? "Assigned" : "None"}
+													/>
 												</div>
 
-												{createdListingId && (
-													<div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/20">
+												{createdCommission?.id && (
+													<div className="rounded-2xl border bg-muted/30 px-4 py-3">
 														<div className="flex items-start gap-3">
-															<CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-															<div>
-																<p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+															<CheckCircle2 className="mt-0.5 size-5 shrink-0" />
+															<div className="flex flex-col gap-1">
+																<p className="text-sm font-semibold">
 																	Commission created
 																</p>
-																<p className="mt-1 text-xs text-emerald-700/90 dark:text-emerald-300/90">
-																	ID: {createdListingId}
+																<p className="text-xs text-muted-foreground">
+																	ID: {createdCommission.id}
 																</p>
 															</div>
 														</div>

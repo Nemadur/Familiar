@@ -1,5 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-import { getCommissionByArtistId, getCommissionById } from "@/api/commisions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	createCommission,
+	deleteCommission,
+	getCommissionByArtistId,
+	getCommissionById,
+	getCommissionCategories,
+	getMyCommissions,
+	getTags,
+	publishCommission,
+	uploadCommissionMedia,
+} from "@/api/commisions";
 import {
 	getIncomingCommissionRequests,
 	getMyCommissionRequests,
@@ -37,7 +47,7 @@ export function useProfileCommissions(artistId: string, page = 0, size = 24) {
 	};
 }
 
-// alias, żeby stary import się nie wysypał
+// Alias so older imports keep working.
 export const useProfileCommisions = useProfileCommissions;
 
 export function useCommission(commissionId: string) {
@@ -47,7 +57,89 @@ export function useCommission(commissionId: string) {
 			if (!commissionId) throw new Error("Commission ID is required");
 			return getCommissionById(commissionId);
 		},
-		enabled: !!commissionId,
+		enabled: Boolean(commissionId),
+	});
+}
+
+export function useMyCommissions(page = 0, size = 10) {
+	return useQuery<TCommissionPageResponse, Error>({
+		queryKey: ["commissions", "me", page, size],
+		queryFn: () => getMyCommissions({ page, size }),
+		enabled: typeof window !== "undefined",
+	});
+}
+
+export function useCreateCommission() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: createCommission,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["commissions", "me"] });
+			queryClient.invalidateQueries({ queryKey: ["commissions", "artist"] });
+		},
+	});
+}
+
+export function usePublishCommission() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (commissionId: string) => publishCommission(commissionId),
+		onSuccess: (data, commissionId) => {
+			queryClient.invalidateQueries({ queryKey: ["commissions", "me"] });
+			queryClient.invalidateQueries({ queryKey: ["commissions", "artist"] });
+			queryClient.invalidateQueries({
+				queryKey: ["commissions", commissionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ["commissions", data.id] });
+		},
+	});
+}
+
+export function useUploadCommissionMedia() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: uploadCommissionMedia,
+		onSuccess: (_, { commissionId }) => {
+			queryClient.invalidateQueries({
+				queryKey: ["commissions", commissionId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["commissions", commissionId, "media-jobs"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["commissions", commissionId, "media-jobs", "active"],
+			});
+		},
+	});
+}
+
+export function useDeleteCommission() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (commissionId: string) => deleteCommission(commissionId),
+		onSuccess: (_, commissionId) => {
+			queryClient.invalidateQueries({ queryKey: ["commissions", "me"] });
+			queryClient.invalidateQueries({ queryKey: ["commissions", "artist"] });
+			queryClient.removeQueries({ queryKey: ["commissions", commissionId] });
+		},
+	});
+}
+
+export function useCommissionCategories(parentId?: string) {
+	return useQuery({
+		queryKey: ["commission-categories", parentId],
+		queryFn: () => getCommissionCategories(parentId),
+	});
+}
+
+export function useTags(includeAdult = false) {
+	return useQuery({
+		queryKey: ["tags", includeAdult],
+		queryFn: () => getTags(includeAdult),
 	});
 }
 

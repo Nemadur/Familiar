@@ -23,6 +23,7 @@ import {
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import LanguageSelect from "./select/language";
+import CurrencySelect from "./select/currency";
 import { TRoles } from "@/types/user/roles";
 import { Skeleton } from "boneyard-js/react";
 
@@ -54,6 +55,7 @@ export default function Header() {
 				<div className="flex shrink-0 items-center gap-2">
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
+						<CurrencySelect display={"compact"} />
 						<LanguageSelect />
 						<ClientOnly>
 							<Skeleton name="header-artist_dashboard" loading={isPending}>

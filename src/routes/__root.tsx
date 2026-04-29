@@ -14,6 +14,7 @@ import i18n, { setSSRLanguage } from "@/lib/i18n";
 import { seo } from "@/lib/seo";
 import { AbilityProvider } from "@/providers/ability";
 import { ThemeProvider } from "@/providers/theme";
+import { CurrencyProvider } from "@/providers/currency";
 import { AuthProvider } from "@/providers/auth";
 import appCss from "../styles.css?url";
 import "@/bones/registry";
@@ -75,20 +76,22 @@ function RootDocument() {
 				<AuthProvider>
 					<AbilityProvider>
 						<ThemeProvider>
-							<Toaster />
-							<Outlet />
-							<TanStackDevtools
-								config={{
-									position: "bottom-right",
-								}}
-								plugins={[
-									{
-										name: "Tanstack Router",
-										render: <TanStackRouterDevtoolsPanel />,
-									},
-									TanStackQueryDevtools,
-								]}
-							/>
+							<CurrencyProvider>
+								<Toaster />
+								<Outlet />
+								<TanStackDevtools
+									config={{
+										position: "bottom-right",
+									}}
+									plugins={[
+										{
+											name: "Tanstack Router",
+											render: <TanStackRouterDevtoolsPanel />,
+										},
+										TanStackQueryDevtools,
+									]}
+								/>
+							</CurrencyProvider>
 						</ThemeProvider>
 					</AbilityProvider>
 				</AuthProvider>

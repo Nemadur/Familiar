@@ -15,6 +15,10 @@ const buttonVariants = cva(
 				secondary: "bg-primary/10 text-primary hover:bg-primary/20", //TODO: make better style for aria-expanded:bg-primary
 				ghost:
 					"hover:bg-muted hover:text-muted-foreground focus-visible:bg-muted focus-visible:text-muted-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+				blur_light:
+					"backdrop-blur-md text-primary hover:bg-primary/80 hover:text-foreground",
+				blur_dark:
+					"backdrop-blur-md text-primary bg-background/80 hover:bg-background/90 hover:text-primary",
 				destructive:
 					"bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
 				link: "text-accent underline-offset-4 hover:underline mx-0! px-0!",

@@ -13,6 +13,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as MainRouteImport } from './routes/_main'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as MainIndexRouteImport } from './routes/_main.index'
+import { Route as DashboardServicesRouteImport } from './routes/dashboard/services'
 import { Route as DashboardForms_templatesRouteImport } from './routes/dashboard/forms_templates'
 import { Route as DashboardCommissions_requestsRouteImport } from './routes/dashboard/commissions_requests'
 import { Route as MainMyRequestsRouteImport } from './routes/_main.my-requests'
@@ -44,6 +45,11 @@ const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRoute,
+} as any)
+const DashboardServicesRoute = DashboardServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardForms_templatesRoute =
   DashboardForms_templatesRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/my-requests': typeof MainMyRequestsRoute
   '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms_templates': typeof DashboardForms_templatesRoute
+  '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$username/$tab': typeof MainUsernameTabRouteWithChildren
   '/auth/forgot/': typeof MainAuthForgotIndexRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/my-requests': typeof MainMyRequestsRoute
   '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms_templates': typeof DashboardForms_templatesRoute
+  '/dashboard/services': typeof DashboardServicesRoute
   '/': typeof MainIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/$username/$tab': typeof MainUsernameTabRouteWithChildren
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/_main/my-requests': typeof MainMyRequestsRoute
   '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms_templates': typeof DashboardForms_templatesRoute
+  '/dashboard/services': typeof DashboardServicesRoute
   '/_main/': typeof MainIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/_main/$username/$tab': typeof MainUsernameTabRouteWithChildren
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/my-requests'
     | '/dashboard/commissions_requests'
     | '/dashboard/forms_templates'
+    | '/dashboard/services'
     | '/dashboard/'
     | '/$username/$tab'
     | '/auth/forgot/'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/my-requests'
     | '/dashboard/commissions_requests'
     | '/dashboard/forms_templates'
+    | '/dashboard/services'
     | '/'
     | '/dashboard'
     | '/$username/$tab'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/_main/my-requests'
     | '/dashboard/commissions_requests'
     | '/dashboard/forms_templates'
+    | '/dashboard/services'
     | '/_main/'
     | '/dashboard/'
     | '/_main/$username/$tab'
@@ -251,6 +263,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
+    }
+    '/dashboard/services': {
+      id: '/dashboard/services'
+      path: '/services'
+      fullPath: '/dashboard/services'
+      preLoaderRoute: typeof DashboardServicesRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/forms_templates': {
       id: '/dashboard/forms_templates'
@@ -394,12 +413,14 @@ const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 interface DashboardRouteChildren {
   DashboardCommissions_requestsRoute: typeof DashboardCommissions_requestsRoute
   DashboardForms_templatesRoute: typeof DashboardForms_templatesRoute
+  DashboardServicesRoute: typeof DashboardServicesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardCommissions_requestsRoute: DashboardCommissions_requestsRoute,
   DashboardForms_templatesRoute: DashboardForms_templatesRoute,
+  DashboardServicesRoute: DashboardServicesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 

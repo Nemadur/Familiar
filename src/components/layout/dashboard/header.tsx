@@ -3,6 +3,7 @@ import { useAuth } from "@/providers/auth";
 import User from "@/components/layout/profile/user";
 import ThemeToggle from "@/components/layout/select/theme-toggle";
 import LanguageSelect from "@/components/layout/select/language";
+import CurrencySelect from "@/components/layout/select/currency";
 
 interface DashboardHeaderProps {
 	title: string;
@@ -24,6 +25,7 @@ export function DashboardHeader({ title, actions }: DashboardHeaderProps) {
 				<div className="h-6 w-px bg-border hidden sm:block" />
 				<div className="flex items-center gap-2">
 					{/* <ThemeToggle /> */}
+					<CurrencySelect />
 					<LanguageSelect />
 					{!isPending && user && (
 						<User user={user} showInfo={false} isDropdown />
