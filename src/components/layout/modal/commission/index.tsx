@@ -87,7 +87,7 @@ export function CommissionModal({
 		user: fetchedArtist,
 		isPending: isArtistPending,
 		error: artistError,
-	} = useUserById(commission?.artistId);
+	} = useUserById(commission?.artistId ?? "");
 
 	useEffect(() => {
 		if (artistError) {
@@ -287,17 +287,28 @@ export function CommissionModal({
 
 								{activeTab === "description" && (
 									<div className="space-y-6 pt-2">
-										<div className="leading-relaxed text-muted-foreground">
-											{commission?.description ? (
-												<MarkdownDisplay content={commission.description} />
-											) : (
-												<div className="space-y-2">
-													<Skeleton className="h-4 w-full" />
-													<Skeleton className="h-4 w-full" />
-													<Skeleton className="h-4 w-3/4" />
-												</div>
-											)}
-										</div>
+										{commission?.description && !isLoading ? (
+											<div className="leading-relaxed text-muted-foreground">
+												{/* FIXME: add no description message */}
+												{isLoading ? (
+													<div className="space-y-2">
+														<Skeleton className="h-4 w-full" />
+														<Skeleton className="h-4 w-full" />
+														<Skeleton className="h-4 w-3/4" />
+													</div>
+												) : null}
+
+												{commission?.description.length > 0 ? (
+													<MarkdownDisplay content={commission?.description} />
+												) : (
+													<div className="text-center text-muted-foreground">
+														{t(
+															"components.profile.commissions.modal.no_description",
+														)}
+													</div>
+												)}
+											</div>
+										) : null}
 
 										{commission?.artistTos ? (
 											<div className="space-y-3">

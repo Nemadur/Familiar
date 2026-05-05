@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_main/$username")({
 					username: params.username,
 				}),
 			},
-		}
+		};
 	},
 	head: ({ loaderData }) => ({
 		meta: seo({
@@ -32,11 +32,21 @@ export const Route = createFileRoute("/_main/$username")({
 			description: loaderData?.seo?.description ?? "",
 		}),
 	}),
+	notFoundComponent: () => {
+		const { username } = Route.useLoaderData();
+		return (
+			<div className="flex flex-1 flex-col items-center justify-center p-8 text-center min-h-screen">
+				<h2 className="text-2xl font-bold mb-2">User "{username}" not found</h2>
+				<p className="text-muted-foreground">
+					The user "{username}" does not exist.
+				</p>
+			</div>
+		);
+	},
 	component: RouteComponent,
 });
 
 export function DefaultProfileTabContent({ username }: { username: string }) {
-
 	const {
 		data: artist,
 		isPending: isArtistPending,
@@ -71,7 +81,7 @@ function RouteComponent() {
 		tab?: string;
 		commissionId?: string;
 		commisionId?: string;
-	}
+	};
 
 	const routeTab = typeof params.tab === "string" ? params.tab : undefined;
 	const activeTab = routeTab ?? "commissions";
@@ -88,10 +98,10 @@ function RouteComponent() {
 				navigate({
 					to: `/${username}/${tab}`,
 					replace: isModalOpen,
-				})
+				});
 			}}
 		>
 			{routeTab ? <Outlet /> : <DefaultProfileTabContent username={username} />}
 		</UserProfileWrapper>
-	)
+	);
 }

@@ -29,3 +29,10 @@ export function setCookie(name: string, value: string, maxAge: number) {
 		path: "/",
 	});
 }
+
+export const dateFormat = (date: Date) =>
+	date.toLocaleDateString("en-US", {
+		month: "short",
+		day: "2-digit",
+		year: "numeric",
+	});

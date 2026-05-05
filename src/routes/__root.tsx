@@ -49,16 +49,6 @@ export const Route = createRootRouteWithContext<{
 			},
 		],
 	}),
-	notFoundComponent: () => {
-		return (
-			<div className="flex flex-1 flex-col items-center justify-center p-8 text-center min-h-screen">
-				<h2 className="text-2xl font-bold mb-2">Page not found</h2>
-				<p className="text-muted-foreground">
-					The page you are looking for does not exist.
-				</p>
-			</div>
-		);
-	},
 	component: RootDocument,
 });
 

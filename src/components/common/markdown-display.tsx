@@ -26,7 +26,10 @@ export function MarkdownDisplay({
 
 	const components = useMemo(
 		() => ({
-			a: ({ href, children }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+			a: ({
+				href,
+				children,
+			}: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
 				if (!href) return <span>{children}</span>;
 
 				return (
