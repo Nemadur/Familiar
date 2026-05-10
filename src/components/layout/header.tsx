@@ -55,7 +55,7 @@ export default function Header() {
 				<div className="flex shrink-0 items-center gap-2">
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
-						<CurrencySelect display={"compact"} />
+						<CurrencySelect display={"compact"} variant={"secondary"} />
 						<LanguageSelect />
 						<ClientOnly>
 							<Skeleton name="header-artist_dashboard" loading={isPending}>

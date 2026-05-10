@@ -34,8 +34,8 @@ code {
 }
 
  :root {
-    --background: var(--color-gray-50);
-    --foreground: var(--color-gray-900);
+    --background: var(--color-neutral-50);
+    --foreground: var(--color-familiar-700);
 
     --card: var(--color-white);
     --card-foreground: var(--color-gray-900);
@@ -91,7 +91,7 @@ code {
 
   .dark {
     --background: var(--color-familiar-800);
-    --foreground: var(--color-familiar-500);
+    --foreground: var(--color-familiar-300);
 
     --card: var(--color-familiar-800);
     --card-foreground: var(--color-familiar-50);

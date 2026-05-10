@@ -55,7 +55,7 @@ export const Route = createRootRouteWithContext<{
 
 function RootDocument() {
 	return (
-		<html lang={i18n.language || "en"}>
+		<html lang={i18n.language || "en"} suppressHydrationWarning>
 			<head>
 				<HeadContent />
 				{import.meta.env.DEV && (
