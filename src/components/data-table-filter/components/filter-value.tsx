@@ -1,5 +1,5 @@
 import { format, isEqual } from "date-fns";
-import { Ellipsis, ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Ellipsis } from "lucide-react";
 import {
 	cloneElement,
 	isValidElement,
@@ -8,6 +8,7 @@ import {
 	useEffect,
 	useMemo,
 	useState,
+	useSyncExternalStore,
 } from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "src/components/ui/button";
@@ -24,7 +25,6 @@ import {
 } from "src/components/ui/command";
 import {
 	Popover,
-	PopoverAnchor,
 	PopoverContent,
 	PopoverTrigger,
 } from "src/components/ui/popover";
@@ -173,15 +173,17 @@ export function FilterValueDisplay<TData, TType extends ColumnDataType>({
 export function FilterValueOptionDisplay<TData>({
 	filter,
 	column,
-	actions,
-	locale = "en",
 }: FilterValueDisplayProps<TData, "option">) {
 	const options = useMemo(() => column.getOptions(), [column]);
-	const selected = options.filter((o) => filter?.values.includes(o.value));
+	const selected = useMemo(
+		() => options.filter((option) => filter?.values.includes(option.value)),
+		[filter?.values, options],
+	);
 
 	if (selected.length === 1) {
 		const { label, icon: Icon } = selected[0];
 		const hasIcon = !!Icon;
+
 		return (
 			<span className="inline-flex items-center gap-1">
 				{hasIcon &&
@@ -194,18 +196,19 @@ export function FilterValueOptionDisplay<TData>({
 			</span>
 		);
 	}
+
 	const name = column.displayName.toLowerCase();
 	const pluralName = name.endsWith("s") ? `${name}es` : `${name}s`;
-
-	const hasOptionIcons = !options?.some((o) => !o.icon);
+	const hasOptionIcons = !options?.some((option) => !option.icon);
 
 	return (
 		<div className="inline-flex items-center gap-0.5">
 			{hasOptionIcons &&
 				take(selected, 3).map(({ value, icon }) => {
 					const Icon = icon!;
+
 					return isValidElement(Icon) ? (
-						Icon
+						cloneElement(Icon, { key: value })
 					) : (
 						<Icon key={value} className="size-4" />
 					);
@@ -220,15 +223,17 @@ export function FilterValueOptionDisplay<TData>({
 export function FilterValueMultiOptionDisplay<TData>({
 	filter,
 	column,
-	actions,
-	locale = "en",
 }: FilterValueDisplayProps<TData, "multiOption">) {
 	const options = useMemo(() => column.getOptions(), [column]);
-	const selected = options.filter((o) => filter.values.includes(o.value));
+	const selected = useMemo(
+		() => options.filter((option) => filter.values.includes(option.value)),
+		[filter.values, options],
+	);
 
 	if (selected.length === 1) {
 		const { label, icon: Icon } = selected[0];
 		const hasIcon = !!Icon;
+
 		return (
 			<span className="inline-flex items-center gap-1.5">
 				{hasIcon &&
@@ -244,8 +249,7 @@ export function FilterValueMultiOptionDisplay<TData>({
 	}
 
 	const name = column.displayName.toLowerCase();
-
-	const hasOptionIcons = !options?.some((o) => !o.icon);
+	const hasOptionIcons = !options?.some((option) => !option.icon);
 
 	return (
 		<div className="inline-flex items-center gap-1.5">
@@ -253,6 +257,7 @@ export function FilterValueMultiOptionDisplay<TData>({
 				<div key="icons" className="inline-flex items-center gap-0.5">
 					{take(selected, 3).map(({ value, icon }) => {
 						const Icon = icon!;
+
 						return isValidElement(Icon) ? (
 							cloneElement(Icon, { key: value })
 						) : (
@@ -285,15 +290,14 @@ function formatDateRange(start: Date, end: Date) {
 
 export function FilterValueDateDisplay<TData>({
 	filter,
-	column,
-	actions,
-	locale = "en",
 }: FilterValueDisplayProps<TData, "date">) {
-	if (!filter) return null;
+	if (!filter?.values) return null;
 	if (filter.values.length === 0) return <Ellipsis className="size-4" />;
+
 	if (filter.values.length === 1) {
 		const value = filter.values[0];
 		const formattedDateStr = format(value, "MMM d, yyyy");
+
 		return <span>{formattedDateStr}</span>;
 	}
 
@@ -304,13 +308,11 @@ export function FilterValueDateDisplay<TData>({
 
 export function FilterValueTextDisplay<TData>({
 	filter,
-	column,
-	actions,
-	locale = "en",
 }: FilterValueDisplayProps<TData, "text">) {
-	if (!filter) return null;
-	if (filter.values.length === 0 || filter.values[0].trim() === "")
+	if (!filter?.values) return null;
+	if (filter.values.length === 0 || filter.values[0].trim() === "") {
 		return <Ellipsis className="size-4" />;
+	}
 
 	const value = filter.values[0];
 
@@ -319,11 +321,9 @@ export function FilterValueTextDisplay<TData>({
 
 export function FilterValueNumberDisplay<TData>({
 	filter,
-	column,
-	actions,
 	locale = "en",
 }: FilterValueDisplayProps<TData, "number">) {
-	if (!filter || !filter.values || filter.values.length === 0) return null;
+	if (!filter?.values || filter.values.length === 0) return null;
 
 	if (
 		filter.operator === "is between" ||
@@ -340,10 +340,9 @@ export function FilterValueNumberDisplay<TData>({
 	}
 
 	const value = filter.values[0];
+
 	return <span className="tabular-nums tracking-tight">{value}</span>;
 }
-
-/****** Property Filter Value Controller ******/
 
 interface FilterValueControllerProps<TData, TType extends ColumnDataType> {
 	filter: FilterModel<TType>;
@@ -420,11 +419,13 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 	}
 }
 
+type FilterOptionState = ColumnOptionExtended & {
+	initialSelected: boolean;
+	isFolder?: boolean;
+};
+
 interface OptionItemProps {
-	option: ColumnOptionExtended & {
-		initialSelected: boolean;
-		isFolder?: boolean;
-	};
+	option: FilterOptionState;
 	onToggle: (value: string, checked: boolean) => void;
 	onFolderClick?: (id: string) => void;
 }
@@ -439,10 +440,11 @@ const OptionItem = memo(function OptionItem({
 	const handleSelect = useCallback(() => {
 		if (isFolder && onFolderClick && id) {
 			onFolderClick(id);
-		} else {
-			onToggle(value, !selected);
+			return;
 		}
-	}, [onToggle, value, selected, isFolder, onFolderClick, id]);
+
+		onToggle(value, !selected);
+	}, [id, isFolder, onFolderClick, onToggle, selected, value]);
 
 	return (
 		<CommandItem
@@ -485,6 +487,93 @@ const OptionItem = memo(function OptionItem({
 	);
 });
 
+function getInitialOptions<TData, TType extends "option" | "multiOption">(
+	column: Column<TData, TType>,
+	filter: FilterModel<TType>,
+): FilterOptionState[] {
+	const counts = column.getFacetedUniqueValues();
+
+	return column.getOptions().map((option) => {
+		const selected = filter.values.includes(option.value);
+
+		return {
+			...option,
+			selected,
+			initialSelected: selected,
+			count: counts?.get(option.value) ?? 0,
+		};
+	});
+}
+
+function getVisibleOptions(
+	options: FilterOptionState[],
+	activeFolder: string | null,
+) {
+	const folders: FilterOptionState[] = [];
+	const visibleOptions: FilterOptionState[] = [];
+	const foldersMap = new Map<string, string>();
+
+	for (const option of options) {
+		if (option.parentId) {
+			if (!foldersMap.has(option.parentId)) {
+				foldersMap.set(option.parentId, option.parentId);
+				folders.push({
+					...option,
+					id: option.parentId,
+					label: option.parentId,
+					value: "",
+					isFolder: true,
+				});
+			}
+
+			if (activeFolder === option.parentId) {
+				visibleOptions.push(option);
+			}
+		} else if (!activeFolder) {
+			visibleOptions.push(option);
+		}
+	}
+
+	return { folders: activeFolder ? [] : folders, visibleOptions };
+}
+
+function splitSelectedOptions(visibleOptions: FilterOptionState[]) {
+	const selectedOptions: FilterOptionState[] = [];
+	const unselectedOptions: FilterOptionState[] = [];
+
+	for (const option of visibleOptions) {
+		if (option.initialSelected) {
+			selectedOptions.push(option);
+		} else {
+			unselectedOptions.push(option);
+		}
+	}
+
+	return { selectedOptions, unselectedOptions };
+}
+
+function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
+	column: Column<TData, TType>,
+	filter: FilterModel<TType>,
+) {
+	const initialOptions = useMemo(
+		() => getInitialOptions(column, filter),
+		[column, filter],
+	);
+	const [options, setOptions] = useState(initialOptions);
+
+	useEffect(() => {
+		setOptions((previous) =>
+			previous.map((option) => ({
+				...option,
+				selected: filter.values.includes(option.value),
+			})),
+		);
+	}, [filter.values]);
+
+	return options;
+}
+
 export function FilterValueOptionController<TData>({
 	filter,
 	column,
@@ -492,28 +581,7 @@ export function FilterValueOptionController<TData>({
 	locale = "en",
 }: FilterValueControllerProps<TData, "option">) {
 	const [activeFolder, setActiveFolder] = useState<string | null>(null);
-
-	const initialOptions = useMemo(() => {
-		const counts = column.getFacetedUniqueValues();
-		return column.getOptions().map((o) => ({
-			...o,
-			selected: filter?.values.includes(o.value),
-			initialSelected: filter?.values.includes(o.value),
-			count: counts?.get(o.value) ?? 0,
-		}));
-	}, [
-		column.getFacetedUniqueValues,
-		column.getOptions,
-		filter?.values.includes,
-	]);
-
-	const [options, setOptions] = useState(initialOptions);
-
-	useEffect(() => {
-		setOptions((prev) =>
-			prev.map((o) => ({ ...o, selected: filter?.values.includes(o.value) })),
-		);
-	}, [filter?.values]);
+	const options = useFilterOptionsState(column, filter);
 
 	const handleToggle = useCallback(
 		(value: string, checked: boolean) => {
@@ -523,65 +591,21 @@ export function FilterValueOptionController<TData>({
 		[actions, column],
 	);
 
-	const { folders, visibleOptions } = useMemo(() => {
-		const f: typeof options = [];
-		const v: typeof options = [];
+	const { folders, visibleOptions } = useMemo(
+		() => getVisibleOptions(options, activeFolder),
+		[activeFolder, options],
+	);
 
-		const foldersMap = new Map<string, string>();
-
-		for (const o of options) {
-			if (o.parentId) {
-				if (!foldersMap.has(o.parentId)) {
-					foldersMap.set(o.parentId, o.parentId);
-					f.push({
-						...o,
-						id: o.parentId,
-						label: o.parentId,
-						value: "",
-						isFolder: true,
-					});
-				}
-
-				if (activeFolder === o.parentId) {
-					v.push(o);
-				}
-			} else if (!activeFolder) {
-				v.push(o);
-			}
-		}
-
-		return { folders: activeFolder ? [] : f, visibleOptions: v };
-	}, [options, activeFolder]);
-
-	const { selectedOptions, unselectedOptions } = useMemo(() => {
-		const sel: typeof visibleOptions = [];
-		const unsel: typeof visibleOptions = [];
-		for (const o of visibleOptions) {
-			if (o.initialSelected) sel.push(o);
-			else unsel.push(o);
-		}
-		return { selectedOptions: sel, unselectedOptions: unsel };
-	}, [visibleOptions]);
+	const { selectedOptions, unselectedOptions } = useMemo(
+		() => splitSelectedOptions(visibleOptions),
+		[visibleOptions],
+	);
 
 	return (
 		<Command loop>
 			<CommandInput placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
 			<CommandList className="max-h-fit">
-				{/* {activeFolder && (
-					<>
-					<CommandGroup>
-						<CommandItem
-							onSelect={() => setActiveFolder(null)}
-							className="cursor-pointer text-muted-foreground font-medium"
-						>
-							<ChevronLeft className="size-4 mr-2" />
-							{t("back", locale) || "Back"}
-						</CommandItem>
-					</CommandGroup>
-					<CommandSeparator className="my-1" />
-					</>
-				)} */}
 				<CommandGroup className={cn(folders.length === 0 && "hidden")}>
 					{folders.map((folder) => (
 						<OptionItem
@@ -593,7 +617,7 @@ export function FilterValueOptionController<TData>({
 					))}
 				</CommandGroup>
 				{folders.length > 0 && selectedOptions.length > 0 && (
-					<CommandSeparator className={"my-1"} />
+					<CommandSeparator className="my-1" />
 				)}
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
@@ -604,7 +628,7 @@ export function FilterValueOptionController<TData>({
 						/>
 					))}
 				</CommandGroup>
-				{selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
+				{selectedOptions.length > 0 && <CommandSeparator className="my-1" />}
 				<CommandGroup
 					className={cn(unselectedOptions.length === 0 && "hidden")}
 				>
@@ -628,31 +652,7 @@ export function FilterValueMultiOptionController<TData>({
 	locale = "en",
 }: FilterValueControllerProps<TData, "multiOption">) {
 	const [activeFolder, setActiveFolder] = useState<string | null>(null);
-
-	const initialOptions = useMemo(() => {
-		const counts = column.getFacetedUniqueValues();
-		return column.getOptions().map((o) => {
-			const selected = filter?.values.includes(o.value);
-			return {
-				...o,
-				selected,
-				initialSelected: selected,
-				count: counts?.get(o.value) ?? 0,
-			};
-		});
-	}, [
-		column.getFacetedUniqueValues,
-		column.getOptions,
-		filter?.values.includes,
-	]);
-
-	const [options, setOptions] = useState(initialOptions);
-
-	useEffect(() => {
-		setOptions((prev) =>
-			prev.map((o) => ({ ...o, selected: filter?.values.includes(o.value) })),
-		);
-	}, [filter?.values]);
+	const options = useFilterOptionsState(column, filter);
 
 	const handleToggle = useCallback(
 		(value: string, checked: boolean) => {
@@ -662,45 +662,15 @@ export function FilterValueMultiOptionController<TData>({
 		[actions, column],
 	);
 
-	const { folders, visibleOptions } = useMemo(() => {
-		const f: typeof options = [];
-		const v: typeof options = [];
+	const { folders, visibleOptions } = useMemo(
+		() => getVisibleOptions(options, activeFolder),
+		[activeFolder, options],
+	);
 
-		const foldersMap = new Map<string, string>();
-
-		for (const o of options) {
-			if (o.parentId) {
-				if (!foldersMap.has(o.parentId)) {
-					foldersMap.set(o.parentId, o.parentId);
-					f.push({
-						...o,
-						id: o.parentId,
-						label: o.parentId,
-						value: "",
-						isFolder: true,
-					});
-				}
-
-				if (activeFolder === o.parentId) {
-					v.push(o);
-				}
-			} else if (!activeFolder) {
-				v.push(o);
-			}
-		}
-
-		return { folders: activeFolder ? [] : f, visibleOptions: v };
-	}, [options, activeFolder]);
-
-	const { selectedOptions, unselectedOptions } = useMemo(() => {
-		const sel: typeof visibleOptions = [];
-		const unsel: typeof visibleOptions = [];
-		for (const o of visibleOptions) {
-			if (o.initialSelected) sel.push(o);
-			else unsel.push(o);
-		}
-		return { selectedOptions: sel, unselectedOptions: unsel };
-	}, [visibleOptions]);
+	const { selectedOptions, unselectedOptions } = useMemo(
+		() => splitSelectedOptions(visibleOptions),
+		[visibleOptions],
+	);
 
 	return (
 		<Command loop>
@@ -729,7 +699,7 @@ export function FilterValueMultiOptionController<TData>({
 					))}
 				</CommandGroup>
 				{folders.length > 0 && selectedOptions.length > 0 && (
-					<CommandSeparator className={"my-1"} />
+					<CommandSeparator className="my-1" />
 				)}
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
@@ -740,7 +710,7 @@ export function FilterValueMultiOptionController<TData>({
 						/>
 					))}
 				</CommandGroup>
-				{selectedOptions.length > 0 && <CommandSeparator className={"my-1"} />}
+				{selectedOptions.length > 0 && <CommandSeparator className="my-1" />}
 				<CommandGroup
 					className={cn(unselectedOptions.length === 0 && "hidden")}
 				>
@@ -757,11 +727,35 @@ export function FilterValueMultiOptionController<TData>({
 	);
 }
 
+let currentDateSnapshot: Date | undefined;
+
+function subscribeToCurrentDateStore() {
+	return () => {};
+}
+
+function getClientCurrentDateSnapshot() {
+	currentDateSnapshot ??= new Date();
+	return currentDateSnapshot;
+}
+
+function getServerCurrentDateSnapshot() {
+	return undefined;
+}
+
+function useClientCurrentDate() {
+	return useSyncExternalStore(
+		subscribeToCurrentDateStore,
+		getClientCurrentDateSnapshot,
+		getServerCurrentDateSnapshot,
+	);
+}
+
 export function FilterValueDateController<TData>({
 	filter,
 	column,
 	actions,
 }: FilterValueControllerProps<TData, "date">) {
+	const clientCurrentDate = useClientCurrentDate();
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: filter?.values[0] ?? undefined,
 		to: filter?.values[1] ?? undefined,
@@ -777,9 +771,7 @@ export function FilterValueDateController<TData>({
 	function changeDateRange(value: DateRange | undefined) {
 		const start = value?.from;
 		const end =
-			start && value && value.to && !isEqual(start, value.to)
-				? value.to
-				: undefined;
+			start && value?.to && !isEqual(start, value.to) ? value.to : undefined;
 
 		setDate({ from: start, to: end });
 
@@ -789,10 +781,12 @@ export function FilterValueDateController<TData>({
 		actions.setFilterValue(column, newValues);
 	}
 
+	const defaultMonth = date?.from ?? clientCurrentDate;
+
 	return (
 		<Calendar
 			mode="range"
-			defaultMonth={date?.from ?? new Date()}
+			{...(defaultMonth ? { defaultMonth } : {})}
 			selected={date}
 			onSelect={changeDateRange}
 			numberOfMonths={2}
@@ -842,12 +836,16 @@ export function FilterValueNumberController<TData>({
 	const [values, setValues] = useState(filter?.values ?? [0, 0]);
 
 	useEffect(() => {
-		if (
-			filter?.values &&
-			filter.values.length === values.length &&
-			filter.values.every((v, i) => v === values[i])
-		) {
-			setValues(filter.values);
+		const filterValues = filter?.values;
+
+		if (!filterValues) return;
+
+		const sameValues =
+			filterValues.length === values.length &&
+			filterValues.every((value, index) => value === values[index]);
+
+		if (!sameValues) {
+			setValues(filterValues);
 		}
 	}, [filter?.values, values]);
 
@@ -883,10 +881,12 @@ export function FilterValueNumberController<TData>({
 	const changeType = useCallback(
 		(type: "single" | "range") => {
 			let newValues: number[] = [];
-			if (type === "single") newValues = [values[0]];
-			else if (!minMax)
+
+			if (type === "single") {
+				newValues = [values[0]];
+			} else if (!minMax) {
 				newValues = createNumberRange([values[0], values[1] ?? 0]);
-			else {
+			} else {
 				const value = values[0];
 				newValues =
 					value - minMax[0] < minMax[1] - value
@@ -905,23 +905,23 @@ export function FilterValueNumberController<TData>({
 			actions.setFilterValue(column, newValues);
 		},
 		[
-			values,
-			column,
 			actions,
+			column,
 			minMax,
-			setFilterOperatorDebounced.cancel,
-			setFilterValueDebounced.cancel,
+			setFilterOperatorDebounced,
+			setFilterValueDebounced,
+			values,
 		],
 	);
 
 	return (
 		<Command>
-			<CommandList className="w-[300px] px-2 py-2">
+			<CommandList className="w-[300px] p-2">
 				<CommandGroup>
 					<div className="flex flex-col w-full">
 						<Tabs
 							value={isNumberRange ? "range" : "single"}
-							onValueChange={(v) => changeType(v as "single" | "range")}
+							onValueChange={(value) => changeType(value as "single" | "range")}
 						>
 							<TabsList className="w-full *:text-xs">
 								<TabsTrigger value="single">{t("single", locale)}</TabsTrigger>
@@ -946,7 +946,7 @@ export function FilterValueNumberController<TData>({
 										id="single"
 										type="number"
 										value={values[0].toString()}
-										onChange={(v) => changeNumber([Number(v)])}
+										onChange={(value) => changeNumber([Number(value)])}
 									/>
 								</div>
 							</TabsContent>
@@ -969,7 +969,7 @@ export function FilterValueNumberController<TData>({
 										<DebouncedInput
 											type="number"
 											value={values[0]}
-											onChange={(v) => changeMinNumber(Number(v))}
+											onChange={(value) => changeMinNumber(Number(value))}
 										/>
 									</div>
 									<div className="flex items-center gap-2">
@@ -979,7 +979,7 @@ export function FilterValueNumberController<TData>({
 										<DebouncedInput
 											type="number"
 											value={values[1]}
-											onChange={(v) => changeMaxNumber(Number(v))}
+											onChange={(value) => changeMaxNumber(Number(value))}
 										/>
 									</div>
 								</div>

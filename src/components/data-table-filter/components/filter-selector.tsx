@@ -77,7 +77,20 @@ function FilterSelectorInner<TData>({
 	}, [property]);
 
 	useEffect(() => {
-		if (!open) setTimeout(() => setValue(""), 150);
+		if (open) return;
+
+		const propertyTimeoutId = window.setTimeout(() => {
+			setProperty(undefined);
+		}, 100);
+
+		const valueTimeoutId = window.setTimeout(() => {
+			setValue("");
+		}, 150);
+
+		return () => {
+			window.clearTimeout(propertyTimeoutId);
+			window.clearTimeout(valueTimeoutId);
+		};
 	}, [open]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: need filters to be updated

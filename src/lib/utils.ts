@@ -36,3 +36,18 @@ export const dateFormat = (date: Date) =>
 		day: "2-digit",
 		year: "numeric",
 	});
+
+export type StaticListItem<TPrefix extends string = string> = {
+	id: `${TPrefix}-${number}`;
+	index: number;
+};
+
+export function createStaticList<TPrefix extends string>(
+	prefix: TPrefix,
+	length: number,
+): StaticListItem<TPrefix>[] {
+	return Array.from({ length }, (_, index) => ({
+		id: `${prefix}-${index + 1}` as `${TPrefix}-${number}`,
+		index,
+	}));
+}

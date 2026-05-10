@@ -1,7 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { cva, type VariantProps } from "class-variance-authority";
 import { NumericFormat, type NumericFormatProps } from "react-number-format";
-import * as React from "react";
+import type React from "react";
+import {
+	Fragment,
+	useCallback,
+	useEffect,
+	useEffectEvent,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { cn } from "src/lib/utils";
@@ -26,6 +35,30 @@ export interface InputGroupProps
 	extends React.ComponentProps<"fieldset">,
 		VariantProps<typeof inputGroupVariants> {}
 
+function assignRef<T>(targetRef: React.Ref<T> | undefined, value: T | null) {
+	if (!targetRef) return;
+
+	if (typeof targetRef === "function") {
+		targetRef(value);
+		return;
+	}
+
+	(targetRef as React.MutableRefObject<T | null>).current = value;
+}
+
+function useMergedRef<T>(
+	firstRef: React.Ref<T> | undefined,
+	secondRef: React.Ref<T> | undefined,
+) {
+	return useCallback(
+		(value: T | null) => {
+			assignRef(firstRef, value);
+			assignRef(secondRef, value);
+		},
+		[firstRef, secondRef],
+	);
+}
+
 function InputGroup({ className, variant, ...props }: InputGroupProps) {
 	return (
 		<fieldset
@@ -41,9 +74,6 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 
 				// Error state.
 				"has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
-
-				// Variant-specific overrides
-				// variant === "floating" && "h-10",
 
 				className,
 			)}
@@ -78,27 +108,32 @@ function InputGroupAddon({
 	align = "inline-start",
 	...props
 }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
-	const ref = React.useRef<HTMLDivElement>(null);
+	const ref = useRef<HTMLDivElement>(null);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		const element = ref.current;
 		if (!element) return;
 
-		const handleMouseDown = (e: MouseEvent) => {
-			if ((e.target as HTMLElement).closest("button")) {
+		const focusGroupedInputOnAddonMouseDown = (event: MouseEvent) => {
+			if ((event.target as HTMLElement).closest("button")) {
 				return;
 			}
+
 			const input = element.parentElement?.querySelector(
 				"input,textarea",
-			) as HTMLElement;
-			// Prevent the div from stealing focus
-			e.preventDefault();
+			) as HTMLElement | null;
+
+			event.preventDefault();
 			input?.focus();
 		};
 
-		element.addEventListener("mousedown", handleMouseDown);
+		element.addEventListener("mousedown", focusGroupedInputOnAddonMouseDown);
+
 		return () => {
-			element.removeEventListener("mousedown", handleMouseDown);
+			element.removeEventListener(
+				"mousedown",
+				focusGroupedInputOnAddonMouseDown,
+			);
 		};
 	}, []);
 
@@ -172,7 +207,6 @@ function InputGroupInput({
 			className={cn(
 				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive",
 				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1 group-data-[variant=floating]/input-group:h-10",
-				// Fix for floating labels: ensure the input acts as the peer correctly and handles placeholders
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
 				className,
 			)}
@@ -181,19 +215,19 @@ function InputGroupInput({
 	);
 }
 
-// TODO: add focus style state for buttons
 export interface NumberInputProps
 	extends Omit<
 		NumericFormatProps,
-		"value" | "onValueChange" | "defaultValue" | "min" | "max"
+		"value" | "onValueChange" | "defaultValue" | "min" | "max" | "getInputRef"
 	> {
+	ref?: React.Ref<HTMLInputElement>;
 	stepper?: number;
 	thousandSeparator?: string;
 	placeholder?: string;
 	defaultValue?: number;
 	min?: number;
 	max?: number;
-	value?: number; // Controlled value
+	value?: number;
 	suffix?: string;
 	prefix?: string;
 	onValueChange?: (value: number | undefined) => void;
@@ -201,150 +235,164 @@ export interface NumberInputProps
 	decimalScale?: number;
 }
 
-const InputGroupNumberInput = React.forwardRef<
-	HTMLInputElement,
-	NumberInputProps
->(
-	(
-		{
-			stepper,
-			thousandSeparator,
-			placeholder,
-			defaultValue,
-			min = -Infinity,
-			max = Infinity,
-			onValueChange,
-			fixedDecimalScale = false,
-			decimalScale = 0,
-			suffix,
-			prefix,
-			value: controlledValue,
-			...props
-		},
-		ref,
-	) => {
-		const [value, setValue] = React.useState<number | undefined>(
-			controlledValue ?? defaultValue,
-		);
+function InputGroupNumberInput({
+	ref,
+	stepper,
+	thousandSeparator,
+	placeholder,
+	defaultValue,
+	min = -Infinity,
+	max = Infinity,
+	onValueChange,
+	fixedDecimalScale = false,
+	decimalScale = 0,
+	suffix,
+	prefix,
+	value: controlledValue,
+	...props
+}: NumberInputProps) {
+	const inputRef = useRef<HTMLInputElement>(null);
+	const mergedInputRef = useMergedRef(inputRef, ref);
 
-		const handleIncrement = React.useCallback(() => {
-			setValue((prev) =>
-				prev === undefined
+	const [value, setValue] = useState<number | undefined>(
+		controlledValue ?? defaultValue,
+	);
+
+	const handleIncrement = useCallback(() => {
+		setValue((previousValue) => {
+			const nextValue =
+				previousValue === undefined
 					? (stepper ?? 1)
-					: Math.min(prev + (stepper ?? 1), max),
-			);
-		}, [stepper, max]);
+					: Math.min(previousValue + (stepper ?? 1), max);
 
-		const handleDecrement = React.useCallback(() => {
-			setValue((prev) =>
-				prev === undefined
+			onValueChange?.(nextValue);
+			return nextValue;
+		});
+	}, [stepper, max, onValueChange]);
+
+	const handleDecrement = useCallback(() => {
+		setValue((previousValue) => {
+			const nextValue =
+				previousValue === undefined
 					? -(stepper ?? 1)
-					: Math.max(prev - (stepper ?? 1), min),
+					: Math.max(previousValue - (stepper ?? 1), min);
+
+			onValueChange?.(nextValue);
+			return nextValue;
+		});
+	}, [stepper, min, onValueChange]);
+
+	const handleIncrementEvent = useEffectEvent(() => {
+		handleIncrement();
+	});
+
+	const handleDecrementEvent = useEffectEvent(() => {
+		handleDecrement();
+	});
+
+	useEffect(() => {
+		const incrementOrDecrementFocusedNumberInput = (event: KeyboardEvent) => {
+			if (document.activeElement !== inputRef.current) {
+				return;
+			}
+
+			if (event.key === "ArrowUp") {
+				event.preventDefault();
+				handleIncrementEvent();
+			} else if (event.key === "ArrowDown") {
+				event.preventDefault();
+				handleDecrementEvent();
+			}
+		};
+
+		window.addEventListener("keydown", incrementOrDecrementFocusedNumberInput);
+
+		return () => {
+			window.removeEventListener(
+				"keydown",
+				incrementOrDecrementFocusedNumberInput,
 			);
-		}, [stepper, min]);
-
-		React.useEffect(() => {
-			const handleKeyDown = (e: KeyboardEvent) => {
-				if (
-					document.activeElement ===
-					(ref as React.RefObject<HTMLInputElement>).current
-				) {
-					if (e.key === "ArrowUp") {
-						handleIncrement();
-					} else if (e.key === "ArrowDown") {
-						handleDecrement();
-					}
-				}
-			};
-
-			window.addEventListener("keydown", handleKeyDown);
-
-			return () => {
-				window.removeEventListener("keydown", handleKeyDown);
-			};
-		}, [handleIncrement, handleDecrement, ref]);
-
-		React.useEffect(() => {
-			if (controlledValue !== undefined) {
-				setValue(controlledValue);
-			}
-		}, [controlledValue]);
-
-		const handleChange = (values: {
-			value: string;
-			floatValue: number | undefined;
-		}) => {
-			const newValue =
-				values.floatValue === undefined ? undefined : values.floatValue;
-			setValue(newValue);
-			if (onValueChange) {
-				onValueChange(newValue);
-			}
 		};
+	}, []);
 
-		const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-			if (props.onBlur) {
-				props.onBlur(e);
-			}
-		};
+	useEffect(() => {
+		if (controlledValue !== undefined) {
+			setValue(controlledValue);
+		}
+	}, [controlledValue]);
 
-		return (
-			<div className="flex w-full items-center">
-				<NumericFormat
-					value={value}
-					onValueChange={handleChange}
-					thousandSeparator={thousandSeparator}
-					decimalScale={decimalScale}
-					fixedDecimalScale={fixedDecimalScale}
-					allowNegative={min < 0}
-					valueIsNumericString
-					onBlur={handleBlur}
-					max={max}
-					min={min}
-					suffix={suffix}
-					prefix={prefix}
-					customInput={InputGroupInput}
-					placeholder={placeholder}
-					className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative text-primary"
-					getInputRef={ref}
-					{...props}
-				/>
+	const updateNumberInputValue = (values: {
+		value: string;
+		floatValue: number | undefined;
+	}) => {
+		const nextValue =
+			values.floatValue === undefined ? undefined : values.floatValue;
 
-				{/* TODO: maybe use left to right not top to bottom */}
-				<div className="flex flex-col rounded-r-xl border-l border-primary/10">
-					<Button
-						type="button"
-						size={"icon-sm"}
-						aria-label="Increase value"
-						className="h-5 rounded-none rounded-tr-xl border-0 border-b border-primary/10 pr-1 focus-visible:z-10"
-						variant="ghost"
-						onClick={handleIncrement}
-						disabled={value === max}
-					>
-						<OutlineChevronUp />
-					</Button>
-					<Button
-						type="button"
-						size={"icon-sm"}
-						aria-label="Decrease value"
-						className="h-5 rounded-none rounded-br-xl border-0 pr-1 focus-visible:z-10"
-						variant="ghost"
-						onClick={handleDecrement}
-						disabled={value === min}
-					>
-						<OutlineChevronDown />
-					</Button>
-				</div>
+		setValue(nextValue);
+		onValueChange?.(nextValue);
+	};
+
+	const notifyNumberInputBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+		props.onBlur?.(event);
+	};
+
+	return (
+		<div className="flex w-full items-center">
+			<NumericFormat
+				value={value}
+				onValueChange={updateNumberInputValue}
+				thousandSeparator={thousandSeparator}
+				decimalScale={decimalScale}
+				fixedDecimalScale={fixedDecimalScale}
+				allowNegative={min < 0}
+				valueIsNumericString
+				onBlur={notifyNumberInputBlur}
+				max={max}
+				min={min}
+				suffix={suffix}
+				prefix={prefix}
+				customInput={InputGroupInput}
+				placeholder={placeholder}
+				className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative text-primary"
+				getInputRef={mergedInputRef}
+				{...props}
+			/>
+
+			<div className="flex flex-col rounded-r-xl border-l border-primary/10">
+				<Button
+					type="button"
+					size="icon-sm"
+					aria-label="Increase value"
+					className="h-5 rounded-none rounded-tr-xl border-0 border-b border-primary/10 pr-1 focus-visible:z-10"
+					variant="ghost"
+					onClick={handleIncrement}
+					disabled={value === max}
+				>
+					<OutlineChevronUp />
+				</Button>
+
+				<Button
+					type="button"
+					size="icon-sm"
+					aria-label="Decrease value"
+					className="h-5 rounded-none rounded-br-xl border-0 pr-1 focus-visible:z-10"
+					variant="ghost"
+					onClick={handleDecrement}
+					disabled={value === min}
+				>
+					<OutlineChevronDown />
+				</Button>
 			</div>
-		);
-	},
-);
+		</div>
+	);
+}
 
 export interface DateInputProps
 	extends Omit<
 		React.ComponentProps<"fieldset">,
-		"value" | "onChange" | "defaultValue"
+		"value" | "onChange" | "defaultValue" | "ref"
 	> {
+	ref?: React.Ref<HTMLFieldSetElement>;
 	value?: Date;
 	onValueChange?: (date: Date | undefined) => void;
 	disabled?: boolean;
@@ -352,448 +400,663 @@ export interface DateInputProps
 	maxDate?: Date;
 }
 
+type DatePart = "month" | "day" | "year";
+
+type DateParts = {
+	month: string;
+	day: string;
+	year: string;
+};
+
+type DateInputRefs = Record<DatePart, React.RefObject<HTMLInputElement | null>>;
+
+type DateInputController = {
+	dateParts: DateParts;
+	focused: DatePart | null;
+	refs: DateInputRefs;
+	valuesRef: React.RefObject<DateParts>;
+	focusSegment: (type: DatePart | null) => void;
+	handleSegmentBlur: () => void;
+	handleSegmentChange: (
+		type: DatePart,
+		event: React.ChangeEvent<HTMLInputElement>,
+	) => void;
+	handleSegmentFocus: (type: DatePart) => void;
+	handleSegmentKeyDown: (
+		type: DatePart,
+		event: React.KeyboardEvent<HTMLInputElement>,
+	) => void;
+};
+
+const emptyDateParts: DateParts = {
+	month: "",
+	day: "",
+	year: "",
+};
+
+const FALLBACK_DATE_ORDER: DatePart[] = ["month", "day", "year"];
+
+const DAY_FIRST_LANGUAGE_CODES = new Set([
+	"ar",
+	"bg",
+	"cs",
+	"da",
+	"de",
+	"el",
+	"en-gb",
+	"es",
+	"et",
+	"fi",
+	"fr",
+	"he",
+	"hi",
+	"hr",
+	"hu",
+	"id",
+	"it",
+	"lt",
+	"lv",
+	"ms",
+	"nl",
+	"no",
+	"pl",
+	"pt",
+	"ro",
+	"ru",
+	"sk",
+	"sl",
+	"sv",
+	"th",
+	"tr",
+	"uk",
+	"vi",
+]);
+
+const YEAR_FIRST_LANGUAGE_CODES = new Set(["ja", "ko", "zh"]);
+
+const DATE_SEGMENT_PLACEHOLDERS: Record<DatePart, string> = {
+	month: "mm",
+	day: "dd",
+	year: "yyyy",
+};
+
+function getDateOrderForLanguage(language: string): DatePart[] {
+	const normalizedLanguage = language.toLowerCase().replace("_", "-");
+	const baseLanguage = normalizedLanguage.split("-")[0] ?? normalizedLanguage;
+
+	if (
+		YEAR_FIRST_LANGUAGE_CODES.has(normalizedLanguage) ||
+		YEAR_FIRST_LANGUAGE_CODES.has(baseLanguage)
+	) {
+		return ["year", "month", "day"];
+	}
+
+	if (
+		DAY_FIRST_LANGUAGE_CODES.has(normalizedLanguage) ||
+		DAY_FIRST_LANGUAGE_CODES.has(baseLanguage)
+	) {
+		return ["day", "month", "year"];
+	}
+
+	return FALLBACK_DATE_ORDER;
+}
+
+function getDatePartsFromValue(value: Date | undefined): DateParts | undefined {
+	if (value === undefined) {
+		return undefined;
+	}
+
+	if (value && !Number.isNaN(value.getTime())) {
+		return {
+			month: String(value.getMonth() + 1).padStart(2, "0"),
+			day: String(value.getDate()).padStart(2, "0"),
+			year: String(value.getFullYear()),
+		};
+	}
+
+	return emptyDateParts;
+}
+
+function createDateFromParts({ month, day, year }: DateParts) {
+	if (month.length !== 2 || day.length !== 2 || year.length !== 4) {
+		return undefined;
+	}
+
+	const date = new Date(Number(year), Number(month) - 1, Number(day));
+
+	return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function getNormalizedDateParts(date: Date): DateParts {
+	return {
+		month: String(date.getMonth() + 1).padStart(2, "0"),
+		day: String(date.getDate()).padStart(2, "0"),
+		year: String(date.getFullYear()),
+	};
+}
+
+function isFullyReplacedSegment(
+	event: React.ChangeEvent<HTMLInputElement>,
+	maxLength: number,
+) {
+	return (
+		event.target.selectionStart === 1 &&
+		event.target.selectionEnd === 1 &&
+		event.target.value.replace(/\D/g, "").length > maxLength
+	);
+}
+
+function normalizeDateSegmentInput(
+	type: DatePart,
+	event: React.ChangeEvent<HTMLInputElement>,
+) {
+	let value = event.target.value.replace(/\D/g, "");
+
+	if (type === "year") {
+		if (isFullyReplacedSegment(event, 4)) {
+			return value.slice(0, 1);
+		}
+
+		return value.length > 4 ? value.slice(-1) : value;
+	}
+
+	if (isFullyReplacedSegment(event, 2)) {
+		value = value.slice(0, 1);
+	} else if (value.length > 2) {
+		value = value.slice(-1);
+	}
+
+	if (type === "month") {
+		if (value.length === 1 && Number(value) > 1) return `0${value}`;
+		if (value.length === 2 && Number(value) > 12) return "12";
+		if (value.length === 2 && Number(value) < 1) return "01";
+
+		return value;
+	}
+
+	if (value.length === 1 && Number(value) > 3) return `0${value}`;
+	if (value.length === 2 && Number(value) > 31) return "31";
+	if (value.length === 2 && Number(value) < 1) return "01";
+
+	return value;
+}
+
+function getSegmentMaxLength(type: DatePart) {
+	return type === "year" ? 4 : 2;
+}
+
+function isSegmentComplete(type: DatePart, value: string) {
+	return value.length === getSegmentMaxLength(type);
+}
+
+function getNextSegment(
+	dateOrder: DatePart[],
+	current: DatePart,
+): DatePart | null {
+	const index = dateOrder.indexOf(current);
+
+	return index < dateOrder.length - 1 ? dateOrder[index + 1] : null;
+}
+
+function getPrevSegment(
+	dateOrder: DatePart[],
+	current: DatePart,
+): DatePart | null {
+	const index = dateOrder.indexOf(current);
+
+	return index > 0 ? dateOrder[index - 1] : null;
+}
+
+function isDateOutsideBounds(
+	value: Date | undefined,
+	minDate: Date | undefined,
+	maxDate: Date | undefined,
+) {
+	if (!value) return false;
+
+	const date = new Date(value);
+	date.setHours(0, 0, 0, 0);
+
+	if (minDate) {
+		const min = new Date(minDate);
+		min.setHours(0, 0, 0, 0);
+
+		if (date < min) return true;
+	}
+
+	if (maxDate) {
+		const max = new Date(maxDate);
+		max.setHours(0, 0, 0, 0);
+
+		if (date > max) return true;
+	}
+
+	return false;
+}
+
+function isDateAriaInvalid(ariaInvalid: React.AriaAttributes["aria-invalid"]) {
+	return (
+		ariaInvalid === true ||
+		ariaInvalid === "true" ||
+		ariaInvalid === "grammar" ||
+		ariaInvalid === "spelling"
+	);
+}
+
+function useDateInputRefs(): DateInputRefs {
+	const month = useRef<HTMLInputElement>(null);
+	const day = useRef<HTMLInputElement>(null);
+	const year = useRef<HTMLInputElement>(null);
+
+	return useMemo(
+		() => ({
+			month,
+			day,
+			year,
+		}),
+		[],
+	);
+}
+
+function useDateInputController({
+	value,
+	onValueChange,
+	dateOrder,
+}: {
+	value?: Date;
+	onValueChange?: (date: Date | undefined) => void;
+	dateOrder: DatePart[];
+}): DateInputController {
+	const refs = useDateInputRefs();
+	const valuesRef = useRef<DateParts>(emptyDateParts);
+	const [dateParts, setDateParts] = useState<DateParts>(emptyDateParts);
+	const [focused, setFocused] = useState<DatePart | null>(null);
+
+	const setDatePartsAndRefs = useCallback(
+		(next: DateParts | ((previousDateParts: DateParts) => DateParts)) => {
+			setDateParts((previousDateParts) => {
+				const resolved =
+					typeof next === "function" ? next(previousDateParts) : next;
+
+				valuesRef.current = resolved;
+				return resolved;
+			});
+		},
+		[],
+	);
+
+	const emitDateChange = useCallback(
+		(nextParts: DateParts) => {
+			const date = createDateFromParts(nextParts);
+
+			if (!date) {
+				onValueChange?.(undefined);
+				return;
+			}
+
+			const normalizedParts = getNormalizedDateParts(date);
+
+			if (
+				normalizedParts.month !== nextParts.month ||
+				normalizedParts.day !== nextParts.day ||
+				normalizedParts.year !== nextParts.year
+			) {
+				setDatePartsAndRefs(normalizedParts);
+			}
+
+			onValueChange?.(date);
+		},
+		[onValueChange, setDatePartsAndRefs],
+	);
+
+	const focusSegment = useCallback(
+		(type: DatePart | null) => {
+			if (!type) return;
+
+			refs[type].current?.focus();
+		},
+		[refs],
+	);
+
+	useEffect(() => {
+		const controlledParts = getDatePartsFromValue(value);
+
+		if (!controlledParts) {
+			// Don't reset internal state if value is explicitly set to undefined.
+			// This prevents clearing all segments when only one segment is invalid/incomplete.
+			return;
+		}
+
+		setDatePartsAndRefs(controlledParts);
+	}, [setDatePartsAndRefs, value]);
+
+	const handleSegmentChange = useCallback(
+		(type: DatePart, event: React.ChangeEvent<HTMLInputElement>) => {
+			const previousValue = valuesRef.current[type];
+			const nextValue = normalizeDateSegmentInput(type, event);
+			const nextParts = {
+				...valuesRef.current,
+				[type]: nextValue,
+			};
+
+			setDatePartsAndRefs(nextParts);
+			emitDateChange(nextParts);
+
+			if (isSegmentComplete(type, nextValue) && nextValue !== previousValue) {
+				focusSegment(getNextSegment(dateOrder, type));
+			}
+		},
+		[dateOrder, emitDateChange, focusSegment, setDatePartsAndRefs],
+	);
+
+	const clearSegment = useCallback(
+		(type: DatePart) => {
+			const nextParts = {
+				...valuesRef.current,
+				[type]: "",
+			};
+
+			setDatePartsAndRefs(nextParts);
+			emitDateChange(nextParts);
+		},
+		[emitDateChange, setDatePartsAndRefs],
+	);
+
+	const handleSegmentKeyDown = useCallback(
+		(type: DatePart, event: React.KeyboardEvent<HTMLInputElement>) => {
+			if (event.key === "Backspace") {
+				const isCaretAtStart =
+					event.currentTarget.value === "" ||
+					(event.currentTarget.selectionStart === 0 &&
+						event.currentTarget.selectionEnd === 0);
+				const isWholeSegmentSelected =
+					event.currentTarget.selectionStart !==
+						event.currentTarget.selectionEnd &&
+					event.currentTarget.selectionStart === 0 &&
+					event.currentTarget.selectionEnd === event.currentTarget.value.length;
+
+				if (isCaretAtStart) {
+					event.preventDefault();
+					focusSegment(getPrevSegment(dateOrder, type));
+					return;
+				}
+
+				if (isWholeSegmentSelected) {
+					event.preventDefault();
+					clearSegment(type);
+				}
+
+				return;
+			}
+
+			if (
+				event.key === "ArrowRight" &&
+				event.currentTarget.selectionStart === event.currentTarget.value.length
+			) {
+				focusSegment(getNextSegment(dateOrder, type));
+				return;
+			}
+
+			if (
+				event.key === "ArrowLeft" &&
+				event.currentTarget.selectionStart === 0
+			) {
+				focusSegment(getPrevSegment(dateOrder, type));
+			}
+		},
+		[clearSegment, dateOrder, focusSegment],
+	);
+
+	const handleSegmentFocus = useCallback((type: DatePart) => {
+		setFocused(type);
+	}, []);
+
+	const handleSegmentBlur = useCallback(() => {
+		setFocused(null);
+	}, []);
+
+	return {
+		dateParts,
+		focused,
+		refs,
+		valuesRef,
+		focusSegment,
+		handleSegmentBlur,
+		handleSegmentChange,
+		handleSegmentFocus,
+		handleSegmentKeyDown,
+	};
+}
+
+function useDateInputInvalidState({
+	value,
+	minDate,
+	maxDate,
+	ariaInvalid,
+}: {
+	value?: Date;
+	minDate?: Date;
+	maxDate?: Date;
+	ariaInvalid: React.AriaAttributes["aria-invalid"];
+}) {
+	return useMemo(() => {
+		if (isDateAriaInvalid(ariaInvalid)) {
+			return true;
+		}
+
+		return isDateOutsideBounds(value, minDate, maxDate);
+	}, [ariaInvalid, maxDate, minDate, value]);
+}
+
+function useDateInputMouseDown({
+	dateOrder,
+	valuesRef,
+	focusSegment,
+	onMouseDown,
+}: {
+	dateOrder: DatePart[];
+	valuesRef: React.RefObject<DateParts>;
+	focusSegment: (type: DatePart | null) => void;
+	onMouseDown?: React.MouseEventHandler<HTMLFieldSetElement>;
+}) {
+	return useCallback(
+		(event: React.MouseEvent<HTMLFieldSetElement>) => {
+			onMouseDown?.(event);
+
+			if (event.defaultPrevented) return;
+			if ((event.target as HTMLElement).tagName === "INPUT") return;
+
+			event.preventDefault();
+
+			const values = valuesRef.current;
+
+			for (const type of dateOrder) {
+				if (!values[type]) {
+					focusSegment(type);
+					return;
+				}
+			}
+
+			focusSegment(dateOrder[dateOrder.length - 1] ?? "year");
+		},
+		[dateOrder, focusSegment, onMouseDown, valuesRef],
+	);
+}
+
+function DateSeparator({ isInvalid }: { isInvalid: boolean }) {
+	return (
+		<span
+			className={cn(
+				"select-none",
+				isInvalid ? "text-destructive" : "text-muted-foreground/50",
+			)}
+		>
+			/
+		</span>
+	);
+}
+
 interface DateSegmentProps {
-	type: "month" | "day" | "year";
+	ref?: React.Ref<HTMLInputElement>;
 	val: string;
 	placeholder: string;
 	focused: boolean;
 	disabled?: boolean;
 	"aria-invalid"?: boolean | "true" | "false";
-	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-	onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+	onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 	onFocus: () => void;
 	onBlur: () => void;
 }
 
-const DateSegment = React.forwardRef<HTMLInputElement, DateSegmentProps>(
-	(props, ref) => {
-		const {
-			val,
-			placeholder,
-			focused,
-			disabled,
-			"aria-invalid": ariaInvalid,
-			onChange,
-			onKeyDown,
-			onFocus,
-			onBlur,
-		} = props;
-		return (
+function DateSegment({
+	ref,
+	val,
+	placeholder,
+	focused,
+	disabled,
+	"aria-invalid": ariaInvalid,
+	onChange,
+	onKeyDown,
+	onFocus,
+	onBlur,
+}: DateSegmentProps) {
+	return (
+		<span
+			className={cn(
+				"relative inline-flex items-center justify-center rounded-sm px-[3px] py-px transition-colors select-none",
+				focused ? "bg-primary/15" : "bg-transparent",
+			)}
+		>
 			<span
-				className={cn(
-					"relative inline-flex items-center justify-center rounded-sm px-[3px] py-px transition-colors select-none",
-					focused ? "bg-primary/15" : "bg-transparent",
-				)}
+				aria-hidden
+				className="invisible select-none text-sm leading-normal"
+				style={{ whiteSpace: "pre" }}
 			>
-				<span
-					aria-hidden
-					className="invisible select-none text-sm leading-normal"
-					style={{ whiteSpace: "pre" }}
-				>
-					{val || placeholder}
-				</span>
-				<input
-					ref={ref}
-					data-slot="input-group-control"
-					aria-invalid={ariaInvalid}
-					type="text"
-					inputMode="numeric"
-					placeholder={placeholder}
-					disabled={disabled}
-					className="absolute inset-0 w-full bg-transparent p-0 text-center text-sm leading-normal outline-none caret-transparent placeholder:text-muted-foreground/70 focus-visible:ring-0 selection:bg-transparent selection:text-primary aria-invalid:text-destructive"
-					value={val}
-					onChange={onChange}
-					onKeyDown={onKeyDown}
-					onFocus={(e) => {
-						// Small delay ensures select() happens after browser default focus behavior
-						setTimeout(() => e.target.select(), 0);
-						onFocus();
-					}}
-					onBlur={onBlur}
-				/>
+				{val || placeholder}
 			</span>
-		);
-	},
-);
-DateSegment.displayName = "DateSegment";
 
-const InputGroupDateInput = React.forwardRef<
-	HTMLFieldSetElement,
-	DateInputProps
->(
-	(
-		{ className, value, onValueChange, disabled, minDate, maxDate, ...props },
-		ref,
-	) => {
-		const { i18n } = useTranslation();
-		const lang = i18n.language || "en";
-		// Determine the order based on the current locale
-		// By parsing a known date (e.g. 2023-11-22), we can check where the month/day/year end up
-		const parts = new Intl.DateTimeFormat(lang).formatToParts(
-			new Date(2023, 10, 22),
-		);
-		const order = parts
-			.filter(
-				(p) => p.type === "day" || p.type === "month" || p.type === "year",
-			)
-			.map((p) => p.type) as ("month" | "day" | "year")[];
-
-		// Fallback to MM/DD/YYYY if format is somehow missing all parts
-		const dateOrder = order.length === 3 ? order : ["month", "day", "year"];
-
-		const [month, setMonth] = React.useState("");
-		const [day, setDay] = React.useState("");
-		const [year, setYear] = React.useState("");
-		const [focused, setFocused] = React.useState<
-			"month" | "day" | "year" | null
-		>(null);
-
-		const monthRef = React.useRef<HTMLInputElement>(null);
-		const dayRef = React.useRef<HTMLInputElement>(null);
-		const yearRef = React.useRef<HTMLInputElement>(null);
-
-		// Refs to always have fresh values inside event handlers (avoids stale closures)
-		const monthVal = React.useRef(month);
-		const dayVal = React.useRef(day);
-		const yearVal = React.useRef(year);
-
-		React.useEffect(() => {
-			monthVal.current = month;
-		}, [month]);
-		React.useEffect(() => {
-			dayVal.current = day;
-		}, [day]);
-		React.useEffect(() => {
-			yearVal.current = year;
-		}, [year]);
-
-		React.useEffect(() => {
-			if (value === undefined) {
-				// Don't reset internal state if value is explicitly set to undefined
-				// This prevents clearing all segments when only one segment is invalid/incomplete
-				return;
-			}
-			if (value && !Number.isNaN(value.getTime())) {
-				setMonth(String(value.getMonth() + 1).padStart(2, "0"));
-				setDay(String(value.getDate()).padStart(2, "0"));
-				setYear(String(value.getFullYear()));
-			} else {
-				setMonth("");
-				setDay("");
-				setYear("");
-			}
-		}, [value]);
-
-		const updateDate = (m: string, d: string, y: string) => {
-			if (m.length === 2 && d.length === 2 && y.length === 4) {
-				const date = new Date(Number(y), Number(m) - 1, Number(d));
-				if (!Number.isNaN(date.getTime())) {
-					const newM = String(date.getMonth() + 1).padStart(2, "0");
-					const newD = String(date.getDate()).padStart(2, "0");
-					const newY = String(date.getFullYear());
-
-					if (m !== newM) setMonth(newM);
-					if (d !== newD) setDay(newD);
-					if (y !== newY) setYear(newY);
-
-					onValueChange?.(date);
-					return;
-				}
-			}
-			onValueChange?.(undefined);
-		};
-
-		const getNextSegment = (
-			current: "month" | "day" | "year",
-		): "month" | "day" | "year" | null => {
-			const idx = dateOrder.indexOf(current);
-			return idx < 2 ? (dateOrder[idx + 1] as "month" | "day" | "year") : null;
-		};
-
-		const getPrevSegment = (
-			current: "month" | "day" | "year",
-		): "month" | "day" | "year" | null => {
-			const idx = dateOrder.indexOf(current);
-			return idx > 0 ? (dateOrder[idx - 1] as "month" | "day" | "year") : null;
-		};
-
-		const focusSegment = (type: "month" | "day" | "year" | null) => {
-			if (type === "month") monthRef.current?.focus();
-			else if (type === "day") dayRef.current?.focus();
-			else if (type === "year") yearRef.current?.focus();
-		};
-
-		const handleKeyDown = (
-			e: React.KeyboardEvent<HTMLInputElement>,
-			type: "month" | "day" | "year",
-		) => {
-			if (e.key === "Backspace") {
-				// If input is empty OR cursor is at the very beginning (selection start/end is 0)
-				if (
-					e.currentTarget.value === "" ||
-					(e.currentTarget.selectionStart === 0 &&
-						e.currentTarget.selectionEnd === 0)
-				) {
-					e.preventDefault();
-					focusSegment(getPrevSegment(type));
-				} else if (
-					e.currentTarget.selectionStart !== e.currentTarget.selectionEnd &&
-					e.currentTarget.selectionStart === 0 &&
-					e.currentTarget.selectionEnd === e.currentTarget.value.length
-				) {
-					// If ALL text is fully selected and backspace is pressed, clear the input
-					e.preventDefault();
-					if (type === "month") {
-						setMonth("");
-						updateDate("", dayVal.current, yearVal.current);
-					} else if (type === "day") {
-						setDay("");
-						updateDate(monthVal.current, "", yearVal.current);
-					} else if (type === "year") {
-						setYear("");
-						updateDate(monthVal.current, dayVal.current, "");
-					}
-				}
-			} else if (e.key === "ArrowRight") {
-				if (e.currentTarget.selectionStart === e.currentTarget.value.length)
-					focusSegment(getNextSegment(type));
-			} else if (e.key === "ArrowLeft") {
-				if (e.currentTarget.selectionStart === 0)
-					focusSegment(getPrevSegment(type));
-			}
-		};
-
-		const isDateInvalid = React.useMemo(() => {
-			if (props["aria-invalid"]) return true;
-			if (!value) return false;
-			const date = new Date(value);
-			date.setHours(0, 0, 0, 0);
-			if (minDate) {
-				const min = new Date(minDate);
-				min.setHours(0, 0, 0, 0);
-				if (date < min) return true;
-			}
-			if (maxDate) {
-				const max = new Date(maxDate);
-				max.setHours(0, 0, 0, 0);
-				if (date > max) return true;
-			}
-			return false;
-		}, [value, minDate, maxDate, props["aria-invalid"]]);
-
-		return (
-			<fieldset
+			<input
 				ref={ref}
-				aria-invalid={isDateInvalid}
-				className={cn(
-					"flex min-h-9 flex-1 cursor-text select-none items-center bg-transparent px-3 text-sm text-primary",
-					disabled && "cursor-not-allowed opacity-50",
-					className,
-				)}
-				onMouseDown={(e) => {
-					if ((e.target as HTMLElement).tagName === "INPUT") return;
-					e.preventDefault();
-
-					// Focus the first empty segment based on the locale's order, or the first segment if all are empty
-					if (!monthVal.current && !dayVal.current && !yearVal.current) {
-						focusSegment(dateOrder[0] as "month" | "day" | "year");
-					} else {
-						for (const type of dateOrder) {
-							if (type === "month" && !monthVal.current) {
-								focusSegment("month");
-								return;
-							}
-							if (type === "day" && !dayVal.current) {
-								focusSegment("day");
-								return;
-							}
-							if (type === "year" && !yearVal.current) {
-								focusSegment("year");
-								return;
-							}
-						}
-						// If all are filled, focus the last one
-						focusSegment(dateOrder[2] as "month" | "day" | "year");
-					}
+				data-slot="input-group-control"
+				aria-invalid={ariaInvalid}
+				type="text"
+				inputMode="numeric"
+				placeholder={placeholder}
+				disabled={disabled}
+				className="absolute inset-0 w-full bg-transparent p-0 text-center text-sm leading-normal outline-none caret-transparent placeholder:text-muted-foreground/70 focus-visible:ring-0 selection:bg-transparent selection:text-primary aria-invalid:text-destructive"
+				value={val}
+				onChange={onChange}
+				onKeyDown={onKeyDown}
+				onFocus={(event) => {
+					setTimeout(() => event.target.select(), 0);
+					onFocus();
 				}}
-				{...props}
-			>
-				{dateOrder.map((segmentType, index) => {
-					const isLast = index === dateOrder.length - 1;
+				onBlur={onBlur}
+			/>
+		</span>
+	);
+}
 
-					if (segmentType === "month") {
-						return (
-							<React.Fragment key="month">
-								<DateSegment
-									ref={monthRef}
-									type="month"
-									val={month}
-									placeholder="mm"
-									focused={focused === "month"}
-									disabled={disabled}
-									aria-invalid={isDateInvalid}
-									onChange={(e) => {
-										let val = e.target.value.replace(/\D/g, "");
-										const isFullySelected =
-											e.target.selectionStart === 1 &&
-											e.target.selectionEnd === 1;
-										if (isFullySelected && val.length > 2) {
-											val = val.slice(0, 1);
-										} else if (val.length > 2) {
-											val = val.slice(-1);
-										}
-										if (val.length === 1 && Number(val) > 1) val = "0" + val;
-										if (val.length === 2 && Number(val) > 12) val = "12";
-										if (val.length === 2 && Number(val) < 1) val = "01";
-										setMonth(val);
-										if (
-											val.length === 2 &&
-											dayVal.current.length === 2 &&
-											yearVal.current.length === 4
-										) {
-											updateDate(val, dayVal.current, yearVal.current);
-										} else {
-											onValueChange?.(undefined);
-										}
-										if (val.length === 2 && val !== monthVal.current)
-											focusSegment(getNextSegment("month"));
-									}}
-									onKeyDown={(e) => handleKeyDown(e, "month")}
-									onFocus={() => setFocused("month")}
-									onBlur={() => setFocused(null)}
-								/>
-								{!isLast && (
-									<span
-										className={cn(
-											"select-none",
-											isDateInvalid
-												? "text-destructive"
-												: "text-muted-foreground/50",
-										)}
-									>
-										/
-									</span>
-								)}
-							</React.Fragment>
-						);
-					}
-					if (segmentType === "day") {
-						return (
-							<React.Fragment key="day">
-								<DateSegment
-									ref={dayRef}
-									type="day"
-									val={day}
-									placeholder="dd"
-									focused={focused === "day"}
-									disabled={disabled}
-									aria-invalid={isDateInvalid}
-									onChange={(e) => {
-										let val = e.target.value.replace(/\D/g, "");
-										const isFullySelected =
-											e.target.selectionStart === 1 &&
-											e.target.selectionEnd === 1;
-										if (isFullySelected && val.length > 2) {
-											val = val.slice(0, 1);
-										} else if (val.length > 2) {
-											val = val.slice(-1);
-										}
-										if (val.length === 1 && Number(val) > 3) val = `0${val}`;
-										if (val.length === 2 && Number(val) > 31) val = "31";
-										if (val.length === 2 && Number(val) < 1) val = "01";
-										setDay(val);
-										if (
-											monthVal.current.length === 2 &&
-											val.length === 2 &&
-											yearVal.current.length === 4
-										) {
-											updateDate(monthVal.current, val, yearVal.current);
-										} else {
-											onValueChange?.(undefined);
-										}
-										if (val.length === 2 && val !== dayVal.current)
-											focusSegment(getNextSegment("day"));
-									}}
-									onKeyDown={(e) => handleKeyDown(e, "day")}
-									onFocus={() => setFocused("day")}
-									onBlur={() => setFocused(null)}
-								/>
-								{!isLast && (
-									<span
-										className={cn(
-											"select-none",
-											isDateInvalid
-												? "text-destructive"
-												: "text-muted-foreground/50",
-										)}
-									>
-										/
-									</span>
-								)}
-							</React.Fragment>
-						);
-					}
-					if (segmentType === "year") {
-						return (
-							<React.Fragment key="year">
-								<DateSegment
-									ref={yearRef}
-									type="year"
-									val={year}
-									placeholder="yyyy"
-									focused={focused === "year"}
-									disabled={disabled}
-									aria-invalid={isDateInvalid}
-									onChange={(e) => {
-										let val = e.target.value.replace(/\D/g, "");
-										const isFullySelected =
-											e.target.selectionStart === 1 &&
-											e.target.selectionEnd === 1;
-										if (isFullySelected && val.length > 4) {
-											val = val.slice(0, 1);
-										} else if (val.length > 4) {
-											val = val.slice(-1);
-										}
-										setYear(val);
-										if (
-											monthVal.current.length === 2 &&
-											dayVal.current.length === 2 &&
-											val.length === 4
-										) {
-											updateDate(monthVal.current, dayVal.current, val);
-										} else {
-											onValueChange?.(undefined);
-										}
-										if (val.length === 4 && val !== yearVal.current)
-											focusSegment(getNextSegment("year"));
-									}}
-									onKeyDown={(e) => handleKeyDown(e, "year")}
-									onFocus={() => setFocused("year")}
-									onBlur={() => setFocused(null)}
-								/>
-								{!isLast && (
-									<span
-										className={cn(
-											"select-none",
-											isDateInvalid
-												? "text-destructive"
-												: "text-muted-foreground/50",
-										)}
-									>
-										/
-									</span>
-								)}
-							</React.Fragment>
-						);
-					}
+function DateSegments({
+	controller,
+	dateOrder,
+	disabled,
+	isInvalid,
+}: {
+	controller: DateInputController;
+	dateOrder: DatePart[];
+	disabled?: boolean;
+	isInvalid: boolean;
+}) {
+	return (
+		<>
+			{dateOrder.map((segmentType, index) => {
+				const isLast = index === dateOrder.length - 1;
 
-					return null;
-				})}
-			</fieldset>
-		);
-	},
-);
-InputGroupDateInput.displayName = "InputGroupDateInput";
+				return (
+					<Fragment key={segmentType}>
+						<DateSegment
+							ref={controller.refs[segmentType]}
+							val={controller.dateParts[segmentType]}
+							placeholder={DATE_SEGMENT_PLACEHOLDERS[segmentType]}
+							focused={controller.focused === segmentType}
+							disabled={disabled}
+							aria-invalid={isInvalid}
+							onChange={(event) =>
+								controller.handleSegmentChange(segmentType, event)
+							}
+							onKeyDown={(event) =>
+								controller.handleSegmentKeyDown(segmentType, event)
+							}
+							onFocus={() => controller.handleSegmentFocus(segmentType)}
+							onBlur={controller.handleSegmentBlur}
+						/>
+
+						{!isLast && <DateSeparator isInvalid={isInvalid} />}
+					</Fragment>
+				);
+			})}
+		</>
+	);
+}
+
+function InputGroupDateInput({
+	ref,
+	className,
+	value,
+	onValueChange,
+	disabled,
+	minDate,
+	maxDate,
+	onMouseDown,
+	...props
+}: DateInputProps) {
+	const { i18n } = useTranslation();
+	const lang = i18n.language || "en";
+	const dateOrder = useMemo(() => getDateOrderForLanguage(lang), [lang]);
+
+	const controller = useDateInputController({
+		value,
+		onValueChange,
+		dateOrder,
+	});
+
+	const isDateInvalid = useDateInputInvalidState({
+		value,
+		minDate,
+		maxDate,
+		ariaInvalid: props["aria-invalid"],
+	});
+
+	const handleMouseDown = useDateInputMouseDown({
+		dateOrder,
+		valuesRef: controller.valuesRef,
+		focusSegment: controller.focusSegment,
+		onMouseDown,
+	});
+
+	return (
+		<fieldset
+			ref={ref}
+			{...props}
+			aria-invalid={isDateInvalid}
+			className={cn(
+				"flex min-h-9 flex-1 cursor-text select-none items-center bg-transparent px-3 text-sm text-primary",
+				disabled && "cursor-not-allowed opacity-50",
+				className,
+			)}
+			onMouseDown={handleMouseDown}
+		>
+			<DateSegments
+				controller={controller}
+				dateOrder={dateOrder}
+				disabled={disabled}
+				isInvalid={isDateInvalid}
+			/>
+		</fieldset>
+	);
+}
 
 export {
 	InputGroup,

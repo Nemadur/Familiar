@@ -8,8 +8,7 @@ import {
 	type ReactElement,
 	type ReactNode,
 	useCallback,
-	useContext,
-	useLayoutEffect,
+	use,
 	useMemo,
 	useState,
 } from "react";
@@ -47,7 +46,6 @@ import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
 
-// Sortable Item Context
 const SortableItemContext = createContext<{
 	listeners: DraggableSyntheticListeners | undefined;
 	isDragging?: boolean;
@@ -81,7 +79,6 @@ const dropAnimationConfig: DropAnimation = {
 	}),
 };
 
-// Multipurpose Sortable Component
 export interface SortableRootProps<T>
 	extends Omit<
 		useRender.ComponentProps<"div">,
@@ -117,9 +114,6 @@ function Sortable<T>({
 	...props
 }: SortableRootProps<T>) {
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-	const [mounted, setMounted] = useState(false);
-
-	useLayoutEffect(() => setMounted(true), []);
 
 	const sensors = useSensors(
 		useSensor(MouseSensor, {
@@ -149,12 +143,12 @@ function Sortable<T>({
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
 			const { active, over } = event;
+
 			setActiveId(null);
 			onDragEnd?.(event);
 
 			if (!over) return;
 
-			// Handle item reordering
 			const activeIndex = value.findIndex(
 				(item: T) => getItemValue(item) === active.id,
 			);
@@ -178,7 +172,7 @@ function Sortable<T>({
 		setActiveId(null);
 	}, []);
 
-	const getStrategy = () => {
+	const strategyHandler = useMemo(() => {
 		switch (strategy) {
 			case "horizontal":
 				return rectSortingStrategy;
@@ -188,7 +182,7 @@ function Sortable<T>({
 			default:
 				return verticalListSortingStrategy;
 		}
-	};
+	}, [strategy]);
 
 	const itemIds = useMemo(() => value.map(getItemValue), [value, getItemValue]);
 
@@ -204,10 +198,11 @@ function Sortable<T>({
 		children,
 	};
 
-	// Find the active child for the overlay
 	const overlayContent = useMemo(() => {
 		if (!activeId) return null;
+
 		let result: ReactNode = null;
+
 		Children.forEach(children, (child) => {
 			if (isValidElement(child) && (child.props as any).value === activeId) {
 				result = cloneElement(child as ReactElement<any>, {
@@ -216,6 +211,7 @@ function Sortable<T>({
 				});
 			}
 		});
+
 		return result;
 	}, [activeId, children]);
 
@@ -233,14 +229,15 @@ function Sortable<T>({
 				onDragEnd={handleDragEnd}
 				onDragCancel={handleDragCancel}
 			>
-				<SortableContext items={itemIds} strategy={getStrategy()}>
+				<SortableContext items={itemIds} strategy={strategyHandler}>
 					{useRender({
 						defaultTagName: "div",
 						render,
 						props: mergeProps<"div">(defaultProps, props),
 					})}
 				</SortableContext>
-				{mounted &&
+
+				{typeof document !== "undefined" &&
 					createPortal(
 						<DragOverlay
 							dropAnimation={dropAnimationConfig}
@@ -270,7 +267,7 @@ function SortableItem({
 	disabled,
 	...props
 }: SortableItemProps) {
-	const isOverlay = useContext(IsOverlayContext);
+	const isOverlay = use(IsOverlayContext);
 
 	const {
 		setNodeRef,
@@ -347,7 +344,7 @@ function SortableItemHandle({
 	cursor = true,
 	...props
 }: SortableItemHandleProps) {
-	const { listeners, isDragging, disabled } = useContext(SortableItemContext);
+	const { listeners, isDragging, disabled } = use(SortableItemContext);
 
 	const defaultProps = {
 		"data-slot": "sortable-item-handle",
@@ -378,10 +375,11 @@ function SortableOverlay({
 	className,
 	...props
 }: SortableOverlayProps) {
-	const { activeId, modifiers } = useContext(SortableInternalContext);
-	const [mounted, setMounted] = useState(false);
+	const { activeId, modifiers } = use(SortableInternalContext);
 
-	useLayoutEffect(() => setMounted(true), []);
+	if (typeof document === "undefined") {
+		return null;
+	}
 
 	const content =
 		activeId && children
@@ -389,8 +387,6 @@ function SortableOverlay({
 				? children({ value: activeId })
 				: children
 			: null;
-
-	if (!mounted) return null;
 
 	return createPortal(
 		<DragOverlay

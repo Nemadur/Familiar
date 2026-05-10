@@ -1,6 +1,6 @@
 import { Slider as SliderPrimitive } from "radix-ui";
-import * as React from "react";
-import { cn } from "src/lib/utils";
+import { useMemo } from "react";
+import { cn, createStaticList } from "src/lib/utils";
 
 function Slider({
 	className,
@@ -10,7 +10,7 @@ function Slider({
 	max = 100,
 	...props
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
-	const _values = React.useMemo(
+	const _values = useMemo(
 		() =>
 			Array.isArray(value)
 				? value
@@ -18,6 +18,11 @@ function Slider({
 					? defaultValue
 					: [min, max],
 		[value, defaultValue, min, max],
+	);
+
+	const thumbIds = useMemo(
+		() => createStaticList("slider-thumb", _values.length),
+		[_values.length],
 	);
 
 	return (
@@ -49,9 +54,7 @@ function Slider({
 			{Array.from({ length: _values.length }, (_, index) => (
 				<SliderPrimitive.Thumb
 					data-slot="slider-thumb"
-					// eslint-disable-next-line react-doctor/no-array-index-as-key
-					// biome-ignore lint/suspicious/noArrayIndexKey: Slider thumbs have no unique ID
-					key={index}
+					key={thumbIds[index].id}
 					className="border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
 				/>
 			))}

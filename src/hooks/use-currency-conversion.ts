@@ -4,9 +4,20 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+function hasRates(rates: Record<string, number>) {
+	return Object.keys(rates).length > 0;
+}
+
+function normalizeCurrency(currency?: string) {
+	return currency?.toUpperCase() || "USD";
+}
+
 export function useCurrencyConversion() {
 	const { userCurrency } = useCurrency();
 	const { i18n } = useTranslation();
+
+	const locale = i18n.language || "en-US";
+	const normalizedUserCurrency = normalizeCurrency(userCurrency);
 
 	// Fetch real Stripe exchange rates from backend
 	const { data: exchangeRatesData, isLoading } = useQuery({
@@ -15,16 +26,19 @@ export function useCurrencyConversion() {
 		staleTime: 1000 * 60 * 60, // 1 hour cache
 	});
 
-	const rates = exchangeRatesData?.rates || {};
+	const rates = useMemo(
+		() => exchangeRatesData?.rates || {},
+		[exchangeRatesData?.rates],
+	);
 
 	const convert = useMemo(() => {
 		return (amount: number, fromCurrency: string) => {
-			const sourceCurrency = fromCurrency?.toUpperCase() || "USD";
+			const sourceCurrency = normalizeCurrency(fromCurrency);
 
 			if (
-				sourceCurrency === userCurrency ||
+				sourceCurrency === normalizedUserCurrency ||
 				!rates ||
-				Object.keys(rates).length === 0
+				!hasRates(rates)
 			) {
 				return amount;
 			}
@@ -34,41 +48,46 @@ export function useCurrencyConversion() {
 			const amountInUSD = amount / fromRate;
 
 			const toRate =
-				userCurrency === "USD" ? 1 : rates[userCurrency.toLowerCase()] || 1;
+				normalizedUserCurrency === "USD"
+					? 1
+					: rates[normalizedUserCurrency.toLowerCase()] || 1;
+
 			return amountInUSD * toRate;
 		};
-	}, [userCurrency, rates]);
+	}, [normalizedUserCurrency, rates]);
 
 	const format = useMemo(() => {
 		return (amount: number, currency: string) => {
-			const locale = i18n.language || "en-US";
+			const normalizedCurrency = normalizeCurrency(currency);
+
 			try {
-				return new Intl.NumberFormat(locale, {
+				return amount.toLocaleString(locale, {
 					style: "currency",
-					currency,
-				}).format(amount);
-			} catch (e) {
-				return `${currency} ${amount.toFixed(2)}`;
+					currency: normalizedCurrency,
+				});
+			} catch {
+				return `${normalizedCurrency} ${amount.toFixed(2)}`;
 			}
 		};
-	}, [i18n.language]);
+	}, [locale]);
 
 	const convertAndFormat = useMemo(() => {
 		return (amount: number, fromCurrency: string) => {
 			const converted = convert(amount, fromCurrency);
 			const targetCurrency =
-				!rates || Object.keys(rates).length === 0
-					? fromCurrency?.toUpperCase() || "USD"
-					: userCurrency;
+				!rates || !hasRates(rates)
+					? normalizeCurrency(fromCurrency)
+					: normalizedUserCurrency;
+
 			return format(converted, targetCurrency);
 		};
-	}, [convert, format, userCurrency, rates]);
+	}, [convert, format, normalizedUserCurrency, rates]);
 
 	return {
 		convert,
 		format,
 		convertAndFormat,
-		userCurrency,
+		userCurrency: normalizedUserCurrency,
 		isLoading,
 	};
 }

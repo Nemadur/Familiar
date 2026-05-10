@@ -132,7 +132,7 @@ export const LikeButton = memo(function LikeButton({
 		<div className="flex items-center">
 			<Button
 				variant="ghost"
-				size={"icon"}
+				size="icon"
 				className={cn(
 					liked
 						? "text-danger drop-shadow-[0_1px_10px_danger] hover:bg-danger/12!"
@@ -144,7 +144,8 @@ export const LikeButton = memo(function LikeButton({
 			>
 				{liked ? <SolidHeart className="text-danger" /> : <OutlineHeart />}
 			</Button>
-			{showLikesCount && (
+
+			{showLikesCount ? (
 				<div
 					className={cn(
 						"text-sm transition-opacity",
@@ -162,7 +163,7 @@ export const LikeButton = memo(function LikeButton({
 				>
 					<NumberFlow value={likesCount} />
 				</div>
-			)}
+			) : null}
 		</div>
 	);
 });

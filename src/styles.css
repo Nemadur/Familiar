@@ -6,6 +6,19 @@
 
 @custom-variant dark (&:where(.dark, .oled, .dark *, .oled *));
 
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition: none !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
 body {
   @apply m-0;
   font-family:
@@ -296,12 +309,6 @@ code {
   }
   body {
     @apply bg-background text-foreground selection:bg-primary/12;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    @apply transition-none;
   }
 }
 

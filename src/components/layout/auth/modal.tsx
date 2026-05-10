@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { OutlineClose, SolidUser } from "@/components/icons/icons";
@@ -34,12 +34,17 @@ import RegisterForm from "./form/register";
 function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 	const { t } = useTranslation();
 	const [open, setOpen] = React.useState(false);
-	const [tab, setTab] = React.useState<AuthTab>(defaultTab);
+	const [selectedTab, setSelectedTab] = React.useState<AuthTab | null>(null);
 	const [forgotOpen, setForgotOpen] = React.useState(false);
 	const isMobile = useIsMobile();
 	const { user } = useAuth();
 
-	// Auto-close modal when user successfully signs in
+	const tab = selectedTab ?? defaultTab;
+
+	const setTab = React.useCallback((nextTab: AuthTab) => {
+		setSelectedTab(nextTab);
+	}, []);
+
 	React.useEffect(() => {
 		if (user && open) setOpen(false);
 	}, [user, open]);
@@ -51,15 +56,15 @@ function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 					<DrawerTrigger asChild>
 						<Button>{t("auth.register.cta")}</Button>
 					</DrawerTrigger>
-					<DrawerContent className={"max-h-[85vh]"}>
-						<DrawerHeader className={"text-center"}>
-							<DrawerClose asChild className={"absolute top-2 right-2"}>
-								<Button variant={"ghost"} size={"icon"} aria-label={"Close"}>
+					<DrawerContent className="max-h-[85vh]">
+						<DrawerHeader className="text-center">
+							<DrawerClose asChild className="absolute top-2 right-2">
+								<Button variant="ghost" size="icon" aria-label="Close">
 									<OutlineClose />
 								</Button>
 							</DrawerClose>
 						</DrawerHeader>
-						<div className={"px-4 pb-4"}>
+						<div className="px-4 pb-4">
 							<AuthContent
 								tab={tab}
 								setTab={setTab}
@@ -70,13 +75,12 @@ function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 					</DrawerContent>
 				</Drawer>
 
-				{/* Mobile forgot password drawer */}
 				<Drawer open={forgotOpen} onOpenChange={setForgotOpen}>
-					<DrawerContent className={"max-h-[85vh]"}>
-						<DrawerHeader className={"text-center"}>
+					<DrawerContent className="max-h-[85vh]">
+						<DrawerHeader className="text-center">
 							<DrawerTitle>Reset your password</DrawerTitle>
 						</DrawerHeader>
-						<div className={"px-4 pb-4"}>
+						<div className="px-4 pb-4">
 							<ForgotForm
 								onModeChange={() => {
 									setForgotOpen(false);
@@ -104,10 +108,7 @@ function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 					{t("auth.register.cta")}
 				</Button>
 			</DialogTrigger>
-			<DialogContent
-				className={"gap-0 p-0 md:max-w-4xl"}
-				showCloseButton={false}
-			>
+			<DialogContent className="gap-0 p-0 md:max-w-4xl" showCloseButton={false}>
 				<AuthContent
 					tab={tab}
 					setTab={setTab}
@@ -126,49 +127,40 @@ function AuthContent({
 	setForgotOpen,
 }: AuthContentProps) {
 	return (
-		<div className={"grid min-h-[420px] md:grid-cols-[320px_minmax(0,1fr)]"}>
-			{/* Left image panel (hidden on mobile) */}
-			<aside
-				className={
-					"relative hidden h-full flex-col gap-4 bg-muted/40 p-6 md:flex"
-				}
-			>
+		<div className="grid min-h-[420px] md:grid-cols-[320px_minmax(0,1fr)]">
+			<aside className="relative hidden h-full flex-col gap-4 bg-muted/40 p-6 md:flex">
 				<img
 					src="https://images.pexels.com/photos/1570264/pexels-photo-1570264.jpeg"
 					alt="Familiar"
-					className={"absolute inset-0 h-full w-full rounded-r-lg object-cover"}
+					className="absolute inset-0 h-full w-full rounded-r-lg object-cover"
 				/>
-				{/* Overlay */}
-				<div className={"absolute inset-0 rounded-r-lg bg-black/50"} />
-				{/* Text component */}
-				<div className={"z-10 flex flex-col gap-2 text-white"}>
-					<div className={"space-y-1"}>
-						<h3 className={"font-semibold text-sm"}>Familiar</h3>
-						<p className={"text-xs opacity-80"}>
+				<div className="absolute inset-0 rounded-r-lg bg-black/50" />
+				<div className="z-10 flex flex-col gap-2 text-white">
+					<div className="space-y-1">
+						<h3 className="font-semibold text-sm">Familiar</h3>
+						<p className="text-xs opacity-80">
 							Sign in to share your work and follow creators.
 						</p>
 					</div>
 				</div>
 			</aside>
 
-			{/* RIGHT Panel */}
-			<section className={"max-h-[80vh] overflow-y-auto p-4"}>
-				<div className={"mb-3 flex justify-end"}>
+			<section className="max-h-[80vh] overflow-y-auto p-4">
+				<div className="mb-3 flex justify-end">
 					<DialogClose asChild>
-						<Button variant={"ghost"} size={"icon"} aria-label={"Close"}>
+						<Button variant="ghost" size="icon" aria-label="Close">
 							<OutlineClose />
 						</Button>
 					</DialogClose>
 				</div>
 
-				{/* Tabs */}
 				<TabContent
 					tab={tab}
 					setTab={setTab}
 					setOpen={setOpen}
 					setForgotOpen={setForgotOpen}
 				/>
-				{/* Footer */}
+
 				<AuthFooter />
 			</section>
 		</div>
@@ -191,9 +183,8 @@ function TabContent({
 			<Tabs
 				value={tab}
 				onValueChange={(value) => setTab(value as AuthTab)}
-				className={"w-full"}
+				className="w-full"
 			>
-				{/* TABS */}
 				<TabsList
 					className={cn(
 						"grid h-auto w-full grid-cols-2 rounded-lg bg-muted p-1",
@@ -203,7 +194,7 @@ function TabContent({
 					<TabsTrigger value="login">Sign In</TabsTrigger>
 					<TabsTrigger value="register">Sign Up</TabsTrigger>
 				</TabsList>
-				{/* LOGIN */}
+
 				<TabsContent value="login">
 					<LoginForm
 						onModeChange={() => setTab("register")}
@@ -211,7 +202,7 @@ function TabContent({
 						onForgot={() => setForgotOpen(true)}
 					/>
 				</TabsContent>
-				{/* REGISTER */}
+
 				<TabsContent value="register">
 					<RegisterForm
 						onModeChange={() => setTab("login")}
@@ -225,6 +216,7 @@ function TabContent({
 
 function AuthFooter() {
 	const { t } = useTranslation();
+
 	return (
 		<p className="mt-3 text-sm text-muted-foreground">
 			{t("auth.terms_agree.label")}{" "}

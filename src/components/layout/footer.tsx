@@ -64,7 +64,7 @@ export default function Footer() {
 					>
 						{/* Social Links */}
 						<div className={"space-y-4"}>
-							<h4 className={"font-bold text-xs tracking-wider"}>
+							<h4 className={"font-semibold text-xs tracking-wider"}>
 								{t("footer.sections.socials")}
 							</h4>
 
@@ -82,7 +82,7 @@ export default function Footer() {
 
 						{/* Navigation Links */}
 						<div className={"space-y-4"}>
-							<h4 className={"font-bold text-xs tracking-wider"}>
+							<h4 className={"font-semibold text-xs tracking-wider"}>
 								{t("footer.sections.navigation")}
 							</h4>
 							<div className={"space-y-2"}>
@@ -98,7 +98,7 @@ export default function Footer() {
 
 						{/* Resources */}
 						<div className={"space-y-4"}>
-							<h4 className={"font-bold text-xs tracking-wider"}>
+							<h4 className={"font-semibold text-xs tracking-wider"}>
 								{t("footer.sections.resources")}
 							</h4>
 
@@ -125,18 +125,10 @@ export default function Footer() {
 						"flex flex-col items-center justify-between gap-4 sm:flex-row"
 					}
 				>
-					<p
-						className={
-							"text-gray-500 text-xs uppercase tracking-wider dark:text-gray-500"
-						}
-					>
+					<p className={"text-neutral-500 text-xs uppercase tracking-wider"}>
 						&copy; {currentYear} {t("footer.copyright.rights")}
 					</p>
-					<p
-						className={
-							"text-gray-500 text-xs uppercase tracking-wider dark:text-gray-500"
-						}
-					>
+					<p className={"text-neutral-500 text-xs uppercase tracking-wider"}>
 						{t("footer.copyright.made_with")}
 					</p>
 				</div>

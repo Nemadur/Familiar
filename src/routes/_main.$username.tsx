@@ -32,19 +32,24 @@ export const Route = createFileRoute("/_main/$username")({
 			description: loaderData?.seo?.description ?? "",
 		}),
 	}),
-	notFoundComponent: () => {
-		const { username } = Route.useLoaderData();
-		return (
-			<div className="flex flex-1 flex-col items-center justify-center p-8 text-center min-h-screen">
-				<h2 className="text-2xl font-bold mb-2">User "{username}" not found</h2>
-				<p className="text-muted-foreground">
-					The user "{username}" does not exist.
-				</p>
-			</div>
-		);
-	},
+	notFoundComponent: () => <UserNotFoundComponent />,
 	component: RouteComponent,
 });
+
+function UserNotFoundComponent() {
+	const { username } = Route.useLoaderData();
+
+	return (
+		<div className="flex min-h-screen flex-1 flex-col items-center justify-center p-8 text-center">
+			<h2 className="mb-2 text-2xl font-semibold">
+				User "{username}" not found
+			</h2>
+			<p className="text-muted-foreground">
+				The user "{username}" does not exist.
+			</p>
+		</div>
+	);
+}
 
 export function DefaultProfileTabContent({ username }: { username: string }) {
 	const {

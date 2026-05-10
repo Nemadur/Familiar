@@ -48,6 +48,8 @@ export function useCreateFormTemplate() {
 }
 
 export function useAssignFormTemplate() {
+	const queryClient = useQueryClient();
+
 	return useMutation({
 		mutationFn: async ({
 			commissionId,
@@ -57,6 +59,19 @@ export function useAssignFormTemplate() {
 			templateId: string | null;
 		}) => {
 			await assignFormTemplate(commissionId, templateId);
+		},
+		onSuccess: async (_data, variables) => {
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: ["commissions"],
+				}),
+				queryClient.invalidateQueries({
+					queryKey: ["commission", variables.commissionId],
+				}),
+				queryClient.invalidateQueries({
+					queryKey: ["form-templates"],
+				}),
+			]);
 		},
 	});
 }

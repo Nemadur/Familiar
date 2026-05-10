@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import {
 	type FieldValues,
 	type Resolver,
@@ -13,8 +13,8 @@ function useFormValidation<T extends FieldValues>({
 	schema,
 	initialData,
 }: UseFormValidationProps<T>) {
-	const [isPending, setIsPending] = useState(false);
 	const isSubmittingRef = useRef(false);
+
 	const {
 		register,
 		handleSubmit: rhfHandleSubmit,
@@ -41,13 +41,13 @@ function useFormValidation<T extends FieldValues>({
 		(onValid: SubmitHandler<T>, onInvalid?: SubmitErrorHandler<T>) => {
 			return rhfHandleSubmit(async (data, e) => {
 				if (isSubmittingRef.current) return;
+
 				isSubmittingRef.current = true;
-				setIsPending(true);
+
 				try {
 					await onValid(data, e);
 				} finally {
 					isSubmittingRef.current = false;
-					setIsPending(false);
 				}
 			}, onInvalid);
 		},
@@ -67,14 +67,16 @@ function useFormValidation<T extends FieldValues>({
 		errors: Object.keys(errors).reduce(
 			(acc, key) => {
 				const error = errors[key as keyof T];
+
 				if (error && typeof error === "object" && "message" in error) {
 					acc[key as keyof T] = error.message as string;
 				}
+
 				return acc;
 			},
 			{} as Record<keyof T, string>,
 		),
-		isPending,
+		isPending: formState.isSubmitting,
 		handleInputChange,
 		handleSubmit,
 		setFormData,

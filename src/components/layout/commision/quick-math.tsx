@@ -36,7 +36,7 @@ export function QuickMath({
 			)}
 		>
 			<div className="mb-6 flex items-center gap-2 text-muted-foreground">
-				<OutlineReceipt className="h-5 w-5" />
+				<OutlineReceipt className="size-5" />
 				<h3 className="font-semibold">Quick math</h3>
 				<span className="ml-auto text-xs opacity-70">
 					Internal reference use only

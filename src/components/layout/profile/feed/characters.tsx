@@ -39,7 +39,7 @@ export function ProfileCharacters({ characters }: ProfileCharactersProps) {
 
 					{/* Gradient Overlay */}
 					<div className="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black/90 via-black/20 to-transparent p-4">
-						<h3 className="truncate font-bold text-lg text-white drop-shadow-md">
+						<h3 className="truncate font-semibold text-lg text-white drop-shadow-md">
 							{character.name}
 						</h3>
 

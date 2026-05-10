@@ -1,5 +1,6 @@
 import { ScrollShadow, Surface } from "@heroui/react";
 import { Check, Maximize2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
 import {
@@ -15,19 +16,92 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import type { LicenseOption } from "@/types/commission";
+
+type CustomLicense = {
+	id: string;
+	title: string;
+	description: string;
+	label: string;
+	updatedAt: string;
+};
+
+const EMPTY_CUSTOM_LICENSES: CustomLicense[] = [];
 
 interface LicenseInfoModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	customLicenses?: LicenseOption[];
+	customLicenses?: CustomLicense[];
+}
+
+function ClientFormattedUpdatedDate({ value }: { value: string }) {
+	const { t } = useTranslation();
+	const [formattedDate, setFormattedDate] = useState("");
+
+	useEffect(() => {
+		const date = new Date(value);
+
+		if (Number.isNaN(date.getTime())) {
+			setFormattedDate("");
+			return;
+		}
+
+		setFormattedDate(
+			date.toLocaleDateString(undefined, {
+				month: "short",
+				day: "numeric",
+				year: "numeric",
+			}),
+		);
+	}, [value]);
+
+	if (!formattedDate) {
+		return null;
+	}
+
+	return (
+		<div className="text-sm text-muted-foreground mb-4">
+			{t(
+				"components.profile.commissions.modal.license_info_modal.custom_licenses.updated",
+				"Updated {{date}}",
+				{
+					date: formattedDate,
+				},
+			)}
+		</div>
+	);
+}
+
+function LicenseRule({
+	allowed,
+	children,
+	muted = !allowed,
+}: {
+	allowed: boolean;
+	children: React.ReactNode;
+	muted?: boolean;
+}) {
+	const Icon = allowed ? Check : X;
+
+	return (
+		<div className="flex items-start gap-3">
+			<Icon
+				className={
+					allowed
+						? "w-5 h-5 text-green-500 mt-0.5 shrink-0"
+						: "w-5 h-5 text-muted-foreground mt-0.5 shrink-0"
+				}
+			/>
+			<span className={muted ? "text-sm text-muted-foreground" : "text-sm"}>
+				{children}
+			</span>
+		</div>
+	);
 }
 
 export function LicenseInfoModal({
 	open,
 	onOpenChange,
-	customLicenses = [],
+	customLicenses = EMPTY_CUSTOM_LICENSES,
 }: LicenseInfoModalProps) {
 	const { t } = useTranslation();
 
@@ -75,30 +149,21 @@ export function LicenseInfoModal({
 								</AccordionTrigger>
 								<AccordionContent className="pb-4">
 									<div className="space-y-4 pt-2">
-										<div className="flex items-start gap-3">
-											<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-											<span className="text-sm">
-												{t(
-													"components.profile.commissions.modal.license_info_modal.personal.allowed.personal_use",
-												)}
-											</span>
-										</div>
-										<div className="flex items-start gap-3">
-											<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-											<span className="text-sm text-muted-foreground">
-												{t(
-													"components.profile.commissions.modal.license_info_modal.personal.forbidden.monetized",
-												)}
-											</span>
-										</div>
-										<div className="flex items-start gap-3">
-											<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-											<span className="text-sm text-muted-foreground">
-												{t(
-													"components.profile.commissions.modal.license_info_modal.personal.forbidden.commercial",
-												)}
-											</span>
-										</div>
+										<LicenseRule allowed>
+											{t(
+												"components.profile.commissions.modal.license_info_modal.personal.allowed.personal_use",
+											)}
+										</LicenseRule>
+										<LicenseRule allowed={false}>
+											{t(
+												"components.profile.commissions.modal.license_info_modal.personal.forbidden.monetized",
+											)}
+										</LicenseRule>
+										<LicenseRule allowed={false}>
+											{t(
+												"components.profile.commissions.modal.license_info_modal.personal.forbidden.commercial",
+											)}
+										</LicenseRule>
 									</div>
 								</AccordionContent>
 							</Surface>
@@ -122,30 +187,21 @@ export function LicenseInfoModal({
 								</AccordionTrigger>
 								<AccordionContent className="pb-4">
 									<div className="space-y-4 pt-2">
-										<div className="flex items-start gap-3">
-											<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-											<span className="text-sm">
-												{t(
-													"components.profile.commissions.modal.license_info_modal.monetized.allowed.personal_use",
-												)}
-											</span>
-										</div>
-										<div className="flex items-start gap-3">
-											<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-											<span className="text-sm">
-												{t(
-													"components.profile.commissions.modal.license_info_modal.monetized.allowed.monetized_content",
-												)}
-											</span>
-										</div>
-										<div className="flex items-start gap-3">
-											<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-											<span className="text-sm text-muted-foreground">
-												{t(
-													"components.profile.commissions.modal.license_info_modal.monetized.forbidden.commercial",
-												)}
-											</span>
-										</div>
+										<LicenseRule allowed>
+											{t(
+												"components.profile.commissions.modal.license_info_modal.monetized.allowed.personal_use",
+											)}
+										</LicenseRule>
+										<LicenseRule allowed>
+											{t(
+												"components.profile.commissions.modal.license_info_modal.monetized.allowed.monetized_content",
+											)}
+										</LicenseRule>
+										<LicenseRule allowed={false}>
+											{t(
+												"components.profile.commissions.modal.license_info_modal.monetized.forbidden.commercial",
+											)}
+										</LicenseRule>
 									</div>
 								</AccordionContent>
 							</Surface>
@@ -190,7 +246,7 @@ export function LicenseInfoModal({
 											</div>
 											<div className="space-y-3 flex-1">
 												<div className="flex items-start gap-2">
-													<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+													<Check className="size-5 text-green-500 mt-0.5 shrink-0" />
 													<span className="text-sm">
 														{t(
 															"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.allowed.creation",
@@ -198,7 +254,7 @@ export function LicenseInfoModal({
 													</span>
 												</div>
 												<div className="flex items-start gap-2">
-													<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+													<Check className="size-5 text-green-500 mt-0.5 shrink-0" />
 													<span className="text-sm">
 														{t(
 															"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.allowed.distribution",
@@ -206,7 +262,7 @@ export function LicenseInfoModal({
 													</span>
 												</div>
 												<div className="flex items-start gap-2">
-													<X className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+													<X className="size-5 text-muted-foreground mt-0.5 shrink-0" />
 													<span className="text-sm text-muted-foreground">
 														{t(
 															"components.profile.commissions.modal.license_info_modal.commercial.commercial_use.forbidden.reselling",
@@ -223,7 +279,7 @@ export function LicenseInfoModal({
 												)}
 											</div>
 											<div className="flex items-start gap-2 flex-1">
-												<Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+												<Check className="size-5 text-green-500 mt-0.5 shrink-0" />
 												<span className="text-sm">
 													{t(
 														"components.profile.commissions.modal.license_info_modal.commercial.credit.value",
@@ -240,7 +296,6 @@ export function LicenseInfoModal({
 					{customLicenses.length > 0 && (
 						<div className="mt-8">
 							<h3 className="text-lg font-semibold mb-4 text-center text-muted-foreground">
-								{/* Author displayName's - try do not display 's in other languages */}
 								{t(
 									"components.profile.commissions.modal.license_info_modal.custom_licenses.title",
 								)}
@@ -253,37 +308,20 @@ export function LicenseInfoModal({
 										className="rounded-2xl p-4 relative"
 									>
 										<Button
-											size={"icon-sm"}
-											variant={"ghost"}
+											size="icon-sm"
+											variant="ghost"
 											className="absolute top-4 right-4"
 										>
 											<Maximize2 className="size-4" />
 										</Button>
 										<div className="flex items-center gap-2 mb-2">
-											<h4 className="font-bold text-lg">{license.label}</h4>
+											<h4 className="font-semibold text-lg">{license.label}</h4>
 										</div>
 										{license.updatedAt && (
-											<div className="text-sm text-muted-foreground mb-4">
-												{t(
-													"components.profile.commissions.modal.license_info_modal.custom_licenses.updated",
-													"Updated {{date}}",
-													{
-														date: new Date(
-															license.updatedAt,
-														).toLocaleDateString(undefined, {
-															month: "short",
-															day: "numeric",
-															year: "numeric",
-														}),
-													},
-												)}
-											</div>
+											<ClientFormattedUpdatedDate value={license.updatedAt} />
 										)}
 										<div className="text-sm text-muted-foreground/90">
-											<MarkdownDisplay
-												content={license.description}
-												variant="restricted"
-											/>
+											<MarkdownDisplay content={license.description} />
 										</div>
 									</Surface>
 								))}

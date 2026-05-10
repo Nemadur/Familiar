@@ -47,9 +47,6 @@ export function useProfileCommissions(artistId: string, page = 0, size = 24) {
 	};
 }
 
-// Alias so older imports keep working.
-export const useProfileCommisions = useProfileCommissions;
-
 export function useCommission(commissionId: string) {
 	return useQuery<TCommissionDetailResponse, Error>({
 		queryKey: ["commissions", commissionId],

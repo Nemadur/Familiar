@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
-import * as React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "src/lib/utils";
 
@@ -13,7 +13,7 @@ const buttonVariants = cva(
 					"bg-primary text-primary-foreground hover:bg-primary/80 selection:bg-primary-foreground/12",
 				outline:
 					"border-border bg-transparent hover:bg-primary/12 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-				secondary: "bg-primary/10 text-primary hover:bg-primary/20", //TODO: make better style for aria-expanded:bg-primary
+				secondary: "bg-primary/10 text-primary hover:bg-primary/20",
 				ghost:
 					"hover:bg-muted hover:text-muted-foreground focus-visible:bg-muted focus-visible:text-muted-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
 				blur_light:
@@ -48,7 +48,15 @@ const buttonVariants = cva(
 	},
 );
 
-// TODO: add hold to confirm for destructive buttons with callback
+type ButtonProps = Omit<React.ComponentProps<"button">, "children"> &
+	VariantProps<typeof buttonVariants> & {
+		asChild?: boolean;
+		onHold?: () => void;
+		holdDuration?: number;
+		onHoldCompleted?: (completed: boolean) => void;
+		children?: React.ReactNode | ((completed: boolean) => React.ReactNode);
+	};
+
 function Button({
 	className,
 	variant = "default",
@@ -63,53 +71,69 @@ function Button({
 	onPointerLeave,
 	children,
 	...props
-}: Omit<React.ComponentProps<"button">, "children"> &
-	VariantProps<typeof buttonVariants> & {
-		asChild?: boolean;
-		onHold?: () => void;
-		holdDuration?: number;
-		onHoldCompleted?: (completed: boolean) => void;
-		children?: React.ReactNode | ((completed: boolean) => React.ReactNode);
-	}) {
+}: ButtonProps) {
 	const Comp = asChild ? Slot.Root : "button";
 
-	const [isHolding, setIsHolding] = React.useState(false);
-	const [holdCompleted, setHoldCompleted] = React.useState(false);
-	const holdTimer = React.useRef<NodeJS.Timeout | null>(null);
-	const visualTimer = React.useRef<NodeJS.Timeout | null>(null);
-	const pointerDownTime = React.useRef<number>(0);
-	const isTap = React.useRef<boolean>(true);
+	const [isHolding, setIsHolding] = useState(false);
+	const [holdCompleted, setHoldCompleted] = useState(false);
 
-	// Sync holdCompleted state with external callback if provided
-	React.useEffect(() => {
-		if (onHoldCompleted) {
-			onHoldCompleted(holdCompleted);
+	const holdCompletedRef = useRef(false);
+	const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const visualTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const pointerDownTime = useRef(0);
+	const isTap = useRef(true);
+
+	const clearHoldTimers = useCallback(() => {
+		if (visualTimer.current) {
+			clearTimeout(visualTimer.current);
+			visualTimer.current = null;
 		}
-	}, [holdCompleted, onHoldCompleted]);
+
+		if (holdTimer.current) {
+			clearTimeout(holdTimer.current);
+			holdTimer.current = null;
+		}
+	}, []);
+
+	const setHoldCompletedState = (completed: boolean) => {
+		if (holdCompletedRef.current === completed) return;
+
+		holdCompletedRef.current = completed;
+		setHoldCompleted(completed);
+		onHoldCompleted?.(completed);
+	};
+
+	useEffect(() => {
+		return () => {
+			clearHoldTimers();
+		};
+	}, [clearHoldTimers]);
 
 	const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
 		if (props.disabled || !onHold) {
 			onPointerDown?.(e);
 			return;
 		}
+
 		if (e.button !== 0) {
 			onPointerDown?.(e);
 			return;
 		}
 
 		isTap.current = true;
-		setHoldCompleted(false);
 		pointerDownTime.current = Date.now();
 
-		if (visualTimer.current) clearTimeout(visualTimer.current);
+		setHoldCompletedState(false);
+		clearHoldTimers();
+
 		visualTimer.current = setTimeout(() => {
 			setIsHolding(true);
 		}, 150);
 
-		if (holdTimer.current) clearTimeout(holdTimer.current);
 		holdTimer.current = setTimeout(() => {
+			clearHoldTimers();
 			setIsHolding(false);
-			setHoldCompleted(true);
+			setHoldCompletedState(true);
 			onHold();
 		}, holdDuration);
 
@@ -117,8 +141,7 @@ function Button({
 	};
 
 	const cancelHold = () => {
-		if (visualTimer.current) clearTimeout(visualTimer.current);
-		if (holdTimer.current) clearTimeout(holdTimer.current);
+		clearHoldTimers();
 		setIsHolding(false);
 	};
 
@@ -127,9 +150,12 @@ function Button({
 			onPointerUp?.(e);
 			return;
 		}
+
 		cancelHold();
+
 		const duration = Date.now() - pointerDownTime.current;
 		isTap.current = duration <= 200;
+
 		onPointerUp?.(e);
 	};
 
@@ -138,8 +164,10 @@ function Button({
 			onPointerLeave?.(e);
 			return;
 		}
+
 		cancelHold();
 		isTap.current = false;
+
 		onPointerLeave?.(e);
 	};
 
@@ -149,6 +177,7 @@ function Button({
 			e.stopPropagation();
 			return;
 		}
+
 		onClick?.(e);
 	};
 
@@ -168,6 +197,9 @@ function Button({
 		}
 	};
 
+	const renderedChildren =
+		typeof children === "function" ? children(holdCompleted) : children;
+
 	if (asChild) {
 		return (
 			<Comp
@@ -181,7 +213,7 @@ function Button({
 				onPointerLeave={onPointerLeave}
 				{...props}
 			>
-				{typeof children === "function" ? children(holdCompleted) : children}
+				{renderedChildren}
 			</Comp>
 		);
 	}
@@ -204,10 +236,8 @@ function Button({
 			{onHold && (
 				<span
 					className={cn(
-						// Don't spread full buttonVariants here — it pulls in the base text color
 						"absolute inset-0 z-10 pointer-events-none border-transparent transition-all ease-linear",
 						"inline-flex items-center justify-center gap-1.5 text-sm font-medium whitespace-nowrap rounded-full",
-						"flex items-center justify-center",
 						getFillStyles(variant as string),
 					)}
 					style={{
@@ -217,14 +247,11 @@ function Button({
 						transitionTimingFunction: "linear",
 					}}
 				>
-					{typeof children === "function"
-						? (children as any)(holdCompleted)
-						: children}
+					{renderedChildren}
 				</span>
 			)}
-			{typeof children === "function"
-				? (children as any)(holdCompleted)
-				: children}
+
+			{renderedChildren}
 		</Comp>
 	);
 }

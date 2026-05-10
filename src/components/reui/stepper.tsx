@@ -5,7 +5,7 @@ import {
 	isValidElement,
 	type ReactElement,
 	useCallback,
-	useContext,
+	use,
 	useEffect,
 	useMemo,
 	useRef,
@@ -14,7 +14,6 @@ import {
 
 import { cn } from "@/lib/utils";
 
-// Types
 type StepperOrientation = "horizontal" | "vertical";
 type StepState = "active" | "completed" | "inactive" | "loading";
 type StepIndicators = {
@@ -54,14 +53,18 @@ const StepItemContext = createContext<StepItemContextValue | undefined>(
 );
 
 function useStepper() {
-	const ctx = useContext(StepperContext);
+	const ctx = use(StepperContext);
+
 	if (!ctx) throw new Error("useStepper must be used within a Stepper");
+
 	return ctx;
 }
 
 function useStepItem() {
-	const ctx = useContext(StepItemContext);
+	const ctx = use(StepItemContext);
+
 	if (!ctx) throw new Error("useStepItem must be used within a StepperItem");
+
 	return ctx;
 }
 
@@ -85,15 +88,17 @@ function Stepper({
 	indicators = DEFAULT_INDICATORS,
 	...props
 }: StepperProps) {
-	const [activeStep, setActiveStep] = useState(defaultValue);
+	const [selectedStep, setSelectedStep] = useState<number | null>(null);
 	const [triggerNodes, setTriggerNodes] = useState<HTMLButtonElement[]>([]);
 
-	// Register/unregister triggers
+	const currentStep = value ?? selectedStep ?? defaultValue;
+
 	const registerTrigger = useCallback((node: HTMLButtonElement) => {
 		setTriggerNodes((prev) => {
 			if (node && !prev.includes(node)) {
 				return [...prev, node];
 			}
+
 			return prev;
 		});
 	}, []);
@@ -105,27 +110,27 @@ function Stepper({
 	const handleSetActiveStep = useCallback(
 		(step: number) => {
 			if (value === undefined) {
-				setActiveStep(step);
+				setSelectedStep(step);
 			}
+
 			onValueChange?.(step);
 		},
 		[value, onValueChange],
 	);
 
-	const currentStep = value ?? activeStep;
-
-	// Keyboard navigation logic
 	const focusTrigger = useCallback(
 		(idx: number) => {
-			if (triggerNodes[idx]) triggerNodes[idx].focus();
+			triggerNodes[idx]?.focus();
 		},
 		[triggerNodes],
 	);
+
 	const focusNext = useCallback(
 		(currentIdx: number) =>
 			focusTrigger((currentIdx + 1) % triggerNodes.length),
 		[focusTrigger, triggerNodes.length],
 	);
+
 	const focusPrev = useCallback(
 		(currentIdx: number) =>
 			focusTrigger(
@@ -133,23 +138,30 @@ function Stepper({
 			),
 		[focusTrigger, triggerNodes.length],
 	);
+
 	const focusFirst = useCallback(() => focusTrigger(0), [focusTrigger]);
+
 	const focusLast = useCallback(
 		() => focusTrigger(triggerNodes.length - 1),
 		[focusTrigger, triggerNodes.length],
 	);
 
-	// Context value
-	const contextValue = useMemo<StepperContextValue>(
-		() => ({
-			activeStep: currentStep,
-			setActiveStep: handleSetActiveStep,
-			stepsCount: Children.toArray(children).filter(
+	const stepsCount = useMemo(
+		() =>
+			Children.toArray(children).filter(
 				(child): child is ReactElement =>
 					isValidElement(child) &&
 					(child.type as { displayName?: string }).displayName ===
 						"StepperItem",
 			).length,
+		[children],
+	);
+
+	const contextValue = useMemo<StepperContextValue>(
+		() => ({
+			activeStep: currentStep,
+			setActiveStep: handleSetActiveStep,
+			stepsCount,
 			orientation,
 			registerTrigger,
 			unregisterTrigger,
@@ -163,7 +175,7 @@ function Stepper({
 		[
 			currentStep,
 			handleSetActiveStep,
-			children,
+			stepsCount,
 			orientation,
 			registerTrigger,
 			unregisterTrigger,
@@ -239,6 +251,8 @@ function StepperItem({
 	);
 }
 
+StepperItem.displayName = "StepperItem";
+
 interface StepperTriggerProps
 	extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	asChild?: boolean;
@@ -268,18 +282,20 @@ function StepperTrigger({
 	const isSelected = activeStep === step;
 	const id = `stepper-tab-${step}`;
 	const panelId = `stepper-panel-${step}`;
-
-	// Register this trigger for keyboard navigation
 	const btnRef = useRef<HTMLButtonElement>(null);
+
 	useEffect(() => {
 		const node = btnRef.current;
-		if (node) {
-			registerTrigger(node);
-			return () => unregisterTrigger(node);
+
+		if (!node) {
+			return;
 		}
+
+		registerTrigger(node);
+
+		return () => unregisterTrigger(node);
 	}, [registerTrigger, unregisterTrigger]);
 
-	// Find our index among triggers for navigation
 	const myIdx = useMemo(
 		() =>
 			triggerNodes.findIndex((n: HTMLButtonElement) => n === btnRef.current),
@@ -291,20 +307,20 @@ function StepperTrigger({
 			case "ArrowRight":
 			case "ArrowDown":
 				e.preventDefault();
-				if (myIdx !== -1 && focusNext) focusNext(myIdx);
+				if (myIdx !== -1) focusNext(myIdx);
 				break;
 			case "ArrowLeft":
 			case "ArrowUp":
 				e.preventDefault();
-				if (myIdx !== -1 && focusPrev) focusPrev(myIdx);
+				if (myIdx !== -1) focusPrev(myIdx);
 				break;
 			case "Home":
 				e.preventDefault();
-				if (focusFirst) focusFirst();
+				focusFirst();
 				break;
 			case "End":
 				e.preventDefault();
-				if (focusLast) focusLast();
+				focusLast();
 				break;
 			case "Enter":
 			case " ":
@@ -342,7 +358,7 @@ function StepperTrigger({
 				"gap-2.5 rounded-full",
 				className,
 			)}
-			type="button" // Explicitly prevent form submission
+			type="button"
 			onClick={() => setActiveStep(step)}
 			onKeyDown={handleKeyDown}
 			disabled={isDisabled}
@@ -360,6 +376,13 @@ function StepperIndicator({
 	const { state, isLoading } = useStepItem();
 	const { indicators } = useStepper();
 
+	const indicator =
+		(isLoading && indicators.loading) ||
+		(state === "completed" && indicators.completed) ||
+		(state === "active" && indicators.active) ||
+		(state === "inactive" && indicators.inactive) ||
+		children;
+
 	return (
 		<div
 			data-slot="stepper-indicator"
@@ -370,18 +393,7 @@ function StepperIndicator({
 				className,
 			)}
 		>
-			<div className="absolute">
-				{indicators &&
-				((isLoading && indicators.loading) ||
-					(state === "completed" && indicators.completed) ||
-					(state === "active" && indicators.active) ||
-					(state === "inactive" && indicators.inactive))
-					? (isLoading && indicators.loading) ||
-						(state === "completed" && indicators.completed) ||
-						(state === "active" && indicators.active) ||
-						(state === "inactive" && indicators.inactive)
-					: children}
-			</div>
+			<div className="absolute">{indicator}</div>
 		</div>
 	);
 }

@@ -140,7 +140,7 @@ export function DashboardSidebar() {
 												className={`flex items-center justify-between ${item.badge ? "pointer-events-none" : ""}`}
 											>
 												<div className="flex items-center gap-2">
-													<item.icon className="h-4 w-4" />
+													<item.icon className="size-4" />
 													<span>{item.title}</span>
 												</div>
 												{item.badge && (
@@ -178,7 +178,7 @@ export function DashboardSidebar() {
 												className={`relative flex items-center justify-between ${item.badge ? "pointer-events-none" : ""}`}
 											>
 												<div className="flex items-center gap-2">
-													<item.icon className="h-4 w-4" />
+													<item.icon className="size-4" />
 													{item.title}
 												</div>
 												{item.badge && (
@@ -214,7 +214,7 @@ export function DashboardSidebar() {
 												className={`flex items-center justify-between ${item.badge ? "pointer-events-none" : ""}`}
 											>
 												<div className="flex items-center gap-2">
-													<item.icon className="h-4 w-4" />
+													<item.icon className="size-4" />
 													{item.title}
 												</div>
 												{item.badge && (

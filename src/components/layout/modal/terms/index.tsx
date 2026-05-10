@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { MarkdownDisplay } from "@/components/common/markdown-display";
 import {
@@ -15,10 +16,65 @@ interface TermsModalProps {
 	artistId: string;
 }
 
+type FormattedDateSnapshot = {
+	formattedDate: string;
+	dateTime: string;
+} | null;
+
+const formattedDateCache = new Map<string, FormattedDateSnapshot>();
+
+function subscribeToFormattedDateStore() {
+	return () => {};
+}
+
+function getClientFormattedDateSnapshot(value: string): FormattedDateSnapshot {
+	const cached = formattedDateCache.get(value);
+
+	if (cached !== undefined) {
+		return cached;
+	}
+
+	const date = new Date(value);
+
+	if (Number.isNaN(date.getTime())) {
+		formattedDateCache.set(value, null);
+		return null;
+	}
+
+	const snapshot = {
+		formattedDate: format(date, "PPP"),
+		dateTime: date.toISOString(),
+	};
+
+	formattedDateCache.set(value, snapshot);
+
+	return snapshot;
+}
+
+function getServerFormattedDateSnapshot(): FormattedDateSnapshot {
+	return null;
+}
+
+function useClientFormattedDate(value: string) {
+	return useSyncExternalStore(
+		subscribeToFormattedDateStore,
+		() => getClientFormattedDateSnapshot(value),
+		getServerFormattedDateSnapshot,
+	);
+}
+
+function ClientFormattedDate({ value }: { value: string }) {
+	const snapshot = useClientFormattedDate(value);
+
+	if (!snapshot) {
+		return null;
+	}
+
+	return <time dateTime={snapshot.dateTime}>{snapshot.formattedDate}</time>;
+}
+
 export function TermsModal({ open, onOpenChange, artistId }: TermsModalProps) {
 	const { t } = useTranslation();
-
-	//Fetch artist Tos
 	const { tosData, isTosPending, tosError } =
 		useProfileTermsOfService(artistId);
 
@@ -31,17 +87,35 @@ export function TermsModal({ open, onOpenChange, artistId }: TermsModalProps) {
 							artistId,
 						})}
 					</DialogTitle>
+
 					{tosData?.updatedAt && (
 						<p className="text-sm text-muted-foreground">
 							{t("components.profile.terms_of_service.updated", {
-								date: format(new Date(tosData?.updatedAt || ""), "PPP"),
-							})}
+								date: "",
+								defaultValue: "Updated",
+							}).trim()}{" "}
+							<ClientFormattedDate value={tosData.updatedAt} />
 						</p>
 					)}
 				</DialogHeader>
 
 				<div className="flex-1 overflow-y-auto p-6">
-					<MarkdownDisplay content={tosData?.tosText || ""} />
+					{isTosPending ? (
+						<p className="text-sm text-muted-foreground">
+							{t("components.profile.terms_of_service.loading", "Loading...")}
+						</p>
+					) : tosError ? (
+						<p className="text-sm text-destructive">
+							{tosError instanceof Error
+								? tosError.message
+								: t(
+										"components.profile.terms_of_service.error",
+										"Failed to load terms of service.",
+									)}
+						</p>
+					) : (
+						<MarkdownDisplay content={tosData?.tosText || ""} />
+					)}
 				</div>
 			</DialogContent>
 		</Dialog>

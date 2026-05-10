@@ -1,5 +1,5 @@
 import { createContextualCan } from "@casl/react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import {
 	type AppAbility,
 	createAbility,
@@ -31,5 +31,5 @@ export function AbilityProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAbility() {
-	return useContext(AbilityContext);
+	return use(AbilityContext);
 }

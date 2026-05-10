@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useIncomingCommissionRequests } from "@/hooks/use-commisions";
-import { RequestList } from "@/components/layout/requests/my/list";
+import { CalendarIcon, CreditCard, Flag, ListFilterIcon } from "lucide-react";
+import { useCallback, useMemo, useReducer } from "react";
+import type { DateFilterOperator } from "@/components/data-table-filter/core/types";
+import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form";
+import { DashboardHeader } from "@/components/layout/dashboard/header";
+import {
+	type DateRangeValue,
+	FilterBar,
+	type FilterGroup,
+	type FilterValue,
+	type ManagedFilterValue,
+} from "@/components/layout/filter-bar";
+import { RequestDetailsModal } from "@/components/layout/modal/my-requests";
 import {
 	getPaymentFilterValue,
 	getPaymentStatus,
@@ -11,33 +21,18 @@ import {
 	type RequestItem,
 	stageLabel,
 } from "@/components/layout/requests/my/helpers";
-import { useState, useMemo, useEffect } from "react";
-import { RequestDetailsModal } from "@/components/layout/modal/my-requests";
-import {
-	type DateRangeValue,
-	FilterBar,
-	type FilterGroup,
-	type FilterValue,
-	type ManagedFilterValue,
-} from "@/components/layout/filter-bar";
-import { CalendarIcon, CreditCard, Flag, ListFilterIcon } from "lucide-react";
+import { RequestList } from "@/components/layout/requests/my/list";
 import {
 	OutlineCheck,
 	OutlineClock03,
 	OutlineClose,
 	OutlinePlus,
 } from "@/components/icons/icons";
-import { Plus } from "lucide-react";
-import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form";
-import { DashboardHeader } from "@/components/layout/dashboard/header";
+import { Button } from "@/components/ui/button";
+import { useIncomingCommissionRequests } from "@/hooks/use-commisions";
+import { useAuth } from "@/providers/auth";
 import { TCommissionRequestStatus } from "@/types/commissions";
 import { TPaymentStatus } from "@/types/payment";
-import type { DateFilterOperator } from "@/components/data-table-filter/core/types";
-import { useAuth } from "@/providers/auth";
-import User from "@/components/layout/profile/user";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/dashboard/commissions_requests")({
 	component: DashboardCommissionsRequests,
@@ -46,30 +41,265 @@ export const Route = createFileRoute("/dashboard/commissions_requests")({
 type ManagedFilterEntry = ManagedFilterValue;
 type ManagedFiltersState = Record<string, ManagedFilterEntry>;
 
-const INITIAL_FILTER_STATE: ManagedFiltersState = {
-	status: { value: [] },
-	payment: { value: [] },
-	timeline: { value: [] },
-	submittedDate: {
-		value: { from: undefined, to: undefined },
-		operator: "is between",
+interface DashboardRequestsState {
+	page: number;
+	selectedRequestId: string | null;
+	detailsOpen: boolean;
+	searchQuery: string;
+	filterState: ManagedFiltersState;
+	isCreateModalOpen: boolean;
+}
+
+type DashboardRequestsAction =
+	| {
+			type: "setPage";
+			page: number;
+	  }
+	| {
+			type: "setSearchQuery";
+			searchQuery: string;
+	  }
+	| {
+			type: "openDetails";
+			requestId: string;
+	  }
+	| {
+			type: "setDetailsOpen";
+			open: boolean;
+	  }
+	| {
+			type: "clearSelectedRequest";
+	  }
+	| {
+			type: "setFilter";
+			groupId: string;
+			value: FilterValue;
+			operator?: ManagedFilterValue["operator"];
+	  }
+	| {
+			type: "clearAllFilters";
+	  }
+	| {
+			type: "setCreateModalOpen";
+			open: boolean;
+	  };
+
+interface RequestsPageModel {
+	requests: RequestItem[];
+	isPending: boolean;
+	requestsError: unknown;
+	totalPages: number;
+	totalItems: number;
+	currentPage: number;
+	startItem: number;
+	endItem: number;
+}
+
+interface DashboardRequestsActions {
+	openDetails: (requestId: string) => void;
+	setDetailsOpen: (open: boolean) => void;
+	setPage: (page: number) => void;
+	setSearchQuery: (searchQuery: string) => void;
+	setCreateModalOpen: (open: boolean) => void;
+	handleFilterChange: (
+		groupId: string,
+		value: FilterValue,
+		operator?: ManagedFilterValue["operator"],
+	) => void;
+	clearAllFilters: () => void;
+}
+
+const REQUEST_FILTER_GROUPS: FilterGroup<RequestItem>[] = [
+	{
+		id: "status",
+		label: "Status",
+		type: "select",
+		icon: ListFilterIcon,
+		getItemValue: (request) => request.status,
+		options: [
+			{
+				id: TCommissionRequestStatus.Pending,
+				label: stageLabel(TCommissionRequestStatus.Pending),
+			},
+			{
+				id: TCommissionRequestStatus.Accepted,
+				label: stageLabel(TCommissionRequestStatus.Accepted),
+			},
+			{
+				id: TCommissionRequestStatus.In_Progress,
+				label: stageLabel(TCommissionRequestStatus.In_Progress),
+			},
+			{
+				id: TCommissionRequestStatus.Delivered,
+				label: stageLabel(TCommissionRequestStatus.Delivered),
+			},
+			{
+				id: TCommissionRequestStatus.Completed,
+				label: stageLabel(TCommissionRequestStatus.Completed),
+			},
+			{
+				id: TCommissionRequestStatus.Cancelled,
+				label: stageLabel(TCommissionRequestStatus.Cancelled),
+			},
+		],
 	},
+	{
+		id: "payment",
+		label: "Payment",
+		type: "select",
+		icon: CreditCard,
+		getItemValue: (request) => getPaymentFilterValue(request),
+		options: [
+			{
+				id: TPaymentStatus.Pending,
+				label: "Pending",
+				icon: OutlineClock03,
+			},
+			{
+				id: TPaymentStatus.Completed,
+				label: "Paid",
+				icon: OutlineCheck,
+			},
+			{
+				id: TPaymentStatus.Failed,
+				label: "Failed",
+				icon: OutlineClose,
+			},
+			{
+				id: TPaymentStatus.Refunded,
+				label: "Refunded",
+				icon: OutlineClose,
+			},
+		],
+	},
+	{
+		id: "timeline",
+		label: "Timeline",
+		type: "select",
+		icon: Flag,
+		getItemValue: (request) => getRequestTimelineFilterValue(request),
+		options: [
+			{ id: "awaiting_review", label: "Awaiting review" },
+			{ id: "accepted", label: "Accepted" },
+			{ id: "in_progress", label: "In progress" },
+			{ id: "delivered", label: "Delivered" },
+			{ id: "completed", label: "Completed" },
+			{ id: "cancelled", label: "Cancelled" },
+		],
+	},
+	{
+		id: "submittedDate",
+		label: "Submitted date",
+		type: "date",
+		icon: CalendarIcon,
+		getItemValue: (request) => new Date(request.createdAt),
+	},
+];
+
+function createInitialFilterState(): ManagedFiltersState {
+	return {
+		status: { value: [] },
+		payment: { value: [] },
+		timeline: { value: [] },
+		submittedDate: {
+			value: { from: undefined, to: undefined },
+			operator: "is between",
+		},
+	};
+}
+
+const INITIAL_DASHBOARD_REQUESTS_STATE: DashboardRequestsState = {
+	page: 1,
+	selectedRequestId: null,
+	detailsOpen: false,
+	searchQuery: "",
+	filterState: createInitialFilterState(),
+	isCreateModalOpen: false,
 };
+
+function dashboardRequestsReducer(
+	state: DashboardRequestsState,
+	action: DashboardRequestsAction,
+): DashboardRequestsState {
+	switch (action.type) {
+		case "setPage":
+			return {
+				...state,
+				page: action.page,
+			};
+
+		case "setSearchQuery":
+			return {
+				...state,
+				searchQuery: action.searchQuery,
+			};
+
+		case "openDetails":
+			return {
+				...state,
+				selectedRequestId: action.requestId,
+				detailsOpen: true,
+			};
+
+		case "setDetailsOpen":
+			return {
+				...state,
+				detailsOpen: action.open,
+			};
+
+		case "clearSelectedRequest":
+			return {
+				...state,
+				selectedRequestId: null,
+				detailsOpen: false,
+			};
+
+		case "setFilter":
+			return {
+				...state,
+				filterState: {
+					...state.filterState,
+					[action.groupId]: {
+						value: action.value,
+						operator: action.operator,
+					},
+				},
+			};
+
+		case "clearAllFilters":
+			return {
+				...state,
+				filterState: createInitialFilterState(),
+			};
+
+		case "setCreateModalOpen":
+			return {
+				...state,
+				isCreateModalOpen: action.open,
+			};
+
+		default:
+			return state;
+	}
+}
 
 function isDateRangeValue(value: FilterValue): value is DateRangeValue {
 	if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
 	return "from" in value || "to" in value;
 }
 
 function startOfDay(date: Date) {
 	const next = new Date(date);
 	next.setHours(0, 0, 0, 0);
+
 	return next;
 }
 
 function endOfDay(date: Date) {
 	const next = new Date(date);
 	next.setHours(23, 59, 59, 999);
+
 	return next;
 }
 
@@ -134,31 +364,96 @@ export function getSelectedValues(value: FilterValue | undefined): string[] {
 	return [];
 }
 
-function DashboardCommissionsRequests() {
-	const [page, setPage] = useState(1);
-	const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
-		null,
+function useDashboardRequestsController() {
+	const [state, dispatch] = useReducer(
+		dashboardRequestsReducer,
+		INITIAL_DASHBOARD_REQUESTS_STATE,
 	);
-	const [detailsOpen, setDetailsOpen] = useState(false);
-	const [searchQuery, setSearchQuery] = useState("");
-	const [filterState, setFilterState] =
-		useState<ManagedFiltersState>(INITIAL_FILTER_STATE);
 
+	const openDetails = useCallback((requestId: string) => {
+		dispatch({ type: "openDetails", requestId });
+	}, []);
+
+	const setDetailsOpen = useCallback((nextOpen: boolean) => {
+		if (nextOpen) {
+			dispatch({ type: "setDetailsOpen", open: true });
+			return;
+		}
+
+		dispatch({ type: "clearSelectedRequest" });
+	}, []);
+
+	const setPage = useCallback((nextPage: number) => {
+		dispatch({ type: "setPage", page: nextPage });
+		dispatch({ type: "clearSelectedRequest" });
+	}, []);
+
+	const setSearchQuery = useCallback((nextSearchQuery: string) => {
+		dispatch({ type: "setSearchQuery", searchQuery: nextSearchQuery });
+	}, []);
+
+	const setCreateModalOpen = useCallback((nextOpen: boolean) => {
+		dispatch({ type: "setCreateModalOpen", open: nextOpen });
+	}, []);
+
+	const handleFilterChange = useCallback(
+		(
+			groupId: string,
+			value: FilterValue,
+			operator?: ManagedFilterValue["operator"],
+		) => {
+			dispatch({
+				type: "setFilter",
+				groupId,
+				value,
+				operator,
+			});
+		},
+		[],
+	);
+
+	const clearAllFilters = useCallback(() => {
+		dispatch({ type: "clearAllFilters" });
+	}, []);
+
+	const actions = useMemo<DashboardRequestsActions>(
+		() => ({
+			openDetails,
+			setDetailsOpen,
+			setPage,
+			setSearchQuery,
+			setCreateModalOpen,
+			handleFilterChange,
+			clearAllFilters,
+		}),
+		[
+			openDetails,
+			setDetailsOpen,
+			setPage,
+			setSearchQuery,
+			setCreateModalOpen,
+			handleFilterChange,
+			clearAllFilters,
+		],
+	);
+
+	return {
+		state,
+		actions,
+	};
+}
+
+function useRequestsPage(page: number): RequestsPageModel {
 	const {
 		data: pageData,
 		isPending,
 		error: requestsError,
 	} = useIncomingCommissionRequests(page - 1, ITEMS_PER_PAGE);
+
 	const requests = useMemo<RequestItem[]>(
 		() => (pageData?.content ?? []) as RequestItem[],
 		[pageData],
 	);
-
-	const { user, isPending: userIsPending, error: userError } = useAuth();
-
-	const { t } = useTranslation();
-
-	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
 	const totalPages = Math.max(1, pageData?.totalPages ?? 1);
 	const totalItems = pageData?.totalElements ?? 0;
@@ -167,133 +462,33 @@ function DashboardCommissionsRequests() {
 		totalItems === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
 	const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
 
-	const selectedRequest =
-		requests.find((request) => request.id === selectedRequestId) ?? null;
+	return {
+		requests,
+		isPending,
+		requestsError,
+		totalPages,
+		totalItems,
+		currentPage,
+		startItem,
+		endItem,
+	};
+}
 
-	useEffect(() => {
-		if (
-			selectedRequestId &&
-			!requests.some((request) => request.id === selectedRequestId)
-		) {
-			setSelectedRequestId(null);
-			setDetailsOpen(false);
-		}
-	}, [requests, selectedRequestId]);
-
-	function openDetails(requestId: string) {
-		setSelectedRequestId(requestId);
-		setDetailsOpen(true);
-	}
-
-	function handleFilterChange(
-		groupId: string,
-		value: FilterValue,
-		operator?: ManagedFilterValue["operator"],
-	) {
-		setFilterState((previous) => ({
-			...previous,
-			[groupId]: {
-				value,
-				operator,
-			},
-		}));
-	}
-
-	function clearAllFilters() {
-		setFilterState(INITIAL_FILTER_STATE);
-	}
-
-	const filterGroups = useMemo<FilterGroup<RequestItem>[]>(
-		() => [
-			{
-				id: "status",
-				label: "Status",
-				type: "select",
-				icon: ListFilterIcon,
-				getItemValue: (request) => request.status,
-				options: [
-					{
-						id: TCommissionRequestStatus.Pending,
-						label: stageLabel(TCommissionRequestStatus.Pending),
-					},
-					{
-						id: TCommissionRequestStatus.Accepted,
-						label: stageLabel(TCommissionRequestStatus.Accepted),
-					},
-					{
-						id: TCommissionRequestStatus.In_Progress,
-						label: stageLabel(TCommissionRequestStatus.In_Progress),
-					},
-					{
-						id: TCommissionRequestStatus.Delivered,
-						label: stageLabel(TCommissionRequestStatus.Delivered),
-					},
-					{
-						id: TCommissionRequestStatus.Completed,
-						label: stageLabel(TCommissionRequestStatus.Completed),
-					},
-					{
-						id: TCommissionRequestStatus.Cancelled,
-						label: stageLabel(TCommissionRequestStatus.Cancelled),
-					},
-				],
-			},
-			{
-				id: "payment",
-				label: "Payment",
-				type: "select",
-				icon: CreditCard,
-				getItemValue: (request) => getPaymentFilterValue(request),
-				options: [
-					{
-						id: TPaymentStatus.Pending,
-						label: "Pending",
-						icon: OutlineClock03,
-					},
-					{
-						id: TPaymentStatus.Completed,
-						label: "Paid",
-						icon: OutlineCheck,
-					},
-					{
-						id: TPaymentStatus.Failed,
-						label: "Failed",
-						icon: OutlineClose,
-					},
-					{
-						id: TPaymentStatus.Refunded,
-						label: "Refunded",
-						icon: OutlineClose,
-					},
-				],
-			},
-			{
-				id: "timeline",
-				label: "Timeline",
-				type: "select",
-				icon: Flag,
-				getItemValue: (request) => getRequestTimelineFilterValue(request),
-				options: [
-					{ id: "awaiting_review", label: "Awaiting review" },
-					{ id: "accepted", label: "Accepted" },
-					{ id: "in_progress", label: "In progress" },
-					{ id: "delivered", label: "Delivered" },
-					{ id: "completed", label: "Completed" },
-					{ id: "cancelled", label: "Cancelled" },
-				],
-			},
-			{
-				id: "submittedDate",
-				label: "Submitted date",
-				type: "date",
-				icon: CalendarIcon,
-				getItemValue: (request) => new Date(request.createdAt),
-			},
-		],
-		[],
+function useSelectedRequest(
+	requests: RequestItem[],
+	selectedRequestId: string | null,
+) {
+	return useMemo(
+		() =>
+			selectedRequestId
+				? (requests.find((request) => request.id === selectedRequestId) ?? null)
+				: null,
+		[requests, selectedRequestId],
 	);
+}
 
-	const filterValues = useMemo<Record<string, ManagedFilterValue>>(
+function useFilterValues(filterState: ManagedFiltersState) {
+	return useMemo<Record<string, ManagedFilterValue>>(
 		() => ({
 			status: filterState.status,
 			payment: filterState.payment,
@@ -302,8 +497,14 @@ function DashboardCommissionsRequests() {
 		}),
 		[filterState],
 	);
+}
 
-	const filteredRequests = useMemo(() => {
+function useFilteredRequests(
+	requests: RequestItem[],
+	filterState: ManagedFiltersState,
+	searchQuery: string,
+) {
+	return useMemo(() => {
 		const query = searchQuery.trim().toLowerCase();
 
 		const statusValues = getSelectedValues(filterState.status?.value);
@@ -321,57 +522,26 @@ function DashboardCommissionsRequests() {
 			const timeline = getRequestTimelineFilterValue(request);
 
 			const matchesSearch = query
-				? [
-						request.id,
-						request.commissionId,
-						request.artistId,
-						request.clientId,
-						request.description ?? "",
-						request.status,
-						payment,
-						paymentLabel,
-						String(request.commissionVersion ?? ""),
-					]
-						.join(" ")
-						.toLowerCase()
-						.includes(query)
+				? createSearchText(request, payment, paymentLabel).includes(query)
 				: true;
 
-			const matchesStatus =
-				statusValues.length === 0
-					? true
-					: matchSingleOrMulti(
-							request.status,
-							resolveOptionOperator(
-								filterState.status?.operator,
-								statusValues.length,
-							),
-							statusValues,
-						);
+			const matchesStatus = matchesSelectFilter(
+				request.status,
+				filterState.status,
+				statusValues,
+			);
 
-			const matchesPayment =
-				paymentValues.length === 0
-					? true
-					: matchSingleOrMulti(
-							payment,
-							resolveOptionOperator(
-								filterState.payment?.operator,
-								paymentValues.length,
-							),
-							paymentValues,
-						);
+			const matchesPayment = matchesSelectFilter(
+				payment,
+				filterState.payment,
+				paymentValues,
+			);
 
-			const matchesTimeline =
-				timelineValues.length === 0
-					? true
-					: matchSingleOrMulti(
-							timeline,
-							resolveOptionOperator(
-								filterState.timeline?.operator,
-								timelineValues.length,
-							),
-							timelineValues,
-						);
+			const matchesTimeline = matchesSelectFilter(
+				timeline,
+				filterState.timeline,
+				timelineValues,
+			);
 
 			const matchesSubmittedDate = matchSubmittedDate(
 				request.createdAt,
@@ -388,73 +558,210 @@ function DashboardCommissionsRequests() {
 			);
 		});
 	}, [filterState, requests, searchQuery]);
+}
+
+function createSearchText(
+	request: RequestItem,
+	payment: string,
+	paymentLabel: string,
+) {
+	return [
+		request.id,
+		request.commissionId,
+		request.artistId,
+		request.clientId,
+		request.description ?? "",
+		request.status,
+		payment,
+		paymentLabel,
+		String(request.commissionVersion ?? ""),
+	]
+		.join(" ")
+		.toLowerCase();
+}
+
+function matchesSelectFilter(
+	actualValue: string,
+	filter: ManagedFilterValue | undefined,
+	selectedValues: string[],
+) {
+	if (selectedValues.length === 0) {
+		return true;
+	}
+
+	return matchSingleOrMulti(
+		actualValue,
+		resolveOptionOperator(filter?.operator, selectedValues.length),
+		selectedValues,
+	);
+}
+
+function DashboardCommissionsRequests() {
+	const { state, actions } = useDashboardRequestsController();
+	const pageModel = useRequestsPage(state.page);
+	const selectedRequest = useSelectedRequest(
+		pageModel.requests,
+		state.selectedRequestId,
+	);
+	const filteredRequests = useFilteredRequests(
+		pageModel.requests,
+		state.filterState,
+		state.searchQuery,
+	);
+	const filterValues = useFilterValues(state.filterState);
 
 	return (
-		<div className="flex flex-1 flex-col h-full bg-muted/40">
-			<DashboardHeader
-				title="Commissions Requests"
-				actions={
-					<Button size={"xl"} onClick={() => setIsCreateModalOpen(true)}>
-						<OutlinePlus />
-						<span className="hidden sm:inline">Create Commission</span>
-					</Button>
-				}
+		<DashboardCommissionsRequestsPage
+			state={state}
+			actions={actions}
+			pageModel={pageModel}
+			filterValues={filterValues}
+			filteredRequests={filteredRequests}
+			selectedRequest={selectedRequest}
+		/>
+	);
+}
+
+interface DashboardCommissionsRequestsPageProps {
+	state: DashboardRequestsState;
+	actions: DashboardRequestsActions;
+	pageModel: RequestsPageModel;
+	filterValues: Record<string, ManagedFilterValue>;
+	filteredRequests: RequestItem[];
+	selectedRequest: RequestItem | null;
+}
+
+function DashboardCommissionsRequestsPage({
+	state,
+	actions,
+	pageModel,
+	filterValues,
+	filteredRequests,
+	selectedRequest,
+}: DashboardCommissionsRequestsPageProps) {
+	const detailsModalOpen = state.detailsOpen && selectedRequest !== null;
+
+	const handleRequestAction = useCallback(
+		(action: string, request: RequestItem) => {
+			if (action === "review") {
+				actions.openDetails(request.id);
+				return;
+			}
+
+			if (action === "set_wip") {
+				console.log("Set WIP clicked for", request.id);
+				return;
+			}
+
+			if (action === "final_delivery") {
+				console.log("Final delivery clicked for", request.id);
+			}
+		},
+		[actions],
+	);
+
+	return (
+		<div className="flex h-full flex-1 flex-col bg-muted/40">
+			<CommissionsRequestsHeader
+				onCreateCommission={() => actions.setCreateModalOpen(true)}
 			/>
 
 			<div className="flex flex-1 flex-col gap-4 p-6">
+				<RequestsErrorBanner error={pageModel.requestsError} />
+
 				<FilterBar
-				data={requests}
-				groups={filterGroups}
-				values={filterValues}
-				onFilterChange={handleFilterChange}
-				searchQuery={searchQuery}
-				onSearchChange={setSearchQuery}
-				searchPlaceholder="Search by description, commission ID, request ID..."
-				onClearAll={clearAllFilters}
-			/>
-
-			{/* TODO: remove commission image and artist info for artist dashbarod version */}
-			<RequestList
-				requests={filteredRequests as any}
-				onRequestClick={openDetails}
-				isPending={isPending}
-				totalCount={totalItems}
-				currentPage={currentPage}
-				totalPages={totalPages}
-				startItem={startItem}
-				endItem={endItem}
-				isRefreshing={isPending}
-				viewType="artist"
-				onPageChange={setPage}
-				onAction={(action, request) => {
-					if (action === "review") {
-						openDetails(request.id);
-					} else if (action === "set_wip") {
-						// TODO: Implement API call to set status to IN_PROGRESS
-						console.log("Set WIP clicked for", request.id);
-					} else if (action === "final_delivery") {
-						// TODO: Implement final delivery modal
-						console.log("Final delivery clicked for", request.id);
-					}
-				}}
-			/>
-
-			<RequestDetailsModal
-				request={selectedRequest as any}
-				open={detailsOpen}
-				onOpenChange={setDetailsOpen}
-				viewType="artist"
-			/>
-
-			{isCreateModalOpen && user && (
-				<CreateCommissionForm
-					username={user.username || user.id}
-					tab="commissions"
-					artistId={user.id}
-					onClose={() => setIsCreateModalOpen(false)}
+					data={pageModel.requests}
+					groups={REQUEST_FILTER_GROUPS}
+					values={filterValues}
+					onFilterChange={actions.handleFilterChange}
+					searchQuery={state.searchQuery}
+					onSearchChange={actions.setSearchQuery}
+					searchPlaceholder="Search by description, commission ID, request ID..."
+					onClearAll={actions.clearAllFilters}
 				/>
-			)}
+
+				<RequestList
+					requests={filteredRequests}
+					onRequestClick={actions.openDetails}
+					isPending={pageModel.isPending}
+					totalCount={pageModel.totalItems}
+					currentPage={pageModel.currentPage}
+					totalPages={pageModel.totalPages}
+					startItem={pageModel.startItem}
+					endItem={pageModel.endItem}
+					isRefreshing={pageModel.isPending}
+					viewType="artist"
+					onPageChange={actions.setPage}
+					onAction={handleRequestAction}
+				/>
+
+				<RequestDetailsModal
+					request={selectedRequest}
+					open={detailsModalOpen}
+					onOpenChange={actions.setDetailsOpen}
+					viewType="artist"
+				/>
+
+				<CreateCommissionDialog
+					open={state.isCreateModalOpen}
+					onOpenChange={actions.setCreateModalOpen}
+				/>
+			</div>
 		</div>
-	</div>
+	);
+}
+
+function CommissionsRequestsHeader({
+	onCreateCommission,
+}: {
+	onCreateCommission: () => void;
+}) {
+	return (
+		<DashboardHeader
+			title="Commissions Requests"
+			actions={
+				<Button size="xl" onClick={onCreateCommission}>
+					<OutlinePlus />
+					<span className="hidden sm:inline">Create Commission</span>
+				</Button>
+			}
+		/>
+	);
+}
+
+function RequestsErrorBanner({ error }: { error: unknown }) {
+	if (!error) {
+		return null;
+	}
+
+	return (
+		<div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+			{error instanceof Error
+				? error.message
+				: "Failed to load commission requests."}
+		</div>
+	);
+}
+
+function CreateCommissionDialog({
+	open,
+	onOpenChange,
+}: {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+}) {
+	const { user } = useAuth();
+
+	if (!open || !user) {
+		return null;
+	}
+
+	return (
+		<CreateCommissionForm
+			username={user.username || user.userId}
+			tab="commissions"
+			artistId={user.userId}
+			onClose={() => onOpenChange(false)}
+		/>
 	);
 }

@@ -1,7 +1,6 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineTrash } from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,11 +26,51 @@ export const levelColors: Record<string, string> = {
 	learning: "bg-danger/12 text-danger",
 };
 
+const LANGUAGE_REGION_OVERRIDES: Record<string, string> = {
+	ar: "SA",
+	bg: "BG",
+	cs: "CZ",
+	da: "DK",
+	de: "DE",
+	el: "GR",
+	en: "US",
+	es: "ES",
+	et: "EE",
+	fi: "FI",
+	fr: "FR",
+	he: "IL",
+	hi: "IN",
+	hr: "HR",
+	hu: "HU",
+	id: "ID",
+	it: "IT",
+	ja: "JP",
+	ko: "KR",
+	lt: "LT",
+	lv: "LV",
+	ms: "MY",
+	nl: "NL",
+	no: "NO",
+	pl: "PL",
+	pt: "PT",
+	ro: "RO",
+	ru: "RU",
+	sk: "SK",
+	sl: "SI",
+	sv: "SE",
+	th: "TH",
+	tr: "TR",
+	uk: "UA",
+	vi: "VN",
+	zh: "CN",
+};
+
 const getTwemojiUrl = (emoji: string) => {
 	try {
 		const codePoints = Array.from(emoji)
-			.map((c) => c.codePointAt(0)?.toString(16))
+			.map((char) => char.codePointAt(0)?.toString(16))
 			.join("-");
+
 		return `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/${codePoints}.png`;
 	} catch {
 		return "";
@@ -43,37 +82,45 @@ function getFlagEmoji(countryCode: string) {
 		.toUpperCase()
 		.split("")
 		.map((char) => 127397 + char.charCodeAt(0));
+
 	return String.fromCodePoint(...codePoints);
 }
 
-function getLanguageData(code: string) {
-	if (!code) return { flag: "🌐", name: "Unknown" };
+function getRegionFromLocaleCode(code: string) {
+	const normalizedCode = code.replace("_", "-");
+	const [, explicitRegion] =
+		normalizedCode.match(/^[a-z]{2,3}-([a-z]{2}|\d{3})/i) ?? [];
 
-	// Check explicit overrides first
-	const defined = languages.find((l) => l.value === code);
-	if (defined)
-		return {
-			flag: defined.flag,
-			name: defined.label,
-		};
-
-	try {
-		const locale = new Intl.Locale(code);
-		// If valid locale, get display name in NATIVE language
-		const name =
-			new Intl.DisplayNames([code], { type: "language" }).of(code) || code;
-
-		// If the locale already has a region (e.g. "en-US", "zh-TW"), use it directly
-		if (locale.region) return { flag: getFlagEmoji(locale.region), name };
-
-		// For language-only codes, try to maximize the locale to get a likely region.
-		const maximized = locale.maximize();
-		if (maximized.region) return { flag: getFlagEmoji(maximized.region), name };
-	} catch {
-		// Ignore errors and try fallback
+	if (explicitRegion && /^[a-z]{2}$/i.test(explicitRegion)) {
+		return explicitRegion.toUpperCase();
 	}
 
-	return { flag: "🌐", name: code };
+	const languageCode = normalizedCode.split("-")[0]?.toLowerCase();
+
+	return languageCode ? LANGUAGE_REGION_OVERRIDES[languageCode] : undefined;
+}
+
+function useLanguageData(code: string) {
+	return useMemo(() => {
+		if (!code) {
+			return { flag: "🌐", name: "Unknown" };
+		}
+
+		const defined = languages.find((language) => language.value === code);
+		if (defined) {
+			return {
+				flag: defined.flag,
+				name: defined.label,
+			};
+		}
+
+		const region = getRegionFromLocaleCode(code);
+
+		return {
+			flag: region ? getFlagEmoji(region) : "🌐",
+			name: code,
+		};
+	}, [code]);
 }
 
 interface SpokenLanguageProps {
@@ -86,17 +133,17 @@ export function SpokenLanguageBadge({
 	showSeparator,
 }: SpokenLanguageProps) {
 	const { t } = useTranslation();
-	const { flag, name } = getLanguageData(language.locale);
+	const { flag, name } = useLanguageData(language.locale);
 
 	return (
 		<div className="flex items-center gap-1.5">
 			<Tooltip>
 				<TooltipTrigger asChild>
-					<div className="flex items-center gap-1.5 cursor-default">
+					<div className="flex cursor-default items-center gap-1.5">
 						<img
 							src={getTwemojiUrl(flag)}
 							alt={name}
-							className="h-[1.333em] w-fit object-contain shrink-0"
+							className="h-[1.333em] w-fit shrink-0 object-contain"
 						/>
 					</div>
 				</TooltipTrigger>
@@ -125,7 +172,7 @@ export function SpokenLanguageSelect({
 	onRemove?: () => void;
 }) {
 	const { t } = useTranslation();
-	const { flag, name } = getLanguageData(language.locale);
+	const { flag, name } = useLanguageData(language.locale);
 	const [isOpen, setIsOpen] = useState(false);
 
 	const levels: {
@@ -161,24 +208,24 @@ export function SpokenLanguageSelect({
 	];
 
 	return (
-		<div className="flex items-center justify-between py-1 group w-full">
+		<div className="group flex w-full items-center justify-between py-1">
 			<div className="flex items-center gap-3">
 				<img
 					src={getTwemojiUrl(flag)}
 					alt={name}
-					className="h-[1.333em] w-fit object-contain shrink-0"
+					className="h-[1.333em] w-fit shrink-0 object-contain"
 				/>
-				<span className="text-sm text-foreground/90 font-medium">{name}</span>
+				<span className="font-medium text-foreground/90 text-sm">{name}</span>
 			</div>
 			<div className="flex items-center">
 				<Select
 					value={language.experience}
-					onValueChange={(val) =>
-						onLevelChange?.(val as SpokenLanguage["experience"])
+					onValueChange={(value) =>
+						onLevelChange?.(value as SpokenLanguage["experience"])
 					}
 					onOpenChange={setIsOpen}
 				>
-					<SelectTrigger className="w-[140px] h-8! rounded-full text-xs shadow-none border-0 hover:bg-secondary">
+					<SelectTrigger className="h-8! w-[140px] rounded-full border-0 text-xs shadow-none hover:bg-secondary">
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
@@ -190,7 +237,7 @@ export function SpokenLanguageSelect({
 							>
 								<div className="flex items-center gap-2">
 									<div
-										className={cn("w-1.5 h-1.5 rounded-full", level.color)}
+										className={cn("h-1.5 w-1.5 rounded-full", level.color)}
 									/>
 									<span>{level.label}</span>
 								</div>
@@ -208,17 +255,15 @@ export function SpokenLanguageSelect({
 						)}
 					>
 						<Button
-							variant={"ghost"}
-							size={"icon-sm"}
-							className={
-								"ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/12 shrink-0"
-							}
-							onClick={(e) => {
-								e.preventDefault();
+							variant="ghost"
+							size="icon-sm"
+							className="ml-1 shrink-0 text-muted-foreground hover:bg-destructive/12 hover:text-destructive"
+							onClick={(event) => {
+								event.preventDefault();
 								onRemove();
 							}}
 						>
-							<Trash2 className="h-4 w-4" />
+							<Trash2 className="size-4" />
 						</Button>
 					</div>
 				)}
@@ -229,23 +274,23 @@ export function SpokenLanguageSelect({
 
 export function SpokenLanguageRow({ language }: { language: SpokenLanguage }) {
 	const { t } = useTranslation();
-	const { flag, name } = getLanguageData(language.locale);
+	const { flag, name } = useLanguageData(language.locale);
 	const colorClass =
 		levelColors[language.experience] ||
 		"bg-muted text-muted-foreground hover:bg-muted/80";
 
 	return (
-		<div className="flex items-center justify-between py-1 group">
+		<div className="group flex items-center justify-between py-1">
 			<div className="flex items-center gap-3">
 				<img
 					src={getTwemojiUrl(flag)}
 					alt={name}
-					className="h-[1.333em] w-fit object-contain shrink-0"
+					className="h-[1.333em] w-fit shrink-0 object-contain"
 				/>
-				<span className="text-sm text-foreground/90 font-medium">{name}</span>
+				<span className="font-medium text-foreground/90 text-sm">{name}</span>
 			</div>
 			<Badge
-				className={cn("capitalize font-medium transition-colors", colorClass)}
+				className={cn("font-medium capitalize transition-colors", colorClass)}
 			>
 				{t(`components.profile.languages.levels.${language.experience}`)}
 			</Badge>

@@ -57,6 +57,8 @@ export interface Option {
 	disabled?: boolean;
 }
 
+const EMPTY_OPTIONS: Option[] = [];
+
 export interface StaticFormBlockProps {
 	label: string;
 	description?: string;
@@ -328,7 +330,7 @@ export function StaticRadioGroup({
 	label,
 	description,
 	required,
-	options = [],
+	options = EMPTY_OPTIONS,
 	className,
 	disabled = false,
 	currencyCode = "USD",
@@ -363,7 +365,7 @@ export function StaticRadioGroup({
 							value={option.id}
 							id={`static-${option.id}`}
 							disabled={disabled || option.disabled}
-							onClick={(e) => {
+							onClick={() => {
 								if (value === option.id) {
 									setValue("");
 								}
@@ -419,7 +421,7 @@ export function FormSelect<T extends FieldValues>({
 	label,
 	description,
 	required,
-	options = [],
+	options = EMPTY_OPTIONS,
 	className,
 	currencyCode = "USD",
 }: FormBlockProps<T>) {
@@ -481,7 +483,7 @@ export function StaticCheckboxGroup({
 	label,
 	description,
 	required,
-	options = [],
+	options = EMPTY_OPTIONS,
 	className,
 	disabled = false,
 	currencyCode = "USD",
@@ -560,7 +562,7 @@ export function StaticSelect({
 	label,
 	description,
 	required,
-	options = [],
+	options = EMPTY_OPTIONS,
 	className,
 	disabled = false,
 	currencyCode = "USD",
@@ -615,7 +617,7 @@ interface FormBlockProps<T extends FieldValues> {
 	description?: string;
 	required?: boolean;
 	className?: string;
-	options: Option[];
+	options?: Option[];
 	otherFieldName?: Path<T>;
 	currencyCode?: string;
 }
@@ -626,7 +628,7 @@ export function FormRadioGroup<T extends FieldValues>({
 	label,
 	description,
 	required,
-	options = [],
+	options = EMPTY_OPTIONS,
 	className,
 	otherFieldName,
 	currencyCode = "USD",
@@ -665,7 +667,7 @@ export function FormRadioGroup<T extends FieldValues>({
 									value={option.id}
 									id={`${name}-${option.id}`}
 									disabled={option.disabled}
-									onClick={(e) => {
+									onClick={() => {
 										if (field.value === option.id) {
 											field.onChange(undefined);
 										}
@@ -739,7 +741,7 @@ export function FormCheckboxGroup<T extends FieldValues>({
 	label,
 	description,
 	required,
-	options = [],
+	options = EMPTY_OPTIONS,
 	className,
 	otherFieldName,
 	currencyCode = "USD",

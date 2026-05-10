@@ -17,7 +17,7 @@ export function DashboardHeader({ title, actions }: DashboardHeaderProps) {
 		<header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 justify-between bg-background">
 			<div className="flex items-center gap-2">
 				<SidebarTrigger className="-ml-2" />
-				<h1 className="text-xl font-bold">{title}</h1>
+				<h1 className="text-xl font-semibold">{title}</h1>
 			</div>
 
 			<div className="flex items-center gap-4">

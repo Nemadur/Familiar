@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/a11y/noSvgWithoutTitle: <explanation> */
-import { surfaceVariants } from "@heroui/styles";
 import {
 	type Cell,
 	type Column,
@@ -10,6 +8,7 @@ import {
 	type Table,
 } from "@tanstack/react-table";
 import { cva } from "class-variance-authority";
+import { Loader2, Pin, PinOff } from "lucide-react";
 import {
 	type CSSProperties,
 	Fragment,
@@ -26,7 +25,7 @@ import {
 import { useDataGrid } from "src/components/reui/data-grid/data-grid";
 import { Checkbox } from "src/components/ui/checkbox";
 import { Spinner } from "src/components/ui/spinner";
-import { cn } from "src/lib/utils";
+import { cn, createStaticList } from "src/lib/utils";
 
 const headerCellSpacingVariants = cva("", {
 	variants: {
@@ -118,14 +117,12 @@ function startDataGridColumnResizeOnEnd<TData>(
 ) {
 	const column = table.getColumn(header.column.id);
 
-	if (!column || !column.getCanResize()) return;
+	if (!column?.getCanResize()) return;
 	if (isDataGridTouchEvent(event) && event.touches.length > 1) return;
 
 	event.persist?.();
 
 	const ownerDocument = event.currentTarget.ownerDocument;
-	const previousBodyCursor = ownerDocument.body.style.cursor;
-	const previousDocumentCursor = ownerDocument.documentElement.style.cursor;
 	const startSize = header.getSize();
 	const dragStartClientX = getDataGridResizeEventClientX(event);
 	const headerCell = event.currentTarget.closest("th");
@@ -146,8 +143,8 @@ function startDataGridColumnResizeOnEnd<TData>(
 		return;
 	}
 
-	ownerDocument.body.style.cursor = "col-resize";
-	ownerDocument.documentElement.style.cursor = "col-resize";
+	ownerDocument.body.classList.add("cursor-col-resize");
+	ownerDocument.documentElement.classList.add("cursor-col-resize");
 
 	const columnSizingStart = header
 		.getLeafHeaders()
@@ -161,7 +158,7 @@ function startDataGridColumnResizeOnEnd<TData>(
 	const updateOffset = (clientXPos?: number, commit = false) => {
 		if (typeof clientXPos !== "number") return;
 
-		let nextColumnSizing: Record<string, number> = {};
+		const nextColumnSizing: Record<string, number> = {};
 		const deltaOffset = (clientXPos - dragStartClientX) * directionMultiplier;
 		const deltaPercentage = Math.max(deltaOffset / startSize, -0.999999);
 
@@ -192,6 +189,7 @@ function startDataGridColumnResizeOnEnd<TData>(
 
 	const endResize = (clientXPos?: number) => {
 		updateOffset(clientXPos, true);
+
 		table.setColumnSizingInfo((old) => ({
 			...old,
 			isResizingColumn: false,
@@ -201,8 +199,9 @@ function startDataGridColumnResizeOnEnd<TData>(
 			deltaPercentage: null,
 			columnSizingStart: [],
 		}));
-		ownerDocument.body.style.cursor = previousBodyCursor;
-		ownerDocument.documentElement.style.cursor = previousDocumentCursor;
+
+		ownerDocument.body.classList.remove("cursor-col-resize");
+		ownerDocument.documentElement.classList.remove("cursor-col-resize");
 	};
 
 	const mouseMoveHandler = (moveEvent: globalThis.MouseEvent) => {
@@ -404,7 +403,7 @@ function DataGridTableBase({ children }: { children: ReactNode }) {
 		const headers = table.getFlatHeaders();
 		const colSizes: Record<string, number> = {};
 		for (let i = 0; i < headers.length; i++) {
-			const header = headers[i]!;
+			const header = headers[i];
 			colSizes[`--header-${header.id}-size`] = header.getSize();
 			colSizes[`--col-${header.column.id}-size`] = header.column.getSize();
 		}
@@ -1126,33 +1125,7 @@ function DataGridTableRowPin<TData>({ row }: { row: Row<TData> }) {
 				isPinned && "text-primary hover:text-primary/80",
 			)}
 		>
-			{isPinned ? (
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="currentColor"
-					stroke="none"
-				>
-					<path d="M16 2l4.585 4.586-2.122 2.121L17.05 7.293l-3.535 3.536 1.413 5.658-2.12 2.121-4.244-4.243L4.322 18.6l-1.414-1.41 4.242-4.244-4.243-4.243 2.122-2.121 5.656 1.414 3.536-3.536-1.414-1.414z" />
-				</svg>
-			) : (
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				>
-					<line x1="12" y1="17" x2="12" y2="22" />
-					<path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z" />
-				</svg>
-			)}
+			{isPinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
 		</button>
 	);
 }
@@ -1199,13 +1172,18 @@ function DataGridTableBodyRows<TData>({ table }: { table: Table<TData> }) {
 	const { isLoading, props } = useDataGrid();
 	const pagination = table.getState().pagination;
 
+	const skeletonKeys = createStaticList("skeleton", pagination.pageSize || 1);
+
 	if (isLoading && props.loadingMode === "skeleton" && pagination?.pageSize) {
 		return (
 			<>
 				{Array.from({ length: pagination.pageSize }).map((_, rowIndex) => (
-					<DataGridTableBodyRowSkeleton key={rowIndex}>
+					<DataGridTableBodyRowSkeleton key={skeletonKeys[rowIndex].id}>
 						{table.getVisibleFlatColumns().map((column, colIndex) => (
-							<DataGridTableBodyRowSkeletonCell column={column} key={colIndex}>
+							<DataGridTableBodyRowSkeletonCell
+								column={column}
+								key={skeletonKeys[colIndex].id}
+							>
 								{column.columnDef.meta?.skeleton}
 							</DataGridTableBodyRowSkeletonCell>
 						))}
@@ -1220,26 +1198,7 @@ function DataGridTableBodyRows<TData>({ table }: { table: Table<TData> }) {
 			<tr>
 				<td colSpan={table.getVisibleFlatColumns().length} className="p-8">
 					<div className="flex items-center justify-center">
-						<svg
-							className="text-muted-foreground mr-3 -ml-1 h-5 w-5 animate-spin"
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<circle
-								className="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								strokeWidth="4"
-							></circle>
-							<path
-								className="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
+						<Loader2 className="size-5 animate-spin" />
 						{props.loadingMessage || "Loading..."}
 					</div>
 				</td>

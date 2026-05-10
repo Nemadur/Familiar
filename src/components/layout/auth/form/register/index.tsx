@@ -112,6 +112,12 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 		setStep((prev) => Math.max(prev - 1, 0) as Step);
 	}, []);
 
+	const handleContinue = useCallback(async () => {
+		if (step !== LAST_STEP) {
+			await goNext();
+		}
+	}, [step, goNext]);
+
 	const onFinalSubmit = async (data: any) => {
 		// Prevent accidental submission from earlier steps
 		if (step !== LAST_STEP) {
@@ -147,27 +153,10 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 		}
 	};
 
-	const handleContinue = async (e: React.MouseEvent<HTMLButtonElement>) => {
-		e.preventDefault(); // Prevent any default button behavior
-		if (step === LAST_STEP) {
-			await handleSubmit(onFinalSubmit)(e);
-		} else {
-			await goNext();
-		}
-	};
-
 	return (
 		<Form {...form}>
 			<form
-				onSubmit={(e) => {
-					// Hard block on submission if not last step
-					if (step !== LAST_STEP) {
-						e.preventDefault();
-						e.stopPropagation(); // Stop bubbling
-						return;
-					}
-					handleSubmit(onFinalSubmit)(e);
-				}}
+				onSubmit={handleSubmit(onFinalSubmit)}
 				onKeyDown={handleKeyDown}
 				className="flex flex-col h-full min-h-[450px]"
 			>
@@ -236,8 +225,8 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 								)}
 
 								<Button
-									type="button"
-									onClick={handleContinue}
+									type={step === LAST_STEP ? "submit" : "button"}
+									onClick={step === LAST_STEP ? undefined : handleContinue}
 									disabled={(step === 0 && !isStep0Valid) || isPending}
 									className="flex-1 w-full"
 									size={"xl"}

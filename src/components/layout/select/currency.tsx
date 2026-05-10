@@ -45,13 +45,168 @@ interface CurrencySelectProps {
 	"aria-invalid"?: boolean;
 }
 
-function getCurrencySymbol(locale: string, currencyCode: string) {
-	const parts = new Intl.NumberFormat(locale, {
-		style: "currency",
-		currency: currencyCode,
-	}).formatToParts(0);
+function normalizeCurrency(currencyCode: string) {
+	return currencyCode.toUpperCase();
+}
 
-	return parts.find((part) => part.type === "currency")?.value ?? currencyCode;
+const CURRENCY_NAMES: Record<string, string> = {
+	AED: "United Arab Emirates Dirham",
+	AFN: "Afghan Afghani",
+	ALL: "Albanian Lek",
+	AMD: "Armenian Dram",
+	ANG: "Netherlands Antillean Guilder",
+	AOA: "Angolan Kwanza",
+	ARS: "Argentine Peso",
+	AUD: "Australian Dollar",
+	AWG: "Aruban Florin",
+	AZN: "Azerbaijani Manat",
+	BAM: "Bosnia and Herzegovina Convertible Mark",
+	BBD: "Barbadian Dollar",
+	BDT: "Bangladeshi Taka",
+	BGN: "Bulgarian Lev",
+	BIF: "Burundian Franc",
+	BMD: "Bermudian Dollar",
+	BND: "Brunei Dollar",
+	BOB: "Bolivian Boliviano",
+	BRL: "Brazilian Real",
+	BSD: "Bahamian Dollar",
+	BWP: "Botswana Pula",
+	BZD: "Belize Dollar",
+	CAD: "Canadian Dollar",
+	CDF: "Congolese Franc",
+	CHF: "Swiss Franc",
+	CLP: "Chilean Peso",
+	CNY: "Chinese Yuan",
+	COP: "Colombian Peso",
+	CRC: "Costa Rican Colón",
+	CVE: "Cape Verdean Escudo",
+	CZK: "Czech Koruna",
+	DJF: "Djiboutian Franc",
+	DKK: "Danish Krone",
+	DOP: "Dominican Peso",
+	DZD: "Algerian Dinar",
+	EGP: "Egyptian Pound",
+	ETB: "Ethiopian Birr",
+	EUR: "Euro",
+	FJD: "Fijian Dollar",
+	FKP: "Falkland Islands Pound",
+	GBP: "British Pound",
+	GEL: "Georgian Lari",
+	GIP: "Gibraltar Pound",
+	GMD: "Gambian Dalasi",
+	GNF: "Guinean Franc",
+	GTQ: "Guatemalan Quetzal",
+	GYD: "Guyanese Dollar",
+	HKD: "Hong Kong Dollar",
+	HNL: "Honduran Lempira",
+	HTG: "Haitian Gourde",
+	HUF: "Hungarian Forint",
+	IDR: "Indonesian Rupiah",
+	ILS: "Israeli New Shekel",
+	INR: "Indian Rupee",
+	ISK: "Icelandic Króna",
+	JMD: "Jamaican Dollar",
+	JPY: "Japanese Yen",
+	KES: "Kenyan Shilling",
+	KGS: "Kyrgyzstani Som",
+	KHR: "Cambodian Riel",
+	KMF: "Comorian Franc",
+	KRW: "South Korean Won",
+	KYD: "Cayman Islands Dollar",
+	KZT: "Kazakhstani Tenge",
+	LAK: "Lao Kip",
+	LBP: "Lebanese Pound",
+	LKR: "Sri Lankan Rupee",
+	LRD: "Liberian Dollar",
+	LSL: "Lesotho Loti",
+	MAD: "Moroccan Dirham",
+	MDL: "Moldovan Leu",
+	MGA: "Malagasy Ariary",
+	MKD: "Macedonian Denar",
+	MMK: "Myanmar Kyat",
+	MNT: "Mongolian Tögrög",
+	MOP: "Macanese Pataca",
+	MUR: "Mauritian Rupee",
+	MVR: "Maldivian Rufiyaa",
+	MWK: "Malawian Kwacha",
+	MXN: "Mexican Peso",
+	MYR: "Malaysian Ringgit",
+	MZN: "Mozambican Metical",
+	NAD: "Namibian Dollar",
+	NGN: "Nigerian Naira",
+	NIO: "Nicaraguan Córdoba",
+	NOK: "Norwegian Krone",
+	NPR: "Nepalese Rupee",
+	NZD: "New Zealand Dollar",
+	PAB: "Panamanian Balboa",
+	PEN: "Peruvian Sol",
+	PGK: "Papua New Guinean Kina",
+	PHP: "Philippine Peso",
+	PKR: "Pakistani Rupee",
+	PLN: "Polish Złoty",
+	PYG: "Paraguayan Guaraní",
+	QAR: "Qatari Riyal",
+	RON: "Romanian Leu",
+	RSD: "Serbian Dinar",
+	RUB: "Russian Ruble",
+	RWF: "Rwandan Franc",
+	SAR: "Saudi Riyal",
+	SBD: "Solomon Islands Dollar",
+	SCR: "Seychellois Rupee",
+	SEK: "Swedish Krona",
+	SGD: "Singapore Dollar",
+	SHP: "Saint Helena Pound",
+	SLE: "Sierra Leonean Leone",
+	SOS: "Somali Shilling",
+	SRD: "Surinamese Dollar",
+	STD: "São Tomé and Príncipe Dobra",
+	SZL: "Swazi Lilangeni",
+	THB: "Thai Baht",
+	TJS: "Tajikistani Somoni",
+	TOP: "Tongan Paʻanga",
+	TRY: "Turkish Lira",
+	TTD: "Trinidad and Tobago Dollar",
+	TWD: "New Taiwan Dollar",
+	TZS: "Tanzanian Shilling",
+	UAH: "Ukrainian Hryvnia",
+	UGX: "Ugandan Shilling",
+	USD: "United States Dollar",
+	UYU: "Uruguayan Peso",
+	UZS: "Uzbekistani Som",
+	VND: "Vietnamese Đồng",
+	VUV: "Vanuatu Vatu",
+	WST: "Samoan Tala",
+	XAF: "Central African CFA Franc",
+	XCD: "East Caribbean Dollar",
+	XOF: "West African CFA Franc",
+	XPF: "CFP Franc",
+	YER: "Yemeni Rial",
+	ZAR: "South African Rand",
+	ZMW: "Zambian Kwacha",
+};
+
+function getCurrencyName(currencyCode: string) {
+	return CURRENCY_NAMES[currencyCode] ?? currencyCode;
+}
+
+function getCurrencySymbol(locale: string, currencyCode: string) {
+	try {
+		const formatted = (0)
+			.toLocaleString(locale, {
+				style: "currency",
+				currency: currencyCode,
+				currencyDisplay: "narrowSymbol",
+				minimumFractionDigits: 0,
+				maximumFractionDigits: 0,
+			})
+			.trim();
+
+		const symbol = formatted.replace(/[\d\s.,\u00a0\u202f]/g, "").trim();
+
+		return symbol || currencyCode;
+	} catch {
+		return currencyCode;
+	}
 }
 
 export default function CurrencySelect({
@@ -61,6 +216,7 @@ export default function CurrencySelect({
 	disabled,
 	display,
 	variant,
+	size = "xl",
 	align,
 	triggerClassName,
 	contentClassName,
@@ -73,18 +229,17 @@ export default function CurrencySelect({
 
 	const resolvedDisplay =
 		display ?? (value || onValueChange ? "field" : "compact");
-	// const resolvedVariant =
-	// 	variant ?? (resolvedDisplay === "field" ? "secondary" : "ghost");
+	const resolvedVariant =
+		variant ?? (resolvedDisplay === "field" ? "secondary" : "ghost");
 	const resolvedAlign =
 		align ?? (resolvedDisplay === "field" ? "start" : "end");
 
 	const currencies = React.useMemo<CurrencyOption[]>(() => {
 		const locale = i18n.language || "en-US";
-		const displayNames = new Intl.DisplayNames([locale], { type: "currency" });
 
 		return STRIPE_SUPPORTED_CURRENCIES.map((currencyCode) => {
-			const normalizedCode = currencyCode.toUpperCase();
-			const name = displayNames.of(normalizedCode) || normalizedCode;
+			const normalizedCode = normalizeCurrency(currencyCode);
+			const name = getCurrencyName(normalizedCode);
 			const symbol = getCurrencySymbol(locale, normalizedCode);
 
 			return {
@@ -96,7 +251,7 @@ export default function CurrencySelect({
 		}).sort((a, b) => a.name.localeCompare(b.name));
 	}, [i18n.language]);
 
-	const selectedValue = (value ?? userCurrency ?? "USD").toUpperCase();
+	const selectedValue = normalizeCurrency(value ?? userCurrency ?? "USD");
 	const selectedCurrency = currencies.find(
 		(currency) => currency.value === selectedValue,
 	) ?? {
@@ -121,13 +276,13 @@ export default function CurrencySelect({
 			<PopoverTrigger asChild>
 				<Button
 					id={id}
-					variant={"secondary"}
+					variant={resolvedVariant}
 					role="combobox"
 					aria-controls={listId}
 					aria-expanded={open}
 					aria-invalid={ariaInvalid || undefined}
 					disabled={disabled}
-					size={"xl"}
+					size={size}
 					className={cn(
 						"justify-between",
 						resolvedDisplay === "field" ? "w-full" : "w-auto",

@@ -95,11 +95,11 @@ export function TimelinesReleaseNotes() {
 										/>
 									</div>
 								) : r.highlight ? (
-									<div className="mb-5 aspect-16/7 w-full overflow-hidden rounded-xl border border-border/60 bg-linear-to-br from-indigo-500/10 to-teal-500/10">
+									<div className="mb-5 aspect-16/7 w-full overflow-hidden rounded-xl border border-border/60 bg-linear-to-br from-neutral-900/10 to-neutral-100/10">
 										<div className="grid h-full place-items-center">
 											<div className="text-center dark:mix-blend-difference bg-clip-text">
-												<OutlineStar className="mx-auto opacity-50 dark:text-teal-300 text-teal-700" />
-												<div className="mt-2 font-heading text-lg dark:text-teal-300 text-teal-700">
+												<OutlineStar className="mx-auto opacity-50 dark:text-neutral-300 text-neutral-700" />
+												<div className="mt-2 font-heading text-lg dark:text-neutral-300 text-neutral-700">
 													Latest release
 												</div>
 											</div>

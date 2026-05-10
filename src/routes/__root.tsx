@@ -18,6 +18,7 @@ import { CurrencyProvider } from "@/providers/currency";
 import { AuthProvider } from "@/providers/auth";
 import appCss from "../styles.css?url";
 import "@/bones/registry";
+import { MotionProvider } from "@/providers/motion";
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
@@ -54,36 +55,41 @@ export const Route = createRootRouteWithContext<{
 
 function RootDocument() {
 	return (
-		<html lang={i18n.language || "en"} suppressHydrationWarning>
+		<html lang={i18n.language || "en"}>
 			<head>
 				<HeadContent />
-				{/* <script
-					crossOrigin="anonymous"
-					src="//unpkg.com/react-scan/dist/auto.global.js"
-				></script> */}
+				{import.meta.env.DEV && (
+					<script
+						defer
+						crossOrigin="anonymous"
+						src="//unpkg.com/react-scan/dist/auto.global.js"
+					/>
+				)}
 			</head>
 			<body>
 				<AuthProvider>
-					<AbilityProvider>
-						<ThemeProvider>
-							<CurrencyProvider>
-								<Toaster />
-								<Outlet />
-								<TanStackDevtools
-									config={{
-										position: "bottom-right",
-									}}
-									plugins={[
-										{
-											name: "Tanstack Router",
-											render: <TanStackRouterDevtoolsPanel />,
-										},
-										TanStackQueryDevtools,
-									]}
-								/>
-							</CurrencyProvider>
-						</ThemeProvider>
-					</AbilityProvider>
+					<MotionProvider>
+						<AbilityProvider>
+							<ThemeProvider>
+								<CurrencyProvider>
+									<Toaster />
+									<Outlet />
+									<TanStackDevtools
+										config={{
+											position: "bottom-right",
+										}}
+										plugins={[
+											{
+												name: "Tanstack Router",
+												render: <TanStackRouterDevtoolsPanel />,
+											},
+											TanStackQueryDevtools,
+										]}
+									/>
+								</CurrencyProvider>
+							</ThemeProvider>
+						</AbilityProvider>
+					</MotionProvider>
 				</AuthProvider>
 				<Analytics />
 				<Scripts />

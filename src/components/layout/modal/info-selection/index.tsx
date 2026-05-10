@@ -68,7 +68,7 @@ export function InfoSelectionModal({
 												: "bg-secondary text-muted-foreground",
 										)}
 									>
-										<Icon className="h-5 w-5" />
+										<Icon className="size-5" />
 									</div>
 								)}
 
@@ -80,8 +80,8 @@ export function InfoSelectionModal({
 								</div>
 
 								{isSelected && (
-									<div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
-										<Check className="h-3 w-3" />
+									<div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+										<Check className="size-3" />
 									</div>
 								)}
 							</div>

@@ -53,8 +53,11 @@ function LoginForm({ onModeChange, onSuccess, onForgot }: LoginFormProps) {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full min-h-[300px]">
-				<div className="flex flex-col space-y-4 px-1 flex-1">
+			<form
+				onSubmit={handleSubmit(onSubmit)}
+				className="flex flex-col h-full min-h-[300px]"
+			>
+				<div className="flex flex-col gap-y-4 px-1 flex-1">
 					<FormField
 						control={control}
 						name="email"

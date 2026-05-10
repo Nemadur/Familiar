@@ -1,5 +1,5 @@
 import type { Table } from "@tanstack/react-table";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { getColumnHeaderLabel } from "src/components/reui/data-grid/data-grid";
 
 import {
@@ -11,6 +11,30 @@ import {
 	DropdownMenuTrigger,
 } from "src/components/ui/dropdown-menu";
 
+function getColumnVisibilityItems<TData>(table: Table<TData>): ReactNode[] {
+	const items: ReactNode[] = [];
+
+	for (const column of table.getAllColumns()) {
+		if (!column.getCanHide()) {
+			continue;
+		}
+
+		items.push(
+			<DropdownMenuCheckboxItem
+				key={column.id}
+				className="capitalize"
+				checked={column.getIsVisible()}
+				onSelect={(event) => event.preventDefault()}
+				onCheckedChange={(value) => column.toggleVisibility(!!value)}
+			>
+				{getColumnHeaderLabel(column)}
+			</DropdownMenuCheckboxItem>,
+		);
+	}
+
+	return items;
+}
+
 function DataGridColumnVisibility<TData>({
 	table,
 	trigger,
@@ -18,6 +42,8 @@ function DataGridColumnVisibility<TData>({
 	table: Table<TData>;
 	trigger: ReactElement<Record<string, unknown>>;
 }) {
+	const columnVisibilityItems = getColumnVisibilityItems(table);
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
@@ -26,22 +52,7 @@ function DataGridColumnVisibility<TData>({
 					<DropdownMenuLabel className="font-medium">
 						Toggle Columns
 					</DropdownMenuLabel>
-					{table
-						.getAllColumns()
-						.filter((column) => column.getCanHide())
-						.map((column) => {
-							return (
-								<DropdownMenuCheckboxItem
-									key={column.id}
-									className="capitalize"
-									checked={column.getIsVisible()}
-									onSelect={(event) => event.preventDefault()}
-									onCheckedChange={(value) => column.toggleVisibility(!!value)}
-								>
-									{getColumnHeaderLabel(column)}
-								</DropdownMenuCheckboxItem>
-							);
-						})}
+					{columnVisibilityItems}
 				</DropdownMenuGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>

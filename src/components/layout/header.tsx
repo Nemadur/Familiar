@@ -43,7 +43,7 @@ export default function Header() {
 				<div className="flex items-center gap-2">
 					<MobileNav />
 					<NavWrapper className="hidden lg:flex">
-						<Link to="/" className="mr-2 ml-3 flex items-center space-x-2">
+						<Link to="/" className="mr-2 ml-3 flex items-center gap-x-2">
 							<span className="font-bold text-sm uppercase tracking-wider text-primary">
 								{t("header.title")}
 							</span>

@@ -20,6 +20,25 @@ export type DetailTab = "details" | "delivery" | "review";
 
 export const ITEMS_PER_PAGE = 10;
 
+const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+});
+
+const TIME_FORMATTER = new Intl.DateTimeFormat("en-US", {
+	hour: "numeric",
+	minute: "2-digit",
+});
+
+const DETAILED_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	hour: "numeric",
+	minute: "2-digit",
+});
+
 export function getPaymentStatus(request: RequestItem): TPaymentStatus {
 	return request.payment?.paymentStatus ?? TPaymentStatus.Pending;
 }
@@ -103,7 +122,6 @@ export function statusTone(stage: TCommissionRequestStatus) {
 			return "info_ghost";
 		case TCommissionRequestStatus.Completed:
 			return "success_ghost";
-
 		case TCommissionRequestStatus.Cancelled:
 			return "danger_ghost";
 	}
@@ -125,39 +143,20 @@ export function paymentTone(payment: TPaymentStatus) {
 }
 
 export function formatShortDate(date: string) {
-	return new Intl.DateTimeFormat("en-US", {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-	}).format(new Date(date));
+	return SHORT_DATE_FORMATTER.format(new Date(date));
 }
 
 export function formatTime(date: string) {
-	return new Intl.DateTimeFormat("en-US", {
-		hour: "numeric",
-		minute: "2-digit",
-	}).format(new Date(date));
+	return TIME_FORMATTER.format(new Date(date));
 }
 
 export function formatDetailedDate(date: string) {
-	return new Intl.DateTimeFormat("en-US", {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-		hour: "numeric",
-		minute: "2-digit",
-	}).format(new Date(date));
-}
-
-export function shortId(value: string, start = 6, end = 4) {
-	if (!value) return "";
-	if (value.length <= start + end) return value;
-	return `${value.slice(0, start)}…${value.slice(-end)}`;
+	return DETAILED_DATE_FORMATTER.format(new Date(date));
 }
 
 export function getRequestTitle(request: RequestItem) {
 	const text = request.description?.trim();
-	if (!text) return `Commission request ${shortId(request.id)}`;
+	if (!text) return `Commission request ${request.id}`;
 	return text.length > 44 ? `${text.slice(0, 44).trimEnd()}…` : text;
 }
 
