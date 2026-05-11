@@ -8,6 +8,7 @@ import {
 	getMyCommissions,
 	getTags,
 	publishCommission,
+	updateCommission,
 	uploadCommissionMedia,
 } from "@/api/commisions";
 import {
@@ -74,6 +75,28 @@ export function useCreateCommission() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["commissions", "me"] });
 			queryClient.invalidateQueries({ queryKey: ["commissions", "artist"] });
+		},
+	});
+}
+
+export function useUpdateCommission() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({
+			commissionId,
+			data,
+		}: {
+			commissionId: string;
+			data: Parameters<typeof updateCommission>[1];
+		}) => updateCommission(commissionId, data),
+		onSuccess: (updated, { commissionId }) => {
+			queryClient.invalidateQueries({ queryKey: ["commissions", "me"] });
+			queryClient.invalidateQueries({ queryKey: ["commissions", "artist"] });
+			queryClient.invalidateQueries({
+				queryKey: ["commissions", commissionId],
+			});
+			queryClient.invalidateQueries({ queryKey: ["commissions", updated.id] });
 		},
 	});
 }

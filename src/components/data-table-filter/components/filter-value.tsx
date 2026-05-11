@@ -492,9 +492,10 @@ function getInitialOptions<TData, TType extends "option" | "multiOption">(
 	filter: FilterModel<TType>,
 ): FilterOptionState[] {
 	const counts = column.getFacetedUniqueValues();
+	const selectedValues = filter?.values ?? [];
 
 	return column.getOptions().map((option) => {
-		const selected = filter.values.includes(option.value);
+		const selected = selectedValues.includes(option.value);
 
 		return {
 			...option,
@@ -563,13 +564,15 @@ function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
 	const [options, setOptions] = useState(initialOptions);
 
 	useEffect(() => {
+		const selectedValues = filter?.values ?? [];
+
 		setOptions((previous) =>
 			previous.map((option) => ({
 				...option,
-				selected: filter.values.includes(option.value),
+				selected: selectedValues.includes(option.value),
 			})),
 		);
-	}, [filter.values]);
+	}, [filter?.values]);
 
 	return options;
 }

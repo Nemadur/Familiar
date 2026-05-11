@@ -1,3 +1,4 @@
+import { surfaceVariants } from "@heroui/react";
 import {
 	type Cell,
 	type Column,
@@ -31,7 +32,7 @@ const headerCellSpacingVariants = cva("", {
 	variants: {
 		size: {
 			dense: "px-2 h-8",
-			default: "px-3",
+			default: "",
 		},
 	},
 	defaultVariants: {
@@ -43,7 +44,7 @@ const bodyCellSpacingVariants = cva("", {
 	variants: {
 		size: {
 			dense: "px-2 py-1.5",
-			default: "px-3 py-2",
+			default: "py-2",
 		},
 	},
 	defaultVariants: {
@@ -55,7 +56,7 @@ const footerCellSpacingVariants = cva("", {
 	variants: {
 		size: {
 			dense: "px-2 py-1.5",
-			default: "px-3 py-2",
+			default: "py-2",
 		},
 	},
 	defaultVariants: {
@@ -368,7 +369,10 @@ function DataGridTableFillBodyCell() {
 			aria-hidden="true"
 			data-slot="data-grid-table-fill-body-cell"
 			style={{ width: "var(--data-grid-fill-size, 0px)" }}
-			className="p-0"
+			className={cn(
+				"p-0",
+				props.tableLayout?.rowRounded && "last:rounded-e-2xl",
+			)}
 		/>
 	);
 }
@@ -417,9 +421,8 @@ function DataGridTableBase({ children }: { children: ReactNode }) {
 				"text-foreground text-sm caption-bottom text-left align-middle font-normal rtl:text-right",
 				props.tableLayout?.columnsResizable ? "min-w-0" : "w-full min-w-full",
 				props.tableLayout?.width === "auto" ? "table-auto" : "table-fixed",
-				!props.tableLayout?.columnsResizable && "",
 				!props.tableLayout?.columnsDraggable &&
-					"border-separate border-spacing-0",
+					"border-separate [border-spacing:0_12px]",
 				props.tableClassNames?.base,
 			)}
 			style={
@@ -765,7 +768,13 @@ function DataGridTableResizeIndicator({
 }
 
 function DataGridTableRowSpacer() {
-	return <tbody aria-hidden="true" className="h-2"></tbody>;
+	return (
+		<tbody data-slot="data-grid-table-spacer">
+			<tr aria-hidden="true" className="h-2">
+				<td className="p-0" />
+			</tr>
+		</tbody>
+	);
 }
 
 function DataGridTableBody({ children }: { children: ReactNode }) {
@@ -773,12 +782,7 @@ function DataGridTableBody({ children }: { children: ReactNode }) {
 
 	return (
 		<tbody
-			className={cn(
-				"[&_tr:last-child]:border-0",
-				props.tableLayout?.rowRounded && "[&_td:first-child]:rounded-l-lg",
-				props.tableLayout?.rowRounded && "[&_td:last-child]:rounded-r-lg",
-				props.tableClassNames?.body,
-			)}
+			className={cn("[&_tr:last-child]:border-0", props.tableClassNames?.body)}
 		>
 			{children}
 		</tbody>
@@ -843,6 +847,7 @@ function DataGridTableBodyRowSkeleton({ children }: { children: ReactNode }) {
 	return (
 		<tr
 			className={cn(
+				"group",
 				"hover:bg-muted/40 data-[state=selected]:bg-muted/50",
 				props.onRowClick && "cursor-pointer",
 				!props.tableLayout?.stripped &&
@@ -880,8 +885,15 @@ function DataGridTableBodyRowSkeletonCell<TData>({
 					? { width: `calc(var(--col-${column.id}-size) * 1px)` }
 					: undefined
 			}
+			// TODO: próbowałem to RD to dać, ale już nie mogłem @NEM
 			className={cn(
 				"align-middle",
+				props.tableLayout?.rowRounded &&
+					"rounded-none first:rounded-s-2xl last:rounded-e-2xl",
+				props.tableLayout?.rowRounded &&
+					surfaceVariants({
+						variant: (props.tableLayout?.rowSurface as any) || "default",
+					}),
 				bodyCellSpacing,
 				props.tableLayout?.cellBorder && "border-e",
 				props.tableLayout?.columnsResizable &&
@@ -890,7 +902,7 @@ function DataGridTableBodyRowSkeletonCell<TData>({
 				column.columnDef.meta?.cellClassName,
 				props.tableLayout?.columnsPinnable &&
 					column.getCanPin() &&
-					'[&[data-pinned][data-last-col]]:border-border data-pinned:bg-background/90 data-pinned:backdrop-blur-xs" [&[data-pinned=left][data-last-col=left]]:border-e! [&[data-pinned=right][data-last-col=right]]:border-s!',
+					"[&[data-pinned][data-last-col]]:border-border data-pinned:bg-background/90 data-pinned:backdrop-blur-xs [&[data-pinned=left][data-last-col=left]]:border-e! [&[data-pinned=right][data-last-col=right]]:border-s!",
 				column.getIndex() === 0 ||
 					column.getIndex() === table.getVisibleFlatColumns().length - 1
 					? props.tableClassNames?.edgeCell
@@ -922,11 +934,23 @@ function DataGridTableBodyRow<TData>({
 
 	return (
 		<tr
+			data-slot="data-grid-table-body-row"
 			ref={(node) => {
 				assignRef(rowRef, node);
 				assignRef(dndRef, node);
 			}}
-			style={{ ...(dndStyle ? dndStyle : null) }}
+			style={{
+				...(dndStyle ? dndStyle : null),
+				...(isRowPinned
+					? {
+							position: "sticky",
+							zIndex: 1,
+							bottom:
+								isRowPinned === "bottom" ? "var(--row-bottom, 0)" : undefined,
+							top: isRowPinned === "top" ? "var(--row-top, 0)" : undefined,
+						}
+					: {}),
+			}}
 			data-state={
 				table.options.enableRowSelection && row.getIsSelected()
 					? "selected"
@@ -935,24 +959,7 @@ function DataGridTableBodyRow<TData>({
 			data-row-pinned={isRowPinned || undefined}
 			data-row-pinned-boundary={pinnedBoundary}
 			onClick={() => props.onRowClick?.(row.original)}
-			className={cn(
-				"hover:bg-muted/40 data-[state=selected]:bg-muted/50",
-				props.onRowClick && "cursor-pointer",
-				!props.tableLayout?.stripped &&
-					props.tableLayout?.rowBorder &&
-					"border-border border-b [&:not(:last-child)>td]:border-b",
-				props.tableLayout?.cellBorder && "*:last:border-e-0",
-				props.tableLayout?.stripped &&
-					"odd:bg-muted/90 odd:hover:bg-muted hover:bg-transparent",
-				table.options.enableRowSelection && "*:first:relative",
-				props.tableLayout?.rowsPinnable &&
-					isRowPinned &&
-					"bg-muted/30 hover:bg-muted/50",
-				pinnedBoundary === "top" && "[&>td]:shadow-[0_2px_0_rgba(0,0,0,0.03)]",
-				pinnedBoundary === "bottom" &&
-					"[&>td]:shadow-[0_2px_0_rgba(0,0,0,0.03)]",
-				props.tableClassNames?.bodyRow,
-			)}
+			className={cn(props.tableClassNames?.bodyRow)}
 		>
 			{children}
 			<DataGridTableFillBodyCell />
@@ -1030,7 +1037,21 @@ function DataGridTableBodyRowCell<TData>({
 				isLastLeftPinned ? "left" : isFirstRightPinned ? "right" : undefined
 			}
 			className={cn(
-				"align-middle",
+				"align-middle transition-colors h-full",
+				/*
+				 * The actual visible row surface is painted by the cells, not by <tr>.
+				 * So rounded rows must be built from first/last cells.
+				 */
+				// TODO: próbowałem to RD to dać, ale już nie mogłem @NEM
+				props.tableLayout?.rowRounded &&
+					"rounded-none first:rounded-s-2xl last:rounded-e-2xl",
+				props.tableLayout?.rowRounded &&
+					surfaceVariants({
+						variant: (props.tableLayout?.rowSurface as any) || "default",
+					}),
+				props.onRowClick &&
+					"group-hover:brightness-98 dark:group-hover:brightness-110",
+				row.getIsSelected() && "brightness-98 dark:brightness-110",
 				bodyCellSpacing,
 				props.tableLayout?.cellBorder && "border-e",
 				props.tableLayout?.columnsResizable &&
@@ -1138,7 +1159,7 @@ function DataGridTableRowSelect<TData>({ row }: { row: Row<TData> }) {
 					"bg-primary absolute inset-s-0 top-0 bottom-0 hidden w-[2px]",
 					row.getIsSelected() && "block",
 				)}
-			></div>
+			/>
 			<Checkbox
 				checked={row.getIsSelected()}
 				onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -1171,18 +1192,31 @@ function DataGridTableRowSelectAll() {
 function DataGridTableBodyRows<TData>({ table }: { table: Table<TData> }) {
 	const { isLoading, props } = useDataGrid();
 	const pagination = table.getState().pagination;
+	const visibleColumns = table.getVisibleFlatColumns();
 
-	const skeletonKeys = createStaticList("skeleton", pagination.pageSize || 1);
+	const skeletonRowKeys = createStaticList(
+		"skeleton-row",
+		pagination.pageSize || 1,
+	);
+	const skeletonColumnKeys = createStaticList(
+		"skeleton-column",
+		visibleColumns.length || 1,
+	);
 
 	if (isLoading && props.loadingMode === "skeleton" && pagination?.pageSize) {
 		return (
 			<>
 				{Array.from({ length: pagination.pageSize }).map((_, rowIndex) => (
-					<DataGridTableBodyRowSkeleton key={skeletonKeys[rowIndex].id}>
-						{table.getVisibleFlatColumns().map((column, colIndex) => (
+					<DataGridTableBodyRowSkeleton
+						key={skeletonRowKeys[rowIndex]?.id ?? `skeleton-row-${rowIndex}`}
+					>
+						{visibleColumns.map((column, colIndex) => (
 							<DataGridTableBodyRowSkeletonCell
 								column={column}
-								key={skeletonKeys[colIndex].id}
+								key={
+									skeletonColumnKeys[colIndex]?.id ??
+									`skeleton-column-${column.id}`
+								}
 							>
 								{column.columnDef.meta?.skeleton}
 							</DataGridTableBodyRowSkeletonCell>
@@ -1196,7 +1230,7 @@ function DataGridTableBodyRows<TData>({ table }: { table: Table<TData> }) {
 	if (isLoading && props.loadingMode === "spinner") {
 		return (
 			<tr>
-				<td colSpan={table.getVisibleFlatColumns().length} className="p-8">
+				<td colSpan={visibleColumns.length} className="p-8">
 					<div className="flex items-center justify-center">
 						<Loader2 className="size-5 animate-spin" />
 						{props.loadingMessage || "Loading..."}

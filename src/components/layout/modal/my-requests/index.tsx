@@ -23,7 +23,7 @@ import {
 	TabSelector,
 	type TabItem,
 } from "@/components/layout/profile/feed/selector";
-import { StatusBadge } from "@/components/layout/requests/my/badges";
+import { StatusBadge } from "@/components/layout/badges";
 import {
 	type DetailTab,
 	formatDetailedDate,

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CalendarIcon, CreditCard, Flag, ListFilterIcon } from "lucide-react";
 import { useCallback, useMemo, useReducer } from "react";
 import type { DateFilterOperator } from "@/components/data-table-filter/core/types";
-import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form";
+import { CommissionForm } from "@/components/layout/commision/commission-form";
 import { DashboardHeader } from "@/components/layout/dashboard/header";
 import {
 	type DateRangeValue,
@@ -662,11 +662,26 @@ function DashboardCommissionsRequestsPage({
 
 	return (
 		<div className="flex h-full flex-1 flex-col bg-muted/40">
-			<CommissionsRequestsHeader
-				onCreateCommission={() => actions.setCreateModalOpen(true)}
-			/>
+			<CommissionsRequestsHeader />
 
 			<div className="flex flex-1 flex-col gap-4 p-6">
+				<div className="flex items-center justify-between mb-2">
+					<h1 className="text-3xl font-semibold tracking-tight text-foreground">
+						Commissions Requests
+					</h1>
+					<div className="flex items-center gap-3">
+						<Button
+							size="xl"
+							onClick={() =>
+								dispatch({ type: "setCreateModalOpen", open: true })
+							}
+						>
+							<OutlinePlus className="size-4 mr-2" />
+							<span className="hidden sm:inline">Create Commission</span>
+						</Button>
+					</div>
+				</div>
+
 				<RequestsErrorBanner error={pageModel.requestsError} />
 
 				<FilterBar
@@ -711,22 +726,8 @@ function DashboardCommissionsRequestsPage({
 	);
 }
 
-function CommissionsRequestsHeader({
-	onCreateCommission,
-}: {
-	onCreateCommission: () => void;
-}) {
-	return (
-		<DashboardHeader
-			title="Commissions Requests"
-			actions={
-				<Button size="xl" onClick={onCreateCommission}>
-					<OutlinePlus />
-					<span className="hidden sm:inline">Create Commission</span>
-				</Button>
-			}
-		/>
-	);
+function CommissionsRequestsHeader() {
+	return <DashboardHeader title="Commissions Requests" />;
 }
 
 function RequestsErrorBanner({ error }: { error: unknown }) {
@@ -757,7 +758,7 @@ function CreateCommissionDialog({
 	}
 
 	return (
-		<CreateCommissionForm
+		<CommissionForm
 			username={user.username || user.userId}
 			tab="commissions"
 			artistId={user.userId}

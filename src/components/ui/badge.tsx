@@ -23,7 +23,7 @@ const badgeVariants = cva(
 				success_ghost:
 					"bg-success/20 text-success-foreground [a&]:hover:bg-success/90",
 				danger_ghost:
-					"bg-destructive/20 text-destructive-foreground [a&]:hover:bg-destructive/90",
+					"bg-destructive/20 text-destructive [a&]:hover:bg-destructive/90",
 				info_ghost: "bg-info/20 text-info-foreground [a&]:hover:bg-info/90",
 				warning_ghost:
 					"bg-warning/20 text-warning-foreground [a&]:hover:bg-warning/90",

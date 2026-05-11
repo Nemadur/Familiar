@@ -6,6 +6,7 @@ import type {
 	TCommissionRequest,
 	TCommissionResponse,
 	TCreateCommissionRequest,
+	TUpdateCommissionRequest,
 	TMediaJobResponse,
 	TTagResponse,
 } from "@/types/commissions";
@@ -66,6 +67,19 @@ export function createCommission(data: TCreateCommissionRequest) {
 		method: "POST",
 		body: JSON.stringify(data),
 	});
+}
+
+export function updateCommission(
+	commissionId: string,
+	data: TUpdateCommissionRequest,
+) {
+	return apiFetch<TCommissionResponse>(
+		`/api/commissions/${encodeURIComponent(commissionId)}`,
+		{
+			method: "PATCH",
+			body: JSON.stringify(data),
+		},
+	);
 }
 
 export function publishCommission(commissionId: string) {

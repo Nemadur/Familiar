@@ -21,22 +21,30 @@ const buttonVariants = cva(
 				blur_dark:
 					"backdrop-blur-md text-primary bg-background/80 hover:bg-background/90 hover:text-primary",
 				destructive:
-					"bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+					"bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+				success:
+					"bg-success text-success-foreground hover:bg-success/90 focus-visible:border-success/40 focus-visible:ring-success/20 dark:bg-success/20 dark:hover:bg-success/30 dark:focus-visible:ring-success/40",
+				success_ghost:
+					"bg-success/12 text-success-foreground [a&]:hover:bg-success/90",
+				destructive_ghost:
+					"bg-destructive/12 text-destructive [a&]:hover:bg-destructive/90",
+				info_ghost: "bg-info/12 text-info-foreground [a&]:hover:bg-info/90",
+				warning_ghost:
+					"bg-warning/12 text-warning-foreground [a&]:hover:bg-warning/90",
 				link: "text-accent underline-offset-4 hover:underline mx-0! px-0!",
-				link_ghost: "bg-accent/10 hover:text-foreground",
+				link_ghost: "bg-accent/12 hover:text-foreground",
 			},
 			size: {
 				default:
 					"h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-				xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-				sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+				xs: "h-6 gap-1  px-2 text-xs in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+				sm: "h-7 gap-1 px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
 				lg: "h-9 gap-1.5 px-3 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
 				xl: "h-10 gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
 				icon: "size-8",
 				"icon-xs":
-					"size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-full [&_svg:not([class*='size-'])]:size-3",
-				"icon-sm":
-					"size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-full",
+					"size-6  in-data-[slot=button-group]:rounded-full [&_svg:not([class*='size-'])]:size-3",
+				"icon-sm": "size-7 in-data-[slot=button-group]:rounded-full",
 				"icon-lg": "size-9",
 				"icon-xl": "size-10 [&_svg:not([class*='size-'])]:size-5",
 			},

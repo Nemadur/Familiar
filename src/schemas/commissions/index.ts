@@ -157,6 +157,7 @@ export const createCommissionFormSchema = z.object({
 		trimmedUuid("Template must be a valid UUID.").optional(),
 	),
 	mediaFiles: z.array(commissionMediaFileSchema).default([]),
+	commissionStatus: commissionStatusSchema.optional(),
 });
 
 export type TCreateCommissionRequestInput = z.input<
@@ -185,6 +186,6 @@ export function toCreateCommissionRequest(values: TCreateCommissionFormValues) {
 		basePrice: parsed.basePrice,
 		currencyCode: parsed.currencyCode,
 		tagIds: parsed.tagIds.length > 0 ? parsed.tagIds : undefined,
-		commissionStatus: TCommissionStatus.Draft,
+		commissionStatus: parsed.commissionStatus ?? TCommissionStatus.Draft,
 	});
 }

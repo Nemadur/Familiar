@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { CreateCommissionForm } from "@/components/layout/commision/create-commission-form";
+import { CommissionForm } from "@/components/layout/commision/commission-form";
 import { CommissionModal } from "@/components/layout/modal/commission";
 import { useUserByUsername } from "@/hooks/use-user";
 
@@ -90,7 +90,7 @@ function CommissionRoute({
 		if (!user?.userId) return null;
 
 		return (
-			<CreateCommissionForm
+			<CommissionForm
 				username={username}
 				tab={tab}
 				artistId={user.userId}

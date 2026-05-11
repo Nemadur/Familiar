@@ -43,12 +43,16 @@ type UserButtonContentProps = {
 	user: TUserResponse;
 	showInfo?: boolean;
 	showAvatar?: boolean;
+	showUsername?: boolean;
+	description?: React.ReactNode;
 };
 
 function UserButtonContent({
 	user,
 	showInfo = true,
 	showAvatar = true,
+	showUsername = true,
+	description,
 }: UserButtonContentProps) {
 	return (
 		<>
@@ -58,9 +62,17 @@ function UserButtonContent({
 					<span className="text-sm leading-none font-medium">
 						{user?.displayName || "Unknown"}
 					</span>
-					<span className="mt-1 text-xs leading-none text-muted-foreground">
-						@{user?.username || "Unknown"}
-					</span>
+					{description ? (
+						<span className="mt-1 text-xs leading-none text-muted-foreground">
+							{description}
+						</span>
+					) : (
+						showUsername && (
+							<span className="mt-1 text-xs leading-none text-muted-foreground">
+								@{user?.username || "Unknown"}
+							</span>
+						)
+					)}
 				</div>
 			)}
 		</>
@@ -71,6 +83,8 @@ type UserProps = {
 	user: TUserResponse;
 	showInfo?: boolean;
 	showAvatar?: boolean;
+	showUsername?: boolean;
+	description?: React.ReactNode;
 	isDropdown?: boolean;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -80,10 +94,13 @@ type UserProps = {
 	drawerTitle?: string;
 };
 
+// eslint-disable-next-line react-doctor/no-many-boolean-props
 export default function User({
 	user,
 	showInfo = true,
 	showAvatar = true,
+	showUsername = true,
+	description,
 	isDropdown = false,
 	open: openProp,
 	onOpenChange,
@@ -122,6 +139,8 @@ export default function User({
 			user={user}
 			showInfo={showInfo}
 			showAvatar={showAvatar}
+			showUsername={showUsername}
+			description={description}
 		/>
 	);
 

@@ -62,7 +62,7 @@ code {
     --accent-foreground: var(--color-white);
 
     --destructive: var(--color-red-500);
-    --destructive-foreground: var(--color-red-600);
+    --destructive-foreground: var(--color-red-50);
 
     --border: var(--color-gray-200);
     --input: var(--color-gray-200);
@@ -74,7 +74,7 @@ code {
     --success:
     var(--color-emerald-500);
     --success-foreground:
-    var(--color-emerald-900);
+    var(--color-emerald-950);
     --info:
     var(--color-violet-500);
     --info-foreground:

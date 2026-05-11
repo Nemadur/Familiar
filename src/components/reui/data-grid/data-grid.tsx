@@ -79,6 +79,16 @@ export interface DataGridProps<TData extends object> {
 		cellBorder?: boolean;
 		rowBorder?: boolean;
 		rowRounded?: boolean;
+		rowSurface?:
+			| "default"
+			| "secondary"
+			| "primary"
+			| "warning"
+			| "success"
+			| "danger"
+			| "transparent"
+			| "glass"
+			| "base";
 		stripped?: boolean;
 		headerBackground?: boolean;
 		headerBorder?: boolean;
@@ -130,6 +140,7 @@ function DataGridProvider<TData extends object>({
 	onRowClick,
 	className,
 	tableLayout,
+	tableClassNames,
 }: DataGridProps<TData> & { table: Table<TData> }) {
 	const columnsResizable = tableLayout?.columnsResizable;
 	const columnsResizeMode = tableLayout?.columnsResizeMode ?? "onEnd";
@@ -142,6 +153,7 @@ function DataGridProvider<TData extends object>({
 		() =>
 			tableLayout
 				? {
+						...tableLayout,
 						columnsResizable,
 						columnsResizeMode,
 					}
@@ -161,6 +173,7 @@ function DataGridProvider<TData extends object>({
 				emptyMessage,
 				onRowClick,
 				className,
+				tableClassNames,
 				tableLayout: stableTableLayout,
 			}) as DataGridProps<TData>,
 		[
@@ -173,6 +186,7 @@ function DataGridProvider<TData extends object>({
 			emptyMessage,
 			onRowClick,
 			className,
+			tableClassNames,
 			stableTableLayout,
 		],
 	);
@@ -260,7 +274,7 @@ function DataGrid<TData extends object>({
 function DataGridContainer({
 	children,
 	className,
-	border = true,
+	border = false,
 }: {
 	children: ReactNode;
 	className?: string;

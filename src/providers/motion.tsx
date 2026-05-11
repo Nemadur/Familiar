@@ -5,7 +5,7 @@ export function MotionProvider({ children }: { children: ReactNode }) {
 	const shouldReduceMotion = useReducedMotion();
 
 	return (
-		<MotionConfig reducedMotion={shouldReduceMotion ? "always" : "never"}>
+		<MotionConfig reducedMotion={shouldReduceMotion ? "always" : "user"}>
 			{children}
 		</MotionConfig>
 	);
