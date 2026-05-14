@@ -1,6 +1,6 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import { UserComment } from "@/components/common/user-comment";
+import { UserComment } from "@/components/ui/user-comment";
 import { OutlineStar, SolidStar } from "@/components/icons/icons";
 import UserAvatar from "@/components/layout/profile/avatar";
 import {

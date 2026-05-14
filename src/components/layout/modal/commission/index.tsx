@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
-import { MarkdownDisplay } from "@/components/common/markdown-display";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import { OutlineChat, SolidStar } from "@/components/icons/icons";
 import {
 	type TabItem,

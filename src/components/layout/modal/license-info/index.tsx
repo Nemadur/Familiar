@@ -2,7 +2,7 @@ import { ScrollShadow, Surface } from "@heroui/react";
 import { Check, Maximize2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MarkdownDisplay } from "@/components/common/markdown-display";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import {
 	Accordion,
 	AccordionContent,

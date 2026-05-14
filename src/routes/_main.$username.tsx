@@ -84,6 +84,7 @@ function RouteComponent() {
 	const navigate = useNavigate();
 	const params = useParams({ strict: false }) as {
 		tab?: string;
+		// TODO: we should standardize on "commissionId" vs "commisionId" across the codebase and remove this hack
 		commissionId?: string;
 		commisionId?: string;
 	};

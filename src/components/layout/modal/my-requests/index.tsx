@@ -9,7 +9,7 @@ import {
 	X,
 } from "lucide-react";
 import { useMemo, useState, type ElementType, type ReactNode } from "react";
-import { MarkdownDisplay } from "@/components/common/markdown-display";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import {
 	OutlineAI,
 	OutlineChat,

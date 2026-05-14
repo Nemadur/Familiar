@@ -19,7 +19,7 @@ import {
 	useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { MarkdownDisplay } from "@/components/common/markdown-display";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import type { NumberFilterOperator } from "@/components/data-table-filter/core/types";
 import {
 	FilterBar,

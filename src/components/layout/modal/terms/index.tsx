@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import { MarkdownDisplay } from "@/components/common/markdown-display";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import {
 	Dialog,
 	DialogContent,
