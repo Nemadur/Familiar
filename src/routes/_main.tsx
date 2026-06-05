@@ -2,6 +2,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { Container } from "@/components/layout/container";
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
+import FloatingToolbar from "@/components/layout/floating-toolbar";
 
 export const Route = createFileRoute("/_main")({
 	component: MainLayout,
@@ -19,6 +20,7 @@ function MainLayout() {
 				>
 					<Outlet />
 				</main>
+				<FloatingToolbar />
 				<Footer />
 			</Container>
 		</div>

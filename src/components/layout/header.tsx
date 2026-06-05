@@ -26,6 +26,7 @@ import LanguageSelect from "./select/language";
 import CurrencySelect from "./select/currency";
 import { TRoles } from "@/types/user/roles";
 import { Skeleton } from "boneyard-js/react";
+import ThemeToggle from "./select/theme-toggle";
 
 function ClientOnly({ children }: { children: React.ReactNode }) {
 	const [mounted, setMounted] = useState(false);
@@ -56,7 +57,7 @@ export default function Header() {
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
 						<CurrencySelect display={"compact"} variant={"secondary"} />
-						<LanguageSelect />
+						{/* <LanguageSelect /> */}
 						<ClientOnly>
 							<Skeleton name="header-artist_dashboard" loading={isPending}>
 								{isPending
