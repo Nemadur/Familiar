@@ -440,131 +440,131 @@ const en: Locale = {
 			Deprecated: "Deprecated",
 			Removed: "Removed",
 			Security: "Security",
-			Breaking: "Breaking",
+			Breaking: "Broken",
 		},
 		releases: {
 			v0_1_0: {
-				Added: ["Initial release of the Familiar platform."],
+				Added: ["Familiar is now live. This is our first public release."],
 			},
 			v0_2_0: {
 				Added: [
-					"Full profile pages are live with avatars, bios, cover images, and feed tabs.",
-					"You can now sign in and out with a real account backed by Supabase.",
-					"Profiles support spoken language badges and SEO-friendly URLs.",
+					"Profiles are now available with avatars, bios, cover images, and feed tabs.",
+					"You can now sign in and out with a real Supabase-powered account.",
+					"Profiles now support language badges and cleaner, SEO-friendly URLs.",
 				],
 			},
 			v0_3_0: {
 				Added: [
 					"You can now browse and request commissions directly from artist profiles.",
-					"Content permissions are now handled behind the scenes based on your account type.",
+					"Content access is now handled automatically based on your account type.",
 				],
 			},
 			v0_3_1: {
 				Improved: [
-					"Commission cards look more polished with refined corners and image rounding.",
-					"Show and hide content labels are shorter and clearer.",
+					"Commission cards now look cleaner, with smoother corners and better image rounding.",
+					"Sensitive content labels are shorter and easier to understand.",
 				],
 				Fixed: [
-					"The hide content button now shows a tooltip so its purpose is clearer.",
+					"The hide content button now includes a tooltip, so its purpose is easier to understand.",
 				],
 			},
 			v0_4_0: {
 				Added: [
-					"New profile modals for info selection, terms of service, and reviews.",
-					"Commission detail pages are now reachable directly from your profile.",
+					"Added new profile modals for info selection, terms of service, and reviews.",
+					"Commission detail pages can now be opened directly from artist profiles.",
 				],
-				Improved: ["Commission previews now load faster and look sharper."],
+				Improved: ["Commission previews now load faster and look cleaner."],
 			},
 			v0_5_0: {
 				Added: [
-					"The app now works great on mobile with a new slide out navigation menu.",
-					"Portfolio posts can be linked directly and shared with a URL.",
-					"Sensitive content is blurred by default with a one tap option to reveal it.",
+					"Mobile now has its own navigation menu, making the app easier to use on smaller screens.",
+					"Portfolio posts can now be opened directly and shared with a link.",
+					"Sensitive content is now blurred by default, with a quick tap to reveal it.",
 				],
 				Improved: [
-					"The user menu adapts to your device, showing a dropdown on desktop and a drawer on mobile.",
-					"Images in the feed autoplay on mobile when you scroll past them.",
-					"Your FAM code is cleaned up automatically when you type or paste it.",
+					"The user menu now adapts to your device, with a dropdown on desktop and a drawer on mobile.",
+					"Feed images can now autoplay on mobile as you scroll past them.",
+					"FAM codes are now formatted automatically when typed or pasted.",
 				],
 			},
 			v0_5_1: {
 				Improved: [
-					"Reels feel more stable with better progress tracking and smoother transitions.",
-					"Links inside posts now show a preview tooltip when you hover over them.",
-					"Commission request forms have a cleaner step by step layout.",
+					"Reels now feel steadier, with better progress tracking and smoother transitions.",
+					"Links in posts now show a preview tooltip when you hover over them.",
+					"Commission request forms now have a cleaner step-by-step flow.",
 				],
-				Added: ["New filter icon available across the app."],
+				Added: ["Added a new filter icon for use across the app."],
 			},
 			v0_5_2: {
 				Fixed: [
 					"Reels no longer flicker or get stuck when switching between items.",
-					"Profile pictures load correctly even when media is still coming in.",
-					"You can only open a commission if it is actually available, not accidentally on closed ones.",
-					"Staying logged in across page refreshes is much more reliable now.",
-					"The app no longer briefly shows you as logged out when you first open it.",
-					"Your chosen theme is applied immediately on load with no flash.",
+					"Profile pictures now load correctly, even while media is still being processed.",
+					"Closed commissions can no longer be opened by accident.",
+					"Staying logged in after refreshing the page is now more reliable.",
+					"The app no longer briefly shows you as logged out when it first loads.",
+					"Your selected theme now applies immediately, without flashing on startup.",
 				],
 				Improved: [
 					"Folder cards now support custom colors and icons.",
-					"License selection inside commission modals is clearer and easier to interact with.",
-					"Scrollable sections in modals behave more consistently.",
+					"License selection in commission modals is clearer and easier to use.",
+					"Scrollable areas inside modals now behave more consistently.",
 				],
 			},
 			v0_5_3: {
 				Improved: [
-					"Calendar, carousel, and multi-step forms are more reliable and easier to use with a keyboard.",
+					"Calendar, carousel, and multi-step form components are now more reliable and easier to use with a keyboard.",
 				],
 			},
 			v0_5_4: {
 				Improved: [
-					"Reels play more smoothly and pause correctly when you scroll away.",
-					"The app feels snappier overall thanks to some under the hood performance work.",
+					"Reels now play more smoothly and pause correctly when you scroll away.",
+					"The app should feel a bit faster thanks to general performance improvements.",
 				],
 				Fixed: [
-					"Sign up flow no longer gets stuck on the continue button in certain situations.",
+					"The sign-up flow no longer gets stuck on the continue button in certain cases.",
 				],
 			},
 			v0_6_0: {
 				Added: [
-					"New filtering system lets you narrow down lists by date, text, number, or multiple options at once.",
-					"Filters work great on mobile too.",
+					"Added a new filtering system for narrowing lists by date, text, numbers, or multiple options at once.",
+					"Filters now work nicely on mobile too.",
 				],
 			},
 			v0_7_0: {
 				Added: [
-					"You can now send and manage commission requests end to end.",
-					"A new My Requests page lets you track the status of everything you have sent.",
+					"You can now send and manage commission requests from start to finish.",
+					"Added a new My Requests page where you can track the progress.",
 				],
 			},
 			v0_7_1: {
 				Improved: [
-					"Commission requests now have dedicated actions: submit, accept, reject, cancel, and attach media.",
-					"The request details page got a full redesign with clearer status cards and a hold-to-confirm button for sensitive actions.",
-					"Artists now see a dashboard shortcut right in the header.",
-					"Filters now support grouped and nested options for easier browsing.",
+					"Commission requests now have clearer actions for submitting, accepting, rejecting, canceling, and attaching media.",
+					"The request details page has a cleaner design, clearer status cards, and a hold-to-confirm button for sensitive actions.",
+					"Artists now have a dashboard shortcut directly in the header.",
+					"Filters now support grouped and nested options, making browsing easier.",
 				],
 			},
 			v0_7_2: {
 				Improved: [
-					"Commission previews now load faster and look sharper.",
-					"Archived commissions are filtered out more reliably from your list.",
+					"Commission previews now load faster and look clearer.",
+					"Archived commissions are now hidden from your list more reliably.",
 				],
 				Removed: [
-					"Cleaned up some old placeholder data that was no longer needed.",
-					"Portfolio post view is temporarily hidden while we rework it.",
+					"Removed old placeholder data that was no longer needed.",
+					"Portfolio post view is temporarily hidden while it is being reworked.",
 				],
 			},
 			v0_7_3: {
 				Added: [
-					"Release notes, you can be updated on the latest features and improvements.",
+					"Added release notes, so you can quickly see what is new, improved, and fixed in Familiar.",
 				],
 			},
 			v0_7_4: {
 				Improved: [
-					"Reworked the release notes page to support multiple languages.",
+					"Release notes now support multiple languages, so more users can follow what changed.",
 				],
 				Fixed: [
-					"Register and Login page share now one layout, no more weird offsets.",
+					"Login and registration now share the same layout, so the pages feel more consistent.",
 				],
 			},
 		},

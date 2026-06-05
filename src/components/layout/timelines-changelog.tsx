@@ -215,7 +215,7 @@ function ReleaseChangeGroup({
 
 			<TypographyList className="prose">
 				{items.map((item) => (
-					<li key={item} className="text-sm leading-relaxed">
+					<li key={item} className="text-sm leading-relaxed text-foreground">
 						{item}
 					</li>
 				))}

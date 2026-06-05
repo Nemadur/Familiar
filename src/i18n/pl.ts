@@ -426,6 +426,151 @@ const pl: Locale = {
 			made_with: "Stworzone z ❤️",
 		},
 	},
+	releaseNotes: {
+		title: "Nowinki Familiarowe",
+		eyebrow: "Lista zmian",
+		latest: "Najnowsze",
+		latestRelease: "Najnowsza wersja",
+		tags: {
+			Added: "Dodano",
+			Improved: "Ulepszono",
+			Fixed: "Poprawiono",
+			Deprecated: "Deprecowano",
+			Removed: "Usunięto",
+			Security: "Bezpieczństwo",
+			Breaking: "Zepsuto",
+		},
+		releases: {
+			v0_1_0: {
+				Added: [
+					"Familiar jest już dostępny. To nasze pierwsze publiczne wydanie.",
+				],
+			},
+			v0_2_0: {
+				Added: [
+					"Profile są już dostępne, razem z avatarami, opisami, obrazami w tle i zakładkami feedu.",
+					"Możesz teraz logować się i wylogowywać z prawdziwego konta obsługiwanego przez Supabase.",
+					"Profile obsługują teraz oznaczenia języków i czytelniejsze adresy URL przyjazne SEO.",
+				],
+			},
+			v0_3_0: {
+				Added: [
+					"Możesz teraz przeglądać i zamawiać zlecenia bezpośrednio z profili artystów.",
+					"Dostęp do treści jest teraz obsługiwany automatycznie na podstawie typu konta.",
+				],
+			},
+			v0_3_1: {
+				Improved: [
+					"Karty zleceń wyglądają teraz czyściej, z płynniejszymi zaokrągleniami i lepiej dopasowanymi obrazami.",
+					"Etykiety treści wrażliwych są krótsze i łatwiejsze do zrozumienia.",
+				],
+				Fixed: [
+					"Przycisk ukrywania treści ma teraz podpowiedź, dzięki czemu jego działanie jest łatwiejsze do zrozumienia.",
+				],
+			},
+			v0_4_0: {
+				Added: [
+					"Dodano nowe okna profilu do wyboru informacji, regulaminu usług i opinii.",
+					"Szczegóły zleceń można teraz otwierać bezpośrednio z profili artystów.",
+				],
+				Improved: [
+					"Podglądy zleceń ładują się szybciej i wyglądają czytelniej.",
+				],
+			},
+			v0_5_0: {
+				Added: [
+					"Wersja mobilna ma teraz własne menu nawigacji, dzięki czemu łatwiej korzystać z aplikacji na mniejszych ekranach.",
+					"Posty portfolio można teraz otwierać bezpośrednio i udostępniać linkiem.",
+					"Treści wrażliwe są teraz domyślnie rozmyte i można je szybko odsłonić jednym dotknięciem.",
+				],
+				Improved: [
+					"Menu użytkownika dopasowuje się do urządzenia, z listą rozwijaną na desktopie i panelem wysuwanym na mobile.",
+					"Obrazy w feedzie mogą teraz odtwarzać się automatycznie na mobile podczas przewijania.",
+					"Kody FAM są teraz automatycznie formatowane podczas wpisywania lub wklejania.",
+				],
+			},
+			v0_5_1: {
+				Improved: [
+					"Rolki działają stabilniej, z lepszym śledzeniem postępu i płynniejszymi przejściami.",
+					"Linki w postach pokazują teraz podgląd po najechaniu kursorem.",
+					"Formularze zleceń mają teraz czytelniejszy układ krok po kroku.",
+				],
+				Added: ["Dodano nową ikonę filtrowania do użycia w aplikacji."],
+			},
+			v0_5_2: {
+				Fixed: [
+					"Rolki nie migoczą już ani nie blokują się podczas przełączania między elementami.",
+					"Zdjęcia profilowe ładują się poprawnie, nawet gdy media są jeszcze przetwarzane.",
+					"Zamkniętych zleceń nie da się już przypadkowo otworzyć.",
+					"Pozostawanie zalogowanym po odświeżeniu strony działa teraz pewniej.",
+					"Aplikacja nie pokazuje już przez chwilę, że jesteś wylogowany podczas pierwszego ładowania.",
+					"Wybrany motyw stosuje się od razu, bez migania przy uruchomieniu.",
+				],
+				Improved: [
+					"Karty folderów obsługują teraz własne kolory i ikony.",
+					"Wybór licencji w oknach zleceń jest czytelniejszy i łatwiejszy w obsłudze.",
+					"Przewijane obszary w oknach działają teraz bardziej spójnie.",
+				],
+			},
+			v0_5_3: {
+				Improved: [
+					"Kalendarz, karuzela i formularze wieloetapowe są teraz stabilniejsze i wygodniejsze w obsłudze klawiaturą.",
+				],
+			},
+			v0_5_4: {
+				Improved: [
+					"Rolki odtwarzają się płynniej i poprawnie pauzują, gdy przewiniesz dalej.",
+					"Aplikacja powinna działać trochę szybciej dzięki ogólnym usprawnieniom wydajności.",
+				],
+				Fixed: [
+					"Proces rejestracji nie blokuje się już na przycisku kontynuacji w niektórych przypadkach.",
+				],
+			},
+			v0_6_0: {
+				Added: [
+					"Dodano nowy system filtrowania list według daty, tekstu, liczb albo wielu opcji naraz.",
+					"Filtry dobrze działają teraz również na mobile.",
+				],
+			},
+			v0_7_0: {
+				Added: [
+					"Możesz teraz wysyłać i obsługiwać zlecenia od początku do końca.",
+					'Dodano stronę "Moje zlecenia", gdzie możesz śledzić ich progres.',
+				],
+			},
+			v0_7_1: {
+				Improved: [
+					"Zlecenia mają teraz czytelniejsze akcje do wysyłania, akceptowania, odrzucania, anulowania i dodawania mediów.",
+					"Strona szczegółów zlecenia ma czytelniejszy wygląd, lepsze karty statusu i przycisk przytrzymania do ważnych akcji.",
+					"Artyści mają teraz skrót do panelu bezpośrednio w nagłówku.",
+					"Filtry obsługują teraz grupowane i zagnieżdżone opcje, dzięki czemu łatwiej przeglądać listy.",
+				],
+			},
+			v0_7_2: {
+				Improved: [
+					"Podglądy zleceń ładują się szybciej i wyglądają czytelniej.",
+					"Zarchiwizowane zlecenia są teraz skuteczniej ukrywane z listy.",
+				],
+				Removed: [
+					"Usunięto stare dane testowe, które nie były już potrzebne.",
+					"Widok posta portfolio jest tymczasowo ukryty, dopóki go przebudowujemy.",
+				],
+			},
+			v0_7_3: {
+				Added: [
+					'Dodano notatki o "nowych wersjach", żeby szybko sprawdzić, co nowego, co ulepszono i co naprawiono w Familiar.',
+				],
+			},
+			v0_7_4: {
+				Improved: [
+					'Notatki o "nowych wersjach" obsługują teraz wiele języków, żeby więcej użytkowników mogło śledzić zmiany.',
+				],
+				Fixed: [
+					"Logowanie i rejestracja korzystają teraz z tego samego układu, więc strony wyglądają spójniej.",
+				],
+			},
+		},
+	},
 };
 
 export default pl;
