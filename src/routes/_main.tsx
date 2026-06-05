@@ -14,7 +14,7 @@ function MainLayout() {
 				<Header />
 				<main
 					className={
-						"flex h-full min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5 lg:px-5"
+						"flex h-full min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5 sm:pt-2 lg:px-5"
 					}
 				>
 					<Outlet />

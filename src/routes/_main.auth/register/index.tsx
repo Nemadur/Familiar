@@ -1,63 +1,36 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import RegisterForm from "@/components/layout/auth/form/register";
-import { Button } from "@/components/ui/button";
+import { TypographyMuted } from "@/components/ui/typography/muted";
+import { TypographyH3 } from "@/components/ui/typography/h3";
+import { AuthLegalFooter } from "@/components/layout/auth/footer";
 
 export const Route = createFileRoute("/_main/auth/register/")({
-	component: SignupPage,
+	component: RegisterPage,
 });
 
-function SignupPage() {
+function RegisterPage() {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 
 	return (
-		<div className="grid sm:w-full lg:w-full md:w-xl md:mx-auto h-full min-h-[calc(100dvh-6rem)] lg:grid-cols-2">
-			<div className="flex flex-col gap-4 p-6 md:p-10">
-				<div className="flex flex-1 flex-col lg:items-center lg:justify-center">
-					<div className="w-full flex flex-col h-full lg:max-w-md">
-						<div className="flex-1 flex flex-col pt-8">
-							<RegisterForm
-								onSuccess={() => navigate({ to: "/" })}
-								onModeChange={() => navigate({ to: "/auth/login" })}
-							/>
-						</div>
+		<article className="flex h-full flex-1 flex-col">
+			<header className="flex flex-col gap-2 py-8">
+				<TypographyH3>{t("auth.register.title", "Register")}</TypographyH3>
 
-						<div className="mt-auto pt-6 space-y-4 text-center text-sm">
-							<div className="text-muted-foreground">
-								{t("auth.register.already_have_account")}{" "}
-								<Button
-									type="button"
-									onClick={() => navigate({ to: "/auth/login" })}
-									variant={"link"}
-									className="p-0 h-auto"
-								>
-									{t("auth.login.cta")}
-								</Button>
-							</div>
+				<TypographyMuted>
+					{t("auth.register.description", "Register to Familiar")}
+				</TypographyMuted>
+			</header>
 
-							<p className="px-8 text-muted-foreground">
-								{t("auth.terms_agree.label")}{" "}
-								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="#">{t("auth.terms_agree.terms")}</Link>
-								</Button>{" "}
-								{t("auth.terms_agree.and")}{" "}
-								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="#">{t("auth.terms_agree.privacy")}</Link>
-								</Button>
-								.
-							</p>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div className="bg-muted relative hidden lg:block rounded-4xl overflow-hidden">
-				<img
-					src="https://images.pexels.com/photos/1570264/pexels-photo-1570264.jpeg"
-					alt="Familiar"
-					className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+			<section aria-labelledby="auth-page-title" className="mt-4 h-full">
+				<RegisterForm
+					onSuccess={() => navigate({ to: "/" })}
+					onModeChange={() => navigate({ to: "/auth/login" })}
 				/>
-			</div>
-		</div>
+			</section>
+
+			<AuthLegalFooter />
+		</article>
 	);
 }

@@ -13,6 +13,7 @@ function DashboardLayout() {
 	const { user, isPending } = useAuth();
 	const navigate = useNavigate();
 
+	// TODO: move guard to middleware or 1 source of truth
 	useEffect(() => {
 		if (isPending) return;
 

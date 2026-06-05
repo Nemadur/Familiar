@@ -175,7 +175,7 @@ const NavLinks = memo(() => {
 
 	const navigationLinks = [
 		{ path: "/", label: t("header.navigation.home") },
-		{ path: "/shop", label: t("header.navigation.shop") },
+		// { path: "/shop", label: t("header.navigation.shop") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },
 	];

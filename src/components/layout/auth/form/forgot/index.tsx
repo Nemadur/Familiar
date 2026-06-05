@@ -22,6 +22,8 @@ import type { ForgotFormProps } from "@/types/auth/form/forgot";
 import type { ForgotPasswordData } from "@/types/auth/schema/forgot-password";
 
 function ForgotForm({ onSuccess, onModeChange }: ForgotFormProps) {
+	const { t } = useTranslation();
+
 	const form = useFormValidation({
 		schema: forgotPassword,
 		initialData: {
@@ -29,19 +31,24 @@ function ForgotForm({ onSuccess, onModeChange }: ForgotFormProps) {
 		},
 	});
 
-	const { handleSubmit } = form;
-	const { t } = useTranslation();
+	const {
+		handleSubmit,
+		control,
+		formState: { isSubmitting },
+	} = form;
 
 	const submitPasswordResetRequest = async (data: ForgotPasswordData) => {
-		const forgotPasswordPromise = (async () => {
-			await supabase.auth.resetPasswordForEmail(data.email, {
+		const resetPasswordPromise = (async () => {
+			const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
 				redirectTo: `${window.location.origin}/auth/reset-password`,
 			});
 
-			return { success: true };
+			if (error) {
+				throw error;
+			}
 		})();
 
-		toast.promise(forgotPasswordPromise, {
+		toast.promise(resetPasswordPromise, {
 			loading: "Sending reset email...",
 			success: () => {
 				onSuccess?.();
@@ -52,47 +59,75 @@ function ForgotForm({ onSuccess, onModeChange }: ForgotFormProps) {
 				return "If an account exists with this email, you will receive a password reset link shortly.";
 			},
 		});
+
+		try {
+			await resetPasswordPromise;
+		} catch {
+			// Intentionally hidden to avoid account enumeration.
+		}
 	};
 
 	return (
 		<Form {...form}>
 			<form
 				onSubmit={handleSubmit(submitPasswordResetRequest)}
-				className="space-y-4"
+				className="flex min-h-[300px] h-full w-full flex-col"
+				aria-label={t("auth.forgot.reset_password")}
 			>
-				<FormField
-					control={form.control}
-					name="email"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>{t("auth.email.label")}</FormLabel>
-							<FormControl>
-								<InputGroup>
-									<InputGroupAddon>
-										<OutlineMail />
-									</InputGroupAddon>
-									<InputGroupInput
-										placeholder={t("auth.email.placeholder")}
-										type="email"
-										{...field}
-									/>
-								</InputGroup>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				<fieldset
+					disabled={isSubmitting}
+					className="flex flex-1 flex-col gap-4 px-1"
+				>
+					<legend className="sr-only">{t("auth.forgot.title")}</legend>
 
-				<div className="flex flex-col gap-2">
-					<Button type="submit">{t("auth.forgot.reset_password")}</Button>
+					<FormField
+						control={control}
+						name="email"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>{t("auth.email.label")}</FormLabel>
+
+								<FormControl>
+									<InputGroup>
+										<InputGroupAddon aria-hidden="true">
+											<OutlineMail />
+										</InputGroupAddon>
+
+										<InputGroupInput
+											placeholder={t("auth.email.placeholder")}
+											type="email"
+											autoComplete="email"
+											inputMode="email"
+											{...field}
+										/>
+									</InputGroup>
+								</FormControl>
+
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</fieldset>
+
+				<footer className="mt-auto flex shrink-0 flex-col gap-2 px-1">
+					<Button
+						type="submit"
+						disabled={isSubmitting}
+						className="w-full"
+						size="2xl"
+					>
+						{t("auth.forgot.reset_password")}
+					</Button>
+
 					<Button
 						type="button"
-						variant="ghost"
-						onClick={() => onModeChange("login")}
+						variant="link"
+						onClick={() => onModeChange?.("login")}
+						className="w-full justify-center"
 					>
 						{t("auth.forgot.back_to_login")}
 					</Button>
-				</div>
+				</footer>
 			</form>
 		</Form>
 	);

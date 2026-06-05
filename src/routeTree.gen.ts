@@ -20,6 +20,7 @@ import { Route as MainReleaseNotesRouteImport } from './routes/_main.release-not
 import { Route as MainMyRequestsRouteImport } from './routes/_main.my-requests'
 import { Route as MainLogoutRouteImport } from './routes/_main.logout'
 import { Route as MainUsernameRouteImport } from './routes/_main.$username'
+import { Route as MainAuthRouteRouteImport } from './routes/_main.auth/route'
 import { Route as MainUsernameTabRouteImport } from './routes/_main.$username/$tab'
 import { Route as MainAuthRegisterIndexRouteImport } from './routes/_main.auth/register/index'
 import { Route as MainAuthLoginIndexRouteImport } from './routes/_main.auth/login/index'
@@ -84,25 +85,30 @@ const MainUsernameRoute = MainUsernameRouteImport.update({
   path: '/$username',
   getParentRoute: () => MainRoute,
 } as any)
+const MainAuthRouteRoute = MainAuthRouteRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainUsernameTabRoute = MainUsernameTabRouteImport.update({
   id: '/$tab',
   path: '/$tab',
   getParentRoute: () => MainUsernameRoute,
 } as any)
 const MainAuthRegisterIndexRoute = MainAuthRegisterIndexRouteImport.update({
-  id: '/auth/register/',
-  path: '/auth/register/',
-  getParentRoute: () => MainRoute,
+  id: '/register/',
+  path: '/register/',
+  getParentRoute: () => MainAuthRouteRoute,
 } as any)
 const MainAuthLoginIndexRoute = MainAuthLoginIndexRouteImport.update({
-  id: '/auth/login/',
-  path: '/auth/login/',
-  getParentRoute: () => MainRoute,
+  id: '/login/',
+  path: '/login/',
+  getParentRoute: () => MainAuthRouteRoute,
 } as any)
 const MainAuthForgotIndexRoute = MainAuthForgotIndexRouteImport.update({
-  id: '/auth/forgot/',
-  path: '/auth/forgot/',
-  getParentRoute: () => MainRoute,
+  id: '/forgot/',
+  path: '/forgot/',
+  getParentRoute: () => MainAuthRouteRoute,
 } as any)
 const MainUsernameTabCommissionIdIndexRoute =
   MainUsernameTabCommissionIdIndexRouteImport.update({
@@ -126,6 +132,7 @@ const MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/auth': typeof MainAuthRouteRouteWithChildren
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId': typeof MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof MainAuthRouteRouteWithChildren
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
   '/dashboard': typeof DashboardRouteWithChildren
+  '/_main/auth': typeof MainAuthRouteRouteWithChildren
   '/_main/$username': typeof MainUsernameRouteWithChildren
   '/_main/logout': typeof MainLogoutRoute
   '/_main/my-requests': typeof MainMyRequestsRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/auth'
     | '/$username'
     | '/logout'
     | '/my-requests'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/auth'
     | '/$username'
     | '/logout'
     | '/my-requests'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_main'
     | '/dashboard'
+    | '/_main/auth'
     | '/_main/$username'
     | '/_main/logout'
     | '/_main/my-requests'
@@ -325,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainUsernameRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/auth': {
+      id: '/_main/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof MainAuthRouteRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/$username/$tab': {
       id: '/_main/$username/$tab'
       path: '/$tab'
@@ -334,24 +353,24 @@ declare module '@tanstack/react-router' {
     }
     '/_main/auth/register/': {
       id: '/_main/auth/register/'
-      path: '/auth/register'
+      path: '/register'
       fullPath: '/auth/register/'
       preLoaderRoute: typeof MainAuthRegisterIndexRouteImport
-      parentRoute: typeof MainRoute
+      parentRoute: typeof MainAuthRouteRoute
     }
     '/_main/auth/login/': {
       id: '/_main/auth/login/'
-      path: '/auth/login'
+      path: '/login'
       fullPath: '/auth/login/'
       preLoaderRoute: typeof MainAuthLoginIndexRouteImport
-      parentRoute: typeof MainRoute
+      parentRoute: typeof MainAuthRouteRoute
     }
     '/_main/auth/forgot/': {
       id: '/_main/auth/forgot/'
-      path: '/auth/forgot'
+      path: '/forgot'
       fullPath: '/auth/forgot/'
       preLoaderRoute: typeof MainAuthForgotIndexRouteImport
-      parentRoute: typeof MainRoute
+      parentRoute: typeof MainAuthRouteRoute
     }
     '/_main/$username/$tab/$commissionId/': {
       id: '/_main/$username/$tab/$commissionId/'
@@ -376,6 +395,22 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface MainAuthRouteRouteChildren {
+  MainAuthForgotIndexRoute: typeof MainAuthForgotIndexRoute
+  MainAuthLoginIndexRoute: typeof MainAuthLoginIndexRoute
+  MainAuthRegisterIndexRoute: typeof MainAuthRegisterIndexRoute
+}
+
+const MainAuthRouteRouteChildren: MainAuthRouteRouteChildren = {
+  MainAuthForgotIndexRoute: MainAuthForgotIndexRoute,
+  MainAuthLoginIndexRoute: MainAuthLoginIndexRoute,
+  MainAuthRegisterIndexRoute: MainAuthRegisterIndexRoute,
+}
+
+const MainAuthRouteRouteWithChildren = MainAuthRouteRoute._addFileChildren(
+  MainAuthRouteRouteChildren,
+)
 
 interface MainUsernameTabRouteChildren {
   MainUsernameTabCommissionIdIndexRoute: typeof MainUsernameTabCommissionIdIndexRoute
@@ -408,25 +443,21 @@ const MainUsernameRouteWithChildren = MainUsernameRoute._addFileChildren(
 )
 
 interface MainRouteChildren {
+  MainAuthRouteRoute: typeof MainAuthRouteRouteWithChildren
   MainUsernameRoute: typeof MainUsernameRouteWithChildren
   MainLogoutRoute: typeof MainLogoutRoute
   MainMyRequestsRoute: typeof MainMyRequestsRoute
   MainReleaseNotesRoute: typeof MainReleaseNotesRoute
   MainIndexRoute: typeof MainIndexRoute
-  MainAuthForgotIndexRoute: typeof MainAuthForgotIndexRoute
-  MainAuthLoginIndexRoute: typeof MainAuthLoginIndexRoute
-  MainAuthRegisterIndexRoute: typeof MainAuthRegisterIndexRoute
 }
 
 const MainRouteChildren: MainRouteChildren = {
+  MainAuthRouteRoute: MainAuthRouteRouteWithChildren,
   MainUsernameRoute: MainUsernameRouteWithChildren,
   MainLogoutRoute: MainLogoutRoute,
   MainMyRequestsRoute: MainMyRequestsRoute,
   MainReleaseNotesRoute: MainReleaseNotesRoute,
   MainIndexRoute: MainIndexRoute,
-  MainAuthForgotIndexRoute: MainAuthForgotIndexRoute,
-  MainAuthLoginIndexRoute: MainAuthLoginIndexRoute,
-  MainAuthRegisterIndexRoute: MainAuthRegisterIndexRoute,
 }
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
