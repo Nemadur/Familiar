@@ -1,9 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import LoginForm from "@/components/layout/auth/form/login";
-import { TypographyH3 } from "@/components/ui/typography/h3";
-import { TypographyMuted } from "@/components/ui/typography/muted";
 import { AuthLegalFooter } from "@/components/layout/auth/footer";
+import { Typography } from "@heroui/react";
 
 export const Route = createFileRoute("/_main/auth/login/")({
 	component: LoginPage,
@@ -15,11 +14,11 @@ function LoginPage() {
 
 	return (
 		<article className="flex h-full flex-1 flex-col">
-			<header className="flex flex-col gap-2 py-8">
-				<TypographyH3>{t("auth.login.title", "Login")}</TypographyH3>
-				<TypographyMuted>
+			<header className="flex flex-col py-6">
+				<Typography.Heading level={3}>{t("auth.login.title", "Login")}</Typography.Heading>
+				<Typography.Paragraph size="sm" className="text-muted-foreground">
 					{t("auth.login.description", "Login to Familiar")}
-				</TypographyMuted>
+				</Typography.Paragraph>
 			</header>
 
 			<section aria-labelledby="auth-page-title" className="mt-4 h-full">

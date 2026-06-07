@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { TypographyMuted } from "@/components/ui/typography/muted";
+import { Typography } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -8,7 +8,7 @@ export function AuthLegalFooter() {
 
 	return (
 		<footer className="mt-auto flex flex-col gap-4 pt-6 text-center text-sm">
-			<TypographyMuted>
+			<Typography.Paragraph size="sm" className="text-muted-foreground">
 				{t("auth.terms_agree.label")}{" "}
 				<Button asChild variant="link" className="h-auto p-0">
 					<Link to="/">{t("auth.terms_agree.terms")}</Link>
@@ -18,7 +18,7 @@ export function AuthLegalFooter() {
 					<Link to="/">{t("auth.terms_agree.privacy")}</Link>
 				</Button>
 				.
-			</TypographyMuted>
+			</Typography.Paragraph>
 		</footer>
 	);
 }

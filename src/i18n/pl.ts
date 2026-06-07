@@ -571,6 +571,236 @@ const pl: Locale = {
 			},
 		},
 	},
+	privacyPolicy: {
+		title: "Polityka prywatności",
+		eyebrow: "Dokument prawny",
+		description:
+			"Dowiedz się, jak Familiar zbiera, wykorzystuje i chroni Twoje informacje.",
+		effectiveDateLabel: "Data obowiązywania",
+		effectiveDate: "2026-06-07",
+		sections: [
+			{
+				title: "Wprowadzenie",
+				body: [
+					"Familiar to platforma społecznościowa dla artystów, klientów i społeczności kreatywnych. Ta Polityka prywatności wyjaśnia, jakie informacje zbieramy, jak ich używamy i jakie masz możliwości kontroli.",
+					"Korzystając z Familiar, akceptujesz zasady opisane w tej polityce.",
+				],
+			},
+			{
+				title: "Informacje, które zbieramy",
+				body: [
+					"Zbieramy informacje, które przekazujesz bezpośrednio podczas tworzenia konta, edycji profilu, publikowania treści, składania zleceń lub kontaktu z nami.",
+				],
+				items: [
+					"Informacje o koncie, takie jak email, nazwa użytkownika, nazwa wyświetlana i typ konta.",
+					"Informacje profilowe, takie jak avatar, bio, oznaczenia języków, portfolio i publiczne linki.",
+					"Treści, które przesyłasz lub udostępniasz, takie jak posty, obrazy, szczegóły zleceń i wiadomości związane z zapytaniami.",
+					"Informacje techniczne, takie jak typ urządzenia, przeglądarka, adres IP, dane sesji i podstawowe logi użycia.",
+				],
+			},
+			{
+				title: "Jak używamy Twoich informacji",
+				body: [
+					"Używamy Twoich informacji, aby dostarczać, zabezpieczać, rozwijać i personalizować Familiar.",
+				],
+				items: [
+					"Do tworzenia i obsługi Twojego konta.",
+					"Do wyświetlania profilu, portfolio, postów i informacji o zleceniach.",
+					"Do obsługi zapytań o zlecenia i powiązanych działań.",
+					"Do ochrony platformy przed nadużyciami, spamem, oszustwami i nieautoryzowanym dostępem.",
+					"Do poprawy wydajności, dostępności i wygody korzystania z platformy.",
+					"Do kontaktu w sprawie ważnych aktualizacji konta, bezpieczeństwa lub działania usługi.",
+				],
+			},
+			{
+				title: "Treści publiczne",
+				body: [
+					"Niektóre informacje w Familiar są publiczne z założenia. Może to obejmować nazwę użytkownika, nazwę wyświetlaną, avatar, stronę profilu, portfolio, publiczne posty, listy zleceń i inne treści, które zdecydujesz się opublikować.",
+					"Nie udostępniaj prywatnych lub wrażliwych informacji w publicznych częściach platformy.",
+				],
+			},
+			{
+				title: "Pliki cookie i podobne technologie",
+				body: [
+					"Familiar może używać plików cookie, pamięci lokalnej i podobnych technologii, aby utrzymać zalogowanie, zapamiętać preferencje, poprawić bezpieczeństwo i zrozumieć sposób korzystania z platformy.",
+				],
+			},
+			{
+				title: "Jak udostępniamy informacje",
+				body: [
+					"Nie sprzedajemy Twoich danych osobowych. Możemy udostępniać ograniczone informacje tylko wtedy, gdy jest to potrzebne do działania Familiar, spełnienia obowiązków prawnych, ochrony użytkowników lub korzystania z zaufanych dostawców usług.",
+				],
+				items: [
+					"Dostawcom usług, którzy pomagają nam hostować, zabezpieczać, analizować lub obsługiwać platformę.",
+					"Organom lub stronom prawnym, gdy wymagają tego przepisy albo ważna procedura prawna.",
+					"Innym użytkownikom, gdy publikujesz treści lub korzystasz z funkcji publicznych.",
+				],
+			},
+			{
+				title: "Przechowywanie danych",
+				body: [
+					"Przechowujemy Twoje informacje tak długo, jak jest to potrzebne do działania Familiar, spełnienia obowiązków prawnych, rozwiązywania sporów, zapobiegania nadużyciom i egzekwowania naszych zasad.",
+					"Gdy informacje nie są już potrzebne, usuwamy je lub anonimizujemy tam, gdzie jest to rozsądnie możliwe.",
+				],
+			},
+			{
+				title: "Twoje wybory i prawa",
+				body: [
+					"W zależności od Twojej lokalizacji możesz mieć prawo do dostępu, poprawienia, usunięcia, eksportu lub ograniczenia używania swoich danych osobowych.",
+				],
+				items: [
+					"Część informacji o koncie i profilu możesz zaktualizować bezpośrednio w ustawieniach.",
+					"Możesz poprosić o usunięcie lub poprawienie wybranych danych osobowych.",
+					"Możesz skontaktować się z nami w sprawach dotyczących prywatności.",
+				],
+			},
+			{
+				title: "Bezpieczeństwo",
+				body: [
+					"Stosujemy rozsądne środki techniczne i organizacyjne, aby chronić Twoje informacje. Żadna usługa internetowa nie może jednak zagwarantować pełnego bezpieczeństwa.",
+				],
+			},
+			{
+				title: "Prywatność dzieci",
+				body: [
+					"Familiar nie jest przeznaczony dla dzieci poniżej minimalnego wieku wymaganego przez obowiązujące prawo. Jeśli dowiemy się, że zebraliśmy dane dziecka bez odpowiedniej zgody, podejmiemy właściwe kroki w celu ich usunięcia.",
+				],
+			},
+			{
+				title: "Zmiany w tej polityce",
+				body: [
+					"Możemy od czasu do czasu aktualizować tę Politykę prywatności. Przy ważnych zmianach zaktualizujemy datę obowiązywania i możemy powiadomić użytkowników przez platformę.",
+				],
+			},
+			{
+				title: "Kontakt",
+				body: [
+					"Jeśli masz pytania dotyczące tej Polityki prywatności, możesz skontaktować się z zespołem Familiar przez oficjalne kanały wsparcia lub kontaktu dostępne na platformie.",
+				],
+			},
+		],
+	},
+	termsOfService: {
+		title: "Regulamin",
+		eyebrow: "Dokument prawny",
+		description: "Przeczytaj te warunki uważnie przed korzystaniem z Familiar.",
+		effectiveDateLabel: "Data obowiązywania",
+		effectiveDate: "2026-06-07",
+		sections: [
+			{
+				title: "Wprowadzenie",
+				body: [
+					"Ten Regulamin wyjaśnia zasady korzystania z Familiar. Familiar to platforma społecznościowa dla artystów, klientów i społeczności kreatywnych.",
+					"Tworząc konto lub korzystając z Familiar, akceptujesz ten Regulamin. Jeśli się z nim nie zgadzasz, nie korzystaj z platformy.",
+				],
+			},
+			{
+				title: "Konta",
+				body: [
+					"Do korzystania z części funkcji Familiar może być wymagane konto. Odpowiadasz za bezpieczeństwo danych logowania oraz za wszystkie działania wykonywane przez Twoje konto.",
+				],
+				items: [
+					"Podczas tworzenia konta musisz podać prawidłowe informacje.",
+					"Nie możesz podszywać się pod inną osobę, markę, artystę ani organizację.",
+					"Nie możesz sprzedawać, przekazywać ani udostępniać dostępu do konta bez zgody.",
+					"Musisz skontaktować się z nami, jeśli uważasz, że ktoś uzyskał nieautoryzowany dostęp do Twojego konta.",
+				],
+			},
+			{
+				title: "Treści użytkownika",
+				body: [
+					"Zachowujesz prawa własności do treści, które tworzysz i przesyłasz do Familiar. Publikując treści na platformie, pozwalasz nam jednak wyświetlać, przechowywać, przetwarzać i udostępniać je w zakresie potrzebnym do działania Familiar.",
+					"Odpowiadasz za upewnienie się, że masz prawa do przesyłania i udostępniania swoich treści.",
+				],
+				items: [
+					"Nie możesz przesyłać treści naruszających prawa innych osób.",
+					"Nie możesz przesyłać treści nielegalnych, obraźliwych, nienawistnych, szkodliwych ani wprowadzających w błąd.",
+					"Nie możesz przesyłać treści naruszających zasady społeczności lub polityki platformy.",
+				],
+			},
+			{
+				title: "Usługi artystów i zlecenia",
+				body: [
+					"Familiar może umożliwiać artystom i klientom komunikację dotyczącą zleceń, zapytań, portfolio i powiązanych usług.",
+					"O ile nie wskazano wyraźnie inaczej, Familiar nie jest stroną indywidualnych ustaleń między artystami i klientami. Artyści i klienci odpowiadają za jasne określenie oczekiwań, cen, terminów, licencji i zasad dostawy.",
+				],
+				items: [
+					"Artyści odpowiadają za rzetelne opisywanie swoich usług.",
+					"Klienci odpowiadają za przeczytanie szczegółów usługi przed wysłaniem zapytania.",
+					"Obie strony odpowiadają za przestrzeganie uzgodnionych zasad, licencji i ustaleń płatniczych.",
+				],
+			},
+			{
+				title: "Dozwolone korzystanie",
+				body: [
+					"Zobowiązujesz się korzystać z Familiar w sposób bezpieczny, zgodny z prawem i szanujący innych użytkowników.",
+				],
+				items: [
+					"Nie możesz używać Familiar do spamu, oszustw, wyłudzeń, nękania ani nadużyć.",
+					"Nie możesz próbować zakłócać, przeciążać, scrapować, odtwarzać kodu ani atakować platformy.",
+					"Nie możesz omijać zabezpieczeń, kontroli dostępu, blokad ani ograniczeń konta.",
+					"Nie możesz używać Familiar do rozpowszechniania malware lub szkodliwych linków.",
+				],
+			},
+			{
+				title: "Moderacja treści",
+				body: [
+					"Możemy sprawdzać, ukrywać, ograniczać, usuwać lub zgłaszać treści, jeśli uznamy, że naruszają ten Regulamin, nasze polityki, prawo albo bezpieczeństwo platformy.",
+					"Możemy również zawiesić lub zakończyć działanie kont, które łamią zasady albo tworzą ryzyko dla Familiar, użytkowników lub społeczności.",
+				],
+			},
+			{
+				title: "Własność intelektualna",
+				body: [
+					"Familiar, w tym jego projekt, branding, interfejs, oprogramowanie i funkcje platformy, jest chroniony przepisami dotyczącymi własności intelektualnej. Nie możesz kopiować, modyfikować, rozpowszechniać ani nadużywać materiałów należących do Familiar bez zgody.",
+					"Treści przesyłane przez użytkowników należą do odpowiednich użytkowników lub właścicieli praw, chyba że wskazano inaczej.",
+				],
+			},
+			{
+				title: "Usługi zewnętrzne",
+				body: [
+					"Familiar może korzystać z usług zewnętrznych do hostingu, uwierzytelniania, płatności, analityki, przechowywania danych lub innych funkcji platformy. Te usługi mogą mieć własne regulaminy i polityki prywatności.",
+				],
+			},
+			{
+				title: "Dostępność i zmiany",
+				body: [
+					"Staramy się, aby Familiar był dostępny i niezawodny, ale nie możemy zagwarantować, że platforma zawsze będzie działała bez przerw, błędów lub ograniczeń dostępności.",
+					"Możemy aktualizować, zmieniać, zawieszać lub usuwać funkcje w dowolnym momencie, szczególnie gdy jest to potrzebne ze względów bezpieczeństwa, konserwacji, zgodności z prawem lub rozwoju produktu.",
+				],
+			},
+			{
+				title: "Zastrzeżenia",
+				body: [
+					"Familiar jest udostępniany w stanie takim, w jakim jest, oraz w miarę dostępności. W najszerszym zakresie dozwolonym przez prawo nie udzielamy gwarancji dotyczących nieprzerwanego dostępu, pełnego bezpieczeństwa, przydatności do konkretnego celu ani dokładności treści użytkowników.",
+				],
+			},
+			{
+				title: "Ograniczenie odpowiedzialności",
+				body: [
+					"W najszerszym zakresie dozwolonym przez prawo Familiar i jego zespół nie ponoszą odpowiedzialności za pośrednie, przypadkowe, szczególne, następcze ani karne szkody związane z korzystaniem z platformy.",
+				],
+			},
+			{
+				title: "Zakończenie korzystania",
+				body: [
+					"Możesz przestać korzystać z Familiar w dowolnym momencie. Możemy zawiesić lub zakończyć dostęp, jeśli naruszysz ten Regulamin, stworzysz ryzyko prawne, zaszkodzisz innym użytkownikom albo nadużyjesz platformy.",
+				],
+			},
+			{
+				title: "Zmiany w Regulaminie",
+				body: [
+					"Możemy od czasu do czasu aktualizować ten Regulamin. Przy ważnych zmianach zaktualizujemy datę obowiązywania i możemy powiadomić użytkowników przez platformę.",
+				],
+			},
+			{
+				title: "Kontakt",
+				body: [
+					"Jeśli masz pytania dotyczące tego Regulaminu, możesz skontaktować się z zespołem Familiar przez oficjalne kanały wsparcia lub kontaktu dostępne na platformie.",
+				],
+			},
+		],
+	},
 };
 
 export default pl;

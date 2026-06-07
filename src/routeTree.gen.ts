@@ -16,7 +16,9 @@ import { Route as MainIndexRouteImport } from './routes/_main.index'
 import { Route as DashboardServicesRouteImport } from './routes/dashboard/services'
 import { Route as DashboardForms_templatesRouteImport } from './routes/dashboard/forms_templates'
 import { Route as DashboardCommissions_requestsRouteImport } from './routes/dashboard/commissions_requests'
+import { Route as MainTosRouteImport } from './routes/_main.tos'
 import { Route as MainReleaseNotesRouteImport } from './routes/_main.release-notes'
+import { Route as MainPrivacyRouteImport } from './routes/_main.privacy'
 import { Route as MainMyRequestsRouteImport } from './routes/_main.my-requests'
 import { Route as MainLogoutRouteImport } from './routes/_main.logout'
 import { Route as MainUsernameRouteImport } from './routes/_main.$username'
@@ -65,9 +67,19 @@ const DashboardCommissions_requestsRoute =
     path: '/commissions_requests',
     getParentRoute: () => DashboardRoute,
   } as any)
+const MainTosRoute = MainTosRouteImport.update({
+  id: '/tos',
+  path: '/tos',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainReleaseNotesRoute = MainReleaseNotesRouteImport.update({
   id: '/release-notes',
   path: '/release-notes',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainPrivacyRoute = MainPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => MainRoute,
 } as any)
 const MainMyRequestsRoute = MainMyRequestsRouteImport.update({
@@ -136,7 +148,9 @@ export interface FileRoutesByFullPath {
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
+  '/privacy': typeof MainPrivacyRoute
   '/release-notes': typeof MainReleaseNotesRoute
+  '/tos': typeof MainTosRoute
   '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms_templates': typeof DashboardForms_templatesRoute
   '/dashboard/services': typeof DashboardServicesRoute
@@ -154,7 +168,9 @@ export interface FileRoutesByTo {
   '/$username': typeof MainUsernameRouteWithChildren
   '/logout': typeof MainLogoutRoute
   '/my-requests': typeof MainMyRequestsRoute
+  '/privacy': typeof MainPrivacyRoute
   '/release-notes': typeof MainReleaseNotesRoute
+  '/tos': typeof MainTosRoute
   '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms_templates': typeof DashboardForms_templatesRoute
   '/dashboard/services': typeof DashboardServicesRoute
@@ -176,7 +192,9 @@ export interface FileRoutesById {
   '/_main/$username': typeof MainUsernameRouteWithChildren
   '/_main/logout': typeof MainLogoutRoute
   '/_main/my-requests': typeof MainMyRequestsRoute
+  '/_main/privacy': typeof MainPrivacyRoute
   '/_main/release-notes': typeof MainReleaseNotesRoute
+  '/_main/tos': typeof MainTosRoute
   '/dashboard/commissions_requests': typeof DashboardCommissions_requestsRoute
   '/dashboard/forms_templates': typeof DashboardForms_templatesRoute
   '/dashboard/services': typeof DashboardServicesRoute
@@ -199,7 +217,9 @@ export interface FileRouteTypes {
     | '/$username'
     | '/logout'
     | '/my-requests'
+    | '/privacy'
     | '/release-notes'
+    | '/tos'
     | '/dashboard/commissions_requests'
     | '/dashboard/forms_templates'
     | '/dashboard/services'
@@ -217,7 +237,9 @@ export interface FileRouteTypes {
     | '/$username'
     | '/logout'
     | '/my-requests'
+    | '/privacy'
     | '/release-notes'
+    | '/tos'
     | '/dashboard/commissions_requests'
     | '/dashboard/forms_templates'
     | '/dashboard/services'
@@ -238,7 +260,9 @@ export interface FileRouteTypes {
     | '/_main/$username'
     | '/_main/logout'
     | '/_main/my-requests'
+    | '/_main/privacy'
     | '/_main/release-notes'
+    | '/_main/tos'
     | '/dashboard/commissions_requests'
     | '/dashboard/forms_templates'
     | '/dashboard/services'
@@ -309,11 +333,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCommissions_requestsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_main/tos': {
+      id: '/_main/tos'
+      path: '/tos'
+      fullPath: '/tos'
+      preLoaderRoute: typeof MainTosRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/release-notes': {
       id: '/_main/release-notes'
       path: '/release-notes'
       fullPath: '/release-notes'
       preLoaderRoute: typeof MainReleaseNotesRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/privacy': {
+      id: '/_main/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof MainPrivacyRouteImport
       parentRoute: typeof MainRoute
     }
     '/_main/my-requests': {
@@ -447,7 +485,9 @@ interface MainRouteChildren {
   MainUsernameRoute: typeof MainUsernameRouteWithChildren
   MainLogoutRoute: typeof MainLogoutRoute
   MainMyRequestsRoute: typeof MainMyRequestsRoute
+  MainPrivacyRoute: typeof MainPrivacyRoute
   MainReleaseNotesRoute: typeof MainReleaseNotesRoute
+  MainTosRoute: typeof MainTosRoute
   MainIndexRoute: typeof MainIndexRoute
 }
 
@@ -456,7 +496,9 @@ const MainRouteChildren: MainRouteChildren = {
   MainUsernameRoute: MainUsernameRouteWithChildren,
   MainLogoutRoute: MainLogoutRoute,
   MainMyRequestsRoute: MainMyRequestsRoute,
+  MainPrivacyRoute: MainPrivacyRoute,
   MainReleaseNotesRoute: MainReleaseNotesRoute,
+  MainTosRoute: MainTosRoute,
   MainIndexRoute: MainIndexRoute,
 }
 
