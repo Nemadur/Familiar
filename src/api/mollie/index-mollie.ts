@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/fetch";
-import type { TMolliePaymentRequest, TMolliePaymentResponse } from "./types_mollie";
+import type { TMolliePaymentRequest, TMolliePaymentResponse } from "./types-mollie";
 
 /**
  * Creates a payment in Mollie.
