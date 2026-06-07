@@ -420,7 +420,8 @@ const en: Locale = {
 			blog: "Blog",
 			faq: "FAQ",
 			sponsors: "Sponsors",
-			terms: "Terms",
+			terms: "Terms of Service",
+			privacy: "Privacy Policy",
 			documentation: "Documentation",
 		},
 		copyright: {
@@ -568,6 +569,236 @@ const en: Locale = {
 				],
 			},
 		},
+	},
+	privacyPolicy: {
+		title: "Privacy Policy",
+		eyebrow: "Legal",
+		description:
+			"Learn how Familiar collects, uses, and protects your information.",
+		effectiveDateLabel: "Effective date",
+		effectiveDate: "2026-06-07",
+		sections: [
+			{
+				title: "Introduction",
+				body: [
+					"Familiar is a social platform for artists, clients, and creative communities. This Privacy Policy explains what information we collect, how we use it, and what choices you have.",
+					"By using Familiar, you agree to the practices described in this policy.",
+				],
+			},
+			{
+				title: "Information we collect",
+				body: [
+					"We collect information that you provide directly when you create an account, edit your profile, post content, request commissions, or contact us.",
+				],
+				items: [
+					"Account information, such as your email, username, display name, and account type.",
+					"Profile information, such as avatar, bio, language badges, portfolio content, and public links.",
+					"Content you upload or share, such as posts, images, commission details, and messages connected to requests.",
+					"Technical information, such as device type, browser, IP address, session data, and basic usage logs.",
+				],
+			},
+			{
+				title: "How we use your information",
+				body: [
+					"We use your information to provide, secure, improve, and personalize Familiar.",
+				],
+				items: [
+					"To create and manage your account.",
+					"To display your profile, portfolio, posts, and commission information.",
+					"To process commission requests and related actions.",
+					"To protect the platform from abuse, spam, fraud, and unauthorized access.",
+					"To improve performance, accessibility, and user experience.",
+					"To contact you about important account, safety, or service updates.",
+				],
+			},
+			{
+				title: "Public content",
+				body: [
+					"Some information on Familiar is public by design. This may include your username, display name, avatar, profile page, portfolio, public posts, commission listings, and other content you choose to publish.",
+					"Please avoid sharing private or sensitive information in public areas of the platform.",
+				],
+			},
+			{
+				title: "Cookies and similar technologies",
+				body: [
+					"Familiar may use cookies, local storage, and similar technologies to keep you signed in, remember your preferences, improve security, and understand how the platform is used.",
+				],
+			},
+			{
+				title: "How we share information",
+				body: [
+					"We do not sell your personal information. We may share limited information only when necessary to operate Familiar, comply with legal obligations, protect users, or use trusted service providers.",
+				],
+				items: [
+					"Service providers that help us host, secure, analyze, or operate the platform.",
+					"Authorities or legal parties when required by law or valid legal process.",
+					"Other users, when you publish content or interact with public features.",
+				],
+			},
+			{
+				title: "Data retention",
+				body: [
+					"We keep your information for as long as needed to provide Familiar, comply with legal obligations, resolve disputes, prevent abuse, and enforce our terms.",
+					"When your information is no longer needed, we will delete it or anonymize it where reasonably possible.",
+				],
+			},
+			{
+				title: "Your choices and rights",
+				body: [
+					"Depending on your location, you may have rights to access, correct, delete, export, or restrict the use of your personal information.",
+				],
+				items: [
+					"You can update some account and profile information directly in your settings.",
+					"You may request deletion or correction of certain personal information.",
+					"You may contact us if you have privacy questions or requests.",
+				],
+			},
+			{
+				title: "Security",
+				body: [
+					"We use reasonable technical and organizational measures to protect your information. However, no online service can guarantee perfect security.",
+				],
+			},
+			{
+				title: "Children's privacy",
+				body: [
+					"Familiar is not intended for children below the minimum age required by applicable law. If we learn that we collected personal information from a child without proper consent, we will take appropriate steps to remove it.",
+				],
+			},
+			{
+				title: "Changes to this policy",
+				body: [
+					"We may update this Privacy Policy from time to time. When we make important changes, we will update the effective date and may notify users through the platform.",
+				],
+			},
+			{
+				title: "Contact",
+				body: [
+					"If you have questions about this Privacy Policy, you can contact the Familiar team through the official support or contact channels provided on the platform.",
+				],
+			},
+		],
+	},
+	termsOfService: {
+		title: "Terms of Service",
+		eyebrow: "Legal",
+		description: "Please read these terms carefully before using Familiar.",
+		effectiveDateLabel: "Effective date",
+		effectiveDate: "2026-06-07",
+		sections: [
+			{
+				title: "Introduction",
+				body: [
+					"These Terms of Service explain the rules for using Familiar. Familiar is a social platform for artists, clients, and creative communities.",
+					"By creating an account or using Familiar, you agree to these terms. If you do not agree, please do not use the platform.",
+				],
+			},
+			{
+				title: "Accounts",
+				body: [
+					"You may need an account to use some features of Familiar. You are responsible for keeping your login details safe and for all activity that happens through your account.",
+				],
+				items: [
+					"You must provide accurate information when creating an account.",
+					"You may not impersonate another person, brand, artist, or organization.",
+					"You may not sell, transfer, or share access to your account without permission.",
+					"You must contact us if you believe your account has been accessed without permission.",
+				],
+			},
+			{
+				title: "User content",
+				body: [
+					"You keep ownership of the content you create and upload to Familiar. However, by posting content on the platform, you allow us to display, store, process, and share that content as needed to operate Familiar.",
+					"You are responsible for making sure that you have the rights to upload and share your content.",
+				],
+				items: [
+					"You may not upload content that infringes someone else's rights.",
+					"You may not upload illegal, abusive, hateful, harmful, or misleading content.",
+					"You may not upload content that violates our community rules or platform policies.",
+				],
+			},
+			{
+				title: "Artist services and commissions",
+				body: [
+					"Familiar may allow artists and clients to communicate about commissions, requests, portfolios, and related services.",
+					"Unless clearly stated otherwise, Familiar is not a party to individual agreements between artists and clients. Artists and clients are responsible for setting clear expectations, prices, deadlines, licenses, and delivery terms.",
+				],
+				items: [
+					"Artists are responsible for describing their services accurately.",
+					"Clients are responsible for reading service details before submitting a request.",
+					"Both sides are responsible for respecting agreed terms, licenses, and payment arrangements.",
+				],
+			},
+			{
+				title: "Acceptable use",
+				body: [
+					"You agree to use Familiar in a safe, lawful, and respectful way.",
+				],
+				items: [
+					"You may not use Familiar for spam, scams, fraud, harassment, or abuse.",
+					"You may not attempt to disrupt, overload, scrape, reverse engineer, or attack the platform.",
+					"You may not bypass security systems, access controls, bans, or account restrictions.",
+					"You may not use Familiar to distribute malware or harmful links.",
+				],
+			},
+			{
+				title: "Content moderation",
+				body: [
+					"We may review, hide, restrict, remove, or report content if we believe it violates these terms, our policies, the law, or the safety of the platform.",
+					"We may also suspend or terminate accounts that break the rules or create risk for Familiar, its users, or its community.",
+				],
+			},
+			{
+				title: "Intellectual property",
+				body: [
+					"Familiar, including its design, branding, interface, software, and platform features, is protected by intellectual property laws. You may not copy, modify, distribute, or misuse Familiar's own materials without permission.",
+					"Content uploaded by users belongs to the relevant users or rights holders, unless stated otherwise.",
+				],
+			},
+			{
+				title: "Third-party services",
+				body: [
+					"Familiar may use third-party services for hosting, authentication, payments, analytics, storage, or other platform features. These services may have their own terms and privacy policies.",
+				],
+			},
+			{
+				title: "Availability and changes",
+				body: [
+					"We work to keep Familiar available and reliable, but we cannot guarantee that the platform will always be uninterrupted, error-free, or available.",
+					"We may update, change, suspend, or remove features at any time, especially when needed for security, maintenance, legal compliance, or product improvement.",
+				],
+			},
+			{
+				title: "Disclaimers",
+				body: [
+					"Familiar is provided on an as-is and as-available basis. To the fullest extent allowed by law, we do not make warranties about uninterrupted access, perfect security, suitability for a specific purpose, or the accuracy of user content.",
+				],
+			},
+			{
+				title: "Limitation of liability",
+				body: [
+					"To the fullest extent allowed by law, Familiar and its team will not be liable for indirect, incidental, special, consequential, or punitive damages related to your use of the platform.",
+				],
+			},
+			{
+				title: "Termination",
+				body: [
+					"You may stop using Familiar at any time. We may suspend or terminate access if you violate these terms, create legal risk, harm other users, or misuse the platform.",
+				],
+			},
+			{
+				title: "Changes to these terms",
+				body: [
+					"We may update these Terms of Service from time to time. When we make important changes, we will update the effective date and may notify users through the platform.",
+				],
+			},
+			{
+				title: "Contact",
+				body: [
+					"If you have questions about these Terms of Service, you can contact the Familiar team through the official support or contact channels provided on the platform.",
+				],
+			},
+		],
 	},
 };
 

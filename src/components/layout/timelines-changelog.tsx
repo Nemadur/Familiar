@@ -1,11 +1,9 @@
+import { Typography } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "../ui/badge";
 import { cn, dateFormat, getReleaseTranslationKey } from "@/lib/utils";
-import { OutlineStar, SolidStar } from "../icons/icons";
 import type { TRelease, TReleaseInput } from "@/types/release-notes";
-import { TypographyH2 } from "../ui/typography/h2";
-import { TypographyH4 } from "../ui/typography/h4";
-import { TypographyList } from "../ui/typography/list";
+import { OutlineStar, SolidStar } from "../icons/icons";
+import { Badge } from "../ui/badge";
 
 export const TAG_STYLES = {
 	Added:
@@ -77,9 +75,9 @@ export function TimelinesReleaseNotes() {
 						{t("releaseNotes.eyebrow", "Changelog")}
 					</p>
 
-					<TypographyH2>
+					<Typography.Heading level={2}>
 						{t("releaseNotes.title", "What's new with Familiar")}
-					</TypographyH2>
+					</Typography.Heading>
 				</header>
 
 				<ol
@@ -115,7 +113,9 @@ function ReleaseNoteItem({ release }: { release: TRelease }) {
 					</time>
 
 					<div className="mt-1 flex items-center gap-2">
-						<TypographyH4>v{release.version}</TypographyH4>
+						<Typography.Heading level={4}>
+							v{release.version}
+						</Typography.Heading>
 
 						{release.highlight ? (
 							<Badge size="sm" aria-label={t("releaseNotes.latest", "Latest")}>
@@ -207,19 +207,21 @@ function ReleaseChangeGroup({
 
 	return (
 		<section aria-labelledby={headingId} className="flex flex-col gap-2">
-			<h3 id={headingId}>
-				<Badge size="sm" className={cn(TAG_STYLES[group])}>
-					{t(`releaseNotes.tags.${group}`, group)}
-				</Badge>
-			</h3>
+			<Typography.Prose>
+				<Typography.Heading level={6} id={headingId}>
+					<Badge size="sm" className={cn(TAG_STYLES[group])}>
+						{t(`releaseNotes.tags.${group}`, group)}
+					</Badge>
+				</Typography.Heading>
 
-			<TypographyList className="prose">
-				{items.map((item) => (
-					<li key={item} className="text-sm leading-relaxed text-foreground">
-						{item}
-					</li>
-				))}
-			</TypographyList>
+				<ul className="prose">
+					{items.map((item) => (
+						<li key={item} className="text-sm leading-relaxed text-foreground">
+							{item}
+						</li>
+					))}
+				</ul>
+			</Typography.Prose>
 		</section>
 	);
 }
