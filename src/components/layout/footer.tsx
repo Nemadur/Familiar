@@ -42,15 +42,19 @@ export default function Footer() {
 				// Match these hrefs to your actual route paths.
 				{
 					label: t("footer.links.privacy", "Privacy Policy"),
-					href: "/privacy-policy",
+					href: "/privacy",
 				},
 				{
 					label: t("footer.links.terms", "Terms of Service"),
-					href: "/terms-of-service",
+					href: "/tos",
 				},
 				{
 					label: t("footer.links.release-notes", "Release Notes"),
 					href: "/release-notes",
+				},
+				{
+					label: t("footer.links.roadmap", "Roadmap"),
+					href: "/roadmap",
 				},
 			],
 		},

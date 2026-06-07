@@ -25,8 +25,6 @@ import {
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import CurrencySelect from "./select/currency";
-import LanguageSelect from "./select/language";
-import ThemeToggle from "./select/theme-toggle";
 
 function ClientOnly({ children }: { children: React.ReactNode }) {
 	const [mounted, setMounted] = useState(false);
@@ -174,6 +172,8 @@ const NavLinks = memo(() => {
 		switch (path) {
 			case "/":
 				return isActive ? <SolidHome /> : <OutlineHome />;
+			// case "/roadmap":
+			// 	return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/shop":
 				return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/blog":
@@ -184,7 +184,8 @@ const NavLinks = memo(() => {
 	};
 
 	const navigationLinks = [
-		{ path: "/", label: t("header.navigation.home") },
+		{ path: "/", label: t("header.navigation.home", "Home") },
+		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
 		// { path: "/shop", label: t("header.navigation.shop") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },

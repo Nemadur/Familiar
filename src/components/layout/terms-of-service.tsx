@@ -1,8 +1,8 @@
-import { useTranslation } from "react-i18next";
-import { Badge } from "../ui/badge";
-import { dateFormat } from "@/lib/utils";
-import { MarkdownDisplay } from "../ui/markdown-display";
 import { Typography } from "@heroui/react";
+import { useTranslation } from "react-i18next";
+import { dateFormat } from "@/lib/utils";
+import { Badge } from "../ui/badge";
+import { MarkdownDisplay } from "../ui/markdown-display";
 
 type TermsOfServiceSection = {
 	title: string;
@@ -30,7 +30,10 @@ export function TermsOfService() {
 			>
 				<header className="flex flex-col gap-3">
 					<div className="flex flex-col gap-1">
-						<Typography.Paragraph size={"xs"} className="font-mono text-muted-foreground uppercase tracking-[0.3em]">
+						<Typography.Paragraph
+							size={"xs"}
+							className="font-mono text-muted-foreground uppercase tracking-[0.3em]"
+						>
 							{t("termsOfService.eyebrow", "Legal")}
 						</Typography.Paragraph>
 
@@ -61,30 +64,35 @@ export function TermsOfService() {
 				</header>
 
 				<article className="mt-10">
-					<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-h2:mt-10 prose-h2:scroll-m-20 prose-p:text-foreground prose-li:text-muted-foreground">
-					{sections.map((section) => (
-						<section key={section.title}>
-							<Typography.Heading level={3}>{section.title}</Typography.Heading>
+					<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-li:text-muted-foreground">
+						{sections.map((section) => (
+							<section key={section.title}>
+								<Typography.Heading level={3}>
+									{section.title}
+								</Typography.Heading>
 
-							{section.body?.map((paragraph) => (
-								<MarkdownDisplay
-									key={paragraph}
-									className="not-first:mt-6"
-									content={paragraph}
-								/>
-							))}
+								{section.body?.map((paragraph) => (
+									<MarkdownDisplay
+										key={paragraph}
+										className="not-first:mt-6"
+										content={paragraph}
+									/>
+								))}
 
-							{section.items?.length && (
-								<ul>
-									{section.items.map((item) => (
-										<li key={item}>
-											<MarkdownDisplay content={item} />
-										</li>
-									))}
-								</ul>
-							)}
-						</section>
-					))}
+								{section.items?.length && (
+									<ul>
+										{section.items.map((item) => (
+											<li key={item}>
+												<MarkdownDisplay
+													content={item}
+													className="text-primary"
+												/>
+											</li>
+										))}
+									</ul>
+								)}
+							</section>
+						))}
 					</Typography.Prose>
 				</article>
 			</section>

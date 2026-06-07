@@ -817,6 +817,49 @@ const pl: Locale = {
 			},
 		],
 	},
+	roadmap: {
+		title: "Co dalej w Familiar",
+		eyebrow: "Roadmapa",
+		description:
+			"Prosty podgląd planowanych funkcji i tego, nad czym teraz pracujemy.",
+		status: {
+			Planned: "Planowane",
+			InProgress: "W trakcie",
+			Exploring: "Rozważane",
+		},
+		items: {
+			"item-1": {
+				title: "Lepszy panel zleceń",
+				description:
+					"Czytelniejszy panel dla artystów i klientów, który ułatwi zarządzanie zapytaniami o zlecenia.",
+				details: [
+					"Czytelniejsze karty statusu zapytań.",
+					"Lepsze akcje do akceptowania, odrzucania, anulowania i aktualizowania zleceń.",
+					"Wygodniejszy układ mobilny do zarządzania zleceniami na mniejszych ekranach.",
+				],
+			},
+			"item-2": {
+				title: "Ulepszone posty portfolio",
+				description:
+					"Posty portfolio wrócą z czytelniejszym widokiem szczegółów i lepszą obsługą udostępniania.",
+				details: [
+					"Lepsze strony postów dla prac i przykładów zleceń.",
+					"Czytelniejsze wyświetlanie obrazów i podglądów.",
+					"Ulepszone linki do udostępniania postów portfolio.",
+				],
+			},
+			"item-3": {
+				title: "Powiadomienia",
+				description:
+					"Rozważamy powiadomienia, które pomogą użytkownikom śledzić ważną aktywność bez ręcznego sprawdzania każdej strony.",
+				details: [
+					"Aktualizacje dotyczące zmian w zapytaniach o zlecenia.",
+					"Możliwe powiadomienia o profilach, obserwacjach i aktywności.",
+					"Proste centrum powiadomień w aplikacji.",
+				],
+			},
+		},
+	},
 };
 
 export default pl;
