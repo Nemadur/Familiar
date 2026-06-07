@@ -1,9 +1,9 @@
 import {
-	AbilityProvider as CaslAbilityProvider,
 	Can,
+	AbilityProvider as CaslAbilityProvider,
 	useAbility,
 } from "@casl/react";
-import { useMemo, type ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
 	type AppAbility,
 	createAbility,
@@ -25,11 +25,7 @@ export function AbilityProvider({ children }: { children: ReactNode }) {
 		return getUserPermissions(user as TUserProfile);
 	}, [user]);
 
-	return (
-		<CaslAbilityProvider value={ability}>
-			{children}
-		</CaslAbilityProvider>
-	);
+	return <CaslAbilityProvider value={ability}>{children}</CaslAbilityProvider>;
 }
 
 export function useAppAbility() {
