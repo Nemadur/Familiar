@@ -25,8 +25,6 @@ interface MarkdownDisplayProps {
 	isShort?: boolean;
 }
 
-const linkClassName = "link font-medium text-primary hover:underline";
-
 const NewTabModifierContext = createContext(false);
 const CurrentOriginContext = createContext<string | null>(null);
 
@@ -137,8 +135,8 @@ function MarkdownLink({
 			<TooltipTrigger asChild>
 				{isInternal ? (
 					<Link
+						className="link text-[1em]"
 						to={href}
-						className={linkClassName}
 						onClick={handleInternalClick}
 						onAuxClick={handleInternalAuxClick}
 					>
@@ -146,19 +144,17 @@ function MarkdownLink({
 					</Link>
 				) : (
 					<a
+						className="link text-[1em]"
 						href={href}
 						target={isExternal ? "_blank" : undefined}
 						rel={isExternal ? "noopener noreferrer" : undefined}
-						className={linkClassName}
 					>
 						{children}
 					</a>
 				)}
 			</TooltipTrigger>
 
-			<TooltipContent>
-				<p className="max-w-xs break-all">{tooltipText}</p>
-			</TooltipContent>
+			<TooltipContent>{tooltipText}</TooltipContent>
 		</Tooltip>
 	);
 }

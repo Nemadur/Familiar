@@ -64,7 +64,7 @@ export function PrivacyPolicy() {
 				</header>
 
 				<article className="mt-10">
-					<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-li:text-muted-foreground">
+					<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-p:text-muted-foreground">
 						{sections.map((section) => (
 							<section key={section.title}>
 								<Typography.Heading level={3}>
@@ -83,10 +83,7 @@ export function PrivacyPolicy() {
 									<ul>
 										{section.items.map((item) => (
 											<li key={item}>
-												<MarkdownDisplay
-													content={item}
-													className="text-primary"
-												/>
+												<MarkdownDisplay content={item} />
 											</li>
 										))}
 									</ul>

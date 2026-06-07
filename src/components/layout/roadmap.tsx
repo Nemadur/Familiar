@@ -103,7 +103,7 @@ function RoadmapItem({ item }: { item: TRoadmapItem }) {
 				</header>
 
 				<div className="min-w-0 space-y-3">
-					<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-li:text-muted-foreground">
+					<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-p:text-muted-foreground">
 						<Typography.Heading level={3}>{title}</Typography.Heading>
 
 						{description && <MarkdownDisplay content={description} />}
@@ -112,10 +112,7 @@ function RoadmapItem({ item }: { item: TRoadmapItem }) {
 							<ul>
 								{details.map((detail) => (
 									<li key={detail}>
-										<MarkdownDisplay
-											className="text-primary"
-											content={detail}
-										/>
+										<MarkdownDisplay content={detail} />
 									</li>
 								))}
 							</ul>

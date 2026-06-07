@@ -225,7 +225,7 @@ function ReleaseChangeGroup({
 
 	return (
 		<section aria-labelledby={headingId} className="space-y-3">
-			<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-li:text-muted-foreground">
+			<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-p:text-muted-foreground">
 				<h3 id={headingId}>
 					<Badge size="sm" className={cn(TAG_STYLES[group])}>
 						{t(`releaseNotes.tags.${group}`, group)}
@@ -235,11 +235,7 @@ function ReleaseChangeGroup({
 				<ul>
 					{items.map((item) => (
 						<li key={item}>
-							<MarkdownDisplay
-								key={item}
-								content={item}
-								className="text-primary"
-							/>
+							<MarkdownDisplay key={item} content={item} />
 						</li>
 					))}
 				</ul>
