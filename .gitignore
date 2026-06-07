@@ -1,22 +1,41 @@
-node_modules
-.DS_Store
-dist
-dist-ssr
-*.local
+##########################
+# Generated .gitignore
+##########################
+
+# Node
+node_modules/
+
+# Build / output
+dist/
+dist-ssr/
+.output/
+.nitro/
+.vinxi/
+
+# Environment
 .env
-.nitro
-.tanstack
-.wrangler
-.output
-.vinxi
+*.local
+
+# Tooling / configs
+.tanstack/
+.wrangler/
 __unconfig*
-todos.json
-/.trae
-# heroui-agents-md
-.heroui-docs/
-/.agents
-skills-lock.json
 boneyard.config.json
-src/api/api-docs.json
-/src/api/docs
+todos.json
+
+# Project specific
+/agents
 /skills
+/src/api/docs/
+src/api/api-docs.json
+skills-lock.json
+
+# Trae / Heroui
+/.trae
+.heroui-docs/
+# heroui-agents-md
+
+# Mockup files
+*.mockup
+*.mock
+/mock/
