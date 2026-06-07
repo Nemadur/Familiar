@@ -65,7 +65,7 @@ export function TimelinesReleaseNotes() {
 	const { t } = useTranslation();
 
 	return (
-		<main className="min-h-svh px-4 py-10 sm:px-6 sm:py-12">
+		<main className="px-4 py-10 sm:px-6 sm:py-12">
 			<section
 				aria-labelledby="release-notes-title"
 				className="mx-auto max-w-3xl"
@@ -75,7 +75,11 @@ export function TimelinesReleaseNotes() {
 						{t("releaseNotes.eyebrow", "Changelog")}
 					</p>
 
-					<Typography.Heading id="release-notes-title" level={2}>
+					<Typography.Heading
+						id="release-notes-title"
+						level={2}
+						className="text-primary"
+					>
 						{t("releaseNotes.title", "What's new with Familiar")}
 					</Typography.Heading>
 				</header>
@@ -114,7 +118,11 @@ function ReleaseNoteItem({ release }: { release: TRelease }) {
 						</time>
 
 						<div className="mt-1 flex flex-wrap items-center gap-2">
-							<Typography.Heading id={titleId} level={4}>
+							<Typography.Heading
+								id={titleId}
+								level={4}
+								className="text-primary"
+							>
 								v{release.version}
 							</Typography.Heading>
 
