@@ -569,8 +569,11 @@ const en: Locale = {
 				],
 			},
 			v0_7_5: {
+				Added: [
+					"Added [Privacy Policy](/privacy) and [Terms of Service](/tos) pages.",
+				],
 				Improved: [
-					"[Privacy Policy](/privacy) and [Terms of Service](/tos) now have a cleaner reading layout with better typography.",
+					"Privacy Policy and Terms of Service now have a cleaner reading layout with better typography.",
 					"Legal pages now use translated content, including titles, descriptions, dates, sections, and list items.",
 					"Release notes now look better on mobile, with a layout that gives each version more space.",
 					"The footer is now easier to maintain and includes clearer links to legal resources.",

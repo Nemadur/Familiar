@@ -570,8 +570,11 @@ const pl: Locale = {
 				],
 			},
 			v0_7_5: {
+				Added: [
+					"Dodano strony [Polityka prywatności](/privacy) i [Regulamin](/tos) do aplikacji.",
+				],
 				Improved: [
-					"Strony [Polityka prywatności](/privacy) i [Regulamin](/tos) mają teraz czytelniejszy układ oraz lepszą typografię.",
+					"Polityka prywatności i Regulamin mają teraz czytelniejszy układ oraz lepszą typografię.",
 					"Strony prawne korzystają teraz z tłumaczeń, w tym tytułów, opisów, dat, sekcji i elementów list.",
 					"Notatki o wersjach wyglądają teraz lepiej na urządzeniach mobilnych, z układem dającym każdej wersji więcej miejsca.",
 					"Stopka jest teraz łatwiejsza w utrzymaniu i zawiera czytelniejsze linki do dokumentów prawnych.",
