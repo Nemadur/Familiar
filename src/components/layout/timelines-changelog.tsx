@@ -65,7 +65,7 @@ export function TimelinesReleaseNotes() {
 	const { t } = useTranslation();
 
 	return (
-		<main className="min-h-svh px-6 py-12">
+		<main className="min-h-svh px-4 py-10 sm:px-6 sm:py-12">
 			<section
 				aria-labelledby="release-notes-title"
 				className="mx-auto max-w-3xl"
@@ -75,13 +75,13 @@ export function TimelinesReleaseNotes() {
 						{t("releaseNotes.eyebrow", "Changelog")}
 					</p>
 
-					<Typography.Heading level={2}>
+					<Typography.Heading id="release-notes-title" level={2}>
 						{t("releaseNotes.title", "What's new with Familiar")}
 					</Typography.Heading>
 				</header>
 
 				<ol
-					className="mt-6 flex flex-col"
+					className="mt-8 flex flex-col"
 					aria-label={t("releaseNotes.eyebrow", "Changelog")}
 				>
 					{RELEASES.map((release) => (
@@ -102,34 +102,39 @@ function ReleaseNoteItem({ release }: { release: TRelease }) {
 		<li>
 			<article
 				aria-labelledby={titleId}
-				className="grid grid-cols-[150px_1fr] gap-8 py-10"
+				className="grid gap-5 border-border/60 border-b py-8 last:border-b-0 sm:py-10 md:grid-cols-[150px_minmax(0,1fr)] md:gap-8"
 			>
-				<header className="sticky top-20 self-start">
-					<time
-						dateTime={release.date}
-						className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.25em]"
-					>
-						{dateFormat(release.date, i18n.language)}
-					</time>
+				<header className="flex flex-wrap items-start justify-between gap-3 md:sticky md:top-20 md:block md:self-start">
+					<div>
+						<time
+							dateTime={release.date}
+							className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.25em]"
+						>
+							{dateFormat(release.date, i18n.language)}
+						</time>
 
-					<div className="mt-1 flex items-center gap-2">
-						<Typography.Heading level={4}>
-							v{release.version}
-						</Typography.Heading>
+						<div className="mt-1 flex flex-wrap items-center gap-2">
+							<Typography.Heading id={titleId} level={4}>
+								v{release.version}
+							</Typography.Heading>
 
-						{release.highlight ? (
-							<Badge size="sm" aria-label={t("releaseNotes.latest", "Latest")}>
-								<SolidStar aria-hidden="true" />
-								{t("releaseNotes.latest", "Latest")}
-							</Badge>
-						) : null}
+							{release.highlight ? (
+								<Badge
+									size="sm"
+									aria-label={t("releaseNotes.latest", "Latest")}
+								>
+									<SolidStar aria-hidden="true" />
+									{t("releaseNotes.latest", "Latest")}
+								</Badge>
+							) : null}
+						</div>
 					</div>
 				</header>
 
-				<div className="flex flex-col gap-5">
+				<div className="min-w-0 space-y-5">
 					<ReleaseMedia release={release} />
 
-					<div className="flex flex-col gap-5">
+					<div className="space-y-5">
 						{release.groups.map((group) => (
 							<ReleaseChangeGroup
 								key={group}
@@ -150,7 +155,7 @@ function ReleaseMedia({ release }: { release: TRelease }) {
 
 	if (release.image) {
 		return (
-			<figure className="aspect-16/7 w-full overflow-hidden rounded-xl border border-border/60">
+			<figure className="aspect-video w-full overflow-hidden rounded-xl border border-border/60 sm:aspect-16/7">
 				<img
 					src={release.image.src}
 					alt={release.image.alt}
@@ -169,16 +174,16 @@ function ReleaseMedia({ release }: { release: TRelease }) {
 	return (
 		<figure
 			aria-label={t("releaseNotes.latestRelease", "Latest release")}
-			className="aspect-16/7 w-full overflow-hidden rounded-xl border border-border/60 bg-linear-to-br from-neutral-900/10 to-neutral-100/10"
+			className="aspect-video w-full overflow-hidden rounded-xl border border-border/60 bg-linear-to-br from-neutral-900/10 to-neutral-100/10 sm:aspect-16/7"
 		>
-			<div className="grid size-full place-items-center">
-				<figcaption className="text-center dark:mix-blend-difference bg-clip-text">
+			<div className="grid size-full place-items-center p-6">
+				<figcaption className="text-center dark:mix-blend-difference">
 					<OutlineStar
 						aria-hidden="true"
 						className="mx-auto text-neutral-700 opacity-50 dark:text-neutral-300"
 					/>
 
-					<span className="mt-2 block font-heading text-lg text-neutral-700 dark:text-neutral-300">
+					<span className="mt-2 block font-heading text-neutral-700 text-sm dark:text-neutral-300 sm:text-lg">
 						{t("releaseNotes.latestRelease", "Latest release")}
 					</span>
 				</figcaption>
@@ -205,23 +210,23 @@ function ReleaseChangeGroup({
 		defaultValue: [],
 	}) as string[];
 
-	return (
-		<section aria-labelledby={headingId} className="flex flex-col gap-2">
-			<Typography.Prose>
-				<Typography.Heading level={6} id={headingId}>
-					<Badge size="sm" className={cn(TAG_STYLES[group])}>
-						{t(`releaseNotes.tags.${group}`, group)}
-					</Badge>
-				</Typography.Heading>
+	if (!items.length) {
+		return null;
+	}
 
-				<ul className="prose">
-					{items.map((item) => (
-						<li key={item} className="text-sm leading-relaxed text-foreground">
-							{item}
-						</li>
-					))}
-				</ul>
-			</Typography.Prose>
+	return (
+		<section aria-labelledby={headingId} className="space-y-3">
+			<h3 id={headingId}>
+				<Badge size="sm" className={cn(TAG_STYLES[group])}>
+					{t(`releaseNotes.tags.${group}`, group)}
+				</Badge>
+			</h3>
+
+			<ul className="space-y-2 pl-5 text-sm leading-7 text-foreground marker:text-muted-foreground">
+				{items.map((item) => (
+					<li key={item}>{item}</li>
+				))}
+			</ul>
 		</section>
 	);
 }
