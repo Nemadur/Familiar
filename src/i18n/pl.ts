@@ -569,6 +569,19 @@ const pl: Locale = {
 					"Logowanie i rejestracja korzystają teraz z tego samego układu, więc strony wyglądają spójniej.",
 				],
 			},
+			v0_7_5: {
+				Improved: [
+					"Strony [Polityka prywatności](/privacy) i [Regulamin](/tos) mają teraz czytelniejszy układ oraz lepszą typografię.",
+					"Strony prawne korzystają teraz z tłumaczeń, w tym tytułów, opisów, dat, sekcji i elementów list.",
+					"Notatki o wersjach wyglądają teraz lepiej na urządzeniach mobilnych, z układem dającym każdej wersji więcej miejsca.",
+					"Stopka jest teraz łatwiejsza w utrzymaniu i zawiera czytelniejsze linki do dokumentów prawnych.",
+				],
+				Fixed: [
+					"Treść notatek o wersjach nie jest już ściskana w wąskich kolumnach na małych ekranach.",
+					"Sekcje dokumentów prawnych renderują się teraz poprawnie z tłumaczeń.",
+					"Treści Markdown na stronach prawnych nie tworzą już niepoprawnych, zagnieżdżonych akapitów.",
+				],
+			},
 		},
 	},
 	privacyPolicy: {

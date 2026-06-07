@@ -568,6 +568,19 @@ const en: Locale = {
 					"Login and registration now share the same layout, so the pages feel more consistent.",
 				],
 			},
+			v0_7_5: {
+				Improved: [
+					"[Privacy Policy](/privacy) and [Terms of Service](/tos) now have a cleaner reading layout with better typography.",
+					"Legal pages now use translated content, including titles, descriptions, dates, sections, and list items.",
+					"Release notes now look better on mobile, with a layout that gives each version more space.",
+					"The footer is now easier to maintain and includes clearer links to legal resources.",
+				],
+				Fixed: [
+					"Release note content no longer gets squeezed into narrow columns on small screens.",
+					"Legal document sections now render correctly from translations.",
+					"Markdown content in legal pages no longer creates invalid nested paragraph elements.",
+				],
+			},
 		},
 	},
 	privacyPolicy: {

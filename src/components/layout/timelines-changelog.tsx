@@ -4,6 +4,7 @@ import { cn, dateFormat, getReleaseTranslationKey } from "@/lib/utils";
 import type { TRelease, TReleaseInput } from "@/types/release-notes";
 import { OutlineStar, SolidStar } from "../icons/icons";
 import { Badge } from "../ui/badge";
+import { MarkdownDisplay } from "../ui/markdown-display";
 
 export const TAG_STYLES = {
 	Added:
@@ -126,7 +127,7 @@ function ReleaseNoteItem({ release }: { release: TRelease }) {
 								v{release.version}
 							</Typography.Heading>
 
-							{release.highlight ? (
+							{release.highlight && (
 								<Badge
 									size="sm"
 									aria-label={t("releaseNotes.latest", "Latest")}
@@ -134,7 +135,7 @@ function ReleaseNoteItem({ release }: { release: TRelease }) {
 									<SolidStar aria-hidden="true" />
 									{t("releaseNotes.latest", "Latest")}
 								</Badge>
-							) : null}
+							)}
 						</div>
 					</div>
 				</header>
@@ -232,7 +233,13 @@ function ReleaseChangeGroup({
 
 			<ul className="space-y-2 pl-5 text-sm leading-7 text-foreground marker:text-muted-foreground">
 				{items.map((item) => (
-					<li key={item}>{item}</li>
+					<li key={item}>
+						<MarkdownDisplay
+							key={item}
+							className="not-first:mt-6"
+							content={item}
+						/>
+					</li>
 				))}
 			</ul>
 		</section>

@@ -1,7 +1,7 @@
 import { Typography } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "../ui/badge";
 import { dateFormat } from "@/lib/utils";
+import { Badge } from "../ui/badge";
 import { MarkdownDisplay } from "../ui/markdown-display";
 
 type PrivacyPolicySection = {
@@ -26,7 +26,7 @@ export function PrivacyPolicy() {
 		<main className="px-6 py-12">
 			<section
 				aria-labelledby="privacy-policy-title"
-				className="mx-auto"
+				className="mx-auto max-w-3xl"
 			>
 				<header className="flex flex-col gap-3">
 					<div className="flex flex-col gap-1">
@@ -42,10 +42,7 @@ export function PrivacyPolicy() {
 						</Typography.Heading>
 					</div>
 
-					<Typography.Paragraph
-						size="sm"
-						className="text-muted-foreground"
-					>
+					<Typography.Paragraph size="sm" className="text-muted-foreground">
 						{t(
 							"privacyPolicy.description",
 							"Learn how Familiar collects, uses, and protects your information.",
@@ -86,9 +83,7 @@ export function PrivacyPolicy() {
 									<ul>
 										{section.items.map((item) => (
 											<li key={item}>
-												<MarkdownDisplay
-													content={item}
-												/>
+												<MarkdownDisplay content={item} />
 											</li>
 										))}
 									</ul>
