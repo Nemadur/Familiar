@@ -3,7 +3,6 @@ import {
 	type AnchorHTMLAttributes,
 	createContext,
 	type MouseEvent,
-	type ReactNode,
 	useContext,
 	useEffect,
 	useMemo,
@@ -29,6 +28,7 @@ interface MarkdownDisplayProps {
 const linkClassName = "link font-medium text-primary hover:underline";
 
 const NewTabModifierContext = createContext(false);
+const CurrentOriginContext = createContext<string | null>(null);
 
 function isExternalHref(href: string) {
 	if (href.startsWith("//")) return true;
@@ -47,6 +47,16 @@ function isInternalHref(href: string) {
 
 function isNewTabClick(event: MouseEvent) {
 	return event.ctrlKey || event.metaKey || event.button === 1;
+}
+
+function getDisplayHref(href: string, origin: string | null) {
+	if (!origin) return href;
+
+	try {
+		return new URL(href, origin).toString();
+	} catch {
+		return href;
+	}
 }
 
 function openInNewTab(href: string) {
@@ -79,11 +89,22 @@ function useNewTabModifier() {
 	return isPressed;
 }
 
+function useCurrentOrigin() {
+	const [origin, setOrigin] = useState<string | null>(null);
+
+	useEffect(() => {
+		setOrigin(window.location.origin);
+	}, []);
+
+	return origin;
+}
+
 function MarkdownLink({
 	href,
 	children,
 }: AnchorHTMLAttributes<HTMLAnchorElement>) {
 	const isNewTabModifierPressed = useContext(NewTabModifierContext);
+	const currentOrigin = useContext(CurrentOriginContext);
 
 	if (!href) {
 		return <span>{children}</span>;
@@ -91,8 +112,11 @@ function MarkdownLink({
 
 	const isInternal = isInternalHref(href);
 	const isExternal = isExternalHref(href);
+	const displayHref = getDisplayHref(href, currentOrigin);
 
-	const tooltipText = isNewTabModifierPressed ? `${href} (new tab)` : href;
+	const tooltipText = isNewTabModifierPressed
+		? `${displayHref} (new tab)`
+		: displayHref;
 
 	const handleInternalClick = (event: MouseEvent) => {
 		if (!isNewTabClick(event)) return;
@@ -145,6 +169,7 @@ export function MarkdownDisplay({
 	isShort = false,
 }: MarkdownDisplayProps) {
 	const isNewTabModifierPressed = useNewTabModifier();
+	const currentOrigin = useCurrentOrigin();
 
 	const remarkPlugins = useMemo(() => [remarkGfm, remarkBreaks], []);
 
@@ -158,20 +183,25 @@ export function MarkdownDisplay({
 	if (!content) return null;
 
 	return (
-		<NewTabModifierContext.Provider value={isNewTabModifierPressed}>
-			<TooltipProvider>
-				<div
-					className={cn(
-						isShort && "line-clamp-3",
-						"text-sm prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-secondary prose-pre:text-secondary-foreground",
-						className,
-					)}
-				>
-					<ReactMarkdown remarkPlugins={remarkPlugins} components={components}>
-						{content}
-					</ReactMarkdown>
-				</div>
-			</TooltipProvider>
-		</NewTabModifierContext.Provider>
+		<CurrentOriginContext.Provider value={currentOrigin}>
+			<NewTabModifierContext.Provider value={isNewTabModifierPressed}>
+				<TooltipProvider>
+					<div
+						className={cn(
+							isShort && "line-clamp-3",
+							"text-sm prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-secondary prose-pre:text-secondary-foreground",
+							className,
+						)}
+					>
+						<ReactMarkdown
+							remarkPlugins={remarkPlugins}
+							components={components}
+						>
+							{content}
+						</ReactMarkdown>
+					</div>
+				</TooltipProvider>
+			</NewTabModifierContext.Provider>
+		</CurrentOriginContext.Provider>
 	);
 }
