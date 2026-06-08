@@ -42,11 +42,19 @@ export default function Footer() {
 				// Match these hrefs to your actual route paths.
 				{
 					label: t("footer.links.privacy", "Privacy Policy"),
-					href: "/privacy-policy",
+					href: "/privacy",
 				},
 				{
 					label: t("footer.links.terms", "Terms of Service"),
-					href: "/terms-of-service",
+					href: "/tos",
+				},
+				{
+					label: t("footer.links.release-notes", "Release Notes"),
+					href: "/release-notes",
+				},
+				{
+					label: t("footer.links.roadmap", "Roadmap"),
+					href: "/roadmap",
 				},
 			],
 		},
@@ -85,9 +93,13 @@ function FooterBrand() {
 			<SolidLogoText size={80} />
 
 			<div className="space-y-2">
-				<Typography.Heading level={3}>{t("footer.about.title")}</Typography.Heading>
+				<Typography.Heading level={3}>
+					{t("footer.about.title")}
+				</Typography.Heading>
 
-				<Typography.Paragraph className="text-muted-foreground" size={"sm"}>{t("footer.about.description")}</Typography.Paragraph>
+				<Typography.Paragraph className="text-muted-foreground" size={"sm"}>
+					{t("footer.about.description")}
+				</Typography.Paragraph>
 			</div>
 		</div>
 	);
@@ -149,11 +161,17 @@ function FooterBottom({ currentYear }: { currentYear: number }) {
 	return (
 		<div className="p-6">
 			<div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-				<Typography.Paragraph size={"xs"} className="text-muted-foreground uppercase">
+				<Typography.Paragraph
+					size={"xs"}
+					className="text-muted-foreground uppercase"
+				>
 					&copy; {currentYear} {t("footer.copyright.rights")}
 				</Typography.Paragraph>
 
-				<Typography.Paragraph size={"xs"} className="text-muted-foreground uppercase">
+				<Typography.Paragraph
+					size={"xs"}
+					className="text-muted-foreground uppercase"
+				>
 					{t("footer.copyright.made_with")}
 				</Typography.Paragraph>
 			</div>

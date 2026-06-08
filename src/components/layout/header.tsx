@@ -1,4 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
+import { Skeleton } from "boneyard-js/react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/components/icons/icons";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
+import { TRoles } from "@/types/user/roles";
 import { Button } from "../ui/button";
 import {
 	Sheet,
@@ -22,11 +24,7 @@ import {
 } from "../ui/sheet";
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
-import LanguageSelect from "./select/language";
 import CurrencySelect from "./select/currency";
-import { TRoles } from "@/types/user/roles";
-import { Skeleton } from "boneyard-js/react";
-import ThemeToggle from "./select/theme-toggle";
 
 function ClientOnly({ children }: { children: React.ReactNode }) {
 	const [mounted, setMounted] = useState(false);
@@ -59,7 +57,11 @@ export default function Header() {
 						<CurrencySelect display={"compact"} variant={"secondary"} />
 						{/* <LanguageSelect /> */}
 						<ClientOnly>
-							<Skeleton name="header-artist_dashboard" loading={isPending}>
+							<Skeleton
+								name="header-artist_dashboard"
+								loading={isPending}
+								className="hidden lg:flex"
+							>
 								{isPending
 									? null
 									: user?.roles?.includes(TRoles.Artist) && (
@@ -72,8 +74,13 @@ export default function Header() {
 							</Skeleton>
 						</ClientOnly>
 
+						{/* TODO: add language and theme to mobile sidebar */}
 						<ClientOnly>
-							<Skeleton name="header-user_menu" loading={isPending}>
+							<Skeleton
+								name="header-user_menu"
+								loading={isPending}
+								className="hidden lg:flex"
+							>
 								{isPending ? null : user ? (
 									<User user={user} showInfo={false} isDropdown />
 								) : (
@@ -165,6 +172,8 @@ const NavLinks = memo(() => {
 		switch (path) {
 			case "/":
 				return isActive ? <SolidHome /> : <OutlineHome />;
+			// case "/roadmap":
+			// 	return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/shop":
 				return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/blog":
@@ -175,7 +184,8 @@ const NavLinks = memo(() => {
 	};
 
 	const navigationLinks = [
-		{ path: "/", label: t("header.navigation.home") },
+		{ path: "/", label: t("header.navigation.home", "Home") },
+		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
 		// { path: "/shop", label: t("header.navigation.shop") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },

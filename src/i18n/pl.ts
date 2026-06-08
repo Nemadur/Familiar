@@ -569,6 +569,22 @@ const pl: Locale = {
 					"Logowanie i rejestracja korzystają teraz z tego samego układu, więc strony wyglądają spójniej.",
 				],
 			},
+			v0_7_5: {
+				Added: [
+					"Dodano strony [Polityka prywatności](/privacy) i [Regulamin](/tos) do aplikacji.",
+				],
+				Improved: [
+					"Polityka prywatności i Regulamin mają teraz czytelniejszy układ oraz lepszą typografię.",
+					"Strony prawne korzystają teraz z tłumaczeń, w tym tytułów, opisów, dat, sekcji i elementów list.",
+					"Notatki o wersjach wyglądają teraz lepiej na urządzeniach mobilnych, z układem dającym każdej wersji więcej miejsca.",
+					"Stopka jest teraz łatwiejsza w utrzymaniu i zawiera czytelniejsze linki do dokumentów prawnych.",
+				],
+				Fixed: [
+					"Treść notatek o wersjach nie jest już ściskana w wąskich kolumnach na małych ekranach.",
+					"Sekcje dokumentów prawnych renderują się teraz poprawnie z tłumaczeń.",
+					"Treści Markdown na stronach prawnych nie tworzą już niepoprawnych, zagnieżdżonych akapitów.",
+				],
+			},
 		},
 	},
 	privacyPolicy: {
@@ -800,6 +816,49 @@ const pl: Locale = {
 				],
 			},
 		],
+	},
+	roadmap: {
+		title: "Co dalej w Familiar",
+		eyebrow: "Roadmapa",
+		description:
+			"Prosty podgląd planowanych funkcji i tego, nad czym teraz pracujemy.",
+		status: {
+			Planned: "Planowane",
+			InProgress: "W trakcie",
+			Exploring: "Rozważane",
+		},
+		items: {
+			"item-1": {
+				title: "Lepszy panel zleceń",
+				description:
+					"Czytelniejszy panel dla artystów i klientów, który ułatwi zarządzanie zapytaniami o zlecenia.",
+				details: [
+					"Czytelniejsze karty statusu zapytań.",
+					"Lepsze akcje do akceptowania, odrzucania, anulowania i aktualizowania zleceń.",
+					"Wygodniejszy układ mobilny do zarządzania zleceniami na mniejszych ekranach.",
+				],
+			},
+			"item-2": {
+				title: "Ulepszone posty portfolio",
+				description:
+					"Posty portfolio wrócą z czytelniejszym widokiem szczegółów i lepszą obsługą udostępniania.",
+				details: [
+					"Lepsze strony postów dla prac i przykładów zleceń.",
+					"Czytelniejsze wyświetlanie obrazów i podglądów.",
+					"Ulepszone linki do udostępniania postów portfolio.",
+				],
+			},
+			"item-3": {
+				title: "Powiadomienia",
+				description:
+					"Rozważamy powiadomienia, które pomogą użytkownikom śledzić ważną aktywność bez ręcznego sprawdzania każdej strony.",
+				details: [
+					"Aktualizacje dotyczące zmian w zapytaniach o zlecenia.",
+					"Możliwe powiadomienia o profilach, obserwacjach i aktywności.",
+					"Proste centrum powiadomień w aplikacji.",
+				],
+			},
+		},
 	},
 };
 

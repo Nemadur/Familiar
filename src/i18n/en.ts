@@ -568,6 +568,22 @@ const en: Locale = {
 					"Login and registration now share the same layout, so the pages feel more consistent.",
 				],
 			},
+			v0_7_5: {
+				Added: [
+					"Added [Privacy Policy](/privacy) and [Terms of Service](/tos) pages.",
+				],
+				Improved: [
+					"Privacy Policy and Terms of Service now have a cleaner reading layout with better typography.",
+					"Legal pages now use translated content, including titles, descriptions, dates, sections, and list items.",
+					"Release notes now look better on mobile, with a layout that gives each version more space.",
+					"The footer is now easier to maintain and includes clearer links to legal resources.",
+				],
+				Fixed: [
+					"Release note content no longer gets squeezed into narrow columns on small screens.",
+					"Legal document sections now render correctly from translations.",
+					"Markdown content in legal pages no longer creates invalid nested paragraph elements.",
+				],
+			},
 		},
 	},
 	privacyPolicy: {
@@ -799,6 +815,49 @@ const en: Locale = {
 				],
 			},
 		],
+	},
+	roadmap: {
+		title: "Coming next to Familiar",
+		eyebrow: "Roadmap",
+		description:
+			"A simple look at planned features and what we are working on next.",
+		status: {
+			Planned: "Planned",
+			InProgress: "In progress",
+			Exploring: "Exploring",
+		},
+		items: {
+			"item-1": {
+				title: "Better commission dashboard",
+				description:
+					"A clearer dashboard for artists and clients to manage commission requests more easily.",
+				details: [
+					"Clearer request status cards.",
+					"Better actions for accepting, rejecting, canceling, and updating requests.",
+					"Cleaner mobile layout for managing commissions on smaller screens.",
+				],
+			},
+			"item-2": {
+				title: "Improved portfolio posts",
+				description:
+					"Portfolio posts will return with a cleaner detail view and better sharing support.",
+				details: [
+					"Better post pages for artwork and commission examples.",
+					"Cleaner media display for images and previews.",
+					"Improved links for sharing portfolio posts.",
+				],
+			},
+			"item-3": {
+				title: "Notifications",
+				description:
+					"Notifications are being explored to help users follow important activity without checking every page manually.",
+				details: [
+					"Updates for commission request changes.",
+					"Possible profile, follow, and activity notifications.",
+					"Simple notification center inside the app.",
+				],
+			},
+		},
 	},
 };
 
