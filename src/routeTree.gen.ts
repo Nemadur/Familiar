@@ -24,6 +24,8 @@ import { Route as MainUsernameTabRouteImport } from './routes/_main.$username/$t
 import { Route as MainAuthRegisterIndexRouteImport } from './routes/_main.auth/register/index'
 import { Route as MainAuthLoginIndexRouteImport } from './routes/_main.auth/login/index'
 import { Route as MainAuthForgotIndexRouteImport } from './routes/_main.auth/forgot/index'
+import { Route as MainAuthMollieConnectRouteImport } from './routes/_main.auth/mollie/connect'
+import { Route as MainAuthMollieCallbackRouteImport } from './routes/_main.auth/mollie/callback'
 import { Route as MainUsernameTabCommissionIdIndexRouteImport } from './routes/_main.$username/$tab/$commissionId/index'
 import { Route as MainUsernameTabFolderFolderSlugIndexRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/index'
 import { Route as MainUsernameTabFolderFolderSlugSubfolderSlugPostIdRouteImport } from './routes/_main.$username/$tab/folder/$folderSlug/$subfolderSlug/$postId'
@@ -104,6 +106,16 @@ const MainAuthForgotIndexRoute = MainAuthForgotIndexRouteImport.update({
   path: '/auth/forgot/',
   getParentRoute: () => MainRoute,
 } as any)
+const MainAuthMollieConnectRoute = MainAuthMollieConnectRouteImport.update({
+  id: '/auth/mollie/connect',
+  path: '/auth/mollie/connect',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainAuthMollieCallbackRoute = MainAuthMollieCallbackRouteImport.update({
+  id: '/auth/mollie/callback',
+  path: '/auth/mollie/callback',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainUsernameTabCommissionIdIndexRoute =
   MainUsernameTabCommissionIdIndexRouteImport.update({
     id: '/$commissionId/',
@@ -135,6 +147,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/services': typeof DashboardServicesRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/$username/$tab': typeof MainUsernameTabRouteWithChildren
+  '/auth/mollie/callback': typeof MainAuthMollieCallbackRoute
+  '/auth/mollie/connect': typeof MainAuthMollieConnectRoute
   '/auth/forgot/': typeof MainAuthForgotIndexRoute
   '/auth/login/': typeof MainAuthLoginIndexRoute
   '/auth/register/': typeof MainAuthRegisterIndexRoute
@@ -153,6 +167,8 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/$username/$tab': typeof MainUsernameTabRouteWithChildren
+  '/auth/mollie/callback': typeof MainAuthMollieCallbackRoute
+  '/auth/mollie/connect': typeof MainAuthMollieConnectRoute
   '/auth/forgot': typeof MainAuthForgotIndexRoute
   '/auth/login': typeof MainAuthLoginIndexRoute
   '/auth/register': typeof MainAuthRegisterIndexRoute
@@ -174,6 +190,8 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/_main/$username/$tab': typeof MainUsernameTabRouteWithChildren
+  '/_main/auth/mollie/callback': typeof MainAuthMollieCallbackRoute
+  '/_main/auth/mollie/connect': typeof MainAuthMollieConnectRoute
   '/_main/auth/forgot/': typeof MainAuthForgotIndexRoute
   '/_main/auth/login/': typeof MainAuthLoginIndexRoute
   '/_main/auth/register/': typeof MainAuthRegisterIndexRoute
@@ -195,6 +213,8 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/'
     | '/$username/$tab'
+    | '/auth/mollie/callback'
+    | '/auth/mollie/connect'
     | '/auth/forgot/'
     | '/auth/login/'
     | '/auth/register/'
@@ -213,6 +233,8 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/$username/$tab'
+    | '/auth/mollie/callback'
+    | '/auth/mollie/connect'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -233,6 +255,8 @@ export interface FileRouteTypes {
     | '/_main/'
     | '/dashboard/'
     | '/_main/$username/$tab'
+    | '/_main/auth/mollie/callback'
+    | '/_main/auth/mollie/connect'
     | '/_main/auth/forgot/'
     | '/_main/auth/login/'
     | '/_main/auth/register/'
@@ -353,6 +377,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainAuthForgotIndexRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/auth/mollie/connect': {
+      id: '/_main/auth/mollie/connect'
+      path: '/auth/mollie/connect'
+      fullPath: '/auth/mollie/connect'
+      preLoaderRoute: typeof MainAuthMollieConnectRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/auth/mollie/callback': {
+      id: '/_main/auth/mollie/callback'
+      path: '/auth/mollie/callback'
+      fullPath: '/auth/mollie/callback'
+      preLoaderRoute: typeof MainAuthMollieCallbackRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/$username/$tab/$commissionId/': {
       id: '/_main/$username/$tab/$commissionId/'
       path: '/$commissionId'
@@ -413,6 +451,8 @@ interface MainRouteChildren {
   MainMyRequestsRoute: typeof MainMyRequestsRoute
   MainReleaseNotesRoute: typeof MainReleaseNotesRoute
   MainIndexRoute: typeof MainIndexRoute
+  MainAuthMollieCallbackRoute: typeof MainAuthMollieCallbackRoute
+  MainAuthMollieConnectRoute: typeof MainAuthMollieConnectRoute
   MainAuthForgotIndexRoute: typeof MainAuthForgotIndexRoute
   MainAuthLoginIndexRoute: typeof MainAuthLoginIndexRoute
   MainAuthRegisterIndexRoute: typeof MainAuthRegisterIndexRoute
@@ -424,6 +464,8 @@ const MainRouteChildren: MainRouteChildren = {
   MainMyRequestsRoute: MainMyRequestsRoute,
   MainReleaseNotesRoute: MainReleaseNotesRoute,
   MainIndexRoute: MainIndexRoute,
+  MainAuthMollieCallbackRoute: MainAuthMollieCallbackRoute,
+  MainAuthMollieConnectRoute: MainAuthMollieConnectRoute,
   MainAuthForgotIndexRoute: MainAuthForgotIndexRoute,
   MainAuthLoginIndexRoute: MainAuthLoginIndexRoute,
   MainAuthRegisterIndexRoute: MainAuthRegisterIndexRoute,
