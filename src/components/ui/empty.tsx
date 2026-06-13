@@ -66,11 +66,7 @@ type EmptyTitleProps = Omit<
 	level?: ComponentProps<typeof Typography.Heading>["level"];
 };
 
-function EmptyTitle({
-	className,
-	level = 4,
-	...props
-}: EmptyTitleProps) {
+function EmptyTitle({ className, level = 4, ...props }: EmptyTitleProps) {
 	return (
 		<Typography.Heading
 			data-slot="empty-title"
@@ -114,9 +110,9 @@ function EmptyContent({ className, ...props }: ComponentProps<"div">) {
 
 export {
 	Empty,
-	EmptyHeader,
-	EmptyTitle,
-	EmptyDescription,
 	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
 	EmptyMedia,
+	EmptyTitle,
 };

@@ -1,5 +1,5 @@
-import { Link, useLocation } from "@tanstack/react-router";
 import type { AnyRoute, LinkProps } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
 	Briefcase,
 	Wallet,
@@ -13,9 +13,12 @@ import {
 	ExternalLink,
 	User as UserIcon,
 } from "lucide-react";
+import { OutlineListBoxes } from "@/components/icons/icons";
+import { Button } from "@/components/ui/button";
 import {
 	Sidebar,
 	SidebarContent,
+	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
@@ -23,11 +26,8 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth";
-import { OutlineListBoxes } from "@/components/icons/icons";
 import type { FileRoutesByTo } from "@/routeTree.gen";
 
 type ValidRoute = keyof FileRoutesByTo;
@@ -104,7 +104,7 @@ export function DashboardSidebar() {
 	const { user } = useAuth();
 
 	return (
-		<Sidebar variant="inset" className="border-r bg-background">
+		<Sidebar variant="inset">
 			<SidebarHeader className="p-4">
 				<div className="flex items-center gap-2 font-bold text-xl text-primary">
 					Dashboard

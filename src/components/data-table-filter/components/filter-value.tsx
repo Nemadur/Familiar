@@ -7,6 +7,7 @@ import {
 	useCallback,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 	useSyncExternalStore,
 } from "react";
@@ -36,6 +37,7 @@ import {
 	TabsTrigger,
 } from "src/components/ui/tabs";
 import { cn } from "src/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { numberFilterOperators } from "../core/operators";
 import type {
 	Column,
@@ -350,6 +352,7 @@ interface FilterValueControllerProps<TData, TType extends ColumnDataType> {
 	actions: DataTableFilterActions;
 	strategy: FilterStrategy;
 	locale?: Locale;
+	backButtonMode?: "inside" | "floating";
 }
 
 export const FilterValueController = memo(
@@ -362,7 +365,9 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 	actions,
 	strategy,
 	locale = "en",
-}: FilterValueControllerProps<TData, TType>) {
+	backButtonMode = "inside",
+	onBack,
+}: FilterValueControllerProps<TData, TType> & { onBack?: () => void }) {
 	switch (column.type) {
 		case "option":
 			return (
@@ -372,6 +377,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 					actions={actions}
 					strategy={strategy}
 					locale={locale}
+					backButtonMode={backButtonMode}
+					onBack={onBack}
 				/>
 			);
 		case "multiOption":
@@ -382,6 +389,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 					actions={actions}
 					strategy={strategy}
 					locale={locale}
+					backButtonMode={backButtonMode}
+					onBack={onBack}
 				/>
 			);
 		case "date":
@@ -392,6 +401,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 					actions={actions}
 					strategy={strategy}
 					locale={locale}
+					backButtonMode={backButtonMode}
+					onBack={onBack}
 				/>
 			);
 		case "text":
@@ -402,6 +413,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 					actions={actions}
 					strategy={strategy}
 					locale={locale}
+					backButtonMode={backButtonMode}
+					onBack={onBack}
 				/>
 			);
 		case "number":
@@ -412,6 +425,8 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 					actions={actions}
 					strategy={strategy}
 					locale={locale}
+					backButtonMode={backButtonMode}
+					onBack={onBack}
 				/>
 			);
 		default:
@@ -422,6 +437,7 @@ function __FilterValueController<TData, TType extends ColumnDataType>({
 type FilterOptionState = ColumnOptionExtended & {
 	initialSelected: boolean;
 	isFolder?: boolean;
+	selectedChildrenCount?: number;
 };
 
 interface OptionItemProps {
@@ -435,7 +451,16 @@ const OptionItem = memo(function OptionItem({
 	onToggle,
 	onFolderClick,
 }: OptionItemProps) {
-	const { value, label, icon: Icon, selected, count, isFolder, id } = option;
+	const {
+		value,
+		label,
+		icon: Icon,
+		selected,
+		count,
+		isFolder,
+		id,
+		selectedChildrenCount,
+	} = option;
 
 	const handleSelect = useCallback(() => {
 		if (isFolder && onFolderClick && id) {
@@ -467,22 +492,25 @@ const OptionItem = memo(function OptionItem({
 					))}
 				<span>
 					{label}
-					{!isFolder && (
-						<sup
-							className={cn(
-								count == null && "hidden",
-								"ml-0.5 tabular-nums tracking-tight text-muted-foreground",
-								count === 0 && "slashed-zero",
-							)}
-						>
-							{typeof count === "number" ? (count < 100 ? count : "100+") : ""}
-						</sup>
-					)}
+					<sup
+						className={cn(
+							count == null && "hidden",
+							"ml-0.5 tabular-nums tracking-tight text-muted-foreground",
+							count === 0 && "slashed-zero",
+						)}
+					>
+						{typeof count === "number" ? (count < 100 ? count : "100+") : ""}
+					</sup>
 				</span>
 			</div>
-			{isFolder && (
-				<ChevronRight className="size-4 ml-auto text-muted-foreground" />
-			)}
+			<div className="flex items-center gap-1">
+				{isFolder && !!selectedChildrenCount && selectedChildrenCount > 0 && (
+					<span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 rounded-full">
+						{selectedChildrenCount}
+					</span>
+				)}
+				{isFolder && <ChevronRight className="size-4 text-muted-foreground" />}
+			</div>
 		</CommandItem>
 	);
 });
@@ -512,19 +540,38 @@ function getVisibleOptions(
 ) {
 	const folders: FilterOptionState[] = [];
 	const visibleOptions: FilterOptionState[] = [];
-	const foldersMap = new Map<string, string>();
+	const foldersMap = new Map<string, FilterOptionState>();
 
 	for (const option of options) {
 		if (option.parentId) {
 			if (!foldersMap.has(option.parentId)) {
-				foldersMap.set(option.parentId, option.parentId);
-				folders.push({
+				// Find the parent option to get its label instead of using the raw ID
+				const parentOption = options.find((opt) => opt.id === option.parentId);
+
+				const newFolder = {
 					...option,
 					id: option.parentId,
-					label: option.parentId,
+					label: parentOption ? parentOption.label : option.parentId,
 					value: "",
 					isFolder: true,
-				});
+					// Base it off of the parent's selection state too
+					selectedChildrenCount: parentOption?.selected ? 1 : 0,
+					// Start count at the parent's own count (e.g. products directly in "Digital Art")
+					count: parentOption?.count || 0,
+				};
+				foldersMap.set(option.parentId, newFolder);
+				folders.push(newFolder);
+			}
+
+			const folder = foldersMap.get(option.parentId);
+			if (folder) {
+				// Accumulate the count of all children for the folder
+				folder.count = (folder.count || 0) + (option.count || 0);
+
+				if (option.selected) {
+					folder.selectedChildrenCount =
+						(folder.selectedChildrenCount || 0) + 1;
+				}
 			}
 
 			if (activeFolder === option.parentId) {
@@ -535,7 +582,25 @@ function getVisibleOptions(
 		}
 	}
 
-	return { folders: activeFolder ? [] : folders, visibleOptions };
+	// If we're inside a folder, we want to include the parent item itself at the top of the visible options list
+	if (activeFolder) {
+		const parentItem = options.find(
+			(opt) => opt.id === activeFolder && !opt.parentId,
+		);
+		if (parentItem) {
+			visibleOptions.unshift(parentItem);
+		}
+	}
+
+	// Prevent duplicating top-level items that are also rendered as folders
+	const dedupedVisibleOptions = visibleOptions.filter(
+		(opt) => !(!activeFolder && !opt.parentId && foldersMap.has(opt.id)),
+	);
+
+	return {
+		folders: activeFolder ? [] : folders,
+		visibleOptions: dedupedVisibleOptions,
+	};
 }
 
 function splitSelectedOptions(visibleOptions: FilterOptionState[]) {
@@ -569,6 +634,7 @@ function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
 		setOptions((previous) =>
 			previous.map((option) => ({
 				...option,
+				initialSelected: selectedValues.includes(option.value),
 				selected: selectedValues.includes(option.value),
 			})),
 		);
@@ -577,12 +643,48 @@ function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
 	return options;
 }
 
+export function FloatingBackButton({ onClick }: { onClick: () => void }) {
+	const [position, setPosition] = useState<"left" | "right">("left");
+	const ref = useRef<HTMLButtonElement>(null);
+
+	useEffect(() => {
+		if (!ref.current) return;
+		const timer = setTimeout(() => {
+			if (!ref.current) return;
+			const rect = ref.current.getBoundingClientRect();
+			if (position === "left" && rect.left < 10) {
+				setPosition("right");
+			} else if (position === "right" && rect.right > window.innerWidth - 10) {
+				setPosition("left");
+			}
+		}, 10);
+		return () => clearTimeout(timer);
+	}, [position]);
+
+	return (
+		<Button
+			ref={ref}
+			variant="outline"
+			size="icon"
+			className={cn(
+				"absolute top-0 z-100 bg-popover",
+				position === "left" ? "-left-10" : "-right-10",
+			)}
+			onClick={onClick}
+		>
+			<ChevronLeft className="size-4" />
+		</Button>
+	);
+}
+
 export function FilterValueOptionController<TData>({
 	filter,
 	column,
 	actions,
 	locale = "en",
-}: FilterValueControllerProps<TData, "option">) {
+	backButtonMode = "inside",
+	onBack,
+}: FilterValueControllerProps<TData, "option"> & { onBack?: () => void }) {
 	const [activeFolder, setActiveFolder] = useState<string | null>(null);
 	const options = useFilterOptionsState(column, filter);
 
@@ -604,47 +706,97 @@ export function FilterValueOptionController<TData>({
 		[visibleOptions],
 	);
 
+	const mainItems = unselectedOptions.filter((opt) => !opt.parentId);
+	const subItems = unselectedOptions.filter((opt) => opt.parentId);
+
 	return (
-		<Command loop>
-			<CommandInput placeholder={t("search", locale)} />
-			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-			<CommandList className="max-h-fit">
-				<CommandGroup className={cn(folders.length === 0 && "hidden")}>
-					{folders.map((folder) => (
-						<OptionItem
-							key={`folder-${folder.id}`}
-							option={folder}
-							onToggle={handleToggle}
-							onFolderClick={setActiveFolder}
-						/>
-					))}
-				</CommandGroup>
-				{folders.length > 0 && selectedOptions.length > 0 && (
-					<CommandSeparator className="my-1" />
-				)}
-				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
-					{selectedOptions.map((option) => (
-						<OptionItem
-							key={option.value}
-							option={option}
-							onToggle={handleToggle}
-						/>
-					))}
-				</CommandGroup>
-				{selectedOptions.length > 0 && <CommandSeparator className="my-1" />}
-				<CommandGroup
-					className={cn(unselectedOptions.length === 0 && "hidden")}
-				>
-					{unselectedOptions.map((option) => (
-						<OptionItem
-							key={option.value}
-							option={option}
-							onToggle={handleToggle}
-						/>
-					))}
-				</CommandGroup>
-			</CommandList>
-		</Command>
+		<>
+			{backButtonMode === "floating" && (activeFolder || onBack) && (
+				<FloatingBackButton
+					onClick={() => {
+						if (activeFolder) setActiveFolder(null);
+						else if (onBack) onBack();
+					}}
+				/>
+			)}
+			<Command loop>
+				<CommandInput placeholder={t("search", locale)} />
+				<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
+				<CommandList className="max-h-fit">
+					{backButtonMode === "inside" && (activeFolder || onBack) && (
+						<CommandGroup>
+							<CommandItem
+								onSelect={() => {
+									if (activeFolder) setActiveFolder(null);
+									else if (onBack) onBack();
+								}}
+								className="cursor-pointer text-muted-foreground font-medium"
+							>
+								<ChevronLeft className="size-4 mr-2" />
+								{t("back", locale) || "Back"}
+							</CommandItem>
+						</CommandGroup>
+					)}
+					<CommandGroup className={cn(folders.length === 0 && "hidden")}>
+						{folders.map((folder) => (
+							<OptionItem
+								key={`folder-${folder.id}`}
+								option={folder}
+								onToggle={handleToggle}
+								onFolderClick={setActiveFolder}
+							/>
+						))}
+					</CommandGroup>
+					{folders.length > 0 && selectedOptions.length > 0 && (
+						<CommandSeparator className="my-1" />
+					)}
+					<CommandGroup
+						className={cn(selectedOptions.length === 0 && "hidden")}
+					>
+						{selectedOptions.map((option) => (
+							<OptionItem
+								key={option.value}
+								option={option}
+								onToggle={handleToggle}
+							/>
+						))}
+					</CommandGroup>
+					{selectedOptions.length > 0 && unselectedOptions.length > 0 && (
+						<CommandSeparator className="my-1" />
+					)}
+
+					<CommandGroup
+						heading={activeFolder ? "Category" : undefined}
+						className={cn(mainItems.length === 0 && "hidden")}
+					>
+						{mainItems.map((option) => (
+							<OptionItem
+								key={option.value}
+								option={option}
+								onToggle={handleToggle}
+							/>
+						))}
+					</CommandGroup>
+
+					{mainItems.length > 0 && subItems.length > 0 && (
+						<CommandSeparator className="my-1" />
+					)}
+
+					<CommandGroup
+						heading={activeFolder ? "Subcategories" : undefined}
+						className={cn(subItems.length === 0 && "hidden")}
+					>
+						{subItems.map((option) => (
+							<OptionItem
+								key={option.value}
+								option={option}
+								onToggle={handleToggle}
+							/>
+						))}
+					</CommandGroup>
+				</CommandList>
+			</Command>
+		</>
 	);
 }
 
@@ -653,7 +805,9 @@ export function FilterValueMultiOptionController<TData>({
 	column,
 	actions,
 	locale = "en",
-}: FilterValueControllerProps<TData, "multiOption">) {
+	backButtonMode = "inside",
+	onBack,
+}: FilterValueControllerProps<TData, "multiOption"> & { onBack?: () => void }) {
 	const [activeFolder, setActiveFolder] = useState<string | null>(null);
 	const options = useFilterOptionsState(column, filter);
 
@@ -675,58 +829,97 @@ export function FilterValueMultiOptionController<TData>({
 		[visibleOptions],
 	);
 
+	const mainItems = unselectedOptions.filter((opt) => !opt.parentId);
+	const subItems = unselectedOptions.filter((opt) => opt.parentId);
+
 	return (
-		<Command loop>
-			<CommandInput placeholder={t("search", locale)} />
-			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-			<CommandList className="max-h-[300px]">
-				{activeFolder && (
-					<CommandGroup>
-						<CommandItem
-							onSelect={() => setActiveFolder(null)}
-							className="cursor-pointer text-muted-foreground font-medium"
-						>
-							<ChevronLeft className="size-4 mr-2" />
-							{t("back", locale) || "Back"}
-						</CommandItem>
+		<>
+			{backButtonMode === "floating" && (activeFolder || onBack) && (
+				<FloatingBackButton
+					onClick={() => {
+						if (activeFolder) setActiveFolder(null);
+						else if (onBack) onBack();
+					}}
+				/>
+			)}
+			<Command loop>
+				<CommandInput placeholder={t("search", locale)} />
+				<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
+				<CommandList className="max-h-[300px]">
+					{backButtonMode === "inside" && (activeFolder || onBack) && (
+						<CommandGroup>
+							<CommandItem
+								onSelect={() => {
+									if (activeFolder) setActiveFolder(null);
+									else if (onBack) onBack();
+								}}
+								className="cursor-pointer text-muted-foreground font-medium"
+							>
+								<ChevronLeft className="size-4 mr-2" />
+								{t("back", locale) || "Back"}
+							</CommandItem>
+						</CommandGroup>
+					)}
+					<CommandGroup className={cn(folders.length === 0 && "hidden")}>
+						{folders.map((folder) => (
+							<OptionItem
+								key={`folder-${folder.id}`}
+								option={folder}
+								onToggle={handleToggle}
+								onFolderClick={setActiveFolder}
+							/>
+						))}
 					</CommandGroup>
-				)}
-				<CommandGroup className={cn(folders.length === 0 && "hidden")}>
-					{folders.map((folder) => (
-						<OptionItem
-							key={`folder-${folder.id}`}
-							option={folder}
-							onToggle={handleToggle}
-							onFolderClick={setActiveFolder}
-						/>
-					))}
-				</CommandGroup>
-				{folders.length > 0 && selectedOptions.length > 0 && (
-					<CommandSeparator className="my-1" />
-				)}
-				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
-					{selectedOptions.map((option) => (
-						<OptionItem
-							key={option.value}
-							option={option}
-							onToggle={handleToggle}
-						/>
-					))}
-				</CommandGroup>
-				{selectedOptions.length > 0 && <CommandSeparator className="my-1" />}
-				<CommandGroup
-					className={cn(unselectedOptions.length === 0 && "hidden")}
-				>
-					{unselectedOptions.map((option) => (
-						<OptionItem
-							key={option.value}
-							option={option}
-							onToggle={handleToggle}
-						/>
-					))}
-				</CommandGroup>
-			</CommandList>
-		</Command>
+					{folders.length > 0 && selectedOptions.length > 0 && (
+						<CommandSeparator className="my-1" />
+					)}
+					<CommandGroup
+						className={cn(selectedOptions.length === 0 && "hidden")}
+					>
+						{selectedOptions.map((option) => (
+							<OptionItem
+								key={option.value}
+								option={option}
+								onToggle={handleToggle}
+							/>
+						))}
+					</CommandGroup>
+					{selectedOptions.length > 0 && unselectedOptions.length > 0 && (
+						<CommandSeparator className="my-1" />
+					)}
+
+					<CommandGroup
+						heading={activeFolder ? "Category" : undefined}
+						className={cn(mainItems.length === 0 && "hidden")}
+					>
+						{mainItems.map((option) => (
+							<OptionItem
+								key={option.value}
+								option={option}
+								onToggle={handleToggle}
+							/>
+						))}
+					</CommandGroup>
+
+					{mainItems.length > 0 && subItems.length > 0 && (
+						<CommandSeparator className="my-1" />
+					)}
+
+					<CommandGroup
+						heading={activeFolder ? "Subcategories" : undefined}
+						className={cn(subItems.length === 0 && "hidden")}
+					>
+						{subItems.map((option) => (
+							<OptionItem
+								key={option.value}
+								option={option}
+								onToggle={handleToggle}
+							/>
+						))}
+					</CommandGroup>
+				</CommandList>
+			</Command>
+		</>
 	);
 }
 
@@ -757,7 +950,9 @@ export function FilterValueDateController<TData>({
 	filter,
 	column,
 	actions,
-}: FilterValueControllerProps<TData, "date">) {
+	backButtonMode = "inside",
+	onBack,
+}: FilterValueControllerProps<TData, "date"> & { onBack?: () => void }) {
 	const clientCurrentDate = useClientCurrentDate();
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: filter?.values[0] ?? undefined,
@@ -787,13 +982,32 @@ export function FilterValueDateController<TData>({
 	const defaultMonth = date?.from ?? clientCurrentDate;
 
 	return (
-		<Calendar
-			mode="range"
-			{...(defaultMonth ? { defaultMonth } : {})}
-			selected={date}
-			onSelect={changeDateRange}
-			numberOfMonths={2}
-		/>
+		<>
+			{backButtonMode === "floating" && onBack && (
+				<FloatingBackButton onClick={onBack} />
+			)}
+			<div className="flex flex-col">
+				{backButtonMode === "inside" && onBack && (
+					<div className="p-2 pb-0 border-b">
+						<Button
+							variant="ghost"
+							className="w-full justify-start text-muted-foreground h-8"
+							onClick={onBack}
+						>
+							<ChevronLeft className="size-4 mr-2" />
+							{t("back", "en") || "Back"}
+						</Button>
+					</div>
+				)}
+				<Calendar
+					mode="range"
+					{...(defaultMonth ? { defaultMonth } : {})}
+					selected={date}
+					onSelect={changeDateRange}
+					numberOfMonths={2}
+				/>
+			</div>
+		</>
 	);
 }
 
@@ -802,25 +1016,43 @@ export function FilterValueTextController<TData>({
 	column,
 	actions,
 	locale = "en",
-}: FilterValueControllerProps<TData, "text">) {
+	backButtonMode = "inside",
+	onBack,
+}: FilterValueControllerProps<TData, "text"> & { onBack?: () => void }) {
 	const changeText = (value: string | number) => {
 		actions.setFilterValue(column, [String(value)]);
 	};
 
 	return (
-		<Command>
-			<CommandList className="max-h-fit">
-				<CommandGroup>
-					<CommandItem>
-						<DebouncedInput
-							placeholder={t("search", locale)}
-							value={filter?.values[0] ?? ""}
-							onChange={changeText}
-						/>
-					</CommandItem>
-				</CommandGroup>
-			</CommandList>
-		</Command>
+		<>
+			{backButtonMode === "floating" && onBack && (
+				<FloatingBackButton onClick={onBack} />
+			)}
+			<Command>
+				<CommandList className="max-h-fit">
+					{backButtonMode === "inside" && onBack && (
+						<CommandGroup>
+							<CommandItem
+								onSelect={onBack}
+								className="cursor-pointer text-muted-foreground font-medium"
+							>
+								<ChevronLeft className="size-4 mr-2" />
+								{t("back", locale) || "Back"}
+							</CommandItem>
+						</CommandGroup>
+					)}
+					<CommandGroup>
+						<CommandItem>
+							<DebouncedInput
+								placeholder={t("search", locale)}
+								value={filter?.values[0] ?? ""}
+								onChange={changeText}
+							/>
+						</CommandItem>
+					</CommandGroup>
+				</CommandList>
+			</Command>
+		</>
 	);
 }
 
@@ -829,7 +1061,9 @@ export function FilterValueNumberController<TData>({
 	column,
 	actions,
 	locale = "en",
-}: FilterValueControllerProps<TData, "number">) {
+	backButtonMode = "inside",
+	onBack,
+}: FilterValueControllerProps<TData, "number"> & { onBack?: () => void }) {
 	const minMax = useMemo(() => column.getFacetedMinMaxValues(), [column]);
 	const [sliderMin, sliderMax] = [
 		minMax ? minMax[0] : 0,
@@ -918,79 +1152,102 @@ export function FilterValueNumberController<TData>({
 	);
 
 	return (
-		<Command>
-			<CommandList className="w-[300px] p-2">
-				<CommandGroup>
-					<div className="flex flex-col w-full">
-						<Tabs
-							value={isNumberRange ? "range" : "single"}
-							onValueChange={(value) => changeType(value as "single" | "range")}
-						>
-							<TabsList className="w-full *:text-xs">
-								<TabsTrigger value="single">{t("single", locale)}</TabsTrigger>
-								<TabsTrigger value="range">{t("range", locale)}</TabsTrigger>
-							</TabsList>
-							<TabsContent value="single" className="flex flex-col gap-4 mt-4">
-								{minMax && (
-									<Slider
-										value={[values[0]]}
-										onValueChange={(value) => changeNumber(value)}
-										min={sliderMin}
-										max={sliderMax}
-										step={1}
-										aria-orientation="horizontal"
-									/>
-								)}
-								<div className="flex items-center gap-2">
-									<span className="text-xs font-medium">
-										{t("value", locale)}
-									</span>
-									<DebouncedInput
-										id="single"
-										type="number"
-										value={values[0].toString()}
-										onChange={(value) => changeNumber([Number(value)])}
-									/>
-								</div>
-							</TabsContent>
-							<TabsContent value="range" className="flex flex-col gap-4 mt-4">
-								{minMax && (
-									<Slider
-										value={values}
-										onValueChange={changeNumber}
-										min={sliderMin}
-										max={sliderMax}
-										step={1}
-										aria-orientation="horizontal"
-									/>
-								)}
-								<div className="grid grid-cols-2 gap-4">
+		<>
+			{backButtonMode === "floating" && onBack && (
+				<FloatingBackButton onClick={onBack} />
+			)}
+			<Command>
+				<CommandList className="w-[300px] p-2">
+					{backButtonMode === "inside" && onBack && (
+						<CommandGroup>
+							<CommandItem
+								onSelect={onBack}
+								className="cursor-pointer text-muted-foreground font-medium"
+							>
+								<ChevronLeft className="size-4 mr-2" />
+								{t("back", locale) || "Back"}
+							</CommandItem>
+						</CommandGroup>
+					)}
+					<CommandGroup>
+						<div className="flex flex-col w-full">
+							<Tabs
+								value={isNumberRange ? "range" : "single"}
+								onValueChange={(value) =>
+									changeType(value as "single" | "range")
+								}
+							>
+								<TabsList className="w-full *:text-xs">
+									<TabsTrigger value="single">
+										{t("single", locale)}
+									</TabsTrigger>
+									<TabsTrigger value="range">{t("range", locale)}</TabsTrigger>
+								</TabsList>
+								<TabsContent
+									value="single"
+									className="flex flex-col gap-4 mt-4"
+								>
+									{minMax && (
+										<Slider
+											value={[values[0]]}
+											onValueChange={(value) => changeNumber(value)}
+											min={sliderMin}
+											max={sliderMax}
+											step={1}
+											aria-orientation="horizontal"
+										/>
+									)}
 									<div className="flex items-center gap-2">
 										<span className="text-xs font-medium">
-											{t("min", locale)}
+											{t("value", locale)}
 										</span>
 										<DebouncedInput
+											id="single"
 											type="number"
-											value={values[0]}
-											onChange={(value) => changeMinNumber(Number(value))}
+											value={values[0].toString()}
+											onChange={(value) => changeNumber([Number(value)])}
 										/>
 									</div>
-									<div className="flex items-center gap-2">
-										<span className="text-xs font-medium">
-											{t("max", locale)}
-										</span>
-										<DebouncedInput
-											type="number"
-											value={values[1]}
-											onChange={(value) => changeMaxNumber(Number(value))}
+								</TabsContent>
+								<TabsContent value="range" className="flex flex-col gap-4 mt-4">
+									{minMax && (
+										<Slider
+											value={values}
+											onValueChange={changeNumber}
+											min={sliderMin}
+											max={sliderMax}
+											step={1}
+											aria-orientation="horizontal"
 										/>
+									)}
+									<div className="grid grid-cols-2 gap-4">
+										<div className="flex items-center gap-2">
+											<span className="text-xs font-medium">
+												{t("min", locale)}
+											</span>
+											<DebouncedInput
+												type="number"
+												value={values[0]}
+												onChange={(value) => changeMinNumber(Number(value))}
+											/>
+										</div>
+										<div className="flex items-center gap-2">
+											<span className="text-xs font-medium">
+												{t("max", locale)}
+											</span>
+											<DebouncedInput
+												type="number"
+												value={values[1]}
+												onChange={(value) => changeMaxNumber(Number(value))}
+											/>
+										</div>
 									</div>
-								</div>
-							</TabsContent>
-						</Tabs>
-					</div>
-				</CommandGroup>
-			</CommandList>
-		</Command>
+								</TabsContent>
+							</Tabs>
+						</div>
+					</CommandGroup>
+				</CommandList>
+			</Command>
+		</>
 	);
 }

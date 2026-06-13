@@ -2,6 +2,7 @@ import { Surface, Typography } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { OutlineArrowRight, SolidLogoText } from "@/components/icons/icons";
+import { Elevated } from "@/lib/elevated";
 
 type FooterLink = {
 	label: string;
@@ -62,8 +63,9 @@ export default function Footer() {
 
 	return (
 		<footer className="px-4">
-			<Surface
-				variant="secondary"
+			<Elevated
+				offset={1}
+				shadowLevel={0}
 				className="rounded-3xl p-6 text-secondary-foreground"
 			>
 				<div className="flex flex-col items-start justify-between gap-8 md:flex-row">
@@ -78,7 +80,7 @@ export default function Footer() {
 						))}
 					</nav>
 				</div>
-			</Surface>
+			</Elevated>
 
 			<FooterBottom currentYear={currentYear} />
 		</footer>

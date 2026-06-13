@@ -1,6 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineCheck, OutlineChevronRight } from "@/components/icons/icons";
+import {
+	OutlineCheck,
+	OutlineChevronDown,
+	OutlineChevronRight,
+} from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -15,6 +19,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { Elevated } from "@/lib/elevated";
 import { STRIPE_SUPPORTED_CURRENCIES } from "@/lib/stripe-currencies";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/providers/currency";
@@ -297,7 +302,7 @@ export default function CurrencySelect({
 					>
 						{selectedCurrency.name} ({selectedCurrency.symbol})
 					</span>
-					<OutlineChevronRight data-icon="inline-end" className="rotate-90" />
+					<OutlineChevronDown data-icon="inline-end" />
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent

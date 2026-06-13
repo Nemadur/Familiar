@@ -9,18 +9,24 @@ import {
 	DialogTitle,
 } from "src/components/ui/dialog";
 import { cn } from "src/lib/utils";
+import { surfaceClasses } from "@/lib/surface-classes";
+import { SurfaceProvider, useSurface } from "@/lib/surface-context";
 
 function Command({
 	className,
 	style,
 	...props
 }: React.ComponentProps<typeof CommandPrimitive>) {
+	const substrate = useSurface();
+	const level = Math.min(substrate + 2, 0);
+
 	return (
 		<CommandPrimitive
 			data-slot="command"
 			className={cn(
-				"bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-(--command-content-radius) group/command",
+				"text-elevated-foreground flex h-full w-full flex-col overflow-hidden rounded-(--command-content-radius) group/command",
 				className,
+				surfaceClasses(level, 0),
 			)}
 			style={
 				{
@@ -97,25 +103,17 @@ function CommandList({
 			className={cn(
 				"max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto p-(--command-content-padding) group/list",
 
-				// First item styling (Grouped & Direct) - Default to Large Top Rounding
-				"[&_[data-slot=command-item]:first-of-type]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
-				"[&_[data-slot=command-group]:first-of-type_[data-slot=command-item]:first-of-type]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
+				// First item styling
+				"[&_[cmdk-list-sizer]>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
+				"[&_[cmdk-list-sizer]>:nth-child(1_of_:not([hidden],.hidden))_[cmdk-group-items]>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
 
 				// Reset First item to Small Rounding if Command has Input
-				"peer-data-[slot=command-input-wrapper]:[&_[data-slot=command-item]:first-of-type]:rounded-t-lg!",
-				"peer-data-[slot=command-input-wrapper]:[&_[data-slot=command-group]:first-of-type_[data-slot=command-item]:first-of-type]:rounded-t-lg!",
+				"peer-data-[slot=command-input-wrapper]:[&_[cmdk-list-sizer]>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-lg!",
+				"peer-data-[slot=command-input-wrapper]:[&_[cmdk-list-sizer]>:nth-child(1_of_:not([hidden],.hidden))_[cmdk-group-items]>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-lg!",
 
-				// Last item styling (Grouped & Direct) - Always applies Large Bottom Rounding
-				"[&_[data-slot=command-item]:last-of-type]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
-				"[&_[data-slot=command-group]:last-of-type_[data-slot=command-item]:last-of-type]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
-
-				// Fix: Reset rounded corners if item is followed by a separator
-				"[&_[data-slot=command-item]:has(+[data-slot=command-separator])]:rounded-b-lg!",
-				"[&_[data-slot=command-group]:has(+[data-slot=command-separator])_[data-slot=command-item]:last-of-type]:rounded-b-lg!",
-
-				// Fix: Reset rounded corners if item is preceded by a separator
-				"[&_[data-slot=command-separator]+[data-slot=command-item]]:rounded-t-lg!",
-				"[&_[data-slot=command-separator]+[data-slot=command-group]_[data-slot=command-item]:first-of-type]:rounded-t-lg!",
+				// Last item styling
+				"[&_[cmdk-list-sizer]>:nth-last-child(1_of_:not([hidden],.hidden))]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
+				"[&_[cmdk-list-sizer]>:nth-last-child(1_of_:not([hidden],.hidden))_[cmdk-group-items]>:nth-last-child(1_of_:not([hidden],.hidden))]:rounded-b-[calc(var(--command-content-radius)-var(--command-content-padding))]!",
 
 				className,
 			)}
@@ -173,7 +171,9 @@ function CommandItem({
 		<CommandPrimitive.Item
 			data-slot="command-item"
 			className={cn(
-				"data-[selected=true]:bg-primary/6 data-[selected=true]:text-primary [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"data-[selected=true]:bg-black/6 dark:data-[selected=true]:bg-white/6",
+				"data-[selected=true]:text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"data-[selected=true]:shadow-none",
 				className,
 			)}
 			{...props}
@@ -200,11 +200,11 @@ function CommandShortcut({
 export {
 	Command,
 	CommandDialog,
-	CommandInput,
-	CommandList,
 	CommandEmpty,
 	CommandGroup,
+	CommandInput,
 	CommandItem,
-	CommandShortcut,
+	CommandList,
 	CommandSeparator,
+	CommandShortcut,
 };

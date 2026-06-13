@@ -11,6 +11,7 @@ import {
 	SolidHome,
 	SolidReceipt,
 } from "@/components/icons/icons";
+import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import { TRoles } from "@/types/user/roles";
@@ -186,7 +187,7 @@ const NavLinks = memo(() => {
 	const navigationLinks = [
 		{ path: "/", label: t("header.navigation.home", "Home") },
 		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
-		// { path: "/shop", label: t("header.navigation.shop") },
+		{ path: "/shop", label: t("header.navigation.shop", "Shop") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },
 	];

@@ -1,4 +1,9 @@
-import { ArrowRightIcon, ChevronRightIcon, FilterIcon } from "lucide-react";
+import {
+	ArrowRightIcon,
+	ChevronLeft,
+	ChevronRightIcon,
+	FilterIcon,
+} from "lucide-react";
 import React, {
 	isValidElement,
 	memo,
@@ -35,7 +40,7 @@ import type {
 import { isAnyOf } from "../lib/array";
 import { getColumn } from "../lib/helpers";
 import { type Locale, t } from "../lib/i18n";
-import { FilterValueController } from "./filter-value";
+import { FilterValueController, FloatingBackButton } from "./filter-value";
 
 interface FilterSelectorProps<TData> {
 	filters: FiltersState;
@@ -43,6 +48,7 @@ interface FilterSelectorProps<TData> {
 	actions: DataTableFilterActions;
 	strategy: FilterStrategy;
 	locale?: Locale;
+	backButtonMode?: "inside" | "floating";
 }
 
 export const FilterSelector = memo(
@@ -55,6 +61,7 @@ function FilterSelectorInner<TData>({
 	actions,
 	strategy,
 	locale = "en",
+	backButtonMode = "inside",
 }: FilterSelectorProps<TData>) {
 	const [open, setOpen] = useState(false);
 	const [value, setValue] = useState("");
@@ -103,44 +110,60 @@ function FilterSelectorInner<TData>({
 					actions={actions}
 					strategy={strategy}
 					locale={locale}
+					backButtonMode={backButtonMode}
+					onBack={() => setProperty(undefined)}
 				/>
 			) : (
-				<Command
-					loop
-					filter={(value, search, keywords) => {
-						const extendValue = `${value} ${keywords?.join(" ")}`;
-						return extendValue.toLowerCase().includes(search.toLowerCase())
-							? 1
-							: 0;
-					}}
-				>
-					<CommandInput
-						value={value}
-						onValueChange={setValue}
-						ref={inputRef}
-						placeholder={t("search", locale)}
-					/>
-					<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-					<CommandList className="max-h-fit">
-						<CommandGroup>
-							{columns.map((column) => (
-								<FilterableColumn
-									key={column.id}
-									column={column}
-									setProperty={setProperty}
+				<>
+					{backButtonMode === "floating" && property && (
+						<FloatingBackButton onClick={() => setProperty(undefined)} />
+					)}
+					<Command
+						loop
+						filter={(value, search, keywords) => {
+							const extendValue = `${value} ${keywords?.join(" ")}`;
+							return extendValue.toLowerCase().includes(search.toLowerCase())
+								? 1
+								: 0;
+						}}
+					>
+						<CommandInput
+							value={value}
+							onValueChange={setValue}
+							ref={inputRef}
+							placeholder={t("search", locale)}
+						/>
+						<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
+						<CommandList className="max-h-fit">
+							<CommandGroup>
+								{backButtonMode === "inside" && property && (
+									<CommandItem
+										onSelect={() => setProperty(undefined)}
+										className="cursor-pointer text-muted-foreground font-medium mb-1"
+									>
+										<ChevronLeft className="size-4" />
+										{t("back", locale) || "Back"}
+									</CommandItem>
+								)}
+								{columns.map((column) => (
+									<FilterableColumn
+										key={column.id}
+										column={column}
+										setProperty={setProperty}
+									/>
+								))}
+								<QuickSearchFilters
+									search={value}
+									filters={filters}
+									columns={columns}
+									actions={actions}
+									strategy={strategy}
+									locale={locale}
 								/>
-							))}
-							<QuickSearchFilters
-								search={value}
-								filters={filters}
-								columns={columns}
-								actions={actions}
-								strategy={strategy}
-								locale={locale}
-							/>
-						</CommandGroup>
-					</CommandList>
-				</Command>
+							</CommandGroup>
+						</CommandList>
+					</Command>
+				</>
 			),
 		[
 			property,
@@ -152,6 +175,7 @@ function FilterSelectorInner<TData>({
 			value,
 			strategy,
 			locale,
+			backButtonMode,
 		],
 	);
 
@@ -173,10 +197,8 @@ function FilterSelectorInner<TData>({
 				align="end"
 				side="bottom"
 				className={cn(
-					"p-0 origin-(--radix-popover-content-transform-origin)",
-					isDateProperty
-						? "w-auto min-w-[20rem] max-w-none overflow-visible"
-						: "w-fit",
+					"p-0 origin-(--radix-popover-content-transform-origin) overflow-visible",
+					isDateProperty ? "w-auto min-w-[20rem] max-w-none" : "w-fit",
 				)}
 			>
 				{content}
