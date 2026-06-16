@@ -27,14 +27,14 @@ export function BasketDropdown() {
 		<Button variant={"secondary"} size={"icon-xl"} className="relative">
 			<ShoppingCart />
 			{basketItems.length > 0 && (
-				<span className="absolute top-1 right-1 flex size-2 items-center justify-center rounded-full bg-red-500 text-[10px] text-white" />
+				<span className="absolute top-0 right-0 flex size-2.5 items-center justify-center rounded-full bg-danger ring-3 ring-background" />
 			)}
 		</Button>
 	);
 
 	const BasketContent = (
 		<div className="flex flex-col max-h-[85vh] lg:max-h-[80vh]">
-			<div className="flex items-center justify-between p-6 border-b border-border">
+			<div className="flex items-center justify-between p-3 border-b border-border">
 				<Typography.Heading level={4}>Basket</Typography.Heading>
 				<div className="flex items-center gap-2">
 					<Typography.Paragraph size={"sm"} className="text-muted-foreground">
@@ -44,16 +44,16 @@ export function BasketDropdown() {
 				</div>
 			</div>
 
-			<div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+			<div className="flex-1 overflow-y-auto p-3 flex flex-col gap-6">
 				{basketItems.map((item) => (
 					<div key={item.id} className="flex gap-4">
 						<img
 							src={item.image}
 							alt={item.title}
-							className="size-[72px] rounded-xl object-cover shrink-0"
+							className="size-14 rounded-xl object-cover shrink-0"
 						/>
 						<div className="flex flex-col flex-1 min-w-0">
-							<div className="flex justify-between items-start gap-4">
+							<div className="flex justify-between items-start gap-3">
 								<Typography.Heading
 									level={6}
 									className="line-clamp-2 uppercase"
@@ -71,12 +71,8 @@ export function BasketDropdown() {
 								>
 									#{item.id}
 								</Typography.Paragraph>
-								<Button
-									variant={"destructive"}
-									size={"icon"}
-									className="h-8 w-8 rounded-full"
-								>
-									<OutlineTrash className="size-4" />
+								<Button variant={"destructive"} size={"icon-sm"}>
+									<OutlineTrash />
 								</Button>
 							</div>
 						</div>
@@ -84,7 +80,7 @@ export function BasketDropdown() {
 				))}
 			</div>
 
-			<div className="p-6 border-t space-y-6 bg-background">
+			<div className="p-3 border-t space-y-6">
 				<div className="flex items-end justify-between">
 					<div className="flex flex-col">
 						<Typography.Heading level={5}>Subtotal</Typography.Heading>
@@ -126,7 +122,7 @@ export function BasketDropdown() {
 		<DropdownMenu open={open} onOpenChange={setOpen}>
 			<DropdownMenuTrigger asChild>{TriggerButton}</DropdownMenuTrigger>
 			<DropdownMenuContent
-				className="w-[28rem] p-0 overflow-hidden rounded-3xl"
+				className="w-md p-0 overflow-hidden rounded-3xl"
 				align="end"
 				sideOffset={8}
 			>

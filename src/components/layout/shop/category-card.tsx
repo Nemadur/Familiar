@@ -81,7 +81,7 @@ export function CategoryCard({
 			offset={1}
 			shadowLevel={0}
 			style={{ backgroundColor: surface }}
-			className="group relative flex self-stretch shadow-none w-full lg:w-[220px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl p-5"
+			className="group shadow-none! relative flex w-full lg:w-full lg:h-full shrink-0 flex-col justify-center lg:justify-end overflow-hidden rounded-[24px] p-5 lg:p-6"
 		>
 			{/* Foreground icon chip */}
 
@@ -95,7 +95,7 @@ export function CategoryCard({
 			{/* Concentric ring shapes, top-right */}
 			<div
 				aria-hidden
-				className="pointer-events-none absolute -right-16 -top-16 z-0"
+				className="pointer-events-none absolute right-3 top-1/2 xl:-right-16 xl:top-16 -translate-y-1/2 z-0"
 			>
 				<div
 					className="flex size-44 items-center justify-center rounded-full transition-transform duration-500 group-hover:scale-110"
@@ -117,32 +117,34 @@ export function CategoryCard({
 			{icon && (
 				<div
 					aria-hidden
-					className="pointer-events-none absolute top-1/2 translate-y-[-50%] lg:translate-y-0 lg:top-auto lg:bottom-6 right-3 size-22 -rotate-12 transition-transform duration-500 group-hover:rotate-0 flex items-center justify-center z-10"
+					className="pointer-events-none absolute top-1/2 -translate-y-1/2 xl:translate-y-0 xl:top-auto xl:-bottom-4 right-3 xl:-right-6 size-44 -rotate-12 transition-transform duration-75 group-hover:rotate-0 flex items-center justify-center z-10"
 					style={{ color: ink, opacity: 0.5 }}
 				>
-					<div className="scale-[4] lg:scale-[5] origin-center opacity-80 [&>svg]:stroke-[1.5]">
+					<div className="scale-[2] xl:scale-[4] origin-center opacity-80 [&>svg]:stroke-[1.5]">
 						{icon}
 					</div>
 				</div>
 			)}
 
 			{/* Content */}
-			<div className="relative mt-auto flex flex-col gap-3 z-10">
-				<div className="flex flex-col gap-1">
+			<div className="relative lg:mt-auto flex flex-col gap-2 lg:gap-3 z-10 w-fit">
+				<div className="flex flex-col lg:gap-1">
 					<Typography.Heading
-						level={4}
-						className="text-pretty font-bold leading-tight"
+						level={5}
+						className="text-pretty font-bold leading-tight lg:text-2xl"
 						style={{ color: ink }}
 					>
 						{title}
 					</Typography.Heading>
 					{count && (
-						<span className="text-sm font-medium" style={{ color: inkSoft }}>
+						<span
+							className="text-xs lg:text-sm font-medium"
+							style={{ color: inkSoft }}
+						>
 							{count}
 						</span>
 					)}
 				</div>
-				{/* TODO: maybe instead of filter move to separated route with only specific category items */}
 				<Button
 					onClick={onSeeAll}
 					size={"lg"}
@@ -150,7 +152,7 @@ export function CategoryCard({
 					style={{ backgroundColor: button, color: buttonText }}
 				>
 					See all
-					<OutlineArrowRight className="transition-transform lg:group-hover:translate-x-0.5" />
+					<OutlineArrowRight />
 				</Button>
 			</div>
 		</Elevated>

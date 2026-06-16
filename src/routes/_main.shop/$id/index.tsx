@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ShopItemModal } from "@/components/layout/modal/shop-item";
 
-export const Route = createFileRoute("/_main/shop/$id")({
+export const Route = createFileRoute("/_main/shop/$id/")({
 	component: ShopItemRoute,
 });
 

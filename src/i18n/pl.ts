@@ -1,6 +1,4 @@
-import type { Locale } from "@/types/i18n";
-
-const pl: Locale = {
+const pl = {
 	seo: {
 		defaults: {
 			title: "Familiar",
@@ -583,6 +581,13 @@ const pl: Locale = {
 					"Treść notatek o wersjach nie jest już ściskana w wąskich kolumnach na małych ekranach.",
 					"Sekcje dokumentów prawnych renderują się teraz poprawnie z tłumaczeń.",
 					"Treści Markdown na stronach prawnych nie tworzą już niepoprawnych, zagnieżdżonych akapitów.",
+				],
+			},
+			v0_8_0: {
+				Added: [
+					"Dodano moduł Sklepu z możliwością przeglądania, kategoriami i filtrowaniem przedmiotów.",
+					"Dodano szczegółowe okno przedmiotu w sklepie z opcją dodania do koszyka.",
+					"Dodano rozwijany Koszyk w nagłówku i dedykowaną stronę realizacji zamówienia (Checkout).",
 				],
 			},
 		},

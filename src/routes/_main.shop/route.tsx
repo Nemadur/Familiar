@@ -1,5 +1,10 @@
 import { ScrollShadow, Typography } from "@heroui/react";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Outlet,
+	useLocation,
+	useNavigate,
+} from "@tanstack/react-router";
 import {
 	BrushIcon,
 	CodeIcon,
@@ -31,6 +36,10 @@ export const Route = createFileRoute("/_main/shop")({
 });
 
 function ShopPage() {
+	const navigate = useNavigate();
+	const location = useLocation();
+	const isRootShop = location.pathname === "/shop";
+
 	const { data: backendCategories } = useCommissionCategories();
 	const { data: items, isLoading: isLoadingItems } = useShopItems();
 
@@ -174,77 +183,82 @@ function ShopPage() {
 
 	return (
 		<div className="flex h-full flex-1 flex-col gap-6">
-			<div className="flex items-center justify-between px-5 lg:px-0">
-				<Typography.Heading level={2}>Shop</Typography.Heading>
-			</div>
+			{isRootShop && (
+				<>
+					<div className="flex items-center justify-between px-5 lg:px-0">
+						<Typography.Heading level={2}>Shop</Typography.Heading>
+					</div>
 
-			<div className="px-5 lg:px-0">
-				<FilterBar
-					data={filteredItems}
-					groups={filterGroups}
-					values={filterValues}
-					onFilterChange={(groupId, value, operator) => {
-						setFilterValues((prev) => ({
-							...prev,
-							[groupId]: { value, operator },
-						}));
-					}}
-					searchQuery={searchQuery}
-					onSearchChange={setSearchQuery}
-					onClearAll={() => setFilterValues({})}
-					searchPlaceholder="Search by item name or creator..."
-				/>
-			</div>
+					<FilterBar
+						data={filteredItems}
+						groups={filterGroups}
+						values={filterValues}
+						className="px-5 lg:px-0"
+						onFilterChange={(groupId, value, operator) => {
+							setFilterValues((prev) => ({
+								...prev,
+								[groupId]: { value, operator },
+							}));
+						}}
+						searchQuery={searchQuery}
+						onSearchChange={setSearchQuery}
+						onClearAll={() => setFilterValues({})}
+						searchPlaceholder="Search by item name or creator..."
+					/>
 
-			{isLoadingItems ? (
-				<div className="flex items-center justify-center p-12">
-					<Typography className="text-muted-foreground">
-						Loading shop items...
-					</Typography>
-				</div>
-			) : (
-				<div className="flex flex-col gap-10 h-full px-5 lg:px-0">
-					{categoriesWithItems.map((group) => {
-						return (
-							<div
-								key={group.category.id}
-								className="flex flex-col lg:flex-row gap-4 lg:gap-6 w-full overflow-hidden"
-							>
-								<CategoryCard
-									title={group.category.name}
-									icon={group.icon}
-									onSeeAll={() => {
-										setFilterValues({
-											categoryId: { value: [group.category.id] },
-										});
-									}}
-								/>
-
-								<div className="flex-1 min-w-0">
-									<ScrollShadow
-										orientation="horizontal"
-										className="flex lg:grid lg:grid-cols-3 gap-3 pb-4 lg:pb-0 snap-x snap-mandatory"
+					{isLoadingItems ? (
+						<div className="flex items-center justify-center p-12">
+							<Typography className="text-muted-foreground">
+								Loading shop items...
+							</Typography>
+						</div>
+					) : (
+						<div className="flex flex-col gap-10 h-full">
+							{categoriesWithItems.map((group) => {
+								return (
+									<div
+										key={group.category.id}
+										className="flex flex-col lg:flex-row gap-4 lg:gap-6 w-full overflow-hidden"
 									>
-										{group.items.slice(0, 3).map((item) => (
-											<div
-												key={item.id}
-												className="w-[85vw] sm:w-[280px] lg:w-auto shrink-0 snap-start"
-											>
-												<ShopItemCard item={item} />
+										<div className="px-5 lg:px-0 shrink-0 w-full lg:w-[260px]">
+											<CategoryCard
+												title={group.category.name}
+												icon={group.icon}
+												onSeeAll={() => {
+													// Generate a URL-friendly slug from the category name
+													const slug = group.category.name
+														.toLowerCase()
+														.replace(/[^a-z0-9]+/g, "-")
+														.replace(/(^-|-$)/g, "");
+													navigate({ to: `/shop/category/${slug}` });
+												}}
+											/>
+										</div>
+
+										<div className="flex-1 min-w-0">
+											<div className="w-full flex overflow-x-auto sm:grid sm:grid-cols-3 gap-3 pb-4 px-5 lg:px-0 lg:pb-0 snap-x snap-mandatory scrollbar-hide">
+												{group.items.slice(0, 3).map((item) => (
+													<div
+														key={item.id}
+														className="w-[85vw] sm:w-auto shrink-0 snap-center"
+													>
+														<ShopItemCard item={item} />
+													</div>
+												))}
 											</div>
-										))}
-									</ScrollShadow>
-								</div>
-							</div>
-						);
-					})}
-					{categoriesWithItems.length === 0 && (
-						<EmptyPage
-							title="No items found"
-							description="Try adjusting your filters or search query."
-						/>
+										</div>
+									</div>
+								);
+							})}
+							{categoriesWithItems.length === 0 && (
+								<EmptyPage
+									title="No items found"
+									description="Try adjusting your filters or search query."
+								/>
+							)}
+						</div>
 					)}
-				</div>
+				</>
 			)}
 			<Outlet />
 		</div>

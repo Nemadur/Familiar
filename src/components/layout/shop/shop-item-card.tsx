@@ -49,7 +49,7 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 	return (
 		<Link
 			to={`/shop/${item.id}` as any}
-			className="group relative flex w-full h-full flex-col gap-2 shrink-0"
+			className="group relative flex w-full h-full flex-col gap-2"
 			onMouseEnter={() => {
 				if (!isTablet) setHoverPlaying(true);
 			}}
@@ -61,9 +61,9 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 			}}
 		>
 			{/* Image container */}
-			<div className="relative aspect-square w-full overflow-hidden rounded-[24px] bg-muted">
+			<div className="relative aspect-square w-full">
 				<Reel
-					className="h-full w-full overflow-hidden"
+					className="h-full w-full overflow-hidden rounded-3xl bg-muted"
 					data={reelItems}
 					index={currentImageIndex}
 					onIndexChange={setCurrentImageIndex}
@@ -78,7 +78,7 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 					{hasMultipleImages && (
 						<>
 							<div
-								className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-1/3 backdrop-blur-md rounded-b-2xl"
+								className="pointer-events-none absolute right-0 bottom-0 left-0 z-1 h-1/3 backdrop-blur-md"
 								style={{
 									maskImage:
 										"linear-gradient(to top, black 0%, black 30%, transparent 100%)",
@@ -89,6 +89,8 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 							<ReelProgress className="top-auto right-auto bottom-2 left-1/2 z-20 w-1/2 -translate-x-1/2 px-1" />
 						</>
 					)}
+					{/* Bookmark on top right */}
+					<BookmarkButton className="absolute top-2 right-2 z-1" />
 					<ReelContent>
 						{(reelItem) => (
 							<ReelImage
@@ -111,9 +113,6 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 						/>
 					)}
 				</Reel>
-
-				{/* Bookmark on top right */}
-				<BookmarkButton className="absolute top-2 right-2 z-0" />
 			</div>
 
 			{/* Info section */}
