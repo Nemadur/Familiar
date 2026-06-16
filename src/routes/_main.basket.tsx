@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { MOCK_BASKET_ITEMS } from "@/api/shop/mock";
 import {
+	OutlineChat,
 	OutlineEdit,
 	OutlineLock,
 	OutlineMail,
@@ -63,7 +64,7 @@ function BasketPage() {
 	}
 
 	return (
-		<div className="flex flex-col gap-6 max-w-6xl mx-auto w-full pt-4">
+		<div className="flex flex-col gap-6 max-w-6xl mx-auto w-full pt-4 px-5 lg:px-0 pb-10">
 			<Typography.Heading level={2}>My basket</Typography.Heading>
 
 			<Form {...form}>
@@ -75,33 +76,31 @@ function BasketPage() {
 					<div className="flex-1 flex flex-col gap-6 w-full">
 						<Elevated className="p-5 rounded-2xl flex flex-col gap-4">
 							{/* Artist Header */}
-							<div className="flex items-center justify-between">
-								<div className="flex items-center gap-2">
+							<div className="flex flex-row items-center justify-between gap-2">
+								<div className="flex items-center gap-2 overflow-hidden">
 									<User
 										user={item.author as any}
 										showUsername={false}
 										avatarSize="sm"
-										buttonClassName="py-0 h-fit w-fit hover:bg-transparent"
+										buttonClassName="py-0 h-fit w-fit hover:bg-transparent shrink-0"
 									/>
 									<Typography.Paragraph
 										size={"xs"}
-										className="text-muted-foreground"
+										className="text-muted-foreground truncate"
 									>
 										1 item • {item.currency} {item.price.toFixed(2)}
 									</Typography.Paragraph>
 								</div>
-								<div className="flex items-center gap-2">
-									<Button variant={"secondary"} size={"icon-lg"}>
-										<MessageCircle className="size-4" />
+								<div className="flex items-center gap-2 shrink-0">
+									<Button variant={"secondary"} size={"icon"}>
+										<OutlineChat />
 									</Button>
-									<Button variant={"destructive"} size={"lg"}>
-										Remove all
-									</Button>
+									<Button variant={"destructive"}>Remove all</Button>
 								</div>
 							</div>
 
 							{/* Item Row */}
-							<div className="flex gap-4">
+							<div className="flex flex-row gap-4 mt-2">
 								<div className="size-20 shrink-0 overflow-hidden rounded-xl bg-muted">
 									<img
 										src={item.image}
@@ -109,27 +108,27 @@ function BasketPage() {
 										className="w-full h-full object-cover"
 									/>
 								</div>
-								<div className="flex-1 flex flex-col justify-center">
-									<div className="flex justify-between items-start gap-4">
-										<div className="flex flex-col">
-											<Typography.Heading level={6}>
+								<div className="flex-1 flex flex-col justify-center min-w-0">
+									<div className="flex justify-between items-start gap-3">
+										<div className="flex flex-col min-w-0">
+											<Typography.Heading level={6} className="line-clamp-2">
 												{item.title}
 											</Typography.Heading>
 											<Typography.Paragraph
 												size={"xs"}
-												className="text-muted-foreground"
+												className="text-muted-foreground mt-0.5"
 											>
 												#1
 											</Typography.Paragraph>
 										</div>
 										<Typography.Paragraph
 											size={"sm"}
-											className="text-muted-foreground"
+											className="text-muted-foreground whitespace-nowrap shrink-0 mt-0.5"
 										>
 											{item.currency} {item.price.toFixed(2)}
 										</Typography.Paragraph>
 									</div>
-									<div className="flex items-center gap-2 mt-2">
+									<div className="flex items-center gap-2 mt-3">
 										<Button variant={"destructive"} size={"icon"}>
 											<Trash2 className="size-4" />
 										</Button>
