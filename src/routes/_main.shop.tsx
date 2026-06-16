@@ -174,42 +174,27 @@ function ShopPage() {
 
 	return (
 		<div className="flex h-full flex-1 flex-col gap-6">
-			<div className="flex items-center justify-between">
+			<div className="flex items-center justify-between px-5 lg:px-0">
 				<Typography.Heading level={2}>Shop</Typography.Heading>
 			</div>
 
-			{/* <Elevated offset={1} className="p-4 rounded-xl flex flex-col gap-2">
-				<Typography className="text-sm font-medium">
-					Elevated Surface (Level 2)
-				</Typography>
-				<Typography className="text-xs text-muted-foreground">
-					This is an elevated test container.
-				</Typography>
-				<Elevated offset={-1} className="p-4 rounded-xl flex flex-col gap-2">
-					<Typography className="text-sm font-medium">
-						Nested Elevated Surface (Level 4)
-					</Typography>
-					<Typography className="text-xs text-muted-foreground">
-						This nested container reads the substrate from its parent.
-					</Typography>
-				</Elevated>
-			</Elevated> */}
-
-			<FilterBar
-				data={filteredItems}
-				groups={filterGroups}
-				values={filterValues}
-				onFilterChange={(groupId, value, operator) => {
-					setFilterValues((prev) => ({
-						...prev,
-						[groupId]: { value, operator },
-					}));
-				}}
-				searchQuery={searchQuery}
-				onSearchChange={setSearchQuery}
-				onClearAll={() => setFilterValues({})}
-				searchPlaceholder="Search by item name or creator..."
-			/>
+			<div className="px-5 lg:px-0">
+				<FilterBar
+					data={filteredItems}
+					groups={filterGroups}
+					values={filterValues}
+					onFilterChange={(groupId, value, operator) => {
+						setFilterValues((prev) => ({
+							...prev,
+							[groupId]: { value, operator },
+						}));
+					}}
+					searchQuery={searchQuery}
+					onSearchChange={setSearchQuery}
+					onClearAll={() => setFilterValues({})}
+					searchPlaceholder="Search by item name or creator..."
+				/>
+			</div>
 
 			{isLoadingItems ? (
 				<div className="flex items-center justify-center p-12">
@@ -218,12 +203,12 @@ function ShopPage() {
 					</Typography>
 				</div>
 			) : (
-				<div className="flex flex-col gap-10 h-full">
+				<div className="flex flex-col gap-10 h-full px-5 lg:px-0">
 					{categoriesWithItems.map((group) => {
 						return (
 							<div
 								key={group.category.id}
-								className="flex gap-6 w-full overflow-hidden"
+								className="flex flex-col lg:flex-row gap-4 lg:gap-6 w-full overflow-hidden"
 							>
 								<CategoryCard
 									title={group.category.name}
@@ -234,12 +219,21 @@ function ShopPage() {
 										});
 									}}
 								/>
+
 								<div className="flex-1 min-w-0">
-									<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+									<ScrollShadow
+										orientation="horizontal"
+										className="flex lg:grid lg:grid-cols-3 gap-3 pb-4 lg:pb-0 snap-x snap-mandatory"
+									>
 										{group.items.slice(0, 3).map((item) => (
-											<ShopItemCard key={item.id} item={item} />
+											<div
+												key={item.id}
+												className="w-[85vw] sm:w-[280px] lg:w-auto shrink-0 snap-start"
+											>
+												<ShopItemCard item={item} />
+											</div>
 										))}
-									</div>
+									</ScrollShadow>
 								</div>
 							</div>
 						);

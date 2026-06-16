@@ -1,6 +1,8 @@
 import { Typography } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
+import { OutlineArrowRight } from "@/components/icons/icons";
+import { Button } from "@/components/ui/button";
 import { generateTailwindPalette, getTextColor } from "@/lib/colors";
 import { Elevated } from "@/lib/elevated";
 import { useTheme } from "@/providers/theme";
@@ -79,7 +81,7 @@ export function CategoryCard({
 			offset={1}
 			shadowLevel={0}
 			style={{ backgroundColor: surface }}
-			className="group relative flex self-stretch shadow-none w-[220px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl p-5"
+			className="group relative flex self-stretch shadow-none w-full lg:w-[220px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl p-5"
 		>
 			{/* Foreground icon chip */}
 
@@ -115,10 +117,10 @@ export function CategoryCard({
 			{icon && (
 				<div
 					aria-hidden
-					className="pointer-events-none absolute -bottom-6 -right-4 size-44 -rotate-12 transition-transform duration-500 group-hover:rotate-0 flex items-center justify-center z-10"
-					style={{ color: ink, opacity: 0.2 }}
+					className="pointer-events-none absolute top-1/2 translate-y-[-50%] lg:translate-y-0 lg:top-auto lg:bottom-6 right-3 size-22 -rotate-12 transition-transform duration-500 group-hover:rotate-0 flex items-center justify-center z-10"
+					style={{ color: ink, opacity: 0.5 }}
 				>
-					<div className="scale-[4] origin-center opacity-80 [&>svg]:stroke-[1.5]">
+					<div className="scale-[4] lg:scale-[5] origin-center opacity-80 [&>svg]:stroke-[1.5]">
 						{icon}
 					</div>
 				</div>
@@ -140,16 +142,16 @@ export function CategoryCard({
 						</span>
 					)}
 				</div>
-
-				<button
-					type="button"
+				{/* TODO: maybe instead of filter move to separated route with only specific category items */}
+				<Button
 					onClick={onSeeAll}
-					className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90"
+					size={"lg"}
+					className="w-fit"
 					style={{ backgroundColor: button, color: buttonText }}
 				>
 					See all
-					<ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-				</button>
+					<OutlineArrowRight className="transition-transform lg:group-hover:translate-x-0.5" />
+				</Button>
 			</div>
 		</Elevated>
 	);

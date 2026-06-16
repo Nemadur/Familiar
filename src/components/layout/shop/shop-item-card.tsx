@@ -63,7 +63,7 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 			{/* Image container */}
 			<div className="relative aspect-square w-full overflow-hidden rounded-[24px] bg-muted">
 				<Reel
-					className="h-full w-full"
+					className="h-full w-full overflow-hidden"
 					data={reelItems}
 					index={currentImageIndex}
 					onIndexChange={setCurrentImageIndex}
@@ -78,7 +78,7 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 					{hasMultipleImages && (
 						<>
 							<div
-								className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-1/3 backdrop-blur-md"
+								className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-1/3 backdrop-blur-md rounded-b-2xl"
 								style={{
 									maskImage:
 										"linear-gradient(to top, black 0%, black 30%, transparent 100%)",
@@ -86,7 +86,7 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 										"linear-gradient(to top, black 0%, black 30%, transparent 100%)",
 								}}
 							/>
-							<ReelProgress className="top-auto right-auto bottom-2 left-1/2 z-10 w-1/2 -translate-x-1/2 px-1" />
+							<ReelProgress className="top-auto right-auto bottom-2 left-1/2 z-20 w-1/2 -translate-x-1/2 px-1" />
 						</>
 					)}
 					<ReelContent>
@@ -95,7 +95,7 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 								alt={reelItem.alt || ""}
 								duration={reelItem.duration}
 								src={reelItem.src}
-								className="h-full w-full object-cover transition-transform duration-300"
+								className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 							/>
 						)}
 					</ReelContent>
