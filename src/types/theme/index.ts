@@ -9,6 +9,7 @@ type ThemeContextProps = {
 	userTheme: UserTheme;
 	appTheme: AppTheme;
 	setTheme: (theme: UserTheme) => void;
+	isDark: boolean;
 };
 
 type ThemeProviderProps = {

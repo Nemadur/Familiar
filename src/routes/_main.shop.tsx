@@ -1,5 +1,5 @@
 import { ScrollShadow, Typography } from "@heroui/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import {
 	BrushIcon,
 	CodeIcon,
@@ -31,9 +31,25 @@ export const Route = createFileRoute("/_main/shop")({
 });
 
 function ShopPage() {
-	const { data: categories, isLoading: isLoadingCategories } =
-		useCommissionCategories();
+	const { data: backendCategories } = useCommissionCategories();
 	const { data: items, isLoading: isLoadingItems } = useShopItems();
+
+	const categories = useMemo(() => {
+		if (backendCategories && backendCategories.length > 0) {
+			return backendCategories;
+		}
+		return [
+			{ id: "c1", name: "Digital Art" },
+			{ id: "c2", name: "Character Design" },
+			{ id: "c3", name: "Concept Art" },
+			{ id: "c4", name: "Illustration" },
+			{ id: "c5", name: "Emote / Sticker" },
+			{ id: "c6", name: "Traditional Art" },
+			{ id: "c7", name: "Handcraft" },
+			{ id: "c8", name: "Animation" },
+			{ id: "c9", name: "Pixel Art" },
+		] as any[];
+	}, [backendCategories]);
 
 	const categoryOptions = useMemo(() => {
 		if (!categories) return [];
@@ -195,7 +211,7 @@ function ShopPage() {
 				searchPlaceholder="Search by item name or creator..."
 			/>
 
-			{isLoadingCategories || isLoadingItems ? (
+			{isLoadingItems ? (
 				<div className="flex items-center justify-center p-12">
 					<Typography className="text-muted-foreground">
 						Loading shop items...
@@ -236,6 +252,7 @@ function ShopPage() {
 					)}
 				</div>
 			)}
+			<Outlet />
 		</div>
 	);
 }

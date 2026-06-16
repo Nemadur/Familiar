@@ -1,41 +1,76 @@
-import type { MockShopItem, MockShopUser } from "@/types/shop";
+import type { MockShopItem } from "@/types/shop";
+import type { TUserResponse } from "@/types/user";
+import { TRoles } from "@/types/user/roles";
 
-const mockUsers: MockShopUser[] = [
+export const MOCK_BASKET_ITEMS = [
 	{
-		id: "u1",
+		id: 1,
+		title: "HEADSHOT SET PRICE JUNE #3",
+		author: {
+			displayName: "Prismagic",
+			username: "Prismagic",
+			avatarPath: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+		},
+		price: 120.0,
+		currency: "PLN",
+		image: "https://picsum.photos/seed/i1/800/600",
+	},
+];
+
+const mockUsers: TUserResponse[] = [
+	{
+		userId: "u1",
 		username: "Kendrick",
-		avatarUrl: "https://i.pravatar.cc/150?u=1",
-		badges: ["star", "verified"],
+		displayName: "Kendrick",
+		avatarPath: "https://i.pravatar.cc/150?u=1",
+		// badges: ["star", "verified"],
+		roles: [TRoles.Artist],
+		createdAt: new Date().toISOString(),
 	},
 	{
-		id: "u2",
+		userId: "u2",
 		username: "Almond Neko",
-		avatarUrl: "https://i.pravatar.cc/150?u=2",
-		badges: ["leaf"],
+		displayName: "Almond Neko",
+		avatarPath: "https://i.pravatar.cc/150?u=2",
+		// badges: ["leaf"],
+		roles: [TRoles.Artist],
+		createdAt: new Date().toISOString(),
 	},
 	{
-		id: "u3",
+		userId: "u3",
 		username: "UniqueOly",
-		avatarUrl: "https://i.pravatar.cc/150?u=3",
-		badges: ["fire"],
+		displayName: "UniqueOly",
+		avatarPath: "https://i.pravatar.cc/150?u=3",
+		// badges: ["fire"],
+		roles: [TRoles.Artist],
+		createdAt: new Date().toISOString(),
 	},
 	{
-		id: "u4",
+		userId: "u4",
 		username: "salmon",
-		avatarUrl: "https://i.pravatar.cc/150?u=4",
-		badges: ["star"],
+		displayName: "salmon",
+		avatarPath: "https://i.pravatar.cc/150?u=4",
+		// badges: ["star"],
+		roles: [TRoles.Artist],
+		createdAt: new Date().toISOString(),
 	},
 	{
-		id: "u5",
+		userId: "u5",
 		username: "mobietin",
-		avatarUrl: "https://i.pravatar.cc/150?u=5",
-		badges: ["verified"],
+		displayName: "mobietin",
+		avatarPath: "https://i.pravatar.cc/150?u=5",
+		// badges: ["verified"],
+		roles: [TRoles.Artist],
+		createdAt: new Date().toISOString(),
 	},
 	{
-		id: "u6",
+		userId: "u6",
 		username: "TabbythaNyx",
-		avatarUrl: "https://i.pravatar.cc/150?u=6",
-		badges: ["star", "verified"],
+		displayName: "TabbythaNyx",
+		avatarPath: "https://i.pravatar.cc/150?u=6",
+		// badges: ["star", "verified"],
+		roles: [TRoles.Artist],
+		createdAt: new Date().toISOString(),
 	},
 ];
 
@@ -49,7 +84,11 @@ export const MOCK_SHOP_ITEMS: MockShopItem[] = [
 		price: 36.77,
 		currencyCode: "PLN",
 		coverImage: "https://picsum.photos/seed/i1/400/300",
-		images: [],
+		images: [
+			"https://picsum.photos/seed/i1/800/600",
+			"https://picsum.photos/seed/i1_2/800/600",
+			"https://picsum.photos/seed/i1_3/800/600",
+		],
 		badges: ["1 of a kind"],
 		author: mockUsers[0],
 		salesCount: 14,

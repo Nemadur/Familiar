@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Skeleton } from "boneyard-js/react";
+import { ShoppingCart } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,6 +24,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "../ui/sheet";
+import { BasketDropdown } from "./basket-dropdown";
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import CurrencySelect from "./select/currency";
@@ -57,6 +59,9 @@ export default function Header() {
 						{/* <ThemeToggle /> */}
 						<CurrencySelect display={"compact"} variant={"secondary"} />
 						{/* <LanguageSelect /> */}
+
+						<BasketDropdown />
+
 						<ClientOnly>
 							<Skeleton
 								name="header-artist_dashboard"

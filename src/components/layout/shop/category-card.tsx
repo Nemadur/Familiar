@@ -1,80 +1,155 @@
 import { Typography } from "@heroui/react";
+import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
-import { OutlineArrowRight } from "@/components/icons/icons";
-import { Button } from "@/components/ui/button";
 import { generateTailwindPalette, getTextColor } from "@/lib/colors";
 import { Elevated } from "@/lib/elevated";
+import { useTheme } from "@/providers/theme";
 
 // Simple deterministic hash to get a consistent color for the same category name
-function stringToColor(str: string): string {
+function getHash(str: string): number {
 	let hash = 0;
 	for (let i = 0; i < str.length; i++) {
 		hash = str.charCodeAt(i) + ((hash << 5) - hash);
 	}
+	return Math.abs(hash);
+}
+
+function stringToColor(str: string): string {
+	const hash = getHash(str);
 	const c = (hash & 0x00ffffff).toString(16).toUpperCase();
 	return `#${"00000".substring(0, 6 - c.length)}${c}`;
 }
+
+const PATTERNS = [
+	// Dots
+	(color: string) =>
+		`url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='${encodeURIComponent(color)}' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
+	// Zigzag
+	(color: string) =>
+		`url("data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.172L6.172 0h5.656L0 11.828V6.172zm40 5.656L28.172 0h5.656L40 6.172v5.656zM6.172 12l12-12h5.656L11.828 12H6.172zm17.656 0L35.828 0h4.172L28.172 12h-4.344z' fill='${encodeURIComponent(color)}' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+	// Diagonal lines
+	(color: string) =>
+		`url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 0h18v2H0V0h2zm-2 20h2v-2H0v2zm18 0h2v-2h-2v2zm-6-20h2v2h-2V0zm-6 0h2v2H6V0z' fill='${encodeURIComponent(color)}' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+	// Waves
+	(color: string) =>
+		`url("data:image/svg+xml,%3Csvg width='20' height='12' viewBox='0 0 20 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6c2.759 0 5.203-1.09 7.071-2.859 1.868 1.77 4.312 2.859 7.071 2.859 2.759 0 5.203-1.09 7.071-2.859V0C18.665 1.77 16.221 2.859 13.462 2.859 10.703 2.859 8.259 1.77 6.391 0 4.523 1.77 2.079 2.859-.68 2.859v3.141z' fill='${encodeURIComponent(color)}' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+];
 
 export function CategoryCard({
 	title,
 	icon,
 	onSeeAll,
+	count,
 }: {
 	title: string;
 	icon?: React.ReactNode;
 	onSeeAll?: () => void;
+	count?: string;
 }) {
+	const { isDark } = useTheme();
+
 	// Generate consistent deterministic colors based on category title
-	const { bgStyle, iconBgStyle, textStyle, buttonStyle } = useMemo(() => {
-		const baseHex = stringToColor(title);
-		const { palette } = generateTailwindPalette(baseHex);
+	const { surface, surfaceDeep, ring, ink, inkSoft, button, patternIndex } =
+		useMemo(() => {
+			const hash = getHash(title);
+			const baseHex = stringToColor(title);
+			const { palette } = generateTailwindPalette(baseHex);
 
-		const bgHex = palette[100] || "#f3f4f6";
-		const iconBgHex = palette[200] || "#e5e7eb";
-		const fgColor = getTextColor(palette, 100);
+			const pIndex = hash % PATTERNS.length;
 
-		return {
-			bgStyle: { backgroundColor: bgHex },
-			iconBgStyle: { backgroundColor: iconBgHex },
-			textStyle: { color: fgColor },
-			buttonStyle: {
-				backgroundColor: palette[900] || "#111827",
-				color: getTextColor(palette, 900),
-			},
-		};
-	}, [title]);
+			return {
+				surface: isDark ? palette[900] || "#111827" : palette[100] || "#f3f4f6",
+				surfaceDeep: isDark
+					? palette[800] || "#1f2937"
+					: palette[200] || "#e5e7eb",
+				ring: isDark ? palette[700] || "#374151" : palette[300] || "#d1d5db",
+				ink: isDark ? palette[300] || "#d1d5db" : getTextColor(palette, 100),
+				inkSoft: isDark ? palette[400] || "#9ca3af" : palette[700] || "#374151",
+				button: isDark ? palette[200] || "#e5e7eb" : palette[900] || "#111827",
+				patternIndex: pIndex,
+			};
+		}, [title, isDark]);
+
+	const buttonText = isDark
+		? getTextColor({ 200: button }, 200)
+		: getTextColor({ 900: button }, 900);
 
 	return (
 		<Elevated
 			offset={1}
 			shadowLevel={0}
-			style={bgStyle}
-			className="relative flex self-stretch shadow-none w-[220px] shrink-0 flex-col justify-between overflow-hidden rounded-3xl p-5"
+			style={{ backgroundColor: surface }}
+			className="group relative flex self-stretch shadow-none w-[220px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl p-5"
 		>
+			{/* Foreground icon chip */}
+
+			{/* SVG Pattern texture */}
 			<div
-				style={iconBgStyle}
-				className="absolute -top-2 -right-2 -rotate-15 rounded-full p-6 transition-transform"
+				aria-hidden
+				className="pointer-events-none absolute inset-0 opacity-40"
+				style={{ backgroundImage: PATTERNS[patternIndex](surfaceDeep) }}
+			/>
+
+			{/* Concentric ring shapes, top-right */}
+			<div
+				aria-hidden
+				className="pointer-events-none absolute -right-16 -top-16 z-0"
 			>
-				{icon && (
-					<span style={textStyle} className="size-6 opacity-75">
-						{icon}
-					</span>
-				)}
+				<div
+					className="flex size-44 items-center justify-center rounded-full transition-transform duration-500 group-hover:scale-110"
+					style={{ backgroundColor: surfaceDeep }}
+				>
+					<div
+						className="flex size-32 items-center justify-center rounded-full"
+						style={{ backgroundColor: ring }}
+					>
+						<div
+							className="size-20 rounded-full"
+							style={{ backgroundColor: surfaceDeep }}
+						/>
+					</div>
+				</div>
 			</div>
 
-			<div className="mt-auto flex flex-col gap-4">
-				<Typography.Heading level={4} style={textStyle}>
-					{title}
-				</Typography.Heading>
-
-				<Button
-					size={"lg"}
-					className="w-fit border-none hover:opacity-90 transition-opacity"
-					style={buttonStyle}
-					onClick={onSeeAll}
+			{/* Huge watermark icon */}
+			{icon && (
+				<div
+					aria-hidden
+					className="pointer-events-none absolute -bottom-6 -right-4 size-44 -rotate-12 transition-transform duration-500 group-hover:rotate-0 flex items-center justify-center z-10"
+					style={{ color: ink, opacity: 0.2 }}
 				>
-					See all <OutlineArrowRight />
-				</Button>
+					<div className="scale-[4] origin-center opacity-80 [&>svg]:stroke-[1.5]">
+						{icon}
+					</div>
+				</div>
+			)}
+
+			{/* Content */}
+			<div className="relative mt-auto flex flex-col gap-3 z-10">
+				<div className="flex flex-col gap-1">
+					<Typography.Heading
+						level={4}
+						className="text-pretty font-bold leading-tight"
+						style={{ color: ink }}
+					>
+						{title}
+					</Typography.Heading>
+					{count && (
+						<span className="text-sm font-medium" style={{ color: inkSoft }}>
+							{count}
+						</span>
+					)}
+				</div>
+
+				<button
+					type="button"
+					onClick={onSeeAll}
+					className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90"
+					style={{ backgroundColor: button, color: buttonText }}
+				>
+					See all
+					<ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+				</button>
 			</div>
 		</Elevated>
 	);

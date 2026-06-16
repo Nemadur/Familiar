@@ -1,9 +1,4 @@
-export interface MockShopUser {
-	id: string;
-	username: string;
-	avatarUrl?: string;
-	badges?: string[];
-}
+import type { TUserResponse } from "../user";
 
 export interface MockShopItem {
 	id: string;
@@ -17,7 +12,7 @@ export interface MockShopItem {
 	coverImage: string;
 	images: string[];
 	badges: string[]; // e.g. "1 of a kind", "Digital"
-	author: MockShopUser;
+	author: TUserResponse;
 	salesCount: number;
 	rating: number;
 	isBookmarked?: boolean;

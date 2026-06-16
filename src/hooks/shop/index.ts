@@ -34,6 +34,18 @@ export function useShopItems(categoryId?: string) {
 			}
 			return itemsWithRealCategories;
 		},
-		enabled: !!categories,
+	});
+}
+
+export function useShopItem(id: string) {
+	const { data: items } = useShopItems();
+	
+	return useQuery<MockShopItem | undefined>({
+		queryKey: ["shop-item", id, items?.length],
+		queryFn: async () => {
+			await new Promise((resolve) => setTimeout(resolve, 200));
+			return items?.find((item) => item.id === id) || MOCK_SHOP_ITEMS.find((item) => item.id === id);
+		},
+		enabled: !!id,
 	});
 }
