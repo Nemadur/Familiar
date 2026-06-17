@@ -1,4 +1,3 @@
-import { MOCK_PINNED_FEEDS } from "#/mock/feed";
 import { OutlineCompass, OutlineUser } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,6 +5,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { MOCK_PINNED_FEEDS } from "#/mock/feed";
 
 export type FeedType = "following" | "discover" | "mutuals" | "rabbit-hole";
 
