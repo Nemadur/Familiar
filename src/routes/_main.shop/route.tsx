@@ -182,10 +182,10 @@ function ShopPage() {
 	}, [categories, filteredItems]);
 
 	return (
-		<div className="flex h-full flex-1 flex-col gap-6">
+		<div className="flex h-full flex-1 flex-col gap-6 pb-5">
 			{isRootShop && (
 				<>
-					<div className="flex items-center justify-between px-5 lg:px-0">
+					<div className="flex items-center justify-between px-4 lg:px-0">
 						<Typography.Heading level={2}>Shop</Typography.Heading>
 					</div>
 
@@ -220,7 +220,7 @@ function ShopPage() {
 										key={group.category.id}
 										className="flex flex-col lg:flex-row gap-4 lg:gap-6 w-full overflow-hidden"
 									>
-										<div className="px-5 lg:px-0 shrink-0 w-full lg:w-[260px]">
+										<div className="px-4 lg:px-0 shrink-0 w-full lg:w-[260px]">
 											<CategoryCard
 												title={group.category.name}
 												icon={group.icon}
@@ -236,7 +236,7 @@ function ShopPage() {
 										</div>
 
 										<div className="flex-1 min-w-0">
-											<div className="w-full flex overflow-x-auto sm:grid sm:grid-cols-3 gap-3 pb-4 px-5 lg:px-0 lg:pb-0 snap-x snap-mandatory scrollbar-hide">
+											<div className="w-full flex overflow-x-auto sm:grid sm:grid-cols-3 gap-3 pb-4 px-4 lg:px-0 lg:pb-0 snap-x snap-mandatory scrollbar-hide">
 												{group.items.slice(0, 3).map((item) => (
 													<div
 														key={item.id}

@@ -4,6 +4,7 @@ import { ShoppingCart } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+	OutlineChat,
 	OutlineFileText,
 	OutlineHome,
 	OutlineMenu,
@@ -61,6 +62,12 @@ export default function Header() {
 						{/* <LanguageSelect /> */}
 
 						<BasketDropdown />
+
+						<Button variant={"secondary"} size={"icon-xl"} asChild>
+							<Link to="/chat">
+								<OutlineChat />
+							</Link>
+						</Button>
 
 						<ClientOnly>
 							<Skeleton

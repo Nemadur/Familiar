@@ -64,7 +64,7 @@ function BasketPage() {
 	}
 
 	return (
-		<div className="flex flex-col gap-6 max-w-6xl mx-auto w-full pt-4 px-5 lg:px-0 pb-10">
+		<div className="flex flex-col gap-6 max-w-6xl mx-auto w-full pt-4 px-4 lg:px-0 pb-10">
 			<Typography.Heading level={2}>My basket</Typography.Heading>
 
 			<Form {...form}>

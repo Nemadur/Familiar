@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Calligraph } from "calligraph";
 import { useState } from "react";
 import {
 	OutlineCheck,
@@ -44,6 +45,9 @@ type UserButtonContentProps = {
 	showUsername?: boolean;
 	description?: React.ReactNode;
 	avatarSize?: "sm" | "default" | "lg" | "xl";
+	status?: string;
+	isOnline?: boolean;
+	avatarBadgeClassName?: string;
 };
 
 function UserButtonContent({
@@ -53,24 +57,64 @@ function UserButtonContent({
 	showUsername = true,
 	description,
 	avatarSize,
+	status,
+	isOnline,
+	avatarBadgeClassName,
 }: UserButtonContentProps) {
 	return (
 		<>
 			{showAvatar && (
-				<UserAvatar user={user as TUserProfile} size={avatarSize} />
+				<UserAvatar
+					user={user as TUserProfile}
+					size={avatarSize}
+					isOnline={isOnline}
+					badgeClassName={avatarBadgeClassName}
+				/>
 			)}
 			{showInfo && (
-				<div className="flex flex-col items-start text-left">
-					<span className="text-sm leading-none font-medium">
+				<div className="flex flex-col items-start text-left min-w-0 flex-1">
+					<span
+						className={cn(
+							"text-sm font-medium truncate w-full",
+							status === "active"
+								? "text-accent-foreground"
+								: "text-foreground",
+						)}
+					>
 						{user?.displayName || "Unknown"}
 					</span>
 					{description ? (
-						<span className="mt-1 text-xs leading-none text-muted-foreground">
+						<span
+							className={cn(
+								"mt-0.5 text-xs truncate w-full",
+								status === "active"
+									? "text-accent-foreground/80"
+									: "text-muted-foreground",
+							)}
+						>
 							{description}
 						</span>
+					) : status ? (
+						<Calligraph
+							className={cn(
+								"mt-0.5 text-xs truncate w-full",
+								isOnline && status === "Online"
+									? "text-green-500 font-medium"
+									: "text-muted-foreground",
+							)}
+						>
+							{status}
+						</Calligraph>
 					) : (
 						showUsername && (
-							<span className="mt-1 text-xs leading-none text-muted-foreground">
+							<span
+								className={cn(
+									"mt-0.5 text-xs truncate w-full",
+									status === "active"
+										? "text-accent-foreground/80"
+										: "text-muted-foreground",
+								)}
+							>
 								@{user?.username || "Unknown"}
 							</span>
 						)
@@ -95,6 +139,9 @@ type UserProps = {
 	nonDropdownButtonClassName?: string;
 	dropdownContentClassName?: string;
 	drawerTitle?: string;
+	status?: string;
+	isOnline?: boolean;
+	avatarBadgeClassName?: string;
 };
 
 // eslint-disable-next-line react-doctor/no-many-boolean-props
@@ -112,6 +159,9 @@ export default function User({
 	nonDropdownButtonClassName,
 	dropdownContentClassName,
 	drawerTitle = "User Menu",
+	status,
+	isOnline,
+	avatarBadgeClassName,
 }: UserProps) {
 	const { logout } = useAuth();
 	const isTablet = useIsTablet();
@@ -146,6 +196,9 @@ export default function User({
 			showUsername={showUsername}
 			description={description}
 			avatarSize={avatarSize}
+			status={status}
+			isOnline={isOnline}
+			avatarBadgeClassName={avatarBadgeClassName}
 		/>
 	);
 

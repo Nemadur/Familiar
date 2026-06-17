@@ -1,12 +1,11 @@
 import { Typography } from "@heroui/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
-import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
 
 function Empty({ className, ...props }: ComponentProps<"div">) {
 	return (
-		<Elevated
+		<div
 			data-slot="empty"
 			className={cn(
 				"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed shadow-none! p-6 text-center text-balance md:p-12",
@@ -36,7 +35,7 @@ const emptyMediaVariants = cva(
 		variants: {
 			variant: {
 				default: "bg-transparent",
-				icon: "flex size-16 shrink-0 items-center justify-center rounded-full bg-muted/75 text-foreground [&_svg:not([class*='size-'])]:size-6",
+				icon: "flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/6 text-foreground [&_svg:not([class*='size-'])]:size-6",
 			},
 		},
 		defaultVariants: {
