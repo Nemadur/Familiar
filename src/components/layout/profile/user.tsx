@@ -167,6 +167,16 @@ export default function User({
 			to: "/$username/$tab",
 			params: { username: user?.username, tab: "characters" },
 		},
+		// TODO: only show if not connected to Mollie
+		// TODO: only show if user has permissions to connect to Mollie (e.g., is admin)
+		// TODO: move scopes and state to env variables or generate dynamically
+		// TODO: get client_id from env variable
+		{
+			label: "Connect To Mollie",
+			icon: <OutlineSettings />,
+			to: "https://my.mollie.com/oauth2/authorize",
+			params: { client_id: import.meta.env.VITE_MOLLIE_CLIENT_ID , redirect_uri: "https://www.familiar.art/auth/mollie/callback", state: "random_state_string", scope: "profiles.read payments.read payments.write" },
+		}
 	];
 
 	const secondaryMenuItems = [
