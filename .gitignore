@@ -36,7 +36,3 @@ skills-lock.json
 .heroui-docs/
 # heroui-agents-md
 
-# Mockup files
-*.mockup
-*.mock
-/mock/
