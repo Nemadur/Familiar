@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { MOCK_BASKET_ITEMS } from "@/api/shop/mock";
+import { MOCK_BASKET_ITEMS } from "#/mock/shop";
 import {
 	OutlineChat,
 	OutlineEdit,

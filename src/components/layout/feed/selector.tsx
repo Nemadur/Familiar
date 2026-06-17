@@ -1,3 +1,4 @@
+import { MOCK_PINNED_FEEDS } from "#/mock/feed";
 import { OutlineCompass, OutlineUser } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,30 +34,7 @@ export function FeedSelector({
 		}
 	};
 
-	// Mock data for now - replace with real data later
-	const pinnedFeeds = [
-		{
-			id: "1",
-			feedId: "following",
-			name: "Following",
-			description: "Posts from people you follow",
-			type: "system" as const,
-		},
-		{
-			id: "2",
-			feedId: "discover",
-			name: "Discover",
-			description: "Discover new content",
-			type: "system" as const,
-		},
-		{
-			id: "3",
-			feedId: "mutuals",
-			name: "Mutuals",
-			description: "Posts from mutual connections",
-			type: "system" as const,
-		},
-	];
+	const pinnedFeeds = MOCK_PINNED_FEEDS;
 
 	return (
 		<>

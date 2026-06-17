@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { MOCK_SHOP_ITEMS } from "@/api/shop/mock";
+import { MOCK_SHOP_ITEMS } from "#/mock/shop";
 import { useCommissionCategories } from "@/hooks/use-commisions";
 import type { MockShopItem } from "@/types/shop";
 
@@ -39,12 +39,15 @@ export function useShopItems(categoryId?: string) {
 
 export function useShopItem(id: string) {
 	const { data: items } = useShopItems();
-	
+
 	return useQuery<MockShopItem | undefined>({
 		queryKey: ["shop-item", id, items?.length],
 		queryFn: async () => {
 			await new Promise((resolve) => setTimeout(resolve, 200));
-			return items?.find((item) => item.id === id) || MOCK_SHOP_ITEMS.find((item) => item.id === id);
+			return (
+				items?.find((item) => item.id === id) ||
+				MOCK_SHOP_ITEMS.find((item) => item.id === id)
+			);
 		},
 		enabled: !!id,
 	});
