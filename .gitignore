@@ -36,7 +36,4 @@ skills-lock.json
 # heroui-agents-md
 
 # Mockup files
-*.mockup
-*.mock
-/mock/
 src/routeTree.gen.ts
