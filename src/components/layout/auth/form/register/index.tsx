@@ -18,6 +18,7 @@ import type { AccountType } from "@/types/auth/schema/accounts";
 import { RegisterStepAccount } from "./step/account";
 import { RegisterStepProfile } from "./step/profile";
 import { RegisterStepSocials } from "./step/socials";
+import { Navigate } from "@tanstack/react-router";
 
 type Step = 0 | 1 | 2;
 
@@ -207,35 +208,32 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 							</div>
 						</div>
 					</div>
-
-					<div className="mt-auto shrink-0 space-y-4 pt-6">
-						<div className="pt-4">
-							<div className="flex flex-1 w-full items-center justify-between gap-2">
-								{step > 0 && (
-									<Button
-										type="button"
-										variant="ghost"
-										onClick={goBack}
-										disabled={isPending}
-										className="w-1/3"
-										size={"xl"}
-									>
-										{t("auth.back", "Back")}
-									</Button>
-								)}
-
+					<div className="mt-auto shrink-0 space-y-2 px-1">
+						<div className="flex flex-1 w-full items-center justify-between gap-2">
+							{step > 0 && (
 								<Button
-									type={step === LAST_STEP ? "submit" : "button"}
-									onClick={step === LAST_STEP ? undefined : handleContinue}
-									disabled={(step === 0 && !isStep0Valid) || isPending}
-									className="flex-1 w-full"
-									size={"xl"}
+									type="button"
+									variant="ghost"
+									onClick={goBack}
+									disabled={isPending}
+									className="w-1/3"
+									size={"2xl"}
 								>
-									{step === LAST_STEP
-										? t("auth.register.submit", "Submit")
-										: t("auth.continue", "Continue")}
+									{t("auth.back", "Back")}
 								</Button>
-							</div>
+							)}
+
+							<Button
+								type={step === LAST_STEP ? "submit" : "button"}
+								onClick={step === LAST_STEP ? undefined : handleContinue}
+								disabled={(step === 0 && !isStep0Valid) || isPending}
+								className="flex-1 w-full"
+								size={"2xl"}
+							>
+								{step === LAST_STEP
+									? t("auth.register.submit", "Submit")
+									: t("auth.continue", "Continue")}
+							</Button>
 						</div>
 					</div>
 				</div>

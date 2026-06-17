@@ -426,6 +426,440 @@ const pl: Locale = {
 			made_with: "Stworzone z ❤️",
 		},
 	},
+	releaseNotes: {
+		title: "Nowinki Familiarowe",
+		eyebrow: "Lista zmian",
+		latest: "Najnowsze",
+		latestRelease: "Najnowsza wersja",
+		tags: {
+			Added: "Dodano",
+			Improved: "Ulepszono",
+			Fixed: "Poprawiono",
+			Deprecated: "Deprecowano",
+			Removed: "Usunięto",
+			Security: "Bezpieczństwo",
+			Breaking: "Zepsuto",
+		},
+		releases: {
+			v0_1_0: {
+				Added: [
+					"Familiar jest już dostępny. To nasze pierwsze publiczne wydanie.",
+				],
+			},
+			v0_2_0: {
+				Added: [
+					"Profile są już dostępne, razem z avatarami, opisami, obrazami w tle i zakładkami feedu.",
+					"Możesz teraz logować się i wylogowywać z prawdziwego konta obsługiwanego przez Supabase.",
+					"Profile obsługują teraz oznaczenia języków i czytelniejsze adresy URL przyjazne SEO.",
+				],
+			},
+			v0_3_0: {
+				Added: [
+					"Możesz teraz przeglądać i zamawiać zlecenia bezpośrednio z profili artystów.",
+					"Dostęp do treści jest teraz obsługiwany automatycznie na podstawie typu konta.",
+				],
+			},
+			v0_3_1: {
+				Improved: [
+					"Karty zleceń wyglądają teraz czyściej, z płynniejszymi zaokrągleniami i lepiej dopasowanymi obrazami.",
+					"Etykiety treści wrażliwych są krótsze i łatwiejsze do zrozumienia.",
+				],
+				Fixed: [
+					"Przycisk ukrywania treści ma teraz podpowiedź, dzięki czemu jego działanie jest łatwiejsze do zrozumienia.",
+				],
+			},
+			v0_4_0: {
+				Added: [
+					"Dodano nowe okna profilu do wyboru informacji, regulaminu usług i opinii.",
+					"Szczegóły zleceń można teraz otwierać bezpośrednio z profili artystów.",
+				],
+				Improved: [
+					"Podglądy zleceń ładują się szybciej i wyglądają czytelniej.",
+				],
+			},
+			v0_5_0: {
+				Added: [
+					"Wersja mobilna ma teraz własne menu nawigacji, dzięki czemu łatwiej korzystać z aplikacji na mniejszych ekranach.",
+					"Posty portfolio można teraz otwierać bezpośrednio i udostępniać linkiem.",
+					"Treści wrażliwe są teraz domyślnie rozmyte i można je szybko odsłonić jednym dotknięciem.",
+				],
+				Improved: [
+					"Menu użytkownika dopasowuje się do urządzenia, z listą rozwijaną na desktopie i panelem wysuwanym na mobile.",
+					"Obrazy w feedzie mogą teraz odtwarzać się automatycznie na mobile podczas przewijania.",
+					"Kody FAM są teraz automatycznie formatowane podczas wpisywania lub wklejania.",
+				],
+			},
+			v0_5_1: {
+				Improved: [
+					"Rolki działają stabilniej, z lepszym śledzeniem postępu i płynniejszymi przejściami.",
+					"Linki w postach pokazują teraz podgląd po najechaniu kursorem.",
+					"Formularze zleceń mają teraz czytelniejszy układ krok po kroku.",
+				],
+				Added: ["Dodano nową ikonę filtrowania do użycia w aplikacji."],
+			},
+			v0_5_2: {
+				Fixed: [
+					"Rolki nie migoczą już ani nie blokują się podczas przełączania między elementami.",
+					"Zdjęcia profilowe ładują się poprawnie, nawet gdy media są jeszcze przetwarzane.",
+					"Zamkniętych zleceń nie da się już przypadkowo otworzyć.",
+					"Pozostawanie zalogowanym po odświeżeniu strony działa teraz pewniej.",
+					"Aplikacja nie pokazuje już przez chwilę, że jesteś wylogowany podczas pierwszego ładowania.",
+					"Wybrany motyw stosuje się od razu, bez migania przy uruchomieniu.",
+				],
+				Improved: [
+					"Karty folderów obsługują teraz własne kolory i ikony.",
+					"Wybór licencji w oknach zleceń jest czytelniejszy i łatwiejszy w obsłudze.",
+					"Przewijane obszary w oknach działają teraz bardziej spójnie.",
+				],
+			},
+			v0_5_3: {
+				Improved: [
+					"Kalendarz, karuzela i formularze wieloetapowe są teraz stabilniejsze i wygodniejsze w obsłudze klawiaturą.",
+				],
+			},
+			v0_5_4: {
+				Improved: [
+					"Rolki odtwarzają się płynniej i poprawnie pauzują, gdy przewiniesz dalej.",
+					"Aplikacja powinna działać trochę szybciej dzięki ogólnym usprawnieniom wydajności.",
+				],
+				Fixed: [
+					"Proces rejestracji nie blokuje się już na przycisku kontynuacji w niektórych przypadkach.",
+				],
+			},
+			v0_6_0: {
+				Added: [
+					"Dodano nowy system filtrowania list według daty, tekstu, liczb albo wielu opcji naraz.",
+					"Filtry dobrze działają teraz również na mobile.",
+				],
+			},
+			v0_7_0: {
+				Added: [
+					"Możesz teraz wysyłać i obsługiwać zlecenia od początku do końca.",
+					'Dodano stronę "Moje zlecenia", gdzie możesz śledzić ich progres.',
+				],
+			},
+			v0_7_1: {
+				Improved: [
+					"Zlecenia mają teraz czytelniejsze akcje do wysyłania, akceptowania, odrzucania, anulowania i dodawania mediów.",
+					"Strona szczegółów zlecenia ma czytelniejszy wygląd, lepsze karty statusu i przycisk przytrzymania do ważnych akcji.",
+					"Artyści mają teraz skrót do panelu bezpośrednio w nagłówku.",
+					"Filtry obsługują teraz grupowane i zagnieżdżone opcje, dzięki czemu łatwiej przeglądać listy.",
+				],
+			},
+			v0_7_2: {
+				Improved: [
+					"Podglądy zleceń ładują się szybciej i wyglądają czytelniej.",
+					"Zarchiwizowane zlecenia są teraz skuteczniej ukrywane z listy.",
+				],
+				Removed: [
+					"Usunięto stare dane testowe, które nie były już potrzebne.",
+					"Widok posta portfolio jest tymczasowo ukryty, dopóki go przebudowujemy.",
+				],
+			},
+			v0_7_3: {
+				Added: [
+					'Dodano notatki o "nowych wersjach", żeby szybko sprawdzić, co nowego, co ulepszono i co naprawiono w Familiar.',
+				],
+			},
+			v0_7_4: {
+				Improved: [
+					'Notatki o "nowych wersjach" obsługują teraz wiele języków, żeby więcej użytkowników mogło śledzić zmiany.',
+				],
+				Fixed: [
+					"Logowanie i rejestracja korzystają teraz z tego samego układu, więc strony wyglądają spójniej.",
+				],
+			},
+			v0_7_5: {
+				Added: [
+					"Dodano strony [Polityka prywatności](/privacy) i [Regulamin](/tos) do aplikacji.",
+				],
+				Improved: [
+					"Polityka prywatności i Regulamin mają teraz czytelniejszy układ oraz lepszą typografię.",
+					"Strony prawne korzystają teraz z tłumaczeń, w tym tytułów, opisów, dat, sekcji i elementów list.",
+					"Notatki o wersjach wyglądają teraz lepiej na urządzeniach mobilnych, z układem dającym każdej wersji więcej miejsca.",
+					"Stopka jest teraz łatwiejsza w utrzymaniu i zawiera czytelniejsze linki do dokumentów prawnych.",
+				],
+				Fixed: [
+					"Treść notatek o wersjach nie jest już ściskana w wąskich kolumnach na małych ekranach.",
+					"Sekcje dokumentów prawnych renderują się teraz poprawnie z tłumaczeń.",
+					"Treści Markdown na stronach prawnych nie tworzą już niepoprawnych, zagnieżdżonych akapitów.",
+				],
+			},
+		},
+	},
+	privacyPolicy: {
+		title: "Polityka prywatności",
+		eyebrow: "Dokument prawny",
+		description:
+			"Dowiedz się, jak Familiar zbiera, wykorzystuje i chroni Twoje informacje.",
+		effectiveDateLabel: "Data obowiązywania",
+		effectiveDate: "2026-06-07",
+		sections: [
+			{
+				title: "Wprowadzenie",
+				body: [
+					"Familiar to platforma społecznościowa dla artystów, klientów i społeczności kreatywnych. Ta Polityka prywatności wyjaśnia, jakie informacje zbieramy, jak ich używamy i jakie masz możliwości kontroli.",
+					"Korzystając z Familiar, akceptujesz zasady opisane w tej polityce.",
+				],
+			},
+			{
+				title: "Informacje, które zbieramy",
+				body: [
+					"Zbieramy informacje, które przekazujesz bezpośrednio podczas tworzenia konta, edycji profilu, publikowania treści, składania zleceń lub kontaktu z nami.",
+				],
+				items: [
+					"Informacje o koncie, takie jak email, nazwa użytkownika, nazwa wyświetlana i typ konta.",
+					"Informacje profilowe, takie jak avatar, bio, oznaczenia języków, portfolio i publiczne linki.",
+					"Treści, które przesyłasz lub udostępniasz, takie jak posty, obrazy, szczegóły zleceń i wiadomości związane z zapytaniami.",
+					"Informacje techniczne, takie jak typ urządzenia, przeglądarka, adres IP, dane sesji i podstawowe logi użycia.",
+				],
+			},
+			{
+				title: "Jak używamy Twoich informacji",
+				body: [
+					"Używamy Twoich informacji, aby dostarczać, zabezpieczać, rozwijać i personalizować Familiar.",
+				],
+				items: [
+					"Do tworzenia i obsługi Twojego konta.",
+					"Do wyświetlania profilu, portfolio, postów i informacji o zleceniach.",
+					"Do obsługi zapytań o zlecenia i powiązanych działań.",
+					"Do ochrony platformy przed nadużyciami, spamem, oszustwami i nieautoryzowanym dostępem.",
+					"Do poprawy wydajności, dostępności i wygody korzystania z platformy.",
+					"Do kontaktu w sprawie ważnych aktualizacji konta, bezpieczeństwa lub działania usługi.",
+				],
+			},
+			{
+				title: "Treści publiczne",
+				body: [
+					"Niektóre informacje w Familiar są publiczne z założenia. Może to obejmować nazwę użytkownika, nazwę wyświetlaną, avatar, stronę profilu, portfolio, publiczne posty, listy zleceń i inne treści, które zdecydujesz się opublikować.",
+					"Nie udostępniaj prywatnych lub wrażliwych informacji w publicznych częściach platformy.",
+				],
+			},
+			{
+				title: "Pliki cookie i podobne technologie",
+				body: [
+					"Familiar może używać plików cookie, pamięci lokalnej i podobnych technologii, aby utrzymać zalogowanie, zapamiętać preferencje, poprawić bezpieczeństwo i zrozumieć sposób korzystania z platformy.",
+				],
+			},
+			{
+				title: "Jak udostępniamy informacje",
+				body: [
+					"Nie sprzedajemy Twoich danych osobowych. Możemy udostępniać ograniczone informacje tylko wtedy, gdy jest to potrzebne do działania Familiar, spełnienia obowiązków prawnych, ochrony użytkowników lub korzystania z zaufanych dostawców usług.",
+				],
+				items: [
+					"Dostawcom usług, którzy pomagają nam hostować, zabezpieczać, analizować lub obsługiwać platformę.",
+					"Organom lub stronom prawnym, gdy wymagają tego przepisy albo ważna procedura prawna.",
+					"Innym użytkownikom, gdy publikujesz treści lub korzystasz z funkcji publicznych.",
+				],
+			},
+			{
+				title: "Przechowywanie danych",
+				body: [
+					"Przechowujemy Twoje informacje tak długo, jak jest to potrzebne do działania Familiar, spełnienia obowiązków prawnych, rozwiązywania sporów, zapobiegania nadużyciom i egzekwowania naszych zasad.",
+					"Gdy informacje nie są już potrzebne, usuwamy je lub anonimizujemy tam, gdzie jest to rozsądnie możliwe.",
+				],
+			},
+			{
+				title: "Twoje wybory i prawa",
+				body: [
+					"W zależności od Twojej lokalizacji możesz mieć prawo do dostępu, poprawienia, usunięcia, eksportu lub ograniczenia używania swoich danych osobowych.",
+				],
+				items: [
+					"Część informacji o koncie i profilu możesz zaktualizować bezpośrednio w ustawieniach.",
+					"Możesz poprosić o usunięcie lub poprawienie wybranych danych osobowych.",
+					"Możesz skontaktować się z nami w sprawach dotyczących prywatności.",
+				],
+			},
+			{
+				title: "Bezpieczeństwo",
+				body: [
+					"Stosujemy rozsądne środki techniczne i organizacyjne, aby chronić Twoje informacje. Żadna usługa internetowa nie może jednak zagwarantować pełnego bezpieczeństwa.",
+				],
+			},
+			{
+				title: "Prywatność dzieci",
+				body: [
+					"Familiar nie jest przeznaczony dla dzieci poniżej minimalnego wieku wymaganego przez obowiązujące prawo. Jeśli dowiemy się, że zebraliśmy dane dziecka bez odpowiedniej zgody, podejmiemy właściwe kroki w celu ich usunięcia.",
+				],
+			},
+			{
+				title: "Zmiany w tej polityce",
+				body: [
+					"Możemy od czasu do czasu aktualizować tę Politykę prywatności. Przy ważnych zmianach zaktualizujemy datę obowiązywania i możemy powiadomić użytkowników przez platformę.",
+				],
+			},
+			{
+				title: "Kontakt",
+				body: [
+					"Jeśli masz pytania dotyczące tej Polityki prywatności, możesz skontaktować się z zespołem Familiar przez oficjalne kanały wsparcia lub kontaktu dostępne na platformie.",
+				],
+			},
+		],
+	},
+	termsOfService: {
+		title: "Regulamin",
+		eyebrow: "Dokument prawny",
+		description: "Przeczytaj te warunki uważnie przed korzystaniem z Familiar.",
+		effectiveDateLabel: "Data obowiązywania",
+		effectiveDate: "2026-06-07",
+		sections: [
+			{
+				title: "Wprowadzenie",
+				body: [
+					"Ten Regulamin wyjaśnia zasady korzystania z Familiar. Familiar to platforma społecznościowa dla artystów, klientów i społeczności kreatywnych.",
+					"Tworząc konto lub korzystając z Familiar, akceptujesz ten Regulamin. Jeśli się z nim nie zgadzasz, nie korzystaj z platformy.",
+				],
+			},
+			{
+				title: "Konta",
+				body: [
+					"Do korzystania z części funkcji Familiar może być wymagane konto. Odpowiadasz za bezpieczeństwo danych logowania oraz za wszystkie działania wykonywane przez Twoje konto.",
+				],
+				items: [
+					"Podczas tworzenia konta musisz podać prawidłowe informacje.",
+					"Nie możesz podszywać się pod inną osobę, markę, artystę ani organizację.",
+					"Nie możesz sprzedawać, przekazywać ani udostępniać dostępu do konta bez zgody.",
+					"Musisz skontaktować się z nami, jeśli uważasz, że ktoś uzyskał nieautoryzowany dostęp do Twojego konta.",
+				],
+			},
+			{
+				title: "Treści użytkownika",
+				body: [
+					"Zachowujesz prawa własności do treści, które tworzysz i przesyłasz do Familiar. Publikując treści na platformie, pozwalasz nam jednak wyświetlać, przechowywać, przetwarzać i udostępniać je w zakresie potrzebnym do działania Familiar.",
+					"Odpowiadasz za upewnienie się, że masz prawa do przesyłania i udostępniania swoich treści.",
+				],
+				items: [
+					"Nie możesz przesyłać treści naruszających prawa innych osób.",
+					"Nie możesz przesyłać treści nielegalnych, obraźliwych, nienawistnych, szkodliwych ani wprowadzających w błąd.",
+					"Nie możesz przesyłać treści naruszających zasady społeczności lub polityki platformy.",
+				],
+			},
+			{
+				title: "Usługi artystów i zlecenia",
+				body: [
+					"Familiar może umożliwiać artystom i klientom komunikację dotyczącą zleceń, zapytań, portfolio i powiązanych usług.",
+					"O ile nie wskazano wyraźnie inaczej, Familiar nie jest stroną indywidualnych ustaleń między artystami i klientami. Artyści i klienci odpowiadają za jasne określenie oczekiwań, cen, terminów, licencji i zasad dostawy.",
+				],
+				items: [
+					"Artyści odpowiadają za rzetelne opisywanie swoich usług.",
+					"Klienci odpowiadają za przeczytanie szczegółów usługi przed wysłaniem zapytania.",
+					"Obie strony odpowiadają za przestrzeganie uzgodnionych zasad, licencji i ustaleń płatniczych.",
+				],
+			},
+			{
+				title: "Dozwolone korzystanie",
+				body: [
+					"Zobowiązujesz się korzystać z Familiar w sposób bezpieczny, zgodny z prawem i szanujący innych użytkowników.",
+				],
+				items: [
+					"Nie możesz używać Familiar do spamu, oszustw, wyłudzeń, nękania ani nadużyć.",
+					"Nie możesz próbować zakłócać, przeciążać, scrapować, odtwarzać kodu ani atakować platformy.",
+					"Nie możesz omijać zabezpieczeń, kontroli dostępu, blokad ani ograniczeń konta.",
+					"Nie możesz używać Familiar do rozpowszechniania malware lub szkodliwych linków.",
+				],
+			},
+			{
+				title: "Moderacja treści",
+				body: [
+					"Możemy sprawdzać, ukrywać, ograniczać, usuwać lub zgłaszać treści, jeśli uznamy, że naruszają ten Regulamin, nasze polityki, prawo albo bezpieczeństwo platformy.",
+					"Możemy również zawiesić lub zakończyć działanie kont, które łamią zasady albo tworzą ryzyko dla Familiar, użytkowników lub społeczności.",
+				],
+			},
+			{
+				title: "Własność intelektualna",
+				body: [
+					"Familiar, w tym jego projekt, branding, interfejs, oprogramowanie i funkcje platformy, jest chroniony przepisami dotyczącymi własności intelektualnej. Nie możesz kopiować, modyfikować, rozpowszechniać ani nadużywać materiałów należących do Familiar bez zgody.",
+					"Treści przesyłane przez użytkowników należą do odpowiednich użytkowników lub właścicieli praw, chyba że wskazano inaczej.",
+				],
+			},
+			{
+				title: "Usługi zewnętrzne",
+				body: [
+					"Familiar może korzystać z usług zewnętrznych do hostingu, uwierzytelniania, płatności, analityki, przechowywania danych lub innych funkcji platformy. Te usługi mogą mieć własne regulaminy i polityki prywatności.",
+				],
+			},
+			{
+				title: "Dostępność i zmiany",
+				body: [
+					"Staramy się, aby Familiar był dostępny i niezawodny, ale nie możemy zagwarantować, że platforma zawsze będzie działała bez przerw, błędów lub ograniczeń dostępności.",
+					"Możemy aktualizować, zmieniać, zawieszać lub usuwać funkcje w dowolnym momencie, szczególnie gdy jest to potrzebne ze względów bezpieczeństwa, konserwacji, zgodności z prawem lub rozwoju produktu.",
+				],
+			},
+			{
+				title: "Zastrzeżenia",
+				body: [
+					"Familiar jest udostępniany w stanie takim, w jakim jest, oraz w miarę dostępności. W najszerszym zakresie dozwolonym przez prawo nie udzielamy gwarancji dotyczących nieprzerwanego dostępu, pełnego bezpieczeństwa, przydatności do konkretnego celu ani dokładności treści użytkowników.",
+				],
+			},
+			{
+				title: "Ograniczenie odpowiedzialności",
+				body: [
+					"W najszerszym zakresie dozwolonym przez prawo Familiar i jego zespół nie ponoszą odpowiedzialności za pośrednie, przypadkowe, szczególne, następcze ani karne szkody związane z korzystaniem z platformy.",
+				],
+			},
+			{
+				title: "Zakończenie korzystania",
+				body: [
+					"Możesz przestać korzystać z Familiar w dowolnym momencie. Możemy zawiesić lub zakończyć dostęp, jeśli naruszysz ten Regulamin, stworzysz ryzyko prawne, zaszkodzisz innym użytkownikom albo nadużyjesz platformy.",
+				],
+			},
+			{
+				title: "Zmiany w Regulaminie",
+				body: [
+					"Możemy od czasu do czasu aktualizować ten Regulamin. Przy ważnych zmianach zaktualizujemy datę obowiązywania i możemy powiadomić użytkowników przez platformę.",
+				],
+			},
+			{
+				title: "Kontakt",
+				body: [
+					"Jeśli masz pytania dotyczące tego Regulaminu, możesz skontaktować się z zespołem Familiar przez oficjalne kanały wsparcia lub kontaktu dostępne na platformie.",
+				],
+			},
+		],
+	},
+	roadmap: {
+		title: "Co dalej w Familiar",
+		eyebrow: "Roadmapa",
+		description:
+			"Prosty podgląd planowanych funkcji i tego, nad czym teraz pracujemy.",
+		status: {
+			Planned: "Planowane",
+			InProgress: "W trakcie",
+			Exploring: "Rozważane",
+		},
+		items: {
+			"item-1": {
+				title: "Lepszy panel zleceń",
+				description:
+					"Czytelniejszy panel dla artystów i klientów, który ułatwi zarządzanie zapytaniami o zlecenia.",
+				details: [
+					"Czytelniejsze karty statusu zapytań.",
+					"Lepsze akcje do akceptowania, odrzucania, anulowania i aktualizowania zleceń.",
+					"Wygodniejszy układ mobilny do zarządzania zleceniami na mniejszych ekranach.",
+				],
+			},
+			"item-2": {
+				title: "Ulepszone posty portfolio",
+				description:
+					"Posty portfolio wrócą z czytelniejszym widokiem szczegółów i lepszą obsługą udostępniania.",
+				details: [
+					"Lepsze strony postów dla prac i przykładów zleceń.",
+					"Czytelniejsze wyświetlanie obrazów i podglądów.",
+					"Ulepszone linki do udostępniania postów portfolio.",
+				],
+			},
+			"item-3": {
+				title: "Powiadomienia",
+				description:
+					"Rozważamy powiadomienia, które pomogą użytkownikom śledzić ważną aktywność bez ręcznego sprawdzania każdej strony.",
+				details: [
+					"Aktualizacje dotyczące zmian w zapytaniach o zlecenia.",
+					"Możliwe powiadomienia o profilach, obserwacjach i aktywności.",
+					"Proste centrum powiadomień w aplikacji.",
+				],
+			},
+		},
+	},
 };
 
 export default pl;

@@ -42,12 +42,29 @@ export function AccountTypeSelector({
 						<label
 							key={opt.key}
 							className={cn(
-								"group relative w-full cursor-pointer rounded-2xl border text-left transition-all",
-								"p-2 sm:p-3",
-								"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 outline-none",
+								"group relative w-full cursor-pointer rounded-2xl border p-2 text-left outline-none transition-all sm:p-3",
+
+								// Shared keyboard focus state
+								"has-focus-visible:ring-2 has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-background",
+
 								selected
-									? "border-blue-500 bg-blue-50/60 dark:bg-blue-950"
-									: "border-border hover:border-blue-300 hover:bg-blue-50/40 dark:hover:bg-blue-950/40",
+									? [
+											"border-blue-500 bg-blue-50 dark:bg-blue-950",
+
+											// Focus when selected
+											"has-focus-visible:border-blue-600",
+											"has-focus-visible:ring-blue-500/40",
+											"dark:has-focus-visible:border-blue-300",
+											"dark:has-focus-visible:ring-blue-300/30",
+										]
+									: [
+											"border-border hover:border-blue-300 hover:bg-blue-50",
+											"dark:hover:border-blue-900 dark:hover:bg-blue-950/50",
+
+											// Focus when not selected
+											"has-focus-visible:border-input",
+											"has-focus-visible:ring-input/50",
+										],
 							)}
 						>
 							<input
@@ -70,10 +87,10 @@ export function AccountTypeSelector({
 								{/* custom radio mark */}
 								<span
 									className={cn(
-										"mt-0.5 flex relative size-5 items-center justify-center rounded-full border transition-all",
+										"mt-0.5 flex relative size-5 items-center justify-center rounded-full border transition-all duraton-75",
 										selected
 											? "border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-400"
-											: "border-border bg-background",
+											: "border-border group-hover:border-blue-700 group-hover:dark:border-blue-300",
 									)}
 									aria-hidden
 								>
@@ -88,15 +105,24 @@ export function AccountTypeSelector({
 								</span>
 
 								<div className={"flex-1"}>
-									<div className={"flex items-center gap-2"}>
+									<div className={"flex items-center justify-between gap-2"}>
 										<span
-											className={cn("font-medium", "text-sm sm:text-[0.95rem]")}
+											className={cn(
+												"font-medium",
+												selected
+													? "text-blue-950 dark:text-blue-50"
+													: "text-primary group-hover:text-blue-950 group-hover:dark:text-blue-50",
+												"text-sm sm:text-[0.95rem]",
+											)}
 										>
 											{opt.title}
 										</span>
 										{opt.key === "client" && (
 											<Badge
-												className={"bg-blue-100 text-[10px] text-blue-700"}
+												size={"sm"}
+												className={
+													"bg-blue-100 text-blue-700 dark:bg-blue-800/30 dark:text-blue-300"
+												}
 											>
 												{t("auth.account_type.client_badge")}
 											</Badge>
@@ -107,8 +133,8 @@ export function AccountTypeSelector({
 										className={cn(
 											"mt-1 text-muted-foreground text-xs leading-relaxed",
 											selected
-												? "text-secondary-foreground"
-												: "text-muted-foreground",
+												? "text-blue-700 dark:text-blue-300"
+												: "text-muted-foreground group-hover:text-blue-700 group-hover:dark:text-blue-300 ",
 										)}
 									>
 										{opt.description}

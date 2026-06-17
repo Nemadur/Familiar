@@ -1,7 +1,10 @@
-import { Badge } from "../ui/badge";
-import { cn, dateFormat } from "@/lib/utils";
-import { OutlineStar, SolidStar } from "../icons/icons";
+import { Typography } from "@heroui/react";
+import { useTranslation } from "react-i18next";
+import { cn, dateFormat, getReleaseTranslationKey } from "@/lib/utils";
 import type { TRelease, TReleaseInput } from "@/types/release-notes";
+import { OutlineStar, SolidStar } from "../icons/icons";
+import { Badge } from "../ui/badge";
+import { MarkdownDisplay } from "../ui/markdown-display";
 
 export const TAG_STYLES = {
 	Added:
@@ -20,16 +23,23 @@ export const TAG_STYLES = {
 		"bg-red-500/12 text-red-700 dark:text-red-400 dark:selection:text-red-200! dark:selection:bg-red-200/12! selection:text-red-900! selection:bg-red-900/12!",
 } as const satisfies Record<string, string>;
 
-const releaseModules = import.meta.glob<TRelease>("/src/release-notes/*.ts", {
-	eager: true,
-	import: "default",
-});
+const releaseModules = import.meta.glob<TReleaseInput>(
+	"/src/release-notes/*.ts",
+	{
+		eager: true,
+		import: "default",
+	},
+);
 
 const RELEASES: TRelease[] = markLatestRelease(
 	Object.values(releaseModules).sort((a, b) =>
 		compareVersionsDesc(a.version, b.version),
 	),
 );
+
+function getReleaseId(version: string) {
+	return `release-${version.replaceAll(".", "-")}`;
+}
 
 function markLatestRelease(releases: TReleaseInput[]): TRelease[] {
 	return releases.map((release, index) => ({
@@ -52,83 +62,184 @@ function compareVersionsDesc(a: string, b: string) {
 	return 0;
 }
 
-// TODO: put this to modal and show on eveery new update (cookie based tracking)
 export function TimelinesReleaseNotes() {
+	const { t } = useTranslation();
+
 	return (
-		<div className="min-h-svh py-12 px-6">
-			<div className="mx-auto max-w-3xl">
-				<div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
-					Changelog
-				</div>
-				<h1 className="mt-1 text-primary font-heading text-3xl tracking-tight">
-					What's new with Familiar
-				</h1>
-				<div className="flex flex-col">
-					{RELEASES.map((r) => (
-						<article
-							key={r.version}
-							className="grid grid-cols-[140px_1fr] gap-8 border-border/40 border-b py-10 last:border-b-0"
-						>
-							<aside className="sticky top-20 self-start">
-								<div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground uppercase tracking-[0.25em]">
-									{r.date}
-								</div>
-								<div className="mt-1 flex items-center gap-2">
-									<span className="font-heading text-xl tracking-tight text-primary">
-										v{r.version}
-									</span>
-									{r.highlight ? (
-										<Badge size={"sm"}>
-											<SolidStar />
-											Latest
-										</Badge>
-									) : null}
-								</div>
-							</aside>
-							<div>
-								{r.image ? (
-									<div className="mb-5 aspect-16/7 w-full overflow-hidden rounded-xl border border-border/60">
-										<img
-											src={r.image.src}
-											alt={r.image.alt}
-											className="h-full w-full object-cover"
-										/>
-									</div>
-								) : r.highlight ? (
-									<div className="mb-5 aspect-16/7 w-full overflow-hidden rounded-xl border border-border/60 bg-linear-to-br from-neutral-900/10 to-neutral-100/10">
-										<div className="grid h-full place-items-center">
-											<div className="text-center dark:mix-blend-difference bg-clip-text">
-												<OutlineStar className="mx-auto opacity-50 dark:text-neutral-300 text-neutral-700" />
-												<div className="mt-2 font-heading text-lg dark:text-neutral-300 text-neutral-700">
-													Latest release
-												</div>
-											</div>
-										</div>
-									</div>
-								) : null}
-								{r.groups.map((g) => (
-									<div key={g.tag} className="mt-5 first:mt-0">
-										<Badge size={"sm"} className={cn(TAG_STYLES[g.tag])}>
-											{g.tag}
-										</Badge>
-										<ul className="mt-2 space-y-1.5 prose">
-											{g.items.map((it) => (
-												<li
-													key={it}
-													className="flex gap-2 text-foreground text-sm leading-relaxed"
-												>
-													<span className="mt-2.5 size-1 shrink-0 rounded-full bg-muted-foreground" />
-													{it}
-												</li>
-											))}
-										</ul>
-									</div>
-								))}
-							</div>
-						</article>
+		<main className="px-4 py-10 sm:px-6 sm:py-12">
+			<section
+				aria-labelledby="release-notes-title"
+				className="mx-auto max-w-3xl"
+			>
+				<header className="flex flex-col gap-1">
+					<p className="font-mono text-xs text-muted-foreground uppercase tracking-[0.3em]">
+						{t("releaseNotes.eyebrow", "Changelog")}
+					</p>
+
+					<Typography.Heading
+						id="release-notes-title"
+						level={2}
+						className="text-primary"
+					>
+						{t("releaseNotes.title", "What's new with Familiar")}
+					</Typography.Heading>
+				</header>
+
+				<ol
+					className="mt-8 flex flex-col"
+					aria-label={t("releaseNotes.eyebrow", "Changelog")}
+				>
+					{RELEASES.map((release) => (
+						<ReleaseNoteItem key={release.version} release={release} />
 					))}
+				</ol>
+			</section>
+		</main>
+	);
+}
+
+function ReleaseNoteItem({ release }: { release: TRelease }) {
+	const releaseId = getReleaseId(release.version);
+	const titleId = `${releaseId}-title`;
+	const { t, i18n } = useTranslation();
+
+	return (
+		<li>
+			<article
+				aria-labelledby={titleId}
+				className="grid gap-5 border-border/60 border-b py-8 last:border-b-0 sm:py-10 md:grid-cols-[150px_minmax(0,1fr)] md:gap-8"
+			>
+				<header className="flex flex-wrap items-start justify-between gap-3 md:sticky md:top-20 md:block md:self-start">
+					<div>
+						<time
+							dateTime={release.date}
+							className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.25em]"
+						>
+							{dateFormat(release.date, i18n.language)}
+						</time>
+
+						<div className="mt-1 flex flex-wrap items-center gap-2">
+							<Typography.Heading
+								id={titleId}
+								level={4}
+								className="text-primary"
+							>
+								v{release.version}
+							</Typography.Heading>
+
+							{release.highlight && (
+								<Badge
+									size="sm"
+									aria-label={t("releaseNotes.latest", "Latest")}
+								>
+									<SolidStar aria-hidden="true" />
+									{t("releaseNotes.latest", "Latest")}
+								</Badge>
+							)}
+						</div>
+					</div>
+				</header>
+
+				<div className="min-w-0 space-y-5">
+					<ReleaseMedia release={release} />
+
+					<div className="space-y-5">
+						{release.groups.map((group) => (
+							<ReleaseChangeGroup
+								key={group}
+								releaseId={releaseId}
+								release={release}
+								group={group}
+							/>
+						))}
+					</div>
 				</div>
+			</article>
+		</li>
+	);
+}
+
+function ReleaseMedia({ release }: { release: TRelease }) {
+	const { t } = useTranslation();
+
+	if (release.image) {
+		return (
+			<figure className="aspect-video w-full overflow-hidden rounded-xl border border-border/60 sm:aspect-16/7">
+				<img
+					src={release.image.src}
+					alt={release.image.alt}
+					className="size-full object-cover"
+					loading="lazy"
+					decoding="async"
+				/>
+			</figure>
+		);
+	}
+
+	if (!release.highlight) {
+		return null;
+	}
+
+	return (
+		<figure
+			aria-label={t("releaseNotes.latestRelease", "Latest release")}
+			className="aspect-video w-full overflow-hidden rounded-xl border border-border/60 bg-linear-to-br from-neutral-900/10 to-neutral-100/10 sm:aspect-16/7"
+		>
+			<div className="grid size-full place-items-center p-6">
+				<figcaption className="text-center dark:mix-blend-difference">
+					<OutlineStar
+						aria-hidden="true"
+						className="mx-auto text-neutral-700 opacity-50 dark:text-neutral-300"
+					/>
+
+					<span className="mt-2 block font-heading text-neutral-700 text-sm dark:text-neutral-300 sm:text-lg">
+						{t("releaseNotes.latestRelease", "Latest release")}
+					</span>
+				</figcaption>
 			</div>
-		</div>
+		</figure>
+	);
+}
+
+function ReleaseChangeGroup({
+	releaseId,
+	release,
+	group,
+}: {
+	releaseId: string;
+	release: TRelease;
+	group: TRelease["groups"][number];
+}) {
+	const { t } = useTranslation();
+	const releaseKey = getReleaseTranslationKey(release.version);
+	const headingId = `${releaseId}-${group.toLowerCase()}-changes`;
+
+	const items = t(`releaseNotes.releases.${releaseKey}.${group}`, {
+		returnObjects: true,
+		defaultValue: [],
+	}) as string[];
+
+	if (!items.length) {
+		return null;
+	}
+
+	return (
+		<section aria-labelledby={headingId} className="space-y-3">
+			<Typography.Prose className="prose max-w-none prose-neutral dark:prose-invert prose-headings:font-heading prose-p:text-muted-foreground">
+				<h3 id={headingId}>
+					<Badge size="sm" className={cn(TAG_STYLES[group])}>
+						{t(`releaseNotes.tags.${group}`, group)}
+					</Badge>
+				</h3>
+
+				<ul>
+					{items.map((item) => (
+						<li key={item}>
+							<MarkdownDisplay key={item} content={item} />
+						</li>
+					))}
+				</ul>
+			</Typography.Prose>
+		</section>
 	);
 }
