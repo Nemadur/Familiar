@@ -19,6 +19,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { Elevated } from "@/lib/elevated";
 import { languages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +30,7 @@ function LanguageSelect() {
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button variant={"secondary"} role={"combobox"} size={"xl"}>
+				<Button role={"combobox"} variant={"secondary"} size={"xl"}>
 					{i18n.language
 						? (() => {
 								const selectedLanguage = languages.find((language) =>

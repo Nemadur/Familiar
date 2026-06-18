@@ -1,14 +1,15 @@
 import { Typography } from "@heroui/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
+import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
 
 function Empty({ className, ...props }: ComponentProps<"div">) {
 	return (
-		<div
+		<Elevated
 			data-slot="empty"
 			className={cn(
-				"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed p-6 text-center text-balance md:p-12",
+				"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed shadow-none! p-6 text-center text-balance md:p-12",
 				className,
 			)}
 			{...props}
@@ -35,7 +36,7 @@ const emptyMediaVariants = cva(
 		variants: {
 			variant: {
 				default: "bg-transparent",
-				icon: "flex size-16 shrink-0 items-center justify-center rounded-full bg-muted text-foreground [&_svg:not([class*='size-'])]:size-6",
+				icon: "flex size-16 shrink-0 items-center justify-center rounded-full bg-muted/75 text-foreground [&_svg:not([class*='size-'])]:size-6",
 			},
 		},
 		defaultVariants: {
@@ -66,11 +67,7 @@ type EmptyTitleProps = Omit<
 	level?: ComponentProps<typeof Typography.Heading>["level"];
 };
 
-function EmptyTitle({
-	className,
-	level = 4,
-	...props
-}: EmptyTitleProps) {
+function EmptyTitle({ className, level = 4, ...props }: EmptyTitleProps) {
 	return (
 		<Typography.Heading
 			data-slot="empty-title"
@@ -114,9 +111,9 @@ function EmptyContent({ className, ...props }: ComponentProps<"div">) {
 
 export {
 	Empty,
-	EmptyHeader,
-	EmptyTitle,
-	EmptyDescription,
 	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
 	EmptyMedia,
+	EmptyTitle,
 };

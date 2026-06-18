@@ -107,6 +107,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 	}, [userTheme]);
 
 	const appTheme = userTheme === "system" ? getSystemTheme() : userTheme;
+	const isDark =
+		appTheme === "dark" ||
+		appTheme === "oled" ||
+		userTheme === "dark" ||
+		userTheme === "oled";
 
 	const setTheme = (newUserTheme: UserTheme) => {
 		const validatedTheme = UserThemeSchema.parse(newUserTheme);
@@ -116,7 +121,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 	};
 
 	return (
-		<ThemeContext value={{ userTheme, appTheme, setTheme }}>
+		<ThemeContext value={{ userTheme, appTheme, setTheme, isDark }}>
 			<ScriptOnce>{themeScript}</ScriptOnce>
 			{children}
 		</ThemeContext>

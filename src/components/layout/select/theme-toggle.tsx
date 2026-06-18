@@ -20,6 +20,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme";
 
@@ -57,8 +58,8 @@ export default function ThemeToggle() {
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="secondary"
 					role="combobox"
+					variant={"secondary"}
 					aria-controls="theme-options"
 					className="w-fit"
 					aria-expanded={open}

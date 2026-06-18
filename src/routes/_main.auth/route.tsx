@@ -6,7 +6,7 @@ export const Route = createFileRoute("/_main/auth")({
 
 function RouteComponent() {
 	return (
-		<main className="min-h-[calc(100vh-6rem)] px-6 md:px-10">
+		<main className="min-h-[calc(100vh-6rem)]">
 			<div className="mx-auto grid min-h-[calc(100dvh-6rem)] w-full max-w-6xl lg:grid-cols-2 lg:gap-10">
 				<section
 					aria-labelledby="auth-page-title"

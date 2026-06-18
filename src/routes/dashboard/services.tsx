@@ -1,30 +1,19 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Surface } from "@heroui/react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+	Archive,
 	CalendarIcon,
-	ListFilterIcon,
-	GripVertical,
+	Edit2,
 	ExternalLink,
+	GripVertical,
+	LinkIcon,
+	ListFilterIcon,
 	MoreHorizontal,
 	Trash,
-	Edit2,
-	LinkIcon,
-	Archive,
 } from "lucide-react";
 import { useCallback, useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import type { DateFilterOperator } from "@/components/data-table-filter/core/types";
-import { CommissionForm } from "@/components/layout/commision/commission-form";
-import { DashboardHeader } from "@/components/layout/dashboard/header";
-import { ConfirmDialog } from "@/components/layout/confirm-dialog";
-import {
-	type DateRangeValue,
-	FilterBar,
-	type FilterGroup,
-	type FilterValue,
-	type ManagedFilterValue,
-} from "@/components/layout/filter-bar";
-import { getSelectedValues } from "@/routes/dashboard/commissions_requests";
-import { matchSingleOrMulti } from "@/components/layout/requests/my/helpers";
 import {
 	OutlineEdit,
 	OutlineImage,
@@ -32,13 +21,24 @@ import {
 	OutlinePlus,
 	OutlineTrash,
 } from "@/components/icons/icons";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { CommissionForm } from "@/components/layout/commision/commission-form";
+import { ConfirmDialog } from "@/components/layout/confirm-dialog";
+import { DashboardHeader } from "@/components/layout/dashboard/header";
+import {
+	type DateRangeValue,
+	FilterBar,
+	type FilterGroup,
+	type FilterValue,
+	type ManagedFilterValue,
+} from "@/components/layout/filter-bar";
+import { matchSingleOrMulti } from "@/components/layout/requests/my/helpers";
 import {
 	Sortable,
 	SortableItem,
 	SortableItemHandle,
 } from "@/components/reui/sortable";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	Select,
 	SelectContent,
@@ -52,10 +52,10 @@ import {
 	usePublishCommission,
 	useUpdateCommission,
 } from "@/hooks/use-commisions";
-import { useAuth } from "@/providers/auth";
-import { TCommissionStatus, type TCommission } from "@/types/commissions";
 import { cn } from "@/lib/utils";
-import { Surface } from "@heroui/react";
+import { useAuth } from "@/providers/auth";
+import { getSelectedValues } from "@/routes/dashboard/commissions_requests";
+import { type TCommission, TCommissionStatus } from "@/types/commissions";
 
 export const Route = createFileRoute("/dashboard/services")({
 	component: DashboardServices,
@@ -551,28 +551,28 @@ function DashboardServices() {
 												<div className="flex flex-col gap-2">
 													{items.map((item, index) => (
 														<SortableItem key={item.id} value={item.id}>
-												<ServiceCategoryItem
-													key={item.id}
-													item={item}
-													onStatusChange={(value) =>
-														handleStatusChange(
-															item.id,
-															value as TCommissionStatus,
-														)
-													}
-													onEdit={() =>
-														dispatch({
-															type: "openEditModal",
-															commissionId: item.id,
-														})
-													}
-													onArchive={() =>
-														dispatch({
-															type: "openArchiveModal",
-															commissionId: item.id,
-														})
-													}
-												/>
+															<ServiceCategoryItem
+																key={item.id}
+																item={item}
+																onStatusChange={(value) =>
+																	handleStatusChange(
+																		item.id,
+																		value as TCommissionStatus,
+																	)
+																}
+																onEdit={() =>
+																	dispatch({
+																		type: "openEditModal",
+																		commissionId: item.id,
+																	})
+																}
+																onArchive={() =>
+																	dispatch({
+																		type: "openArchiveModal",
+																		commissionId: item.id,
+																	})
+																}
+															/>
 														</SortableItem>
 													))}
 												</div>
@@ -646,9 +646,9 @@ function ServiceCategoryItem({
 	const { user } = useAuth();
 
 	return (
-		<Surface className="flex rounded-3xl p-1 pr-5!">
+		<Surface className="flex rounded-2xl p-1 pr-5!">
 			<div className="flex items-center gap-4 flex-1 overflow-hidden">
-				<div className="h-24 aspect-video rounded-[24px] bg-muted overflow-hidden shrink-0">
+				<div className="h-16 aspect-video rounded-xl bg-muted overflow-hidden shrink-0">
 					{item.multimedia?.[0] ? (
 						<img
 							src={item.multimedia[0].sizes?.half}
@@ -729,7 +729,11 @@ function ServiceCategoryItem({
 						</Link>
 					</Button>
 					{item.commissionStatus !== TCommissionStatus.Archived && (
-						<Button variant={"destructive_ghost"} size="icon-lg" onClick={onArchive}>
+						<Button
+							variant={"destructive_ghost"}
+							size="icon-lg"
+							onClick={onArchive}
+						>
 							<OutlineTrash />
 						</Button>
 					)}
@@ -739,7 +743,7 @@ function ServiceCategoryItem({
 								variant: "ghost",
 								size: "icon-lg",
 							}),
-							"cursor-grab hover:bg-transparent"
+							"cursor-grab hover:bg-transparent",
 						)}
 					>
 						<GripVertical />

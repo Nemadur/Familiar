@@ -1,9 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
+	OutlineCheck,
+	OutlineClearNight,
 	OutlineLogout,
+	OutlineMonitor,
 	OutlineReceipt,
 	OutlineSettings,
+	OutlineSunny,
 	OutlineUser,
 } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
@@ -19,12 +23,12 @@ import {
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-	DropdownMenuSub,
-	DropdownMenuSubTrigger,
 	DropdownMenuPortal,
+	DropdownMenuSeparator,
+	DropdownMenuSub,
 	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
+	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsTablet } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -32,12 +36,6 @@ import { useAuth } from "@/providers/auth";
 import { useTheme } from "@/providers/theme";
 import type { TUserProfile, TUserResponse } from "@/types/user";
 import UserAvatar from "./avatar";
-import {
-	OutlineMonitor,
-	OutlineSunny,
-	OutlineClearNight,
-	OutlineCheck,
-} from "@/components/icons/icons";
 
 type UserButtonContentProps = {
 	user: TUserResponse;
@@ -45,6 +43,7 @@ type UserButtonContentProps = {
 	showAvatar?: boolean;
 	showUsername?: boolean;
 	description?: React.ReactNode;
+	avatarSize?: "sm" | "default" | "lg" | "xl";
 };
 
 function UserButtonContent({
@@ -53,10 +52,13 @@ function UserButtonContent({
 	showAvatar = true,
 	showUsername = true,
 	description,
+	avatarSize,
 }: UserButtonContentProps) {
 	return (
 		<>
-			{showAvatar && <UserAvatar user={user as TUserProfile} />}
+			{showAvatar && (
+				<UserAvatar user={user as TUserProfile} size={avatarSize} />
+			)}
 			{showInfo && (
 				<div className="flex flex-col items-start text-left">
 					<span className="text-sm leading-none font-medium">
@@ -85,6 +87,7 @@ type UserProps = {
 	showAvatar?: boolean;
 	showUsername?: boolean;
 	description?: React.ReactNode;
+	avatarSize?: "sm" | "default" | "lg" | "xl";
 	isDropdown?: boolean;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -101,6 +104,7 @@ export default function User({
 	showAvatar = true,
 	showUsername = true,
 	description,
+	avatarSize,
 	isDropdown = false,
 	open: openProp,
 	onOpenChange,
@@ -141,6 +145,7 @@ export default function User({
 			showAvatar={showAvatar}
 			showUsername={showUsername}
 			description={description}
+			avatarSize={avatarSize}
 		/>
 	);
 
@@ -252,13 +257,12 @@ export default function User({
 			<div className="p-1">
 				<Button
 					variant="destructive"
-					className="h-9 w-full cursor-pointer justify-start px-2"
 					onClick={() => {
 						logout();
 						setOpen(false);
 					}}
 				>
-					<OutlineLogout className="mr-2 size-4" />
+					<OutlineLogout className="size-4" />
 					<span>Logout</span>
 				</Button>
 			</div>

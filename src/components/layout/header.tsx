@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Skeleton } from "boneyard-js/react";
+import { ShoppingCart } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,6 +12,7 @@ import {
 	SolidHome,
 	SolidReceipt,
 } from "@/components/icons/icons";
+import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import { TRoles } from "@/types/user/roles";
@@ -22,6 +24,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "../ui/sheet";
+import { BasketDropdown } from "./basket-dropdown";
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import CurrencySelect from "./select/currency";
@@ -56,6 +59,9 @@ export default function Header() {
 						{/* <ThemeToggle /> */}
 						<CurrencySelect display={"compact"} variant={"secondary"} />
 						{/* <LanguageSelect /> */}
+
+						<BasketDropdown />
+
 						<ClientOnly>
 							<Skeleton
 								name="header-artist_dashboard"
@@ -186,7 +192,7 @@ const NavLinks = memo(() => {
 	const navigationLinks = [
 		{ path: "/", label: t("header.navigation.home", "Home") },
 		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
-		// { path: "/shop", label: t("header.navigation.shop") },
+		{ path: "/shop", label: t("header.navigation.shop", "Shop") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },
 	];

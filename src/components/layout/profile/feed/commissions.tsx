@@ -19,14 +19,7 @@ import {
 	useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import type { NumberFilterOperator } from "@/components/data-table-filter/core/types";
-import {
-	FilterBar,
-	type FilterGroup,
-	type FilterValue,
-	type ManagedFilterValue,
-} from "@/components/layout/filter-bar";
 import {
 	OutlineBookmark,
 	OutlineChat,
@@ -36,7 +29,6 @@ import {
 	OutlineFilter,
 	OutlineUser,
 } from "@/components/icons/icons";
-import { EmptyPage } from "@/components/layout/empty-page";
 import {
 	Reel,
 	ReelContent,
@@ -44,8 +36,16 @@ import {
 	type ReelItem,
 	ReelProgress,
 } from "@/components/kibo-ui/reel";
+import { EmptyPage } from "@/components/layout/empty-page";
+import {
+	FilterBar,
+	type FilterGroup,
+	type FilterValue,
+	type ManagedFilterValue,
+} from "@/components/layout/filter-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import {
 	Tooltip,
 	TooltipContent,
@@ -63,6 +63,7 @@ import {
 	type TMultimediaItem,
 } from "@/types/commissions";
 import type { TUserProfile } from "@/types/user";
+import { BookmarkButton } from "../../bookmark";
 
 interface ProfileCommissionsProps {
 	artist: TUserProfile;
@@ -1199,21 +1200,6 @@ function CommissionCardHeader({
 				</ScrollShadow>
 			</div>
 		</div>
-	);
-}
-
-function BookmarkButton({ className }: { className?: string }) {
-	return (
-		<Button
-			size="icon-xl"
-			className={cn(
-				"shrink-0 bg-transparent text-primary shadow-none before:absolute before:bottom-0 before:-z-10 before:h-16 before:w-full before:rounded-b-full before:bg-primary/6 before:transition-all hover:bg-transparent hover:before:translate-y-1.5 hover:before:bg-primary/10 hover:[&>svg]:translate-y-1.5 [&>svg]:transition-transform",
-				className,
-			)}
-			onClick={(event) => event.stopPropagation()}
-		>
-			<OutlineBookmark />
-		</Button>
 	);
 }
 

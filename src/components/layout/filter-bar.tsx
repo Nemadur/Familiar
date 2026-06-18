@@ -587,6 +587,7 @@ export function FilterBar<TData>({
 						filters={filters}
 						actions={wrappedActions}
 						strategy={strategy}
+						backButtonMode="floating"
 					/>
 				</div>
 			</div>

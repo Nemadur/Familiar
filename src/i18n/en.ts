@@ -1,6 +1,4 @@
-import type { Locale } from "@/types/i18n";
-
-const en: Locale = {
+const en = {
 	seo: {
 		defaults: {
 			title: "Familiar",
@@ -582,6 +580,13 @@ const en: Locale = {
 					"Release note content no longer gets squeezed into narrow columns on small screens.",
 					"Legal document sections now render correctly from translations.",
 					"Markdown content in legal pages no longer creates invalid nested paragraph elements.",
+				],
+			},
+			v0_8_0: {
+				Added: [
+					"Added the Shop feature with browsing, categories, and item filtering.",
+					"Added a detailed Shop Item modal to view items and add them to your basket.",
+					"Added a Basket dropdown in the header and a dedicated Checkout page.",
 				],
 			},
 		},
