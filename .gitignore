@@ -11,6 +11,7 @@ dist-ssr/
 .output/
 .nitro/
 .vinxi/
+.vscode/
 
 # Environment
 .env
@@ -35,5 +36,4 @@ skills-lock.json
 .heroui-docs/
 # heroui-agents-md
 
-# Mockup files
 src/routeTree.gen.ts
