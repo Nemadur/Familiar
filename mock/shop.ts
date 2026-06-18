@@ -17,6 +17,18 @@ export const MOCK_BASKET_ITEMS = [
 	},
 ];
 
+export const MOCK_CATEGORIES = [
+	{ id: "c1", name: "Digital Art" },
+	{ id: "c2", name: "Character Design" },
+	{ id: "c3", name: "Concept Art" },
+	{ id: "c4", name: "Illustration" },
+	{ id: "c5", name: "Emote / Sticker" },
+	{ id: "c6", name: "Traditional Art" },
+	{ id: "c7", name: "Handcraft" },
+	{ id: "c8", name: "Animation" },
+	{ id: "c9", name: "Pixel Art" },
+];
+
 const mockUsers: TUserResponse[] = [
 	{
 		userId: "u1",

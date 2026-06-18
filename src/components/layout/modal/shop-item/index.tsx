@@ -282,49 +282,25 @@ export function ShopItemModal({
 
 							{/* Description Section */}
 							<Elevated shadowLevel={0} className="p-6 rounded-3xl space-y-6">
-								{/* TODO: remove mockup title and replace */}
 								<div className="flex items-center justify-between">
-									<h3 className="font-bold text-lg">Colour Palettes</h3>
-									<span className="text-sm text-muted-foreground">3</span>
+									<h3 className="font-bold text-lg">Details</h3>
 								</div>
 
 								<div className="leading-relaxed text-[15px] space-y-4">
 									{item.description ? (
 										<MarkdownDisplay content={item.description} />
 									) : (
-										// TODO: remove mockup description and replace with empty message
-										<>
-											<p className="text-muted-foreground text-base">
-												Get a new outfit for your OC, Sona, or Vtuber! Please
-												purchase a commercial license for use on a Vtuber model!
-											</p>
-
-											<div className="space-y-3 mt-4">
-												<div className="flex gap-2">
-													<OutlineClose className="size-5 text-red-400 shrink-0 mt-1" />
-													<p className="text-muted-foreground text-base">
-														Please do not reupload/resell/distribute. Purchasing
-														the outfit means you can use it for yourself and
-														yourself solely. You may use the outfit for multiple
-														of your own characters, but you cannot allow other
-														individuals to use the outfit.
-													</p>
-												</div>
-												<div className="flex gap-2 opacity-50">
-													<OutlineClose className="size-5 text-red-400 shrink-0 mt-1" />
-													<p className="text-muted-foreground text-base">
-														Please do not use this as a base or directly edit
-														the artwork provided
-													</p>
-												</div>
-											</div>
-										</>
+										<p className="text-muted-foreground text-base italic">
+											No description provided.
+										</p>
 									)}
 								</div>
 
-								<Button variant="ghost" className="w-full">
-									Read more
-								</Button>
+								{item.description && (
+									<Button variant="ghost" className="w-full">
+										Read more
+									</Button>
+								)}
 							</Elevated>
 						</div>
 					</div>

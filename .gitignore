@@ -36,3 +36,4 @@ skills-lock.json
 .heroui-docs/
 # heroui-agents-md
 
+src/routeTree.gen.ts

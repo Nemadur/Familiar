@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ListFilterIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { OutlineArrowLeft } from "@/components/icons/icons";
+import { MOCK_CATEGORIES } from "#/mock/shop";
 import { EmptyPage } from "@/components/layout/empty-page";
 import {
 	FilterBar,
@@ -36,17 +37,7 @@ function CategoryPage() {
 		if (backendCategories && backendCategories.length > 0) {
 			return backendCategories;
 		}
-		return [
-			{ id: "c1", name: "Digital Art" },
-			{ id: "c2", name: "Character Design" },
-			{ id: "c3", name: "Concept Art" },
-			{ id: "c4", name: "Illustration" },
-			{ id: "c5", name: "Emote / Sticker" },
-			{ id: "c6", name: "Traditional Art" },
-			{ id: "c7", name: "Handcraft" },
-			{ id: "c8", name: "Animation" },
-			{ id: "c9", name: "Pixel Art" },
-		] as any[];
+		return MOCK_CATEGORIES as any[];
 	}, [backendCategories]);
 
 	const currentCategory = useMemo(() => {
