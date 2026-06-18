@@ -64,7 +64,7 @@ export default function UserAvatar({
 			{isOnline && (
 				<span
 					className={cn(
-						"absolute bottom-0 right-0 size-4 rounded-full border-3 border-background bg-green-500 z-10 translate-x-0.5 translate-y-0.5",
+						"absolute bottom-0 transition-all duration-75 right-0 size-4 rounded-full border-3 border-background bg-green-500 z-10 translate-x-0.5 translate-y-0.5",
 						badgeClassName,
 					)}
 				/>

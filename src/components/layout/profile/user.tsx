@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Calligraph } from "calligraph";
+import { SprayCanIcon } from "lucide-react";
 import { useState } from "react";
 import {
 	OutlineCheck,
@@ -95,7 +96,7 @@ function UserButtonContent({
 							{description}
 						</span>
 					) : status ? (
-						<Calligraph
+						<span
 							className={cn(
 								"mt-0.5 text-xs truncate w-full",
 								isOnline && status === "Online"
@@ -104,7 +105,7 @@ function UserButtonContent({
 							)}
 						>
 							{status}
-						</Calligraph>
+						</span>
 					) : (
 						showUsername && (
 							<span
@@ -233,8 +234,13 @@ export default function User({
 			label: "Connect To Mollie",
 			icon: <OutlineSettings />,
 			to: "https://my.mollie.com/oauth2/authorize",
-			params: { client_id: import.meta.env.VITE_MOLLIE_CLIENT_ID , redirect_uri: "https://www.familiar.art/auth/mollie/callback", state: "random_state_string", scope: "profiles.read payments.read payments.write" },
-		}
+			params: {
+				client_id: import.meta.env.VITE_MOLLIE_CLIENT_ID,
+				redirect_uri: "https://www.familiar.art/auth/mollie/callback",
+				state: "random_state_string",
+				scope: "profiles.read payments.read payments.write",
+			},
+		},
 	];
 
 	const secondaryMenuItems = [
