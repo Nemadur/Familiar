@@ -6,11 +6,58 @@
 
 @custom-variant dark (&:where(.dark, .oled, .dark *, .oled *));
 
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/assets/fonts/OpenRunde-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/assets/fonts/OpenRunde-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/assets/fonts/OpenRunde-Semibold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenRunde';
+  src: url('/assets/fonts/OpenRunde-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition: none !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
 body {
   @apply m-0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  /* font-family:
+    'OpenRunde', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; */
+    font-family: 'OpenRunde', sans-serif;
+    font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -21,47 +68,70 @@ code {
 }
 
  :root {
-    --background: var(--color-gray-50);
-    --foreground: var(--color-gray-900);
+    --background: var(--color-neutral-50);
+    --foreground: var(--color-familiar-700);
 
     --card: var(--color-white);
-    --card-foreground: var(--color-gray-900);
+    --card-foreground: var(--color-neutral-900);
 
     --popover: var(--color-white);
     --popover-foreground: hsl(224 71.4% 4.1%);
 
-    --sidebar-background: var(--color-gray-100);
-    --sidebar-foreground: var(--color-gray-900);
+    --sidebar-background: var(--color-neutral-100);
+    --sidebar-foreground: var(--color-neutral-900);
     --sidebar-primary: var(--color-blue);
-    --sidebar-primary-foreground: var(--color-gray-50);
-    --sidebar-border: var(--color-gray-300);
+    --sidebar-primary-foreground: var(--color-neutral-50);
+    --sidebar-border: var(--color-neutral-300);
 
-    --primary: var(--color-gray-950);
-    --primary-foreground: var(--color-gray-50);
+    --primary: var(--color-neutral-950);
+    --primary-foreground: var(--color-neutral-50);
 
-    --secondary: var(--color-gray-100);
-    --secondary-foreground: var(--color-gray-900);
+    --secondary: var(--color-neutral-200);
+    --secondary-foreground: var(--color-neutral-900);
 
-    --muted: var(--color-gray-100);
-    --muted-foreground: var(--color-gray-500);
+    --muted: var(--color-neutral-100);
+    --muted-foreground: var(--color-neutral-500);
 
     --accent: var(--color-blue);
     --accent-foreground: var(--color-white);
 
     --destructive: var(--color-red-500);
-    --destructive-foreground: var(--color-red-600);
+    --destructive-foreground: var(--color-red-50);
 
-    --border: var(--color-gray-200);
-    --input: var(--color-gray-200);
-    --ring: var(--color-gray-200);
+    --border: var(--color-neutral-200);
+    --input: var(--color-neutral-200);
+    --ring: var(--color-neutral-200);
     --radius: 0.6rem;
 
     --link: var(--color-blue-500);
     --link-hover: var(--color-blue-700);
+
+    --elevated: oklch(1 0 0); /* white */
+    --elevated-foreground: var(--color-neutral-900);
+
+    --surface-1: var(--color-neutral-50);
+    --surface-2: var(--color-neutral-100);
+    --surface-3: var(--color-neutral-200);
+    --surface-4: var(--color-neutral-300);
+    --surface-5: var(--color-neutral-400);
+    --surface-6: var(--color-neutral-500);
+    --surface-7: var(--color-neutral-600);
+    --surface-8: var(--color-neutral-700);
+
+    --shadow-color: rgb(0 0 0 / 0.06);
+    --shadow-1: 0 0 0 1px var(--shadow-color);
+    --shadow-2: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color);
+    --shadow-3: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color);
+    --shadow-4: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color);
+    --shadow-5: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color);
+    --shadow-6: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color), 0 24px 24px -12px var(--shadow-color);
+    --shadow-7: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color), 0 24px 24px -12px var(--shadow-color), 0 48px 48px -24px var(--shadow-color);
+    --shadow-8: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color), 0 24px 24px -12px var(--shadow-color), 0 48px 48px -24px var(--shadow-color), 0 96px 96px -48px var(--shadow-color);
+
     --success:
     var(--color-emerald-500);
     --success-foreground:
-    var(--color-emerald-900);
+    var(--color-emerald-950);
     --info:
     var(--color-violet-500);
     --info-foreground:
@@ -78,7 +148,7 @@ code {
 
   .dark {
     --background: var(--color-familiar-800);
-    --foreground: var(--color-familiar-500);
+    --foreground: var(--color-familiar-300);
 
     --card: var(--color-familiar-800);
     --card-foreground: var(--color-familiar-50);
@@ -95,7 +165,7 @@ code {
     --primary: var(--color-familiar-50);
     --primary-foreground: var(--color-familiar-950);
 
-    --secondary: var(--color-familiar-900);
+    --secondary: var(--color-familiar-700);
     --secondary-foreground: var(--color-familiar-50);
 
     --muted: var(--color-familiar-700);
@@ -113,6 +183,37 @@ code {
 
     --link: var(--color-blue-400);
     --link-hover: var(--color-blue-300);
+
+    --elevated: oklch(0.2342 0.0041 280.05); /* familiar-700, slightly lighter than bg */
+    --elevated-foreground: var(--color-familiar-50);
+
+    --surface-1: var(--color-familiar-800);
+    --surface-2: var(--color-familiar-700);
+    --surface-3: var(--color-familiar-600);
+    --surface-4: var(--color-familiar-500);
+    --surface-5: var(--color-familiar-400);
+    --surface-6: var(--color-familiar-300);
+    --surface-7: var(--color-familiar-200);
+    --surface-8: var(--color-familiar-100);
+
+    --dm-hi-base: rgba(255,255,255,0.01);
+    --dm-hi-mid: rgba(255,255,255,0.02);
+    --dm-hi-high: rgba(255,255,255,0.04);
+    --dm-hi-peak: rgba(255,255,255,0.06);
+    --dm-ring-base: rgba(255,255,255,0.02);
+    --dm-ring-mid: rgba(255,255,255,0.04);
+    --dm-ring-high: rgba(255,255,255,0.06);
+    --dm-drop: rgba(0,0,0,0.18);
+
+    --shadow-1: inset 0 0 0 1px var(--dm-ring-base);
+    --shadow-2: inset 0 1px 0 0 var(--dm-hi-base), inset 0 0 0 1px var(--dm-ring-base), 0 1px 1px -0.5px var(--dm-drop);
+    --shadow-3: inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-base), 0 0 0 1px rgba(0,0,0,0.12), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop);
+    --shadow-4: inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-mid), 0 0 0 1px rgba(0,0,0,0.14), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop);
+    --shadow-5: inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-mid), 0 0 0 1px rgba(0,0,0,0.16), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop);
+    --shadow-6: inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.18), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
+    --shadow-7: inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.20), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop), 0 48px 48px -24px var(--dm-drop);
+    --shadow-8: inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.22), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop), 0 48px 48px -24px var(--dm-drop), 0 96px 96px -48px var(--dm-drop);
+
     --success:
     var(--color-emerald-500);
     --success-foreground:
@@ -168,6 +269,36 @@ code {
 
     --link: var(--color-blue-400);
     --link-hover: var(--color-blue-300);
+
+    --elevated: oklch(0.12 0 0); /* very dark gray, slightly lighter than true black */
+    --elevated-foreground: var(--color-familiar-50);
+
+    --surface-1: #000000;
+    --surface-2: oklch(0.12 0 0);
+    --surface-3: var(--color-familiar-950);
+    --surface-4: var(--color-familiar-900);
+    --surface-5: var(--color-familiar-800);
+    --surface-6: var(--color-familiar-700);
+    --surface-7: var(--color-familiar-600);
+    --surface-8: var(--color-familiar-500);
+
+    --dm-hi-base: rgba(255,255,255,0.01);
+    --dm-hi-mid: rgba(255,255,255,0.02);
+    --dm-hi-high: rgba(255,255,255,0.04);
+    --dm-hi-peak: rgba(255,255,255,0.06);
+    --dm-ring-base: rgba(255,255,255,0.02);
+    --dm-ring-mid: rgba(255,255,255,0.04);
+    --dm-ring-high: rgba(255,255,255,0.06);
+    --dm-drop: rgba(0,0,0,0.18);
+
+    --shadow-1: inset 0 0 0 1px var(--dm-ring-base);
+    --shadow-2: inset 0 1px 0 0 var(--dm-hi-base), inset 0 0 0 1px var(--dm-ring-base), 0 1px 1px -0.5px var(--dm-drop);
+    --shadow-3: inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-base), 0 0 0 1px rgba(0,0,0,0.12), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop);
+    --shadow-4: inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-mid), 0 0 0 1px rgba(0,0,0,0.14), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop);
+    --shadow-5: inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-mid), 0 0 0 1px rgba(0,0,0,0.16), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop);
+    --shadow-6: inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.18), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
+    --shadow-7: inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.20), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop), 0 48px 48px -24px var(--dm-drop);
+    --shadow-8: inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.22), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop), 0 48px 48px -24px var(--dm-drop), 0 96px 96px -48px var(--dm-drop);
   }
 
 @theme inline {
@@ -177,6 +308,27 @@ code {
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-elevated: var(--elevated);
+  --color-elevated-foreground: var(--elevated-foreground);
+
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-surface-5: var(--surface-5);
+  --color-surface-6: var(--surface-6);
+  --color-surface-7: var(--surface-7);
+  --color-surface-8: var(--surface-8);
+
+  --shadow-surface-1: var(--shadow-1);
+  --shadow-surface-2: var(--shadow-2);
+  --shadow-surface-3: var(--shadow-3);
+  --shadow-surface-4: var(--shadow-4);
+  --shadow-surface-5: var(--shadow-5);
+  --shadow-surface-6: var(--shadow-6);
+  --shadow-surface-7: var(--shadow-7);
+  --shadow-surface-8: var(--shadow-8);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -248,17 +400,29 @@ code {
   --color-red-900: oklch(0.396 0.141 25.723);
   --color-red-950: oklch(0.258 0.092 26.042);
 
-  --color-gray-50: oklch(0.985 0.002 247.839);
-  --color-gray-100: oklch(0.967 0.003 264.542);
-  --color-gray-200: oklch(0.928 0.006 264.531);
-  --color-gray-300: oklch(0.872 0.01 258.338);
-  --color-gray-400: oklch(0.707 0.022 261.325);
-  --color-gray-500: oklch(0.551 0.027 264.364);
-  --color-gray-600: oklch(0.446 0.03 256.802);
-  --color-gray-700: oklch(0.373 0.034 259.733);
-  --color-gray-800: oklch(0.278 0.033 256.848);
-  --color-gray-900: oklch(0.21 0.034 264.665);
-  --color-gray-950: oklch(0.13 0.028 261.692);
+  --color-neutral-50: oklch(0.985 0.002 247.839);
+  --color-neutral-100: oklch(0.967 0.003 264.542);
+  --color-neutral-200: oklch(0.928 0.006 264.531);
+  --color-neutral-300: oklch(0.872 0.01 258.338);
+  --color-neutral-400: oklch(0.707 0.022 261.325);
+  --color-neutral-500: oklch(0.551 0.027 264.364);
+  --color-neutral-600: oklch(0.446 0.03 256.802);
+  --color-neutral-700: oklch(0.373 0.034 259.733);
+  --color-neutral-800: oklch(0.278 0.033 256.848);
+  --color-neutral-900: oklch(0.21 0.034 264.665);
+  --color-neutral-950: oklch(0.13 0.028 261.692);
+
+  --color-gray-50: var(--color-neutral-50);
+  --color-gray-100: var(--color-neutral-100);
+  --color-gray-200: var(--color-neutral-200);
+  --color-gray-300: var(--color-neutral-300);
+  --color-gray-400: var(--color-neutral-400);
+  --color-gray-500: var(--color-neutral-500);
+  --color-gray-600: var(--color-neutral-600);
+  --color-gray-700: var(--color-neutral-700);
+  --color-gray-800: var(--color-neutral-800);
+  --color-gray-900: var(--color-neutral-900);
+  --color-gray-950: var(--color-neutral-950);
 
   --color-familiar-50: oklch(0.882 0.0029 264.54);
   --color-familiar-100: oklch(0.8332 0.0056 274.95);
@@ -295,13 +459,7 @@ code {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    @apply transition-none;
+    @apply bg-background text-foreground selection:bg-primary/12;
   }
 }
 

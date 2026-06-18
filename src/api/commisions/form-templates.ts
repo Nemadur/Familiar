@@ -5,6 +5,10 @@ export function getFormTemplates() {
 	return apiFetch<FormTemplateResponse[]>("/api/form-templates");
 }
 
+export function getFormTemplateById(templateId: string) {
+	return apiFetch<FormTemplateResponse>(`/api/form-templates/${templateId}`);
+}
+
 export function createFormTemplate(data: {
 	name: string;
 	description?: string;

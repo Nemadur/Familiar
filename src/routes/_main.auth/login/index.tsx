@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { GalleryVerticalEnd } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import LoginForm from "@/components/layout/auth/form/login";
-import { Button } from "@/components/ui/button";
+import { AuthLegalFooter } from "@/components/layout/auth/footer";
+import { Typography } from "@heroui/react";
 
 export const Route = createFileRoute("/_main/auth/login/")({
 	component: LoginPage,
@@ -13,51 +13,23 @@ function LoginPage() {
 	const { t } = useTranslation();
 
 	return (
-		<div className="grid h-[calc(100vh-6rem)] mt-2 lg:grid-cols-2">
-			<div className="flex flex-col gap-4 p-6 md:p-10">
-				<div className="flex flex-1 items-center justify-center">
-					<div className="w-full max-w-md">
-						<LoginForm
-							onSuccess={() => navigate({ to: "/" })}
-							onModeChange={() => navigate({ to: "/auth/register" })}
-							onForgot={() => navigate({ to: "/auth/forgot" })}
-						/>
+		<article className="flex h-full flex-1 flex-col">
+			<header className="flex flex-col py-6">
+				<Typography.Heading level={3}>{t("auth.login.title", "Login")}</Typography.Heading>
+				<Typography.Paragraph size="sm" className="text-muted-foreground">
+					{t("auth.login.description", "Login to Familiar")}
+				</Typography.Paragraph>
+			</header>
 
-						<div className="mt-6 space-y-4 text-center text-sm">
-							{/* <div className="text-muted-foreground">
-								{t("auth.forgot.register_question")}{" "}
-								<Button
-									type="button"
-									onClick={() => navigate({ to: "/auth/register" })}
-									variant={"link"}
-									className="p-0 h-auto"
-								>
-									{t("auth.register.cta")}
-								</Button>
-							</div> */}
-
-							<p className="px-8 text-muted-foreground">
-								{t("auth.terms_agree.label")}{" "}
-								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="/">{t("auth.terms_agree.terms")}</Link>
-								</Button>{" "}
-								{t("auth.terms_agree.and")}{" "}
-								<Button asChild variant={"link"} className="p-0 h-auto">
-									<Link to="/">{t("auth.terms_agree.privacy")}</Link>
-								</Button>
-								.
-							</p>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div className="bg-muted relative hidden lg:block rounded-4xl overflow-hidden">
-				<img
-					src="https://images.pexels.com/photos/1570264/pexels-photo-1570264.jpeg"
-					alt="Familiar"
-					className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+			<section aria-labelledby="auth-page-title" className="mt-4 h-full">
+				<LoginForm
+					onSuccess={() => navigate({ to: "/" })}
+					onModeChange={() => navigate({ to: "/auth/register" })}
+					onForgot={() => navigate({ to: "/auth/forgot" })}
 				/>
-			</div>
-		</div>
+			</section>
+
+			<AuthLegalFooter />
+		</article>
 	);
 }

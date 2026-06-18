@@ -19,11 +19,63 @@ export enum TCommissionRequestStatus {
 	Cancelled = "CANCELLED",
 }
 
+export type TCreateCommissionRequest = {
+	title: string;
+	description?: string;
+	categoryId: string;
+	folderId?: string;
+	basePrice: number;
+	currencyCode: string;
+	tagIds?: string[];
+	commissionStatus?: TCommissionStatus;
+};
+
+export type TUpdateCommissionRequest = Partial<{
+	title: string;
+	description: string;
+	categoryId: string;
+	folderId: string;
+	basePrice: number;
+	currencyCode: string;
+	multimediaIds: string[];
+	commissionStatus: TCommissionStatus;
+}>;
+
+export type TMediaJobResponse = {
+	jobId: string;
+	status: string;
+	fullSizeId?: string;
+	halfSizeId?: string;
+	thumbnailId?: string;
+	errorMessage?: string;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type TTagResponse = {
+	id: string;
+	name: string;
+	description?: string;
+	hasContentWarning: boolean;
+	isAdultOnly: boolean;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type TCommissionCategoryResponse = {
+	id: string;
+	name: string;
+	description?: string;
+	parentId?: string | null;
+	subcategories?: TCommissionCategoryResponse[];
+};
+
 export type TCommissionCategory = {
 	id: string;
 	name: string;
-	parentId: string;
-	parentName: string;
+	parentId?: string | null;
+	parentName?: string | null;
 };
 
 export type TMultimediaSize = {
@@ -65,33 +117,20 @@ export type TCommission = {
 	artistId: string;
 	version: number;
 	artistTos: TTermsOfService;
+	formTemplateId?: string;
+	formTemplateName?: string;
 	createdAt: string;
 	updatedAt: string;
 };
 
-export type TCommissionDetailResponse = {
-	id: string;
-	title: string;
-	description: string;
-	basePrice: number;
-	currencyCode: string;
-	commissionStatus: TCommissionStatus;
-	category: TCommissionCategory;
-	multimedia: TMultimediaItem[];
-	tags: TTags[];
-	artistId: string;
-	version: number;
-	artistTos: TTermsOfService;
-	createdAt: string;
-	updatedAt: string;
-};
+export type TCommissionDetailResponse = TCommission;
 
 export type TCommissionResponse = {
 	id: string;
 	title: string;
-	description: string;
+	description?: string;
 	categoryId: string;
-	folderId: string;
+	folderId?: string;
 	basePrice: number;
 	currencyCode: string;
 	commissionStatus: TCommissionStatus;
@@ -118,6 +157,10 @@ export type TCommissionRequest = {
 	commissionVersion: number;
 	tosAcceptance: TTermsOfServiceAcceptance;
 	multimedia: TMultimediaItem[];
+	calculatedTotalPrice?: number;
+	currencyCode?: string;
+	formSnapshot?: unknown;
+	formResponse?: unknown;
 	createdAt: string;
 	updatedAt: string;
 	payment: TCommissionRequestPaymentSummary;

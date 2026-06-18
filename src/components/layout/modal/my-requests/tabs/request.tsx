@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { Surface } from "@heroui/react";
-import { Download, ExternalLink } from "lucide-react";
 import { OutlineClose } from "@/components/icons/icons";
+import { Button } from "@/components/ui/button";
 import type { TCommission, TCommissionRequest } from "@/types/commissions";
+import { Surface } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
+import { Download, ExternalLink } from "lucide-react";
 
 export type RequestSectionMedia = {
 	id: string;
@@ -31,18 +31,14 @@ export type RequestSectionCommission = {
 	}> | null;
 };
 
-function shortId(value: string, start = 3, end = 3) {
-	if (!value) return "";
-	if (value.length <= start + end + 3) return value;
-	return `${value.slice(0, start)}...${value.slice(-end)}`;
-}
+const DEFAULT_MONEY_FORMATTER = new Intl.NumberFormat("en-US", {
+	style: "currency",
+	currency: "USD",
+	minimumFractionDigits: 2,
+});
 
 function defaultFormatMoney(value: number) {
-	return new Intl.NumberFormat("en-US", {
-		style: "currency",
-		currency: "USD",
-		minimumFractionDigits: 2,
-	}).format(value);
+	return DEFAULT_MONEY_FORMATTER.format(value);
 }
 
 function getPreviewUrl(media: RequestSectionMedia) {
@@ -76,7 +72,7 @@ export function RequestSectionCard({
 		"";
 
 	return (
-		<Surface className="space-y-6 p-4 rounded-3xl">
+		<Surface className="space-y-6 rounded-3xl p-4">
 			<Surface
 				variant="secondary"
 				className="flex items-center gap-4 rounded-2xl border border-border p-2 pr-4"
@@ -104,14 +100,14 @@ export function RequestSectionCard({
 					</p>
 				</div>
 
-				{commission?.basePrice && (
+				{commission?.basePrice ? (
 					<div className="shrink-0 text-right">
 						<p className="text-[11px] text-muted-foreground">Starting at</p>
 						<p className="text-sm font-semibold text-foreground">
 							{formatMoney(commission.basePrice)}
 						</p>
 					</div>
-				)}
+				) : null}
 			</Surface>
 
 			<div className="grid gap-3 sm:grid-cols-2">
@@ -146,7 +142,7 @@ export function RequestSectionCard({
 
 				<Surface
 					variant="secondary"
-					className="rounded-2xl border border-border px-4 py-4"
+					className="rounded-2xl border border-border p-4"
 				>
 					<p className="text-sm leading-relaxed text-foreground/90">
 						{request.description || "No additional details provided."}
@@ -187,7 +183,7 @@ export function RequestSectionCard({
 										<div className="absolute right-2 top-2 flex items-center gap-2">
 											{originalUrl ? (
 												<Button
-													size={"icon-lg"}
+													size="icon-lg"
 													aria-label="Open original file"
 													asChild
 												>
@@ -202,7 +198,7 @@ export function RequestSectionCard({
 											) : null}
 
 											{originalUrl ? (
-												<Button size={"icon-lg"} aria-label="Download file">
+												<Button size="icon-lg" aria-label="Download file">
 													<Download className="size-4" />
 												</Button>
 											) : null}
@@ -219,25 +215,6 @@ export function RequestSectionCard({
 											) : null}
 										</div>
 									</div>
-
-									{/* <div className="flex items-center gap-3 px-3 py-3"> */}
-									{/* <div className="min-w-0 flex-1">
-											<p className="truncate text-sm font-medium text-foreground">
-												Attachment {media.id}
-											</p>
-											<p className="truncate text-[11px] text-muted-foreground">
-												{originalUrl || "No file source"}
-											</p>
-										</div> */}
-
-									{/* {originalUrl ? (
-											<Button asChild variant={"link"}>
-												<Link to={originalUrl} target="_blank" rel="noreferrer">
-													Open
-												</Link>
-											</Button>
-										) : null} */}
-									{/* </div> */}
 								</Surface>
 							);
 						})}
@@ -245,7 +222,7 @@ export function RequestSectionCard({
 				) : (
 					<Surface
 						variant="secondary"
-						className="rounded-2xl border border-border px-4 py-4"
+						className="rounded-2xl border border-border p-4"
 					>
 						<p className="text-sm text-foreground">No references attached.</p>
 					</Surface>

@@ -28,7 +28,7 @@ import {
 	type CSSProperties,
 	createContext,
 	type ReactNode,
-	useContext,
+	use,
 	useEffect,
 	useId,
 	useMemo,
@@ -53,7 +53,7 @@ import {
 	DataGridTableViewport,
 } from "src/components/reui/data-grid/data-grid-table";
 import { Button } from "src/components/ui/button";
-import { cn } from "src/lib/utils";
+import { cn, createStaticList } from "src/lib/utils";
 
 // Context to share sortable listeners from row to handle
 type SortableContextValue = ReturnType<typeof useSortable>;
@@ -63,7 +63,7 @@ const SortableRowContext = createContext<Pick<
 > | null>(null);
 
 function DataGridTableDndRowHandle({ className }: { className?: string }) {
-	const context = useContext(SortableRowContext);
+	const context = use(SortableRowContext);
 
 	if (!context) {
 		// Fallback if context is not available (shouldn't happen in normal usage)
@@ -162,16 +162,16 @@ function DataGridTableDndRows<TData>({
 	useEffect(() => {
 		if (!isDraggingRow) return;
 
-		const { body, documentElement } = document;
-		const previousBodyCursor = body.style.cursor;
-		const previousDocumentCursor = documentElement.style.cursor;
+		const cursorTargets = [document.body, document.documentElement];
 
-		body.style.cursor = "grabbing";
-		documentElement.style.cursor = "grabbing";
+		cursorTargets.forEach((element) => {
+			element.classList.add("cursor-grabbing");
+		});
 
 		return () => {
-			body.style.cursor = previousBodyCursor;
-			documentElement.style.cursor = previousDocumentCursor;
+			cursorTargets.forEach((element) => {
+				element.classList.remove("cursor-grabbing");
+			});
 		};
 	}, [isDraggingRow]);
 
@@ -202,6 +202,8 @@ function DataGridTableDndRows<TData>({
 		return [restrictToVerticalAxis, restrictToTableContainer];
 	}, []);
 
+	const skeletonKeys = createStaticList("Skeleton", pagination.pageSize);
+
 	return (
 		<DndContext
 			id={useId()}
@@ -219,7 +221,7 @@ function DataGridTableDndRows<TData>({
 				viewportRef={tableContainerRef}
 				className={
 					isDraggingRow
-						? "relative cursor-grabbing [&_*]:cursor-grabbing!"
+						? "relative cursor-grabbing **:cursor-grabbing!"
 						: "relative"
 				}
 			>
@@ -271,7 +273,7 @@ function DataGridTableDndRows<TData>({
 						isLoading &&
 						pagination?.pageSize ? (
 							Array.from({ length: pagination.pageSize }).map((_, rowIndex) => (
-								<DataGridTableBodyRowSkeleton key={rowIndex}>
+								<DataGridTableBodyRowSkeleton key={skeletonKeys[rowIndex].id}>
 									{table.getVisibleFlatColumns().map((column) => {
 										return (
 											<DataGridTableBodyRowSkeletonCell

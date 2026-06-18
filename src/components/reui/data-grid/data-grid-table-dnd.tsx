@@ -1,3 +1,4 @@
+import { createStaticList } from "@/lib/utils";
 import {
 	closestCenter,
 	DndContext,
@@ -170,16 +171,16 @@ function DataGridTableDnd<TData>({
 	useEffect(() => {
 		if (!isDraggingColumn) return;
 
-		const { body, documentElement } = document;
-		const previousBodyCursor = body.style.cursor;
-		const previousDocumentCursor = documentElement.style.cursor;
+		const cursorTargets = [document.body, document.documentElement];
 
-		body.style.cursor = "grabbing";
-		documentElement.style.cursor = "grabbing";
+		cursorTargets.forEach((element) => {
+			element.classList.add("cursor-grabbing");
+		});
 
 		return () => {
-			body.style.cursor = previousBodyCursor;
-			documentElement.style.cursor = previousDocumentCursor;
+			cursorTargets.forEach((element) => {
+				element.classList.remove("cursor-grabbing");
+			});
 		};
 	}, [isDraggingColumn]);
 
@@ -206,6 +207,8 @@ function DataGridTableDnd<TData>({
 		};
 	};
 
+	const skeletonKeys = createStaticList("skeleton", 1);
+
 	return (
 		<DndContext
 			collisionDetection={closestCenter}
@@ -223,7 +226,7 @@ function DataGridTableDnd<TData>({
 				viewportRef={containerRef}
 				className={
 					isDraggingColumn
-						? "relative cursor-grabbing [&_*]:cursor-grabbing!"
+						? "relative cursor-grabbing **:cursor-grabbing!"
 						: "relative"
 				}
 			>
@@ -257,7 +260,7 @@ function DataGridTableDnd<TData>({
 						isLoading &&
 						pagination?.pageSize ? (
 							Array.from({ length: pagination.pageSize }).map((_, rowIndex) => (
-								<DataGridTableBodyRowSkeleton key={rowIndex}>
+								<DataGridTableBodyRowSkeleton key={skeletonKeys[rowIndex].id}>
 									{table.getVisibleFlatColumns().map((column) => {
 										return (
 											<DataGridTableBodyRowSkeletonCell

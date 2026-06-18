@@ -56,7 +56,7 @@ export function ColorPaletteDebugger() {
 							placeholder="#000000"
 						/>
 						<div
-							className="h-10 w-10 rounded border shadow-sm"
+							className="size-10 rounded border shadow-sm"
 							style={{
 								backgroundColor: isValid
 									? normalizeHex(baseColor)

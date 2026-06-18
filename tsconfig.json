@@ -1,15 +1,12 @@
 {
   "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2023",
     "jsx": "react-jsx",
     "module": "ESNext",
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@familiar/api": ["./src/api-index.ts"]
-    },
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "paths": { "@/*": ["./src/*"], "@*": ["./src/*"], "#/*": ["./*"] },
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
 
     /* Bundler mode */

@@ -6,11 +6,11 @@ import {
 	ReelFooter,
 	ReelHeader,
 	ReelImage,
-	type ReelItem,
 	ReelNavigation,
 	ReelProgress,
 	ReelVideo,
-} from "./index";
+	type ReelItem,
+} from ".";
 
 // Example data for the reel
 const reelItems: ReelItem[] = [
@@ -62,30 +62,22 @@ export function ReelControlledExample() {
 	};
 
 	const handlePlayPause = () => {
-		setIsPlaying(!isPlaying);
+		setIsPlaying((prev) => !prev);
 	};
 
 	const handleToggleMute = () => {
-		setIsMuted(!isMuted);
+		setIsMuted((prev) => !prev);
 	};
 
 	const handleNext = () => {
-		if (currentIndex < reelItems.length - 1) {
-			setCurrentIndex(currentIndex + 1);
-		} else {
-			setCurrentIndex(0); // Loop back to start
-		}
+		setCurrentIndex((prev) => (prev < reelItems.length - 1 ? prev + 1 : 0));
 	};
 
 	const handlePrevious = () => {
-		if (currentIndex > 0) {
-			setCurrentIndex(currentIndex - 1);
-		} else {
-			setCurrentIndex(reelItems.length - 1); // Loop to end
-		}
+		setCurrentIndex((prev) => (prev > 0 ? prev - 1 : reelItems.length - 1));
 	};
 
-	const currentItem = reelItems[currentIndex];
+	const currentItem = reelItems[currentIndex] ?? reelItems[0];
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -141,7 +133,7 @@ export function ReelControlledExample() {
 					))}
 				</div>
 
-				<div className="text-gray-600 text-sm">
+				<div className="text-neutral-600 text-sm">
 					<p>Current Index: {currentIndex}</p>
 					<p>Playing: {isPlaying ? "Yes" : "No"}</p>
 					<p>Muted: {isMuted ? "Yes" : "No"}</p>
@@ -164,7 +156,7 @@ export function ReelControlledExample() {
 
 					<ReelHeader>
 						<div className="text-white">
-							<h2 className="font-bold text-xl">Controlled Reel</h2>
+							<h2 className="font-semibold text-xl">Controlled Reel</h2>
 							<p className="text-sm opacity-80">
 								Item {currentIndex + 1} of {reelItems.length}
 							</p>
@@ -207,7 +199,7 @@ export function ReelControlledExample() {
 			{/* Advanced Controlled Example with Custom UI */}
 			<div className="flex flex-col gap-4 rounded-lg border p-4">
 				<h3 className="font-semibold text-lg">Advanced Controlled Example</h3>
-				<p className="text-gray-600 text-sm">
+				<p className="text-neutral-600 text-sm">
 					This example shows how you can build a completely custom UI while
 					controlling the Reel state from outside.
 				</p>
@@ -245,7 +237,9 @@ export function ReelControlledExample() {
 					<div className="flex flex-1 flex-col justify-center gap-4">
 						<div>
 							<h4 className="font-semibold">{currentItem.title}</h4>
-							<p className="text-gray-600 text-sm">{currentItem.description}</p>
+							<p className="text-neutral-600 text-sm">
+								{currentItem.description}
+							</p>
 						</div>
 
 						<div className="space-y-2">
@@ -316,7 +310,7 @@ export function ReelControlledExample() {
 export default function ControlledReelPage() {
 	return (
 		<div className="container mx-auto py-8">
-			<h1 className="mb-8 text-center font-bold text-3xl">
+			<h1 className="mb-8 text-center font-semibold text-3xl">
 				Controlled Reel Examples
 			</h1>
 			<ReelControlledExample />

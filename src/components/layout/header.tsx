@@ -1,7 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router";
+import { Skeleton } from "boneyard-js/react";
+import { ShoppingCart } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+	OutlineChat,
 	OutlineFileText,
 	OutlineHome,
 	OutlineMenu,
@@ -10,8 +13,10 @@ import {
 	SolidHome,
 	SolidReceipt,
 } from "@/components/icons/icons";
+import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
+import { TRoles } from "@/types/user/roles";
 import { Button } from "../ui/button";
 import {
 	Sheet,
@@ -20,11 +25,16 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "../ui/sheet";
+import { BasketDropdown } from "./basket-dropdown";
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
-import LanguageSelect from "./select/language";
-import ThemeToggle from "./select/theme-toggle";
-import { TRoles } from "@/types/user/roles";
+import CurrencySelect from "./select/currency";
+
+function ClientOnly({ children }: { children: React.ReactNode }) {
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+	return mounted ? children : null;
+}
 
 export default function Header() {
 	const { t } = useTranslation();
@@ -36,7 +46,7 @@ export default function Header() {
 				<div className="flex items-center gap-2">
 					<MobileNav />
 					<NavWrapper className="hidden lg:flex">
-						<Link to="/" className="mr-2 ml-3 flex items-center space-x-2">
+						<Link to="/" className="mr-2 ml-3 flex items-center gap-x-2">
 							<span className="font-bold text-sm uppercase tracking-wider text-primary">
 								{t("header.title")}
 							</span>
@@ -48,30 +58,56 @@ export default function Header() {
 				<div className="flex shrink-0 items-center gap-2">
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
-						<LanguageSelect />
-						{/* <Skeleton loading={isPending}> */}
-						{isPending
-							? null
-							: user?.roles?.includes(TRoles.Artist) && (
-									<Button size={"xl"} asChild>
-										<Link to="/dashboard">
-											{t("header.artist-dashboard", "Artist Dashboard")}
-										</Link>
-									</Button>
+						<CurrencySelect display={"compact"} variant={"secondary"} />
+						{/* <LanguageSelect /> */}
+
+						<BasketDropdown />
+
+						<Button variant={"secondary"} size={"icon-xl"} asChild>
+							<Link to="/chat">
+								<OutlineChat />
+							</Link>
+						</Button>
+
+						<ClientOnly>
+							<Skeleton
+								name="header-artist_dashboard"
+								loading={isPending}
+								className="hidden lg:flex"
+							>
+								{isPending
+									? null
+									: user?.roles?.includes(TRoles.Artist) && (
+											<Button size={"xl"} asChild>
+												<Link to="/dashboard">
+													{t("header.artist-dashboard", "Artist Dashboard")}
+												</Link>
+											</Button>
+										)}
+							</Skeleton>
+						</ClientOnly>
+
+						{/* TODO: add language and theme to mobile sidebar */}
+						<ClientOnly>
+							<Skeleton
+								name="header-user_menu"
+								loading={isPending}
+								className="hidden lg:flex"
+							>
+								{isPending ? null : user ? (
+									<User user={user} showInfo={false} isDropdown />
+								) : (
+									<div className="hidden lg:flex items-center gap-2">
+										<Button asChild variant={"secondary"} size={"xl"}>
+											<Link to="/auth/login">{t("auth.login.cta")}</Link>
+										</Button>
+										<Button asChild size={"xl"}>
+											<Link to="/auth/register">{t("auth.register.cta")}</Link>
+										</Button>
+									</div>
 								)}
-						{isPending ? null : user ? (
-							<User user={user} showInfo={false} isDropdown />
-						) : (
-							<div className="hidden lg:flex items-center gap-2">
-								<Button asChild variant={"secondary"} size={"xl"}>
-									<Link to="/auth/login">{t("auth.login.cta")}</Link>
-								</Button>
-								<Button asChild size={"xl"}>
-									<Link to="/auth/register">{t("auth.register.cta")}</Link>
-								</Button>
-							</div>
-						)}
-						{/* </Skeleton> */}
+							</Skeleton>
+						</ClientOnly>
 					</NavWrapper>
 				</div>
 			</div>
@@ -149,6 +185,8 @@ const NavLinks = memo(() => {
 		switch (path) {
 			case "/":
 				return isActive ? <SolidHome /> : <OutlineHome />;
+			// case "/roadmap":
+			// 	return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/shop":
 				return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/blog":
@@ -159,10 +197,11 @@ const NavLinks = memo(() => {
 	};
 
 	const navigationLinks = [
-		{ path: "/", label: t("header.navigation.home") },
-		{ path: "/shop", label: t("header.navigation.shop") },
-		{ path: "/blog", label: t("header.navigation.blog") },
-		{ path: "/users", label: t("header.navigation.users") },
+		{ path: "/", label: t("header.navigation.home", "Home") },
+		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
+		{ path: "/shop", label: t("header.navigation.shop", "Shop") },
+		// { path: "/blog", label: t("header.navigation.blog") },
+		// { path: "/users", label: t("header.navigation.users") },
 	];
 
 	return (

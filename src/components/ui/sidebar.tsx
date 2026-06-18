@@ -1,7 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import { Slot } from "radix-ui";
-import * as React from "react";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { Separator } from "src/components/ui/separator";
@@ -21,6 +20,14 @@ import {
 } from "src/components/ui/tooltip";
 import { useIsMobile } from "src/hooks/use-mobile";
 import { cn, setCookie } from "@/lib/utils";
+import {
+	createContext,
+	useCallback,
+	use,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -32,17 +39,18 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 type SidebarContextProps = {
 	state: "expanded" | "collapsed";
 	open: boolean;
-	setOpen: (open: boolean) => void;
+	setOpen: (open: boolean | ((open: boolean) => boolean)) => void;
 	openMobile: boolean;
 	setOpenMobile: (open: boolean) => void;
 	isMobile: boolean;
 	toggleSidebar: () => void;
 };
 
-const SidebarContext = React.createContext<SidebarContextProps | null>(null);
+const SidebarContext = createContext<SidebarContextProps | null>(null);
 
 function useSidebar() {
-	const context = React.useContext(SidebarContext);
+	const context = use(SidebarContext);
+
 	if (!context) {
 		throw new Error("useSidebar must be used within a SidebarProvider.");
 	}
@@ -64,34 +72,31 @@ function SidebarProvider({
 	onOpenChange?: (open: boolean) => void;
 }) {
 	const isMobile = useIsMobile();
-	const [openMobile, setOpenMobile] = React.useState(false);
+	const [openMobile, setOpenMobile] = useState(false);
+	const [internalOpen, setInternalOpen] = useState<boolean | null>(null);
 
-	// This is the internal state of the sidebar.
-	// We use openProp and setOpenProp for control from outside the component.
-	const [_open, _setOpen] = React.useState(defaultOpen);
-	const open = openProp ?? _open;
-	const setOpen = React.useCallback(
+	const open = openProp ?? internalOpen ?? defaultOpen;
+
+	const setOpen = useCallback(
 		(value: boolean | ((value: boolean) => boolean)) => {
 			const openState = typeof value === "function" ? value(open) : value;
+
 			if (setOpenProp) {
 				setOpenProp(openState);
 			} else {
-				_setOpen(openState);
+				setInternalOpen(openState);
 			}
 
-			// This sets the cookie to keep the sidebar state.
 			setCookie(SIDEBAR_COOKIE_NAME, String(openState), SIDEBAR_COOKIE_MAX_AGE);
 		},
 		[setOpenProp, open],
 	);
 
-	// Helper to toggle the sidebar.
-	const toggleSidebar = React.useCallback(() => {
+	const toggleSidebar = useCallback(() => {
 		return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
 	}, [isMobile, setOpen]);
 
-	// Adds a keyboard shortcut to toggle the sidebar.
-	React.useEffect(() => {
+	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (
 				event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -103,14 +108,13 @@ function SidebarProvider({
 		};
 
 		window.addEventListener("keydown", handleKeyDown);
+
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [toggleSidebar]);
 
-	// We add a state so that we can do data-state="expanded" or "collapsed".
-	// This makes it easier to style the sidebar with Tailwind classes.
 	const state = open ? "expanded" : "collapsed";
 
-	const contextValue = React.useMemo<SidebarContextProps>(
+	const contextValue = useMemo<SidebarContextProps>(
 		() => ({
 			state,
 			open,
@@ -211,7 +215,6 @@ function Sidebar({
 			data-side={side}
 			data-slot="sidebar"
 		>
-			{/* This is what handles the sidebar gap on desktop */}
 			<div
 				data-slot="sidebar-gap"
 				className={cn(
@@ -228,9 +231,8 @@ function Sidebar({
 				className={cn(
 					"fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
 					side === "left"
-						? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-						: "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-					// Adjust the padding for floating and inset variants.
+						? "left-0 group-data-[collapsible=offcanvas]:-left-(--sidebar-width)"
+						: "right-0 group-data-[collapsible=offcanvas]:-right-(--sidebar-width)",
 					variant === "floating" || variant === "inset"
 						? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
 						: "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -424,7 +426,6 @@ function SidebarGroupAction({
 			data-sidebar="group-action"
 			className={cn(
 				"text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-				// Increases the hit area of the button on mobile.
 				"after:absolute after:-inset-2 md:after:hidden",
 				"group-data-[collapsible=icon]:hidden",
 				className,
@@ -470,7 +471,6 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 	);
 }
 
-// TODO: add adaptive rounded corners
 const sidebarMenuButtonVariants = cva(
 	"peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-lg p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
 	{
@@ -528,11 +528,12 @@ function SidebarMenuButton({
 		return button;
 	}
 
-	if (typeof tooltip === "string") {
-		tooltip = {
-			children: tooltip,
-		};
-	}
+	const tooltipProps =
+		typeof tooltip === "string"
+			? {
+					children: tooltip,
+				}
+			: tooltip;
 
 	return (
 		<Tooltip>
@@ -541,7 +542,7 @@ function SidebarMenuButton({
 				side="right"
 				align="center"
 				hidden={state !== "collapsed" || isMobile}
-				{...tooltip}
+				{...tooltipProps}
 			/>
 		</Tooltip>
 	);
@@ -564,7 +565,6 @@ function SidebarMenuAction({
 			data-sidebar="menu-action"
 			className={cn(
 				"text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer-hover/menu-button:text-sidebar-accent-foreground absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-full p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-				// Increases the hit area of the button on mobile.
 				"after:absolute after:-inset-2 md:after:hidden",
 				"peer-data-[size=sm]/menu-button:top-1",
 				"peer-data-[size=default]/menu-button:top-1.5",
@@ -608,10 +608,7 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<"div"> & {
 	showIcon?: boolean;
 }) {
-	// Random width between 50 to 90%.
-	const width = React.useMemo(() => {
-		return `${Math.floor(Math.random() * 40) + 50}%`;
-	}, []);
+	const [width] = useState(() => `${Math.floor(Math.random() * 40) + 50}%`);
 
 	return (
 		<div

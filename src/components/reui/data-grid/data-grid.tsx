@@ -6,7 +6,7 @@ import type {
 	SortingState,
 	Table,
 } from "@tanstack/react-table";
-import { createContext, type ReactNode, useContext, useMemo } from "react";
+import { createContext, type ReactNode, use, useMemo } from "react";
 
 import { cn } from "src/lib/utils";
 
@@ -79,6 +79,16 @@ export interface DataGridProps<TData extends object> {
 		cellBorder?: boolean;
 		rowBorder?: boolean;
 		rowRounded?: boolean;
+		rowSurface?:
+			| "default"
+			| "secondary"
+			| "primary"
+			| "warning"
+			| "success"
+			| "danger"
+			| "transparent"
+			| "glass"
+			| "base";
 		stripped?: boolean;
 		headerBackground?: boolean;
 		headerBorder?: boolean;
@@ -105,13 +115,12 @@ export interface DataGridProps<TData extends object> {
 	};
 }
 
-const DataGridContext = createContext<
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	DataGridContextProps<any> | undefined
->(undefined);
+const DataGridContext = createContext<DataGridContextProps<any> | undefined>(
+	undefined,
+);
 
 function useDataGrid() {
-	const context = useContext(DataGridContext);
+	const context = use(DataGridContext);
 	if (!context) {
 		throw new Error("useDataGrid must be used within a DataGridProvider");
 	}
@@ -121,47 +130,75 @@ function useDataGrid() {
 function DataGridProvider<TData extends object>({
 	children,
 	table,
-	...props
+	recordCount,
+	isLoading = false,
+	loadingMode,
+	loadingMessage,
+	fetchingMoreMessage,
+	allRowsLoadedMessage,
+	emptyMessage,
+	onRowClick,
+	className,
+	tableLayout,
+	tableClassNames,
 }: DataGridProps<TData> & { table: Table<TData> }) {
-	const tableState = table.getState();
-	const resolvedColumnsResizeMode =
-		props.tableLayout?.columnsResizeMode ?? "onEnd";
+	const columnsResizable = tableLayout?.columnsResizable;
+	const columnsResizeMode = tableLayout?.columnsResizeMode ?? "onEnd";
 
-	// Keep resize mode aligned with the DataGrid contract every render so
-	// consumer-level useReactTable options cannot flip it back between drags.
-	if (props.tableLayout?.columnsResizable) {
-		table.options.columnResizeMode = resolvedColumnsResizeMode;
+	if (columnsResizable) {
+		table.options.columnResizeMode = columnsResizeMode;
 	}
 
-	// Memoize context value so consumers don't re-render during column resize.
-	// Column sizing state is intentionally excluded from deps -- CSS variables
-	// on the <table> element handle width updates without React re-renders.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	const stableTableLayout = useMemo(
+		() =>
+			tableLayout
+				? {
+						...tableLayout,
+						columnsResizable,
+						columnsResizeMode,
+					}
+				: undefined,
+		[columnsResizable, columnsResizeMode, tableLayout],
+	);
+
+	const contextProps = useMemo(
+		() =>
+			({
+				recordCount,
+				isLoading,
+				loadingMode,
+				loadingMessage,
+				fetchingMoreMessage,
+				allRowsLoadedMessage,
+				emptyMessage,
+				onRowClick,
+				className,
+				tableClassNames,
+				tableLayout: stableTableLayout,
+			}) as DataGridProps<TData>,
+		[
+			recordCount,
+			isLoading,
+			loadingMode,
+			loadingMessage,
+			fetchingMoreMessage,
+			allRowsLoadedMessage,
+			emptyMessage,
+			onRowClick,
+			className,
+			tableClassNames,
+			stableTableLayout,
+		],
+	);
+
 	const value = useMemo(
 		() => ({
-			props,
+			props: contextProps,
 			table,
-			recordCount: props.recordCount,
-			isLoading: props.isLoading || false,
+			recordCount,
+			isLoading,
 		}),
-		[
-			table,
-			props.recordCount,
-			props.isLoading,
-			props.loadingMode,
-			props.loadingMessage,
-			props.fetchingMoreMessage,
-			props.allRowsLoadedMessage,
-			props.emptyMessage,
-			props.onRowClick,
-			props.className,
-			{
-				props,
-				table,
-				recordCount: props.recordCount,
-				isLoading: props.isLoading || false,
-			},
-		],
+		[contextProps, table, recordCount, isLoading],
 	);
 
 	return (
@@ -237,7 +274,7 @@ function DataGrid<TData extends object>({
 function DataGridContainer({
 	children,
 	className,
-	border = true,
+	border = false,
 }: {
 	children: ReactNode;
 	className?: string;

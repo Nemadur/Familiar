@@ -19,14 +19,14 @@ function LogoutPage() {
 				// Navigate to home page after logout attempt
 				navigate({ to: "/", replace: true });
 			}
-		}
+		};
 
 		performLogout();
 	}, [navigate]);
 
 	return (
 		<div className="flex items-center justify-center min-h-screen">
-			<p>Logging out...</p>
+			<p>Logging out&hellip;</p>
 		</div>
-	)
+	);
 }

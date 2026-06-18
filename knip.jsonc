@@ -1,0 +1,13 @@
+{
+	"entry": [
+		"src/main.tsx",
+		"src/routes/**/*.{ts,tsx}",
+		"src/routeTree.gen.ts"
+	],
+	"project": [
+		"src/**/*.{ts,tsx}"
+	],
+	"ignore": [
+		"src/**"
+	]
+}

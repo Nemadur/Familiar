@@ -1,39 +1,36 @@
-'use client'
-
-import { Input } from 'src/components/ui/input'
-import { useCallback, useEffect, useState } from 'react'
-import { debounce } from '../lib/debounce'
+import type { ChangeEvent, InputHTMLAttributes } from "react";
+import { useMemo } from "react";
+import { Input } from "src/components/ui/input";
+import { debounce } from "../lib/debounce";
 
 export function DebouncedInput({
-  value: initialValue,
-  onChange,
-  debounceMs = 500, // This is the wait time, not the function
-  ...props
+	value: externalValue,
+	onChange,
+	debounceMs = 500,
+	...props
 }: {
-  value: string | number
-  onChange: (value: string | number) => void
-  debounceMs?: number
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
-  const [value, setValue] = useState(initialValue)
+	value: string | number;
+	onChange: (value: string | number) => void;
+	debounceMs?: number;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+	const debouncedOnChange = useMemo(
+		() =>
+			debounce((nextValue: string | number) => {
+				onChange(nextValue);
+			}, debounceMs),
+		[onChange, debounceMs],
+	);
 
-  // Sync with initialValue when it changes
-  useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
+	const updateDebouncedInputValue = (event: ChangeEvent<HTMLInputElement>) => {
+		debouncedOnChange(event.target.value);
+	};
 
-  // Define the debounced function with useCallback
-  const debouncedOnChange = useCallback(
-    debounce((newValue: string | number) => {
-      onChange(newValue)
-    }, debounceMs), // Pass the wait time here
-    [debounceMs, onChange], // Dependencies
-  )
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value
-    setValue(newValue) // Update local state immediately
-    debouncedOnChange(newValue) // Call debounced version
-  }
-
-  return <Input {...props} value={value} onChange={handleChange} />
+	return (
+		<Input
+			{...props}
+			key={`${typeof externalValue}:${externalValue}`}
+			defaultValue={externalValue}
+			onChange={updateDebouncedInputValue}
+		/>
+	);
 }

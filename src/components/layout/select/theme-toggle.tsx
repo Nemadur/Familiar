@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
 	OutlineCheck,
+	OutlineChevronDown,
 	OutlineChevronRight,
 	OutlineClearNight,
 	OutlineMonitor,
@@ -19,6 +20,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme";
 
@@ -56,9 +58,10 @@ export default function ThemeToggle() {
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="secondary"
 					role="combobox"
+					variant={"secondary"}
 					aria-controls="theme-options"
+					className="w-fit"
 					aria-expanded={open}
 					size={"xl"}
 				>
@@ -72,7 +75,7 @@ export default function ThemeToggle() {
 					) : (
 						t("components.theme_switcher.toggle", "Toggle theme")
 					)}
-					<OutlineChevronRight className="rotate-90 ml-auto size-4" />
+					<OutlineChevronDown className="ml-auto size-4" />
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent align="end" className="w-[150px] p-0 overflow-hidden">

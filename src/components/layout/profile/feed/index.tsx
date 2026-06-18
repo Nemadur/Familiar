@@ -15,6 +15,44 @@ interface ProfileFeedProps {
 	variant?: "feed" | "portfolio";
 }
 
+function createTiles(posts: PostWithAuthor[]) {
+	const tiles: Tile[] = [];
+
+	for (const post of posts) {
+		const img = post.images?.[0];
+
+		if (!img) {
+			continue;
+		}
+
+		const bucket = bucketFromDimensions(img.width, img.height);
+
+		tiles.push({
+			id: post.id,
+			widthUnit: bucket.widthUnit,
+			heightUnit: bucket.heightUnit,
+			cover: {
+				path: img.path,
+				width: img.width,
+				height: img.height,
+				alt: img.alt || "",
+			},
+		});
+	}
+
+	return tiles;
+}
+
+function createPostById(posts: PostWithAuthor[]) {
+	const postById = new Map<string, PostWithAuthor>();
+
+	for (const post of posts) {
+		postById.set(post.id, post);
+	}
+
+	return postById;
+}
+
 export function ProfileFeed({
 	posts,
 	className,
@@ -26,61 +64,51 @@ export function ProfileFeed({
 	const [width, setWidth] = useState(0);
 	const [animateGate, setAnimateGate] = useState(false);
 
-	// Convert posts to tiles
-	const tiles = useMemo<Tile[]>(() => {
-		return posts
-			.filter((p) => p.images && p.images.length > 0)
-			.map((post) => {
-				const img = post.images[0];
-				const bucket = bucketFromDimensions(img.width, img.height);
-				return {
-					id: post.id,
-					widthUnit: bucket.widthUnit,
-					heightUnit: bucket.heightUnit,
-					cover: {
-						path: img.path,
-						width: img.width,
-						height: img.height,
-						alt: img.alt,
-					},
-				} satisfies Tile;
-			});
-	}, [posts]);
+	const tiles = useMemo(() => createTiles(posts), [posts]);
+	const postById = useMemo(() => createPostById(posts), [posts]);
 
 	const { cols, placed } = useBento(tiles);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
+
 		const observer = new ResizeObserver((entries) => {
-			if (entries[0].contentRect.width > 0) {
-				setWidth(entries[0].contentRect.width);
+			const entry = entries[0];
+
+			if (entry?.contentRect.width && entry.contentRect.width > 0) {
+				setWidth(entry.contentRect.width);
 			}
 		});
-		observer.observe(containerRef.current);
-		return () => observer.disconnect();
-	}, [posts.length]);
 
-	// Animation gate
+		observer.observe(containerRef.current);
+
+		return () => observer.disconnect();
+	}, []);
+
 	useEffect(() => {
-		if (posts.length > 0) {
-			requestAnimationFrame(() => {
-				requestAnimationFrame(() => setAnimateGate(true));
-			});
+		if (posts.length === 0) {
+			setAnimateGate(false);
+			return;
 		}
+
+		const firstFrame = requestAnimationFrame(() => {
+			requestAnimationFrame(() => setAnimateGate(true));
+		});
+
+		return () => cancelAnimationFrame(firstFrame);
 	}, [posts.length]);
 
 	const handlePostClick = (postId: string) => {
-		const post = posts.find((p) => p.id === postId);
-		if (post && onPostClick) {
-			onPostClick(post);
+		const post = postById.get(postId);
+
+		if (post) {
+			onPostClick?.(post);
 		}
 	};
 
-	// Calculate cell size and gap
 	const gap = 16;
 	const cell = width ? (width - (cols - 1) * gap) / cols : 0;
 
-	// Generate layout nodes
 	const { nodes, containerHeight } = toPixels(placed as any, cell, gap);
 
 	if (!posts.length) {
@@ -103,14 +131,13 @@ export function ProfileFeed({
 			ref={containerRef}
 			className={cn(
 				"relative w-full transition-all duration-300 ease-in-out",
-				// Hide until width is measured to prevent layout shift/small square
 				width === 0 ? "opacity-0" : "opacity-100",
 				className,
 			)}
 			style={{ height: containerHeight }}
 		>
 			{nodes.map((node) => {
-				const post = posts.find((p) => p.id === node.tile.id);
+				const post = postById.get(node.tile.id);
 				if (!post) return null;
 
 				return (

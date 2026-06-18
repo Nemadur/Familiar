@@ -1,4 +1,3 @@
-import * as React from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { useUserById } from "@/hooks/use-user";
@@ -7,9 +6,20 @@ import { getStoredSupabaseUser, supabase } from "@/lib/supabase";
 import type { LoginData } from "@/types/auth/schema/login";
 import type { RegisterData } from "@/types/auth/schema/register";
 import type { TUserResponse } from "@/types/user";
+import {
+	createContext,
+	useCallback,
+	use,
+	useEffect,
+	useMemo,
+	useReducer,
+	useRef,
+	type ReactNode,
+} from "react";
 
 interface AuthContextValue {
 	user: TUserResponse | null;
+	pending: boolean;
 	isPending: boolean;
 	error: Error | null;
 	refreshSession: () => Promise<void>;
@@ -21,9 +31,47 @@ interface AuthContextValue {
 	) => () => void;
 }
 
-const AuthContext = React.createContext<AuthContextValue | undefined>(
-	undefined,
-);
+type AuthState = {
+	session: Session | null | undefined;
+	authBusy: boolean;
+};
+
+type AuthAction =
+	| { type: "start" }
+	| { type: "stop" }
+	| { type: "set-session"; session: Session | null };
+
+const initialAuthState: AuthState = {
+	session: undefined,
+	authBusy: true,
+};
+
+function authReducer(state: AuthState, action: AuthAction): AuthState {
+	switch (action.type) {
+		case "start":
+			return {
+				...state,
+				authBusy: true,
+			};
+
+		case "stop":
+			return {
+				...state,
+				authBusy: false,
+			};
+
+		case "set-session":
+			return {
+				session: action.session,
+				authBusy: false,
+			};
+
+		default:
+			return state;
+	}
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function toOptimisticUser(restoredUser: User): TUserResponse {
 	return {
@@ -37,11 +85,9 @@ function toOptimisticUser(restoredUser: User): TUserResponse {
 		pronouns: null,
 		bio: null,
 		avatarPath: null,
-		// coverPath: null,
 		accentColor: null,
 		isVerified: false,
 		isPremium: false,
-		// isPrivate: false,
 		createdAt: restoredUser.created_at ?? new Date().toISOString(),
 		roles: [],
 	};
@@ -51,24 +97,25 @@ function getOptimisticUserFromStorage(): TUserResponse | null {
 	try {
 		const restoredUser = getStoredSupabaseUser();
 		if (!restoredUser) return null;
+
 		return toOptimisticUser(restoredUser);
-	} catch (e) {
-		console.error("Failed to parse auth session from storage", e);
+	} catch (error) {
+		console.error("Failed to parse auth session from storage", error);
 		return null;
 	}
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [session, setSession] = React.useState<Session | null | undefined>(
-		undefined,
-	);
-	const [authBusy, setAuthBusy] = React.useState(true);
-	const listeners = React.useRef<Array<(user: TUserResponse | null) => void>>(
-		[],
+export function AuthProvider({ children }: { children: ReactNode }) {
+	const [{ session, authBusy }, dispatchAuth] = useReducer(
+		authReducer,
+		initialAuthState,
 	);
 
+	const listeners = useRef<Array<(user: TUserResponse | null) => void>>([]);
+
 	const sessionUserId = session?.user?.id ?? null;
-	const optimisticUser = React.useMemo(() => {
+
+	const optimisticUser = useMemo(() => {
 		if (session?.user) {
 			return toOptimisticUser(session.user);
 		}
@@ -91,23 +138,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const user = fetchedUser ?? optimisticUser ?? null;
 	const error = userQueryError instanceof Error ? userQueryError : null;
+
 	const isPending =
 		authBusy || session === undefined || (!!sessionUserId && userQueryPending);
+
 	const pending = isPending;
 
-	const notifyListeners = React.useCallback((newUser: TUserResponse | null) => {
+	const notifyListeners = useCallback((newUser: TUserResponse | null) => {
 		listeners.current.forEach((listener) => {
 			listener(newUser);
 		});
 	}, []);
 
-	const refreshSession = React.useCallback(async () => {
-		setAuthBusy(true);
+	const refreshSession = useCallback(async () => {
+		dispatchAuth({ type: "start" });
 
 		try {
 			const { data, error } = await supabase.auth.getSession();
-			if (error) throw error;
-			setSession(data.session ?? null);
+
+			if (error) {
+				throw error;
+			}
+
+			dispatchAuth({
+				type: "set-session",
+				session: data.session ?? null,
+			});
 		} catch (error) {
 			console.error(
 				i18n.t("auth.errors.failed_refresh_session", {
@@ -115,14 +171,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				}),
 				error,
 			);
-			setSession(null);
-		} finally {
-			setAuthBusy(false);
+
+			dispatchAuth({
+				type: "set-session",
+				session: null,
+			});
 		}
 	}, []);
 
-	const login = React.useCallback(async (data: LoginData) => {
-		setAuthBusy(true);
+	const login = useCallback(async (data: LoginData) => {
+		dispatchAuth({ type: "start" });
 
 		const promise = (async () => {
 			const { data: signInData, error } =
@@ -135,7 +193,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				throw new Error(i18n.t("auth.errors.invalid_credentials"));
 			}
 
-			setSession(signInData.session ?? null);
+			dispatchAuth({
+				type: "set-session",
+				session: signInData.session ?? null,
+			});
 		})();
 
 		toast.promise(promise, {
@@ -153,14 +214,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				}),
 				error,
 			);
+
+			dispatchAuth({ type: "stop" });
 			throw error;
-		} finally {
-			setAuthBusy(false);
 		}
 	}, []);
 
-	const register = React.useCallback(async (data: RegisterData) => {
-		setAuthBusy(true);
+	const register = useCallback(async (data: RegisterData) => {
+		dispatchAuth({ type: "start" });
 
 		const promise = (async () => {
 			const { data: signUpData, error } = await supabase.auth.signUp({
@@ -188,7 +249,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				);
 			}
 
-			setSession(signUpData.session ?? null);
+			dispatchAuth({
+				type: "set-session",
+				session: signUpData.session ?? null,
+			});
 		})();
 
 		toast.promise(promise, {
@@ -199,17 +263,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 		try {
 			await promise;
-		} finally {
-			setAuthBusy(false);
+		} catch (error) {
+			dispatchAuth({ type: "stop" });
+			throw error;
 		}
 	}, []);
 
-	const logout = React.useCallback(async () => {
-		setAuthBusy(true);
+	const logout = useCallback(async () => {
+		dispatchAuth({ type: "start" });
 
 		try {
 			await supabase.auth.signOut();
-			setSession(null);
+
+			dispatchAuth({
+				type: "set-session",
+				session: null,
+			});
+
 			notifyListeners(null);
 		} catch (error) {
 			console.error(
@@ -218,12 +288,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				}),
 				error,
 			);
-		} finally {
-			setAuthBusy(false);
+
+			dispatchAuth({ type: "stop" });
 		}
 	}, [notifyListeners]);
 
-	const onAuthStateChange = React.useCallback(
+	const onAuthStateChange = useCallback(
 		(callback: (user: TUserResponse | null) => void) => {
 			listeners.current.push(callback);
 
@@ -234,7 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		[],
 	);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		void refreshSession();
 
 		const {
@@ -246,11 +316,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				event === "TOKEN_REFRESHED" ||
 				event === "USER_UPDATED"
 			) {
-				setSession(nextSession ?? null);
-				setAuthBusy(false);
-			} else if (event === "SIGNED_OUT") {
-				setSession(null);
-				setAuthBusy(false);
+				dispatchAuth({
+					type: "set-session",
+					session: nextSession ?? null,
+				});
+
+				return;
+			}
+
+			if (event === "SIGNED_OUT") {
+				dispatchAuth({
+					type: "set-session",
+					session: null,
+				});
+
 				notifyListeners(null);
 			}
 		});
@@ -260,13 +339,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		};
 	}, [notifyListeners, refreshSession]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (!isPending) {
 			notifyListeners(user);
 		}
 	}, [isPending, notifyListeners, user]);
 
-	const value = React.useMemo<AuthContextValue>(
+	const value = useMemo<AuthContextValue>(
 		() => ({
 			user,
 			pending,
@@ -295,7 +374,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAuth() {
-	const context = React.useContext(AuthContext);
+	const context = use(AuthContext);
 
 	if (context === undefined) {
 		throw new Error(i18n.t("auth.errors.use_auth_provider"));

@@ -1,7 +1,7 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { GalleryVerticalEnd } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import ForgotForm from "@/components/layout/auth/form/forgot";
+import { Typography } from "@heroui/react";
 
 export const Route = createFileRoute("/_main/auth/forgot/")({
 	component: ForgotPage,
@@ -9,27 +9,23 @@ export const Route = createFileRoute("/_main/auth/forgot/")({
 
 function ForgotPage() {
 	const navigate = useNavigate();
-	// const { t } = useTranslation();
+	const { t } = useTranslation();
 
 	return (
-		<div className="grid h-[calc(100vh-6rem)] mt-2 lg:grid-cols-2">
-			<div className="flex flex-col gap-4 p-6 md:p-10">
-				<div className="flex flex-1 items-center justify-center">
-					<div className="w-full max-w-md">
-						<ForgotForm
-							onSuccess={() => {}}
-							onModeChange={() => navigate({ to: "/auth/login" })}
-						/>
-					</div>
-				</div>
-			</div>
-			<div className="bg-muted relative hidden lg:block rounded-4xl overflow-hidden">
-				<img
-					src="https://images.pexels.com/photos/1570264/pexels-photo-1570264.jpeg"
-					alt="Familiar"
-					className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+		<article className="flex h-full flex-1 flex-col">
+			<header className="flex flex-col py-6">
+				<Typography.Heading level={3}>{t("auth.forgot.title")}</Typography.Heading>
+
+				<Typography.Paragraph size="sm" className="text-muted-foreground">
+					{t("auth.forgot.description")}</Typography.Paragraph>
+			</header>
+
+			<section aria-labelledby="auth-page-title" className="mt-4 h-full">
+				<ForgotForm
+					onSuccess={() => navigate({ to: "/auth/login" })}
+					onModeChange={() => navigate({ to: "/auth/login" })}
 				/>
-			</div>
-		</div>
-	)
+			</section>
+		</article>
+	);
 }

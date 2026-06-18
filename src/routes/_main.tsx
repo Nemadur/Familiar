@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { Container } from "@/components/layout/container";
+import FloatingToolbar from "@/components/layout/floating-toolbar";
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
 
@@ -14,11 +15,12 @@ function MainLayout() {
 				<Header />
 				<main
 					className={
-						"flex h-full min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-5 lg:px-5"
+						"flex h-full min-h-[calc(100dvh-4rem)] flex-1 flex-col sm:pb-4 sm:pt-2 lg:px-4"
 					}
 				>
 					<Outlet />
 				</main>
+				<FloatingToolbar />
 				<Footer />
 			</Container>
 		</div>

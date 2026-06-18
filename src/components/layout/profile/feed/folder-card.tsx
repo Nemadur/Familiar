@@ -103,7 +103,7 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 			<div className="absolute inset-x-4 bottom-3 z-10 flex h-[75%] items-end justify-center transition-transform duration-300 ease-out group-hover:-translate-y-6 [&>div]:absolute [&>div]:transform [&>div]:overflow-hidden [&>div]:rounded-lg">
 				{/* Card 3 (Back) - Slot 2 */}
 				{backItem && (
-					<div className="h-[90%] w-[90%] translate-x-[-10%] -rotate-6 transition-transform duration-300 group-hover:translate-x-[-15%] group-hover:-translate-y-2 group-hover:-rotate-12 bg-neutral-100 dark:bg-neutral-800">
+					<div className="size-[90%] translate-x-[-10%] -rotate-6 transition-transform duration-300 group-hover:translate-x-[-15%] group-hover:-translate-y-2 group-hover:-rotate-12 bg-neutral-100 dark:bg-neutral-800">
 						<FolderItemContent
 							item={backItem}
 							customIcon={Icon}
@@ -114,7 +114,7 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 
 				{/* Card 2 (Middle) - Slot 1 */}
 				{middleItem && (
-					<div className="h-[90%] w-[90%] translate-x-[5%] rotate-3 bg-blue-500 transition-transform duration-300 group-hover:translate-x-[10%] group-hover:-translate-y-3 group-hover:rotate-6">
+					<div className="size-[90%] translate-x-[5%] rotate-3 bg-blue-500 transition-transform duration-300 group-hover:translate-x-[10%] group-hover:-translate-y-3 group-hover:rotate-6">
 						<FolderItemContent
 							item={middleItem}
 							customIcon={Icon}
@@ -125,7 +125,7 @@ export function FolderCard({ folder, className, onClick }: FolderCardProps) {
 
 				{/* Card 1 (Front) - Slot 0 */}
 				{frontItem && (
-					<div className="flex h-[90%] w-[90%] items-center justify-center bg-muted">
+					<div className="flex size items-center justify-center bg-muted">
 						<FolderItemContent
 							item={frontItem}
 							customIcon={Icon}

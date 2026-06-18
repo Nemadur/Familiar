@@ -3,23 +3,22 @@ import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
-	Scripts,
 	Outlet,
+	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Analytics } from "@vercel/analytics/react";
-import { Container } from "@/components/layout/container";
-import Footer from "@/components/layout/footer";
-
 import { Toaster } from "@/components/ui/sonner";
 import TanStackQueryDevtools from "@/integrations/tanstack-query/devtools";
 import i18n, { setSSRLanguage } from "@/lib/i18n";
 import { seo } from "@/lib/seo";
 import { AbilityProvider } from "@/providers/ability";
-import { ThemeProvider } from "@/providers/theme";
 import { AuthProvider } from "@/providers/auth";
+import { CurrencyProvider } from "@/providers/currency";
+import { ThemeProvider } from "@/providers/theme";
 import appCss from "../styles.css?url";
-// import "../bones/registry";
+import "@/bones/registry";
+import { MotionProvider } from "@/providers/motion";
 
 export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
@@ -51,16 +50,6 @@ export const Route = createRootRouteWithContext<{
 			},
 		],
 	}),
-	notFoundComponent: () => {
-		return (
-			<div className="flex flex-1 flex-col items-center justify-center p-8 text-center min-h-screen">
-				<h2 className="text-2xl font-bold mb-2">Page not found</h2>
-				<p className="text-muted-foreground">
-					The page you are looking for does not exist.
-				</p>
-			</div>
-		);
-	},
 	component: RootDocument,
 });
 
@@ -69,31 +58,38 @@ function RootDocument() {
 		<html lang={i18n.language || "en"} suppressHydrationWarning>
 			<head>
 				<HeadContent />
-				{/* <script
-					crossOrigin="anonymous"
-					src="//unpkg.com/react-scan/dist/auto.global.js"
-				></script> */}
+				{import.meta.env.DEV && (
+					<script
+						defer
+						crossOrigin="anonymous"
+						src="//unpkg.com/react-scan/dist/auto.global.js"
+					/>
+				)}
 			</head>
 			<body>
 				<AuthProvider>
-					<AbilityProvider>
-						<ThemeProvider>
-							<Toaster />
-							<Outlet />
-							<TanStackDevtools
-								config={{
-									position: "bottom-right",
-								}}
-								plugins={[
-									{
-										name: "Tanstack Router",
-										render: <TanStackRouterDevtoolsPanel />,
-									},
-									TanStackQueryDevtools,
-								]}
-							/>
-						</ThemeProvider>
-					</AbilityProvider>
+					<MotionProvider>
+						<AbilityProvider>
+							<ThemeProvider>
+								<CurrencyProvider>
+									<Toaster />
+									<Outlet />
+									<TanStackDevtools
+										config={{
+											position: "bottom-right",
+										}}
+										plugins={[
+											{
+												name: "Tanstack Router",
+												render: <TanStackRouterDevtoolsPanel />,
+											},
+											TanStackQueryDevtools,
+										]}
+									/>
+								</CurrencyProvider>
+							</ThemeProvider>
+						</AbilityProvider>
+					</MotionProvider>
 				</AuthProvider>
 				<Analytics />
 				<Scripts />

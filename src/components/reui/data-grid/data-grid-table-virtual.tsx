@@ -10,14 +10,7 @@ import {
 	type Virtualizer,
 	type VirtualizerOptions,
 } from "@tanstack/react-virtual";
-import {
-	memo,
-	type ReactNode,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
+import { memo, type ReactNode, useCallback, useRef, useState } from "react";
 import { useDataGrid } from "src/components/reui/data-grid/data-grid";
 import {
 	DataGridTableBase,
@@ -46,6 +39,10 @@ type DataGridTableVirtualizerInstance = Virtualizer<
 	HTMLTableRowElement
 >;
 
+type DataGridTableVirtualizerOnChange = NonNullable<
+	VirtualizerOptions<HTMLElement, HTMLTableRowElement>["onChange"]
+>;
+
 type DataGridTableVirtualizerOptions<TData> = Omit<
 	VirtualizerOptions<HTMLElement, HTMLTableRowElement>,
 	"count" | "estimateSize" | "getItemKey" | "getScrollElement"
@@ -70,6 +67,9 @@ interface DataGridTableVirtualProps<TData> {
 	virtualizerOptions?: DataGridTableVirtualizerOptions<TData>;
 }
 
+type VirtualizationMode = "static" | "virtual";
+type InfiniteRowsStatus = "off" | "idle" | "fetching" | "complete";
+
 interface VirtualBodyProps<TData> {
 	table: Table<TData>;
 	columnCount: number;
@@ -78,10 +78,8 @@ interface VirtualBodyProps<TData> {
 	bottomRows: Row<TData>[];
 	virtualItems: VirtualItem[];
 	totalSize: number;
-	isVirtualizationEnabled: boolean;
-	isInfiniteMode: boolean;
-	isFetchingMore: boolean;
-	hasMore?: boolean;
+	virtualizationMode: VirtualizationMode;
+	infiniteRowsStatus: InfiniteRowsStatus;
 	loadingMoreMessage: ReactNode;
 	allRowsLoadedMessage: ReactNode;
 	measureRowRef?: (element: HTMLTableRowElement | null) => void;
@@ -134,10 +132,8 @@ function DataGridTableVirtualBody<TData>({
 	bottomRows,
 	virtualItems,
 	totalSize,
-	isVirtualizationEnabled,
-	isInfiniteMode,
-	isFetchingMore,
-	hasMore,
+	virtualizationMode,
+	infiniteRowsStatus,
 	loadingMoreMessage,
 	allRowsLoadedMessage,
 	measureRowRef,
@@ -146,14 +142,17 @@ function DataGridTableVirtualBody<TData>({
 
 	if (!totalRows) return <DataGridTableEmpty />;
 
+	const isVirtualizationEnabled = virtualizationMode === "virtual";
 	const hasCenterRows = centerRows.length > 0;
-	const showFetchingRow = isInfiniteMode && isFetchingMore;
-	const showCompleteRow = isInfiniteMode && hasMore === false && totalRows > 0;
+	const showFetchingRow = infiniteRowsStatus === "fetching";
+	const showCompleteRow = infiniteRowsStatus === "complete";
 	const hasMiddleSection = hasCenterRows || showFetchingRow || showCompleteRow;
+
 	const leadingSpacerHeight =
 		isVirtualizationEnabled && hasCenterRows && virtualItems.length > 0
 			? (virtualItems[0]?.start ?? 0)
 			: 0;
+
 	const trailingSpacerHeight =
 		isVirtualizationEnabled && hasCenterRows && virtualItems.length > 0
 			? Math.max(
@@ -282,14 +281,31 @@ function DataGridTableVirtual<TData>({
 	virtualizerOptions,
 }: DataGridTableVirtualProps<TData>) {
 	const { table, props } = useDataGrid();
+
 	const { topRows, centerRows, bottomRows } = getDataGridTableRowSections(
 		table,
 		props.tableLayout?.rowsPinnable,
 	);
+
 	const columnCount =
 		table.getVisibleFlatColumns().length +
 		(props.tableLayout?.columnsResizable ? 1 : 0);
+
 	const isInfiniteMode = typeof onFetchMore === "function";
+	const isVirtualizationEnabled = virtualizerOptions?.enabled !== false;
+
+	const virtualizationMode: VirtualizationMode = isVirtualizationEnabled
+		? "virtual"
+		: "static";
+
+	const infiniteRowsStatus: InfiniteRowsStatus = !isInfiniteMode
+		? "off"
+		: isFetchingMore
+			? "fetching"
+			: hasMore === false
+				? "complete"
+				: "idle";
+
 	const [viewportElements, setViewportElements] =
 		useState<DataGridTableVirtualScrollElements>({
 			containerElement: null,
@@ -302,12 +318,13 @@ function DataGridTableVirtual<TData>({
 		getScrollElement: customGetScrollElement,
 		measureElement: customMeasureElement,
 		overscan: customOverscan,
+		onChange: customOnChange,
 		...virtualizerOptionsRest
 	} = virtualizerOptions ?? {};
 
-	const isVirtualizationEnabled = virtualizerOptions?.enabled !== false;
 	const loadingMoreMessage =
 		props.fetchingMoreMessage || props.loadingMessage || "Loading...";
+
 	const allRowsLoadedMessage =
 		props.allRowsLoadedMessage || "All records loaded";
 
@@ -355,6 +372,77 @@ function DataGridTableVirtual<TData>({
 		[centerRows, customEstimateSize, estimateSize],
 	);
 
+	const resolvedFetchMoreOffset = Math.max(0, fetchMoreOffset);
+
+	const onFetchMoreRef = useRef(onFetchMore);
+	onFetchMoreRef.current = onFetchMore;
+
+	const customOnChangeRef = useRef(customOnChange);
+	customOnChangeRef.current = customOnChange;
+
+	const infiniteStateRef = useRef({
+		centerRowsLength: centerRows.length,
+		hasMore,
+		isFetchingMore,
+		isInfiniteMode,
+		isVirtualizationEnabled,
+		resolvedFetchMoreOffset,
+	});
+
+	infiniteStateRef.current = {
+		centerRowsLength: centerRows.length,
+		hasMore,
+		isFetchingMore,
+		isInfiniteMode,
+		isVirtualizationEnabled,
+		resolvedFetchMoreOffset,
+	};
+
+	const lastFetchRequestRowCountRef = useRef<number | null>(null);
+
+	const handleVirtualizerChange = useCallback<DataGridTableVirtualizerOnChange>(
+		(instance, sync) => {
+			customOnChangeRef.current?.(instance, sync);
+
+			const {
+				centerRowsLength,
+				hasMore,
+				isFetchingMore,
+				isInfiniteMode,
+				isVirtualizationEnabled,
+				resolvedFetchMoreOffset,
+			} = infiniteStateRef.current;
+
+			if (
+				!isVirtualizationEnabled ||
+				!isInfiniteMode ||
+				hasMore === false ||
+				isFetchingMore
+			) {
+				return;
+			}
+
+			const virtualItems = instance.getVirtualItems();
+			const lastItem = virtualItems[virtualItems.length - 1];
+
+			if (!lastItem) return;
+
+			const fetchTriggerIndex = centerRowsLength - 1 - resolvedFetchMoreOffset;
+
+			if (lastItem.index < fetchTriggerIndex) {
+				return;
+			}
+
+			if (lastFetchRequestRowCountRef.current === centerRowsLength) {
+				return;
+			}
+
+			lastFetchRequestRowCountRef.current = centerRowsLength;
+			onFetchMoreRef.current?.();
+		},
+		[],
+	);
+
 	const virtualizer = useVirtualizer({
 		count: centerRows.length,
 		getScrollElement: resolveScrollElement,
@@ -362,48 +450,20 @@ function DataGridTableVirtual<TData>({
 		estimateSize: resolveEstimateSize,
 		overscan: customOverscan ?? overscan,
 		measureElement: customMeasureElement,
+		onChange: handleVirtualizerChange,
 		...virtualizerOptionsRest,
 	}) as DataGridTableVirtualizerInstance;
 
 	const virtualItems = isVirtualizationEnabled
 		? virtualizer.getVirtualItems()
 		: [];
+
 	const totalSize = isVirtualizationEnabled ? virtualizer.getTotalSize() : 0;
+
 	const measureRowRef =
 		isVirtualizationEnabled && customMeasureElement
 			? virtualizer.measureElement
 			: undefined;
-	const resolvedFetchMoreOffset = useMemo(
-		() => Math.max(0, fetchMoreOffset),
-		[fetchMoreOffset],
-	);
-
-	useEffect(() => {
-		if (
-			!isVirtualizationEnabled ||
-			!isInfiniteMode ||
-			hasMore === false ||
-			isFetchingMore
-		) {
-			return;
-		}
-
-		const lastItem = virtualItems[virtualItems.length - 1];
-		if (!lastItem) return;
-
-		if (lastItem.index >= centerRows.length - 1 - resolvedFetchMoreOffset) {
-			onFetchMore?.();
-		}
-	}, [
-		centerRows.length,
-		hasMore,
-		isFetchingMore,
-		isInfiniteMode,
-		isVirtualizationEnabled,
-		onFetchMore,
-		resolvedFetchMoreOffset,
-		virtualItems,
-	]);
 
 	return (
 		<DataGridTableViewport
@@ -442,6 +502,7 @@ function DataGridTableVirtual<TData>({
 													header.getContext(),
 												)
 											)}
+
 											{props.tableLayout?.columnsResizable &&
 												column.getCanResize() && (
 													<DataGridTableHeadRowCellResize header={header} />
@@ -468,10 +529,8 @@ function DataGridTableVirtual<TData>({
 						bottomRows={bottomRows}
 						virtualItems={virtualItems}
 						totalSize={totalSize}
-						isVirtualizationEnabled={isVirtualizationEnabled}
-						isInfiniteMode={isInfiniteMode}
-						isFetchingMore={isFetchingMore}
-						hasMore={hasMore}
+						virtualizationMode={virtualizationMode}
+						infiniteRowsStatus={infiniteRowsStatus}
 						loadingMoreMessage={loadingMoreMessage}
 						allRowsLoadedMessage={allRowsLoadedMessage}
 						measureRowRef={measureRowRef}
@@ -487,6 +546,7 @@ function DataGridTableVirtual<TData>({
 }
 
 export { DataGridTableVirtual };
+
 export type {
 	DataGridTableVirtualProps,
 	DataGridTableVirtualScrollElements,

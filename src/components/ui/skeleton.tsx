@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import type * as React from "react";
 import { cn } from "src/lib/utils";
 
@@ -13,7 +13,7 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
 			)}
 			{...props}
 		>
-			<motion.div
+			<m.div
 				className="pointer-events-none absolute inset-y-0 left-0 w-[35%]"
 				initial={{ x: "-100%" }}
 				animate={{ x: "385%" }}
@@ -24,8 +24,8 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
 					repeatDelay: 0.4,
 				}}
 			>
-				<div className="h-full w-full [transform:skewX(-20deg)] bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
-			</motion.div>
+				<div className="h-full w-full transform-[skewX(-20deg)] bg-linear-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
+			</m.div>
 		</div>
 	);
 }

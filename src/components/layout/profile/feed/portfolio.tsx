@@ -45,7 +45,15 @@ export function ProfilePortfolio({
 
 	// Extract options
 	const availableTags = useMemo(
-		() => Array.from(new Set(posts.flatMap((p) => p.tags || []))).sort(),
+		() =>
+			Array.from(
+				new Set(
+					posts.reduce<string[]>((acc, p) => {
+						if (p.tags) acc.push(...p.tags);
+						return acc;
+					}, []),
+				),
+			).sort(),
 		[posts],
 	);
 
@@ -242,9 +250,10 @@ export function ProfilePortfolio({
 		);
 	}
 
-	const filteredFolders = folders
-		.filter((f) => !f.parentId) // Only show root folders
-		.filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+	const filteredFolders = folders.filter(
+		(f) =>
+			!f.parentId && f.name.toLowerCase().includes(searchQuery.toLowerCase()),
+	);
 
 	// Show folders only when no filters are active (except search)
 	// Or maybe show folders always when not in a folder?

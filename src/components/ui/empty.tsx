@@ -1,13 +1,14 @@
+import { Typography } from "@heroui/react";
 import { cva, type VariantProps } from "class-variance-authority";
-
+import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
-function Empty({ className, ...props }: React.ComponentProps<"div">) {
+function Empty({ className, ...props }: ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="empty"
 			className={cn(
-				"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed p-6 text-center text-balance md:p-12",
+				"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed shadow-none! p-6 text-center text-balance md:p-12",
 				className,
 			)}
 			{...props}
@@ -15,12 +16,12 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
+function EmptyHeader({ className, ...props }: ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="empty-header"
 			className={cn(
-				"flex max-w-sm flex-col items-center gap-2 text-center",
+				"flex max-w-md flex-col items-center gap-2 text-center",
 				className,
 			)}
 			{...props}
@@ -29,12 +30,12 @@ function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const emptyMediaVariants = cva(
-	"flex shrink-0 items-center justify-center mb-2 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+	"mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
 	{
 		variants: {
 			variant: {
 				default: "bg-transparent",
-				icon: "bg-muted text-foreground flex size-16 shrink-0 items-center justify-center rounded-full [&_svg:not([class*='size-'])]:size-6",
+				icon: "flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/6 text-foreground [&_svg:not([class*='size-'])]:size-6",
 			},
 		},
 		defaultVariants: {
@@ -47,10 +48,10 @@ function EmptyMedia({
 	className,
 	variant = "default",
 	...props
-}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
+}: ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
 	return (
 		<div
-			data-slot="empty-icon"
+			data-slot="empty-media"
 			data-variant={variant}
 			className={cn(emptyMediaVariants({ variant, className }))}
 			{...props}
@@ -58,22 +59,35 @@ function EmptyMedia({
 	);
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
+type EmptyTitleProps = Omit<
+	ComponentProps<typeof Typography.Heading>,
+	"level"
+> & {
+	level?: ComponentProps<typeof Typography.Heading>["level"];
+};
+
+function EmptyTitle({ className, level = 4, ...props }: EmptyTitleProps) {
 	return (
-		<div
+		<Typography.Heading
 			data-slot="empty-title"
-			className={cn("text-lg font-medium tracking-tight", className)}
+			level={level}
+			className={cn(className)}
 			{...props}
 		/>
 	);
 }
 
-function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
+function EmptyDescription({
+	className,
+	size = "sm",
+	...props
+}: ComponentProps<typeof Typography.Paragraph>) {
 	return (
-		<div
+		<Typography.Paragraph
 			data-slot="empty-description"
+			size={size}
 			className={cn(
-				"text-muted-foreground [&>a:hover]:text-primary text-sm/relaxed [&>a]:underline [&>a]:underline-offset-4",
+				"text-muted-foreground text-sm/relaxed [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
 				className,
 			)}
 			{...props}
@@ -81,7 +95,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
 	);
 }
 
-function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
+function EmptyContent({ className, ...props }: ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="empty-content"
@@ -96,9 +110,9 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
 
 export {
 	Empty,
-	EmptyHeader,
-	EmptyTitle,
-	EmptyDescription,
 	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
 	EmptyMedia,
+	EmptyTitle,
 };

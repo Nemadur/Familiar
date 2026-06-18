@@ -144,7 +144,7 @@ export const LikeButton = memo(function LikeButton({
 			>
 				{liked ? <SolidHeart className="text-danger" /> : <OutlineHeart />}
 			</Button>
-			{showLikesCount && (
+			{Boolean(showLikesCount) && (
 				<div
 					className={cn(
 						"text-sm transition-opacity",
@@ -153,7 +153,7 @@ export const LikeButton = memo(function LikeButton({
 							: isOverlay
 								? "text-white"
 								: "text-muted-foreground",
-						likesCount === 0
+						likesCount === 0 || !likesCount
 							? "opacity-0"
 							: shouldAnimate
 								? "opacity-100"
@@ -196,13 +196,13 @@ export const BookmarkButton = memo(function BookmarkButton({
 	return (
 		<Button
 			variant="ghost"
-			size={"icon"}
+			size="icon-xl"
 			className={cn(
 				isOverlay
 					? "hover:bg-white/12 hover:text-white dark:text-white"
 					: "hover:bg-primary/10 hover:text-primary",
 				bookmarked
-					? "text-yellow-500 drop-shadow-[0_1px_10px_rgba(234,179,8,0.75)] hover:bg-yellow-500/12"
+					? "text-white hover:bg-white/10"
 					: isOverlay
 						? "text-accent drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)]"
 						: "text-muted-foreground",
@@ -210,11 +210,7 @@ export const BookmarkButton = memo(function BookmarkButton({
 			onClick={handleBookmarkClick}
 			style={{ transition: "none" }}
 		>
-			{bookmarked ? (
-				<SolidBookmark className="text-yellow-500" />
-			) : (
-				<OutlineBookmark />
-			)}
+			{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 		</Button>
 	);
 });

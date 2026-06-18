@@ -1,7 +1,6 @@
-import { ScrollShadow } from "@heroui/react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import { UserComment } from "@/components/common/user-comment";
+import { UserComment } from "@/components/ui/user-comment";
 import { OutlineStar, SolidStar } from "@/components/icons/icons";
 import UserAvatar from "@/components/layout/profile/avatar";
 import {
@@ -16,17 +15,141 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StarsRating } from "@/components/ui/stars-rating";
 import { calculateReviewStats } from "@/lib/commission-utils";
-import { cn } from "@/lib/utils";
-import type { Review } from "@/types/commission";
+import { cn, createStaticList } from "@/lib/utils";
+// import type { Review } from "@/types/commission";
 
 interface ReviewsPanelProps {
-	reviews: Review[];
+	reviews: any[];
 	isLoading?: boolean;
 	itemsPerPage?: number;
 	className?: string;
 	showSummary?: boolean;
 	showAverageScore?: boolean;
 	variant?: "default" | "clean";
+}
+
+type FormattedDateSnapshot = {
+	formattedDate: string;
+	dateTime: string;
+} | null;
+
+const RATING_STAR_ITEMS = createStaticList("rating-star", 5);
+const SUMMARY_SKELETON_ITEMS = createStaticList("summary-skeleton", 5);
+const REVIEW_SKELETON_ITEMS = createStaticList("review-skeleton", 3);
+
+const formattedDateCache = new Map<string, FormattedDateSnapshot>();
+
+function subscribeToFormattedDateStore() {
+	return () => {};
+}
+
+function getDateCacheKey(value: string | number | Date) {
+	return value instanceof Date ? value.toISOString() : String(value);
+}
+
+function getClientFormattedDateSnapshot(
+	value: string | number | Date,
+): FormattedDateSnapshot {
+	const cacheKey = getDateCacheKey(value);
+	const cached = formattedDateCache.get(cacheKey);
+
+	if (cached !== undefined) {
+		return cached;
+	}
+
+	const date = new Date(value);
+
+	if (Number.isNaN(date.getTime())) {
+		formattedDateCache.set(cacheKey, null);
+		return null;
+	}
+
+	const snapshot = {
+		formattedDate: date.toLocaleDateString(),
+		dateTime: date.toISOString(),
+	};
+
+	formattedDateCache.set(cacheKey, snapshot);
+
+	return snapshot;
+}
+
+function getServerFormattedDateSnapshot(): FormattedDateSnapshot {
+	return null;
+}
+
+function useClientFormattedDate(value: string | number | Date) {
+	return useSyncExternalStore(
+		subscribeToFormattedDateStore,
+		() => getClientFormattedDateSnapshot(value),
+		getServerFormattedDateSnapshot,
+	);
+}
+
+function ClientDate({
+	value,
+	className,
+}: {
+	value: string | number | Date;
+	className?: string;
+}) {
+	const snapshot = useClientFormattedDate(value);
+
+	if (!snapshot) {
+		return null;
+	}
+
+	return (
+		<time className={className} dateTime={snapshot.dateTime}>
+			{snapshot.formattedDate}
+		</time>
+	);
+}
+
+function getRatingDistribution(reviews: any[], totalReviews: number) {
+	const distribution: Array<{
+		stars: number;
+		percentage: number;
+		count: number;
+	}> = [];
+
+	for (const stars of [5, 4, 3, 2, 1]) {
+		let countForStar = 0;
+
+		for (const review of reviews) {
+			if (Math.round(review.rating) === stars) {
+				countForStar += 1;
+			}
+		}
+
+		const percentage =
+			totalReviews > 0 ? (countForStar / totalReviews) * 100 : 0;
+
+		distribution.push({ stars, percentage, count: countForStar });
+	}
+
+	return distribution;
+}
+
+function RatingStarsRow({ stars }: { stars: number }) {
+	return (
+		<div className="flex gap-0.5 w-24">
+			{RATING_STAR_ITEMS.map((item) => {
+				const isFilled = item.index < stars;
+				const key = `${stars}-${item.id}`;
+
+				return isFilled ? (
+					<SolidStar key={key} size={16} className="text-amber-400" />
+				) : (
+					<OutlineStar
+						key={key}
+						size={16}
+						className="text-muted-foreground/40"
+					/>
+				);
+			})}
+		</div>
+	);
 }
 
 export function ReviewsPanel({
@@ -48,14 +171,8 @@ export function ReviewsPanel({
 
 	const ratingDistribution = useMemo(() => {
 		if (!reviews.length) return [];
-		return [5, 4, 3, 2, 1].map((stars) => {
-			const countForStar = reviews.filter(
-				(r) => Math.round(r.rating) === stars,
-			).length;
-			const percentage =
-				totalReviews > 0 ? (countForStar / totalReviews) * 100 : 0;
-			return { stars, percentage, count: countForStar };
-		});
+
+		return getRatingDistribution(reviews, totalReviews);
 	}, [reviews, totalReviews]);
 
 	const totalPages = Math.ceil(totalReviews / itemsPerPage);
@@ -72,20 +189,21 @@ export function ReviewsPanel({
 					<div className="flex items-center gap-4">
 						<Skeleton className="h-16 w-20" />
 						<div className="flex-1 space-y-2">
-							{[1, 2, 3, 4, 5].map((i) => (
-								// eslint-disable-next-line react-doctor/no-array-index-as-key
-								<Skeleton key={i} className="h-2 w-full" />
+							{SUMMARY_SKELETON_ITEMS.map((item) => (
+								<Skeleton key={item.id} className="h-2 w-full" />
 							))}
 						</div>
 					</div>
 				</div>
 				<div className="space-y-4">
-					{[1, 2, 3].map((i) => (
-						// eslint-disable-next-line react-doctor/no-array-index-as-key
-						<div key={i} className="rounded-xl border bg-card p-4 space-y-2">
+					{REVIEW_SKELETON_ITEMS.map((item) => (
+						<div
+							key={item.id}
+							className="rounded-xl border bg-card p-4 space-y-2"
+						>
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2">
-									<Skeleton className="h-8 w-8 rounded-full" />
+									<Skeleton className="size-8 rounded-full" />
 									<div className="space-y-1">
 										<Skeleton className="h-4 w-24" />
 										<Skeleton className="h-3 w-16" />
@@ -115,7 +233,6 @@ export function ReviewsPanel({
 	return (
 		<div className={className}>
 			<div className="space-y-6">
-				{/* Rating Distribution */}
 				{showSummary && (
 					<div
 						className={cn(
@@ -147,28 +264,11 @@ export function ReviewsPanel({
 							<div className="flex-1 space-y-2">
 								{ratingDistribution.map(({ stars, percentage }) => (
 									<div key={stars} className="flex items-center gap-3 text-xs">
-										<div className="flex gap-0.5 w-24">
-											{Array.from({ length: 5 }).map((_, i) => {
-												const isFilled = i < stars;
-												return isFilled ? (
-													<SolidStar
-														key={`star-filled-${stars}`}
-														size={16}
-														className="text-amber-400"
-													/>
-												) : (
-													<OutlineStar
-														key={`star-empty-${stars}`}
-														size={16}
-														className="text-muted-foreground/40"
-													/>
-												);
-											})}
-										</div>
+										<RatingStarsRow stars={stars} />
 										<div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
 											<Progress
 												value={percentage}
-												className={"[&>div]:bg-amber-400"}
+												className="[&>div]:bg-amber-400"
 											/>
 										</div>
 										<span className="w-8 text-right text-muted-foreground tabular-nums">
@@ -181,7 +281,6 @@ export function ReviewsPanel({
 					</div>
 				)}
 
-				{/* Reviews List */}
 				<div className="space-y-4">
 					{paginatedReviews.map((review) =>
 						variant === "clean" ? (
@@ -190,9 +289,10 @@ export function ReviewsPanel({
 								author={review.author}
 								rightSideContent={
 									<div className="flex items-center gap-2">
-										<span className="text-muted-foreground text-xs">
-											{new Date(review.createdAt).toLocaleDateString()}
-										</span>
+										<ClientDate
+											value={review.createdAt}
+											className="text-muted-foreground text-xs"
+										/>
 										<StarsRating rating={review.rating} size={14} />
 									</div>
 								}
@@ -216,9 +316,10 @@ export function ReviewsPanel({
 											<span className="font-semibold text-sm">
 												{review.author.display_name}
 											</span>
-											<span className="text-muted-foreground text-xs">
-												{new Date(review.createdAt).toLocaleDateString()}
-											</span>
+											<ClientDate
+												value={review.createdAt}
+												className="text-muted-foreground text-xs"
+											/>
 										</div>
 									</div>
 									<StarsRating rating={review.rating} size={14} />
@@ -240,9 +341,9 @@ export function ReviewsPanel({
 							<PaginationItem>
 								<PaginationPrevious
 									href="#"
-									onClick={(e) => {
-										e.preventDefault();
-										setCurrentPage((p) => Math.max(1, p - 1));
+									onClick={(event) => {
+										event.preventDefault();
+										setCurrentPage((page) => Math.max(1, page - 1));
 									}}
 									aria-disabled={currentPage === 1}
 									className={
@@ -251,15 +352,16 @@ export function ReviewsPanel({
 								/>
 							</PaginationItem>
 
-							{Array.from({ length: totalPages }).map((_, i) => {
-								const page = i + 1;
+							{Array.from({ length: totalPages }).map((_, index) => {
+								const page = index + 1;
+
 								return (
 									<PaginationItem key={page}>
 										<PaginationLink
 											href="#"
 											isActive={currentPage === page}
-											onClick={(e) => {
-												e.preventDefault();
+											onClick={(event) => {
+												event.preventDefault();
 												setCurrentPage(page);
 											}}
 										>
@@ -272,9 +374,9 @@ export function ReviewsPanel({
 							<PaginationItem>
 								<PaginationNext
 									href="#"
-									onClick={(e) => {
-										e.preventDefault();
-										setCurrentPage((p) => Math.min(totalPages, p + 1));
+									onClick={(event) => {
+										event.preventDefault();
+										setCurrentPage((page) => Math.min(totalPages, page + 1));
 									}}
 									aria-disabled={currentPage === totalPages}
 									className={cn(

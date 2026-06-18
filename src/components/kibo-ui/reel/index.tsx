@@ -9,15 +9,17 @@ import {
 } from "lucide-react";
 import type {
 	ComponentProps,
+	Dispatch,
 	HTMLAttributes,
 	MouseEventHandler,
 	ReactNode,
+	SetStateAction,
 	VideoHTMLAttributes,
 } from "react";
 import {
 	createContext,
 	useCallback,
-	useContext,
+	use,
 	useEffect,
 	useRef,
 	useState,
@@ -25,13 +27,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useReducedMotion } from "framer-motion";
 
-// Explicit type for reel items
 export type ReelItem = {
 	id: string | number;
 	type: "video" | "image";
 	src: string;
-	duration: number; // Duration in seconds for both video and image
+	duration: number;
 	alt?: string;
 	title?: string;
 	description?: string;
@@ -39,29 +41,31 @@ export type ReelItem = {
 
 type ReelContextType = {
 	currentIndex: number;
-	setCurrentIndex: (index: number | ((prev: number) => number)) => void;
+	setCurrentIndex: Dispatch<SetStateAction<number>>;
 	isPlaying: boolean;
-	setIsPlaying: (playing: boolean) => void;
+	setIsPlaying: Dispatch<SetStateAction<boolean>>;
 	isMuted: boolean;
-	setIsMuted: (muted: boolean) => void;
+	setIsMuted: Dispatch<SetStateAction<boolean>>;
 	progress: number;
-	setProgress: (progress: number) => void;
+	setProgress: Dispatch<SetStateAction<number>>;
 	data: ReelItem[];
 	currentItem: ReelItem;
 	isNavigating: boolean;
-	setIsNavigating: (navigating: boolean) => void;
+	setIsNavigating: Dispatch<SetStateAction<boolean>>;
 	isTransitioning: boolean;
-	setIsTransitioning: (transitioning: boolean) => void;
+	setIsTransitioning: Dispatch<SetStateAction<boolean>>;
 	resetOnPause?: boolean;
 };
 
 const ReelContext = createContext<ReelContextType | undefined>(undefined);
 
 const useReelContext = () => {
-	const context = useContext(ReelContext);
+	const context = use(ReelContext);
+
 	if (!context) {
 		throw new Error("useReelContext must be used within a Reel");
 	}
+
 	return context;
 };
 
@@ -96,6 +100,8 @@ export const Reel = ({
 	resetOnPause = false,
 	...props
 }: ReelProps) => {
+	const shouldReduceMotion = useReducedMotion();
+
 	const [currentIndex, setCurrentIndexState] = useControllableState({
 		defaultProp: defaultIndex,
 		prop: controlledIndex,
@@ -103,7 +109,7 @@ export const Reel = ({
 	});
 
 	const [isPlaying, setIsPlaying] = useControllableState({
-		defaultProp: defaultPlaying ?? autoPlay,
+		defaultProp: defaultPlaying ?? (shouldReduceMotion ? false : autoPlay),
 		prop: controlledPlaying,
 		onChange: controlledOnPlayingChange,
 	});
@@ -118,25 +124,42 @@ export const Reel = ({
 	const [isNavigating, setIsNavigating] = useState(false);
 	const [isTransitioning, setIsTransitioning] = useState(false);
 
+	const safeCurrentIndex = currentIndex ?? 0;
+	const safeIsPlaying = shouldReduceMotion ? false : (isPlaying ?? false);
+	const safeIsMuted = isMuted ?? defaultMuted;
+
 	const setCurrentIndex = useCallback(
-		(index: number | ((prev: number) => number)) => {
+		(nextIndex: SetStateAction<number>) => {
 			setIsTransitioning(true);
-			setProgress(0); // Reset progress immediately to prevent showing 100% during transition
-			setCurrentIndexState(index);
+			setProgress(0);
+			setCurrentIndexState(nextIndex);
 		},
 		[setCurrentIndexState],
 	);
 
-	const currentItem = data[currentIndex];
+	const currentItem = data[safeCurrentIndex] ?? data[0];
+
+	if (!currentItem) {
+		return (
+			<div
+				className={cn(
+					"relative isolate h-full w-auto overflow-hidden transform-[translateZ(0)]",
+					"aspect-9/16",
+					className,
+				)}
+				{...props}
+			/>
+		);
+	}
 
 	return (
 		<ReelContext.Provider
 			value={{
-				currentIndex,
+				currentIndex: safeCurrentIndex,
 				setCurrentIndex,
-				isPlaying,
+				isPlaying: safeIsPlaying,
 				setIsPlaying,
-				isMuted,
+				isMuted: safeIsMuted,
 				setIsMuted,
 				progress,
 				setProgress,
@@ -151,7 +174,7 @@ export const Reel = ({
 		>
 			<div
 				className={cn(
-					"relative isolate h-full w-auto overflow-hidden bg-black",
+					"relative isolate h-full w-auto overflow-hidden transform-[translateZ(0)]",
 					"aspect-9/16",
 					className,
 				)}
@@ -174,16 +197,20 @@ export const ReelContent = ({
 	...props
 }: ReelContentProps) => {
 	const { currentIndex, currentItem, setIsTransitioning } = useReelContext();
+	const shouldReduceMotion = useReducedMotion();
 
 	return (
 		<div
-			className={cn("relative size-full", className)}
+			className={cn("relative size-full overflow-hidden", className)}
 			data-reel-content
 			{...props}
 		>
 			<div
 				key={currentIndex}
-				className="absolute inset-0 animate-in fade-in duration-300 fill-mode-forwards"
+				className={cn(
+					"absolute inset-0 overflow-hidden fill-mode-forwards",
+					!shouldReduceMotion && "animate-in fade-in duration-300",
+				)}
 				onAnimationEnd={() => setIsTransitioning(false)}
 			>
 				<ReelContentItem currentItem={currentItem} currentIndex={currentIndex}>
@@ -206,7 +233,9 @@ const ReelContentItem = ({
 	if (typeof children === "function") {
 		return <>{children(currentItem, currentIndex)}</>;
 	}
+
 	const childrenArray = Array.isArray(children) ? children : [children];
+
 	return <>{childrenArray[currentIndex]}</>;
 };
 
@@ -243,14 +272,12 @@ export const ReelVideo = ({ className, ...props }: ReelVideoProps) => {
 	const pausedProgressRef = useRef<number>(0);
 	const duration = currentItem.duration;
 
-	// Reset progress when not transitioning
 	useEffect(() => {
 		if (!isTransitioning) {
 			pausedProgressRef.current = 0;
 		}
 	}, [isTransitioning]);
 
-	// Store progress when pausing
 	useEffect(() => {
 		if (!isPlaying) {
 			if (resetOnPause) {
@@ -262,33 +289,32 @@ export const ReelVideo = ({ className, ...props }: ReelVideoProps) => {
 		}
 	}, [isPlaying, progress, resetOnPause, setProgress]);
 
-	// Handle play/pause with duration-based progress
 	useEffect(() => {
 		const video = videoRef.current;
+
 		if (!video) {
 			return;
 		}
 
 		if (isPlaying && !isTransitioning) {
 			video.play().catch(() => {
-				// Ignore autoplay errors
+				// Ignore autoplay errors.
 			});
 
-			// Start progress animation only when not transitioning
 			const elapsedTime = (pausedProgressRef.current * duration) / PERCENTAGE;
 			startTimeRef.current = performance.now() - elapsedTime * MS_TO_SECONDS;
 
 			const updateProgress = (currentTime: number) => {
 				const elapsed =
 					(currentTime - (startTimeRef.current || 0)) / MS_TO_SECONDS;
-				const newProgress = (elapsed / duration) * PERCENTAGE;
+				const nextProgress = (elapsed / duration) * PERCENTAGE;
 
-				if (newProgress >= PERCENTAGE) {
+				if (nextProgress >= PERCENTAGE) {
 					const totalItems = data?.length || 0;
 					setCurrentIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
 				} else {
-					setProgress(newProgress);
-					pausedProgressRef.current = newProgress; // Keep ref in sync during playback
+					setProgress(nextProgress);
+					pausedProgressRef.current = nextProgress;
 					animationFrameRef.current = requestAnimationFrame(updateProgress);
 				}
 			};
@@ -354,15 +380,12 @@ export const ReelImage = ({
 	const startTimeRef = useRef<number | undefined>(undefined);
 	const pausedProgressRef = useRef<number>(0);
 
-	// Reset progress when not transitioning
 	useEffect(() => {
-		// Don't reset progress here anymore - it's handled in ReelContent after transition
 		if (!isTransitioning) {
 			pausedProgressRef.current = 0;
 		}
 	}, [isTransitioning]);
 
-	// Store progress when pausing
 	useEffect(() => {
 		if (!isPlaying && !isTransitioning) {
 			if (resetOnPause) {
@@ -374,7 +397,6 @@ export const ReelImage = ({
 		}
 	}, [isPlaying, isTransitioning, progress, resetOnPause, setProgress]);
 
-	// Handle play/pause
 	useEffect(() => {
 		if (isPlaying && !isTransitioning) {
 			const elapsedTime = (pausedProgressRef.current * duration) / PERCENTAGE;
@@ -383,17 +405,14 @@ export const ReelImage = ({
 			const updateProgress = (currentTime: number) => {
 				const elapsed =
 					(currentTime - (startTimeRef.current || 0)) / MS_TO_SECONDS;
-				const newProgress = (elapsed / duration) * PERCENTAGE;
+				const nextProgress = (elapsed / duration) * PERCENTAGE;
 
-				if (newProgress >= PERCENTAGE) {
+				if (nextProgress >= PERCENTAGE) {
 					const totalItems = data?.length || 0;
-
 					setCurrentIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
-					// Important: Do NOT call updateProgress recursively here if we're changing index
-					// The index change will trigger a re-render and cleanup, then a new effect will start
 				} else {
-					setProgress(newProgress);
-					pausedProgressRef.current = newProgress; // Keep ref in sync during playback
+					setProgress(nextProgress);
+					pausedProgressRef.current = nextProgress;
 					animationFrameRef.current = requestAnimationFrame(updateProgress);
 				}
 			};
@@ -447,6 +466,7 @@ export const ReelProgress = ({
 		if (index < currentIndex) {
 			return FULL_PROGRESS;
 		}
+
 		if (index === currentIndex) {
 			return progress;
 		}
@@ -519,10 +539,10 @@ export const ReelPreviousButton = ({
 	const { currentIndex, setCurrentIndex, setIsNavigating } = useReelContext();
 	const NAVIGATION_RESET_DELAY = 50;
 
-	const handlePrevious = () => {
+	const moveToPreviousReelItem = () => {
 		if (currentIndex > 0) {
 			setIsNavigating(true);
-			setCurrentIndex(currentIndex - 1);
+			setCurrentIndex((prev) => Math.max(prev - 1, 0));
 			setTimeout(() => setIsNavigating(false), NAVIGATION_RESET_DELAY);
 		}
 	};
@@ -535,7 +555,7 @@ export const ReelPreviousButton = ({
 				className,
 			)}
 			disabled={currentIndex === 0}
-			onClick={handlePrevious}
+			onClick={moveToPreviousReelItem}
 			size="icon"
 			type="button"
 			variant="ghost"
@@ -558,10 +578,10 @@ export const ReelNextButton = ({
 	const totalItems = data?.length || 0;
 	const NAVIGATION_RESET_DELAY = 50;
 
-	const handleNext = () => {
+	const moveToNextReelItem = () => {
 		if (currentIndex < totalItems - 1) {
 			setIsNavigating(true);
-			setCurrentIndex(currentIndex + 1);
+			setCurrentIndex((prev) => Math.min(prev + 1, totalItems - 1));
 			setTimeout(() => setIsNavigating(false), NAVIGATION_RESET_DELAY);
 		}
 	};
@@ -574,7 +594,7 @@ export const ReelNextButton = ({
 				className,
 			)}
 			disabled={currentIndex === totalItems - 1}
-			onClick={handleNext}
+			onClick={moveToNextReelItem}
 			size="icon"
 			type="button"
 			variant="ghost"
@@ -594,6 +614,10 @@ export const ReelPlayButton = ({
 }: ReelPlayButtonProps) => {
 	const { isPlaying, setIsPlaying } = useReelContext();
 
+	const toggleReelPlayback = () => {
+		setIsPlaying((prev) => !prev);
+	};
+
 	return (
 		<Button
 			aria-label={isPlaying ? "Pause" : "Play"}
@@ -601,7 +625,7 @@ export const ReelPlayButton = ({
 				"rounded-full text-white hover:bg-white/10 hover:text-white",
 				className,
 			)}
-			onClick={() => setIsPlaying(!isPlaying)}
+			onClick={toggleReelPlayback}
 			size="icon"
 			variant="ghost"
 			{...props}
@@ -625,6 +649,10 @@ export const ReelMuteButton = ({
 }: ReelMuteButtonProps) => {
 	const { isMuted, setIsMuted } = useReelContext();
 
+	const toggleReelAudio = () => {
+		setIsMuted((prev) => !prev);
+	};
+
 	return (
 		<Button
 			aria-label={isMuted ? "Unmute" : "Mute"}
@@ -632,7 +660,7 @@ export const ReelMuteButton = ({
 				"rounded-full text-white hover:bg-white/10 hover:text-white",
 				className,
 			)}
-			onClick={() => setIsMuted(!isMuted)}
+			onClick={toggleReelAudio}
 			size="icon"
 			variant="ghost"
 			{...props}
@@ -659,7 +687,7 @@ export const ReelNavigation = ({
 	const NAVIGATION_RESET_DELAY = 50;
 	const HALF_WIDTH_DIVISOR = 2;
 
-	const handleClick: MouseEventHandler<HTMLButtonElement> = (e) => {
+	const navigateByClickPosition: MouseEventHandler<HTMLButtonElement> = (e) => {
 		const rect = e.currentTarget.getBoundingClientRect();
 		const x = e.clientX - rect.left;
 		const width = rect.width;
@@ -667,12 +695,12 @@ export const ReelNavigation = ({
 		if (x < width / HALF_WIDTH_DIVISOR) {
 			if (currentIndex > 0) {
 				setIsNavigating(true);
-				setCurrentIndex(currentIndex - 1);
+				setCurrentIndex((prev) => Math.max(prev - 1, 0));
 				setTimeout(() => setIsNavigating(false), NAVIGATION_RESET_DELAY);
 			}
 		} else if (currentIndex < totalItems - 1) {
 			setIsNavigating(true);
-			setCurrentIndex(currentIndex + 1);
+			setCurrentIndex((prev) => Math.min(prev + 1, totalItems - 1));
 			setTimeout(() => setIsNavigating(false), NAVIGATION_RESET_DELAY);
 		}
 	};
@@ -680,7 +708,7 @@ export const ReelNavigation = ({
 	return (
 		<button
 			className={cn("absolute inset-0 z-10 flex", className)}
-			onClick={handleClick}
+			onClick={navigateByClickPosition}
 			type="button"
 			{...props}
 		>

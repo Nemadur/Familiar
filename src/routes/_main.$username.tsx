@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_main/$username")({
 					username: params.username,
 				}),
 			},
-		}
+		};
 	},
 	head: ({ loaderData }) => ({
 		meta: seo({
@@ -32,11 +32,26 @@ export const Route = createFileRoute("/_main/$username")({
 			description: loaderData?.seo?.description ?? "",
 		}),
 	}),
+	notFoundComponent: () => <UserNotFoundComponent />,
 	component: RouteComponent,
 });
 
-export function DefaultProfileTabContent({ username }: { username: string }) {
+function UserNotFoundComponent() {
+	const { username } = Route.useLoaderData();
 
+	return (
+		<div className="flex min-h-screen flex-1 flex-col items-center justify-center p-8 text-center">
+			<h2 className="mb-2 text-2xl font-semibold">
+				User "{username}" not found
+			</h2>
+			<p className="text-muted-foreground">
+				The user "{username}" does not exist.
+			</p>
+		</div>
+	);
+}
+
+export function DefaultProfileTabContent({ username }: { username: string }) {
 	const {
 		data: artist,
 		isPending: isArtistPending,
@@ -69,9 +84,10 @@ function RouteComponent() {
 	const navigate = useNavigate();
 	const params = useParams({ strict: false }) as {
 		tab?: string;
+		// TODO: we should standardize on "commissionId" vs "commisionId" across the codebase and remove this hack
 		commissionId?: string;
 		commisionId?: string;
-	}
+	};
 
 	const routeTab = typeof params.tab === "string" ? params.tab : undefined;
 	const activeTab = routeTab ?? "commissions";
@@ -88,10 +104,10 @@ function RouteComponent() {
 				navigate({
 					to: `/${username}/${tab}`,
 					replace: isModalOpen,
-				})
+				});
 			}}
 		>
 			{routeTab ? <Outlet /> : <DefaultProfileTabContent username={username} />}
 		</UserProfileWrapper>
-	)
+	);
 }

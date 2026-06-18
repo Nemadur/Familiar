@@ -253,7 +253,7 @@ export const FeedItem = memo(function FeedItem({
 						{/* Sensitive Content Overlay */}
 						<div className="absolute inset-0 z-10 flex flex-col justify-center bg-black/60 p-4 text-center backdrop-blur-sm">
 							<EyeOff className="text-white mb-4 mx-auto" size={32} />
-							<h4 className="mb-1 font-bold text-white text-xl">
+							<h4 className="mb-1 font-semibold text-white text-xl">
 								{t("components.profile.commissions.card.sensitive_content")}
 							</h4>
 							<p className="mb-4 text-sm text-white/70">

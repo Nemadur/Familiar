@@ -1,9 +1,14 @@
 import { Link } from "@tanstack/react-router";
+import { Calligraph } from "calligraph";
 import { useState } from "react";
 import {
+	OutlineCheck,
+	OutlineClearNight,
 	OutlineLogout,
+	OutlineMonitor,
 	OutlineReceipt,
 	OutlineSettings,
+	OutlineSunny,
 	OutlineUser,
 } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
@@ -19,12 +24,12 @@ import {
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-	DropdownMenuSub,
-	DropdownMenuSubTrigger,
 	DropdownMenuPortal,
+	DropdownMenuSeparator,
+	DropdownMenuSub,
 	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
+	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsTablet } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -32,35 +37,88 @@ import { useAuth } from "@/providers/auth";
 import { useTheme } from "@/providers/theme";
 import type { TUserProfile, TUserResponse } from "@/types/user";
 import UserAvatar from "./avatar";
-import {
-	OutlineMonitor,
-	OutlineSunny,
-	OutlineClearNight,
-	OutlineCheck,
-} from "@/components/icons/icons";
 
 type UserButtonContentProps = {
 	user: TUserResponse;
 	showInfo?: boolean;
 	showAvatar?: boolean;
+	showUsername?: boolean;
+	description?: React.ReactNode;
+	avatarSize?: "sm" | "default" | "lg" | "xl";
+	status?: string;
+	isOnline?: boolean;
+	avatarBadgeClassName?: string;
 };
 
 function UserButtonContent({
 	user,
 	showInfo = true,
 	showAvatar = true,
+	showUsername = true,
+	description,
+	avatarSize,
+	status,
+	isOnline,
+	avatarBadgeClassName,
 }: UserButtonContentProps) {
 	return (
 		<>
-			{showAvatar && <UserAvatar user={user as TUserProfile} />}
+			{showAvatar && (
+				<UserAvatar
+					user={user as TUserProfile}
+					size={avatarSize}
+					isOnline={isOnline}
+					badgeClassName={avatarBadgeClassName}
+				/>
+			)}
 			{showInfo && (
-				<div className="flex flex-col items-start text-left">
-					<span className="text-sm leading-none font-medium">
+				<div className="flex flex-col items-start text-left min-w-0 flex-1">
+					<span
+						className={cn(
+							"text-sm font-medium truncate w-full",
+							status === "active"
+								? "text-accent-foreground"
+								: "text-foreground",
+						)}
+					>
 						{user?.displayName || "Unknown"}
 					</span>
-					<span className="mt-1 text-xs leading-none text-muted-foreground">
-						@{user?.username || "Unknown"}
-					</span>
+					{description ? (
+						<span
+							className={cn(
+								"mt-0.5 text-xs truncate w-full",
+								status === "active"
+									? "text-accent-foreground/80"
+									: "text-muted-foreground",
+							)}
+						>
+							{description}
+						</span>
+					) : status ? (
+						<Calligraph
+							className={cn(
+								"mt-0.5 text-xs truncate w-full",
+								isOnline && status === "Online"
+									? "text-green-500 font-medium"
+									: "text-muted-foreground",
+							)}
+						>
+							{status}
+						</Calligraph>
+					) : (
+						showUsername && (
+							<span
+								className={cn(
+									"mt-0.5 text-xs truncate w-full",
+									status === "active"
+										? "text-accent-foreground/80"
+										: "text-muted-foreground",
+								)}
+							>
+								@{user?.username || "Unknown"}
+							</span>
+						)
+					)}
 				</div>
 			)}
 		</>
@@ -71,6 +129,9 @@ type UserProps = {
 	user: TUserResponse;
 	showInfo?: boolean;
 	showAvatar?: boolean;
+	showUsername?: boolean;
+	description?: React.ReactNode;
+	avatarSize?: "sm" | "default" | "lg" | "xl";
 	isDropdown?: boolean;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -78,12 +139,19 @@ type UserProps = {
 	nonDropdownButtonClassName?: string;
 	dropdownContentClassName?: string;
 	drawerTitle?: string;
+	status?: string;
+	isOnline?: boolean;
+	avatarBadgeClassName?: string;
 };
 
+// eslint-disable-next-line react-doctor/no-many-boolean-props
 export default function User({
 	user,
 	showInfo = true,
 	showAvatar = true,
+	showUsername = true,
+	description,
+	avatarSize,
 	isDropdown = false,
 	open: openProp,
 	onOpenChange,
@@ -91,6 +159,9 @@ export default function User({
 	nonDropdownButtonClassName,
 	dropdownContentClassName,
 	drawerTitle = "User Menu",
+	status,
+	isOnline,
+	avatarBadgeClassName,
 }: UserProps) {
 	const { logout } = useAuth();
 	const isTablet = useIsTablet();
@@ -122,6 +193,12 @@ export default function User({
 			user={user}
 			showInfo={showInfo}
 			showAvatar={showAvatar}
+			showUsername={showUsername}
+			description={description}
+			avatarSize={avatarSize}
+			status={status}
+			isOnline={isOnline}
+			avatarBadgeClassName={avatarBadgeClassName}
 		/>
 	);
 
@@ -148,6 +225,16 @@ export default function User({
 			to: "/$username/$tab",
 			params: { username: user?.username, tab: "characters" },
 		},
+		// TODO: only show if not connected to Mollie
+		// TODO: only show if user has permissions to connect to Mollie (e.g., is admin)
+		// TODO: move scopes and state to env variables or generate dynamically
+		// TODO: get client_id from env variable
+		{
+			label: "Connect To Mollie",
+			icon: <OutlineSettings />,
+			to: "https://my.mollie.com/oauth2/authorize",
+			params: { client_id: import.meta.env.VITE_MOLLIE_CLIENT_ID , redirect_uri: "https://www.familiar.art/auth/mollie/callback", state: "random_state_string", scope: "profiles.read payments.read payments.write" },
+		}
 	];
 
 	const secondaryMenuItems = [
@@ -223,13 +310,12 @@ export default function User({
 			<div className="p-1">
 				<Button
 					variant="destructive"
-					className="h-9 w-full cursor-pointer justify-start px-2"
 					onClick={() => {
 						logout();
 						setOpen(false);
 					}}
 				>
-					<OutlineLogout className="mr-2 h-4 w-4" />
+					<OutlineLogout className="size-4" />
 					<span>Logout</span>
 				</Button>
 			</div>

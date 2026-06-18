@@ -7,6 +7,8 @@ import {
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import type * as React from "react";
 import { cn } from "src/lib/utils";
+import { surfaceClasses } from "@/lib/surface-classes";
+import { SurfaceProvider, useSurface } from "@/lib/surface-context";
 
 function DropdownMenu({
 	...props
@@ -39,8 +41,12 @@ function DropdownMenuContent({
 	style,
 	...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+	// const substrate = useSurface();
+	// const level = Math.min(substrate + 2, 0);
+
 	return (
 		<DropdownMenuPrimitive.Portal>
+			{/* <SurfaceProvider value={level}> */}
 			<DropdownMenuPrimitive.Content
 				data-slot="dropdown-menu-content"
 				sideOffset={sideOffset}
@@ -52,70 +58,21 @@ function DropdownMenuContent({
 					} as React.CSSProperties
 				}
 				className={cn(
-					"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-(--dropdown-menu-radius) border p-(--dropdown-menu-padding) shadow-md",
-					// Direct children: big outer top/bottom radius
-					"[&>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					// Group-aware: only the first item in the first group and last item in the last group get big outer radius
-					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-					// If the group is not first/last, keep inner radius only
-					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
-					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
-					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
-					"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
-					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
-					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
-					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
-					"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
-					// Input wrapper above first visible option: always only lg top radius + spacing
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-item]]:mt-1",
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-checkbox-item]]:mt-1",
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-radio-item]]:mt-1",
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-sub-trigger]]:mt-1",
-					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group]:mt-1",
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-item]]:rounded-t-lg!",
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-checkbox-item]]:rounded-t-lg!",
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-radio-item]]:rounded-t-lg!",
-					"[&>.dropdown-menu-input-wrapper+[data-slot=dropdown-menu-sub-trigger]]:rounded-t-lg!",
-					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
-					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
-					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
-					"[&>.dropdown-menu-input-wrapper+.dropdown-menu-group>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
-					// Separator behavior around direct children
-					"[&>[data-slot=dropdown-menu-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-					"[&>[data-slot=dropdown-menu-checkbox-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-					"[&>[data-slot=dropdown-menu-radio-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-					"[&>[data-slot=dropdown-menu-sub-trigger]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-item]]:rounded-t-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-checkbox-item]]:rounded-t-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-radio-item]]:rounded-t-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-sub-trigger]]:rounded-t-lg!",
-					// Separator behavior around grouped items
-					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
-					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
-					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
-					"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
-					"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
+					// surfaceClasses(level, 0),
+					"bg-popover text-elevated-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-(--dropdown-menu-radius) border p-(--dropdown-menu-padding)",
+					// Direct children: big outer top/bottom radius for first/last visible items
+					"[&>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot$=group]:nth-child(1_of_:not([hidden],.hidden))>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>:nth-last-child(1_of_:not([hidden],.hidden))]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+					"[&>[data-slot$=group]:nth-last-child(1_of_:not([hidden],.hidden))>:nth-last-child(1_of_:not([hidden],.hidden))]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+
+					// Input wrapper spacing
+					"[&>.dropdown-menu-input-wrapper+*]:mt-1",
 					className,
 				)}
 				{...props}
 			/>
+			{/* </SurfaceProvider> */}
 		</DropdownMenuPrimitive.Portal>
 	);
 }
@@ -183,7 +140,7 @@ function DropdownMenuItem({
 			data-inset={inset}
 			data-variant={variant}
 			className={cn(
-				"focus:bg-primary/6 focus:text-primary data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive! [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"hover:text-foreground focus:text-foreground hover:bg-primary/6 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive! [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 				className,
 			)}
 			{...props}
@@ -201,7 +158,7 @@ function DropdownMenuCheckboxItem({
 		<DropdownMenuPrimitive.CheckboxItem
 			data-slot="dropdown-menu-checkbox-item"
 			className={cn(
-				"focus:bg-primary/6 focus:text-primary relative flex cursor-default items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"hover:bg-surface-3 hover:text-foreground focus:bg-surface-3 focus:text-foreground focus:shadow-sm relative flex cursor-default items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 				className,
 			)}
 			checked={checked}
@@ -237,7 +194,7 @@ function DropdownMenuRadioItem({
 		<DropdownMenuPrimitive.RadioItem
 			data-slot="dropdown-menu-radio-item"
 			className={cn(
-				"focus:bg-primary/6 focus:text-primary relative flex cursor-default items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+				"hover:bg-surface-3 hover:text-foreground focus:bg-surface-3 focus:text-foreground focus:shadow-sm relative flex cursor-default items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 				className,
 			)}
 			{...props}
@@ -348,51 +305,11 @@ function DropdownMenuSubContent({
 			}
 			className={cn(
 				"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-(--dropdown-menu-radius) border p-(--dropdown-menu-padding) shadow-lg",
-				// Direct children: big outer top/bottom radius
-				"[&>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				// Group-aware: only the first item in the first group and last item in the last group get big outer radius
-				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>.dropdown-menu-group:first-child>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				"[&>.dropdown-menu-group:last-child>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
-				// If the group is not first/last, keep inner radius only
-				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
-				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
-				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
-				"[&>.dropdown-menu-group:not(:first-child)>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
-				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
-				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
-				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
-				"[&>.dropdown-menu-group:not(:last-child)>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
-				// Separator behavior around direct children
-				"[&>[data-slot=dropdown-menu-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-				"[&>[data-slot=dropdown-menu-checkbox-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-				"[&>[data-slot=dropdown-menu-radio-item]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-				"[&>[data-slot=dropdown-menu-sub-trigger]:has(+[data-slot=dropdown-menu-separator])]:rounded-b-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-item]]:rounded-t-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-checkbox-item]]:rounded-t-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-radio-item]]:rounded-t-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+[data-slot=dropdown-menu-sub-trigger]]:rounded-t-lg!",
-				// Separator behavior around grouped items
-				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-item]:last-child]:rounded-b-lg!",
-				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-checkbox-item]:last-child]:rounded-b-lg!",
-				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-radio-item]:last-child]:rounded-b-lg!",
-				"[&>.dropdown-menu-group:has(+[data-slot=dropdown-menu-separator])>[data-slot=dropdown-menu-sub-trigger]:last-child]:rounded-b-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-item]:first-child]:rounded-t-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-checkbox-item]:first-child]:rounded-t-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-radio-item]:first-child]:rounded-t-lg!",
-				"[&>[data-slot=dropdown-menu-separator]+.dropdown-menu-group>[data-slot=dropdown-menu-sub-trigger]:first-child]:rounded-t-lg!",
+				// Direct children: big outer top/bottom radius for first/last visible items
+				"[&>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot$=group]:nth-child(1_of_:not([hidden],.hidden))>:nth-child(1_of_:not([hidden],.hidden))]:rounded-t-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>:nth-last-child(1_of_:not([hidden],.hidden))]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
+				"[&>[data-slot$=group]:nth-last-child(1_of_:not([hidden],.hidden))>:nth-last-child(1_of_:not([hidden],.hidden))]:rounded-b-[calc(var(--dropdown-menu-radius)-var(--dropdown-menu-padding))]!",
 				className,
 			)}
 			{...props}
@@ -402,20 +319,20 @@ function DropdownMenuSubContent({
 
 export {
 	DropdownMenu,
-	DropdownMenuPortal,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuInputWrapper,
-	DropdownMenuInput,
-	DropdownMenuGroup,
-	DropdownMenuLabel,
-	DropdownMenuItem,
 	DropdownMenuCheckboxItem,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuInput,
+	DropdownMenuInputWrapper,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuPortal,
 	DropdownMenuRadioGroup,
 	DropdownMenuRadioItem,
 	DropdownMenuSeparator,
 	DropdownMenuShortcut,
 	DropdownMenuSub,
-	DropdownMenuSubTrigger,
 	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
+	DropdownMenuTrigger,
 };

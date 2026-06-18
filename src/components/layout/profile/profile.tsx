@@ -13,7 +13,6 @@ import { EmptyPage } from "@/components/layout/empty-page";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAvailableFeeds } from "@/hooks/use-available-feeds";
 import { useBento } from "@/hooks/use-bento";
 import { type Tile, toPixels } from "@/lib/bento";
@@ -26,6 +25,10 @@ import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
 import { ProfileDetailsContent } from "./profile-details";
+import { createStaticList } from "@/lib/utils";
+
+const CHARACTER_SKELETON_ITEMS = createStaticList("character-skeleton", 10);
+const COMMISSION_SKELETON_ITEMS = createStaticList("commission-skeleton", 2);
 
 // Temporary stubs for missing components
 const FollowButton = ({
@@ -33,7 +36,6 @@ const FollowButton = ({
 	loading,
 	canFollow,
 	onToggle,
-	showText,
 	className,
 }: any) => {
 	const { t } = useTranslation();
@@ -93,9 +95,9 @@ export function CommissionsContentSkeleton() {
 		<div className="space-y-4">
 			<Skeleton className="h-6 w-32 rounded-md" />
 			<div className="grid gap-4">
-				{[1, 2].map((i) => (
+				{COMMISSION_SKELETON_ITEMS.map((item) => (
 					<div
-						key={`skeleton-feed-${i}`}
+						key={item.id}
 						className="flex h-[320px] flex-col rounded-3xl border border-border/50 p-2 sm:h-[200px] sm:flex-row"
 					>
 						<Skeleton className="h-[180px] w-full rounded-2xl sm:h-full sm:w-2/5" />
@@ -195,6 +197,7 @@ export function PortfolioContentSkeleton() {
 					<Skeleton
 						key={node.key}
 						className="absolute rounded-3xl"
+						data-boneyard-content="true"
 						style={node.style}
 					/>
 				))}
@@ -207,7 +210,10 @@ export function CharactersContentSkeleton() {
 	return (
 		<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{Array.from({ length: 10 }).map((_, i) => (
-				<div key={i} className="flex flex-col gap-2">
+				<div
+					key={CHARACTER_SKELETON_ITEMS[i].id}
+					className="flex flex-col gap-2"
+				>
 					<Skeleton className="aspect-3/4 w-full rounded-xl" />
 					<Skeleton className="h-4 w-3/4" />
 				</div>
@@ -345,7 +351,7 @@ export function UserProfileSidebar({
 			</div>
 
 			<div className="space-y-4">
-				<h3 className="inline-flex w-full items-center gap-2 text-2xl font-bold text-neutral-950 dark:text-neutral-50">
+				<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
 					<span className="truncate">{user.displayName}</span>
 					<ProfileBadge user={user} />
 				</h3>
