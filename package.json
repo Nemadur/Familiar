@@ -3,13 +3,13 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#/*": "./src/*"
+    "#/*": "./*"
   },
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
+    "dev": "bunx --bun vite",
+    "build": "bunx --bun vite build",
+    "preview": "bunx --bun vite preview",
+    "test": "bunx --bun vitest -- run",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check"
@@ -95,7 +95,6 @@
     "jsdom": "^29.1.1",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.8"
   }
 }
