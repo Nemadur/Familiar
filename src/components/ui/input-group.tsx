@@ -1,6 +1,4 @@
-import { useTranslation } from "react-i18next";
 import { cva, type VariantProps } from "class-variance-authority";
-import { NumericFormat, type NumericFormatProps } from "react-number-format";
 import type React from "react";
 import {
 	Fragment,
@@ -11,6 +9,8 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useTranslation } from "react-i18next";
+import { NumericFormat, type NumericFormatProps } from "react-number-format";
 import { Button } from "src/components/ui/button";
 import { Input } from "src/components/ui/input";
 import { cn } from "src/lib/utils";
@@ -207,6 +207,26 @@ function InputGroupInput({
 			className={cn(
 				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive",
 				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1 group-data-[variant=floating]/input-group:h-10",
+				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
+				className,
+			)}
+			{...props}
+		/>
+	);
+}
+
+import { Textarea } from "src/components/ui/textarea";
+
+function InputGroupTextarea({
+	className,
+	...props
+}: React.ComponentProps<typeof Textarea>) {
+	return (
+		<Textarea
+			data-slot="input-group-control"
+			className={cn(
+				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive resize-none py-2",
+				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1",
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
 				className,
 			)}
@@ -1061,10 +1081,11 @@ function InputGroupDateInput({
 export {
 	InputGroup,
 	InputGroupAddon,
+	InputGroupButton,
+	InputGroupDateInput,
 	InputGroupInput,
 	InputGroupNumberInput,
-	InputGroupDateInput,
-	InputGroupButton,
 	InputGroupText,
+	InputGroupTextarea as InputGroupTextArea,
 	inputGroupVariants,
 };
