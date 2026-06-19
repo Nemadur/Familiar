@@ -4,6 +4,7 @@ import { Calligraph } from "calligraph";
 import { Info, MoreVertical, Paperclip, Send } from "lucide-react";
 import { MOCK_MESSAGES, MOCK_USERS } from "mock/chat";
 import { Fragment, useState } from "react";
+import { MOCK_MESSAGES, MOCK_USERS } from "#/mock/chat";
 import {
 	OutlineArrowLeft,
 	OutlineChat,
@@ -88,13 +89,17 @@ function ChatLayout() {
 										key={user.id}
 										onClick={() => setActiveChat(user.id)}
 										className={cn(
-											"flex items-center gap-3 p-3 rounded-2xl text-left transition-colors group/user-btn",
+											"group/user-btn flex items-center gap-3 rounded-2xl p-3 text-left transition-colors",
 											isActive
-												? "bg-accent text-accent-foreground"
-												: "hover:bg-accent/12 text-foreground",
+												? "bg-accent text-accent-foreground [--chat-item-bg:var(--accent)]"
+												: [
+														"text-foreground hover:bg-accent/12",
+														"[--chat-item-bg:var(--background)]",
+														"hover:[--chat-item-bg:color-mix(in_oklab,var(--accent)_12%,var(--background))]",
+													],
 										)}
 									>
-										<div className="flex-1 min-w-0 flex items-center justify-between gap-3 pointer-events-none">
+										<div className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-3">
 											<User
 												user={{
 													userId: user.id,
@@ -109,20 +114,21 @@ function ChatLayout() {
 												avatarSize="lg"
 												description={user.lastMessage}
 												isOnline={user.online}
-												status={isActive ? "active" : undefined} // Used to style the text colors in User
+												status={isActive ? "active" : undefined}
 												buttonClassName="p-0 hover:bg-transparent h-auto w-auto max-w-[70%]"
 												nonDropdownButtonClassName="!opacity-100"
 												avatarBadgeClassName={cn(
 													"transition-colors",
 													isActive
-														? "border-accent"
-														: "border-background group-hover/user-btn:border-[color-mix(in_oklab,var(--accent)_12%,var(--background))]",
+														? "!border-accent"
+														: "!border-background group-hover/user-btn:!border-[color-mix(in_oklab,var(--accent)_12%,var(--background))]",
 												)}
 											/>
-											<div className="flex flex-col items-end gap-1 shrink-0">
+
+											<div className="flex shrink-0 flex-col items-end gap-1">
 												<span
 													className={cn(
-														"text-xs shrink-0",
+														"shrink-0 text-xs",
 														isActive
 															? "text-accent-foreground/80"
 															: "text-muted-foreground",
@@ -130,10 +136,11 @@ function ChatLayout() {
 												>
 													{user.time}
 												</span>
+
 												{user.unread > 0 && (
 													<Calligraph
 														className={cn(
-															"flex items-center justify-center size-5 rounded-full text-[10px] font-medium",
+															"flex size-5 items-center justify-center rounded-full text-[10px] font-medium",
 															isActive
 																? "bg-accent-foreground text-accent"
 																: "bg-primary text-primary-foreground",

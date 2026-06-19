@@ -80,7 +80,7 @@ export default function Header() {
 									: user?.roles?.includes(TRoles.Artist) && (
 											<Button size={"xl"} asChild>
 												<Link to="/dashboard">
-													{t("header.artist-dashboard", "Artist Dashboard")}
+													{t("header.artist-dashboard", "Dashboard")}
 												</Link>
 											</Button>
 										)}
