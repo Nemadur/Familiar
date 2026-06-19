@@ -7,6 +7,7 @@ import {
 	ShoppingBasket,
 	Trash2,
 } from "lucide-react";
+import { MOCK_BASKET_ITEMS } from "mock/shop";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import {
@@ -34,7 +35,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import useFormValidation from "@/hooks/use-form-validation";
 import { Elevated } from "@/lib/elevated";
-import { MOCK_BASKET_ITEMS } from "@/mock/shop";
 
 export const Route = createFileRoute("/_main/basket")({
 	component: BasketPage,

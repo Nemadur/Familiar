@@ -2,6 +2,7 @@ import { Typography } from "@heroui/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Calligraph } from "calligraph";
 import { Info, MoreVertical, Paperclip, Send } from "lucide-react";
+import { MOCK_MESSAGES, MOCK_USERS } from "mock/chat";
 import { Fragment, useState } from "react";
 import {
 	OutlineArrowLeft,
@@ -22,7 +23,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
-import { MOCK_MESSAGES, MOCK_USERS } from "@/mock/chat";
 
 export const Route = createFileRoute("/_chat/chat")({
 	component: ChatLayout,
