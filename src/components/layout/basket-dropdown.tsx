@@ -2,7 +2,6 @@ import { Typography } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { ShoppingCart } from "lucide-react";
 import { useState } from "react";
-import { MOCK_BASKET_ITEMS } from "#/mock/shop";
 import { OutlineTrash } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -12,6 +11,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsTablet } from "@/hooks/use-mobile";
+import { MOCK_BASKET_ITEMS } from "@/mock/shop";
 import UserAvatar from "./profile/avatar";
 
 export function BasketDropdown() {

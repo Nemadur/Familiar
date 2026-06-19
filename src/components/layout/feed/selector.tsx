@@ -5,7 +5,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MOCK_PINNED_FEEDS } from "#/mock/feed";
+import { MOCK_PINNED_FEEDS } from "@/mock/feed";
 
 export type FeedType = "following" | "discover" | "mutuals" | "rabbit-hole";
 

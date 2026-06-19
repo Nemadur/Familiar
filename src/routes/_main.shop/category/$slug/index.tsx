@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ListFilterIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { OutlineArrowLeft } from "@/components/icons/icons";
-import { MOCK_CATEGORIES } from "#/mock/shop";
 import { EmptyPage } from "@/components/layout/empty-page";
 import {
 	FilterBar,
@@ -15,6 +14,7 @@ import { ShopItemCard } from "@/components/layout/shop/shop-item-card";
 import { Button } from "@/components/ui/button";
 import { useShopItems } from "@/hooks/shop";
 import { useCommissionCategories } from "@/hooks/use-commisions";
+import { MOCK_CATEGORIES } from "@/mock/shop";
 import type { MockShopItem } from "@/types/shop";
 
 export const Route = createFileRoute("/_main/shop/category/$slug/")({

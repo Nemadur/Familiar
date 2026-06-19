@@ -22,7 +22,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Elevated } from "@/lib/elevated";
 import { cn } from "@/lib/utils";
-import { MOCK_USERS, MOCK_MESSAGES } from "#/mock/chat";
+import { MOCK_MESSAGES, MOCK_USERS } from "@/mock/chat";
 
 export const Route = createFileRoute("/_chat/chat")({
 	component: ChatLayout,

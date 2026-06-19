@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#/*": "./*"
+    "#/*": "./src/*"
   },
   "scripts": {
     "dev": "bunx --bun vite",

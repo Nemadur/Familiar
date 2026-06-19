@@ -17,7 +17,6 @@ import {
 	VideoIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { MOCK_CATEGORIES } from "#/mock/shop";
 import { EmptyPage } from "@/components/layout/empty-page";
 import {
 	FilterBar,
@@ -30,6 +29,7 @@ import { ShopItemCard } from "@/components/layout/shop/shop-item-card";
 import { useShopItems } from "@/hooks/shop";
 import { useCommissionCategories } from "@/hooks/use-commisions";
 import { Elevated } from "@/lib/elevated";
+import { MOCK_CATEGORIES } from "@/mock/shop";
 import type { MockShopItem } from "@/types/shop";
 
 export const Route = createFileRoute("/_main/shop")({
