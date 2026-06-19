@@ -1,8 +1,8 @@
 import { Typography } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { ShoppingCart } from "lucide-react";
+import { MOCK_BASKET_ITEMS } from "mock/shop";
 import { useState } from "react";
-import { MOCK_BASKET_ITEMS } from "#/mock/shop";
 import { OutlineTrash } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";

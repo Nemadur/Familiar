@@ -6,10 +6,10 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
+    "dev": "bunx --bun vite",
+    "build": "bunx --bun vite build",
+    "preview": "bunx --bun vite preview",
+    "test": "bunx --bun vitest -- run",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check"
@@ -60,7 +60,7 @@
     "lucide-react": "^1.17.0",
     "motion": "^12.40.0",
     "next-themes": "^0.4.6",
-    "nitro": "^3.0.260603-beta",
+    "nitro": "^3.0.260610-beta",
     "pdfjs-dist": "^6.0.227",
     "radix-ui": "^1.5.0",
     "react": "^19.2.7",
@@ -95,7 +95,6 @@
     "jsdom": "^29.1.1",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.8"
   }
 }

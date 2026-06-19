@@ -109,5 +109,3 @@ function handleMollieClientRegistration() {
       console.error("Error during Mollie client registration:", error);
     });
 }
-
-export default RouteComponent;

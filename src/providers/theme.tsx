@@ -96,17 +96,34 @@ const themeScript = (() => {
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-	const [userTheme, setUserTheme] = useState<UserTheme>(getStoredUserTheme);
+	const [userTheme, setUserTheme] = useState<UserTheme>("system");
+	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
-		// Ensure theme is correctly applied on mount
-		handleThemeChange(userTheme);
+		setMounted(true);
+		const stored = getStoredUserTheme();
+		if (stored !== "system") {
+			setUserTheme(stored);
+		}
+		handleThemeChange(stored);
 
+		if (stored !== "system") return;
+		return setupPreferredListener();
+	}, []);
+
+	useEffect(() => {
+		if (!mounted) return;
+		handleThemeChange(userTheme);
 		if (userTheme !== "system") return;
 		return setupPreferredListener();
-	}, [userTheme]);
+	}, [userTheme, mounted]);
 
-	const appTheme = userTheme === "system" ? getSystemTheme() : userTheme;
+	const appTheme = !mounted
+		? "light"
+		: userTheme === "system"
+			? getSystemTheme()
+			: userTheme;
+
 	const isDark =
 		appTheme === "dark" ||
 		appTheme === "oled" ||
