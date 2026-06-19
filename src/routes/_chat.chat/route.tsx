@@ -4,7 +4,6 @@ import { Calligraph } from "calligraph";
 import { Info, MoreVertical, Paperclip, Send } from "lucide-react";
 import { MOCK_MESSAGES, MOCK_USERS } from "mock/chat";
 import { Fragment, useState } from "react";
-import { MOCK_MESSAGES, MOCK_USERS } from "#/mock/chat";
 import {
 	OutlineArrowLeft,
 	OutlineChat,
