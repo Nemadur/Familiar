@@ -3,18 +3,24 @@ import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { boneyardPlugin } from "boneyard-js/vite";
+import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 const config = defineConfig({
 	plugins: [
 		devtools(),
-		tsconfigPaths({ projects: ["./tsconfig.json"] }),
 		tailwindcss(),
 		tanstackStart(),
+		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
 		viteReact(),
 		boneyardPlugin(),
 	],
+	resolve: {
+		tsconfigPaths: true,
+	},
+	build: {
+		chunkSizeWarningLimit: 2000,
+	},
 	optimizeDeps: {
 		exclude: [
 			"@tanstack/start-server-core",

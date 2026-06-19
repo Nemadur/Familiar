@@ -1,8 +1,8 @@
 import { Typography } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { ShoppingCart } from "lucide-react";
+import { MOCK_BASKET_ITEMS } from "mock/shop";
 import { useState } from "react";
-import { MOCK_BASKET_ITEMS } from "#/mock/shop";
 import { OutlineTrash } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -34,8 +34,8 @@ export function BasketDropdown() {
 
 	const BasketContent = (
 		<div className="flex flex-col max-h-[85vh] lg:max-h-[80vh]">
-			<div className="flex items-center justify-between p-3 border-b border-border">
-				<Typography.Heading level={4}>Basket</Typography.Heading>
+			<div className="flex items-center justify-between pt-5 px-5">
+				<Typography.Heading level={6}>Basket</Typography.Heading>
 				<div className="flex items-center gap-2">
 					<Typography.Paragraph size={"sm"} className="text-muted-foreground">
 						{basketItems.length} item{basketItems.length !== 1 ? "s" : ""} from
@@ -44,38 +44,45 @@ export function BasketDropdown() {
 				</div>
 			</div>
 
-			<div className="flex-1 overflow-y-auto p-3 flex flex-col gap-6">
+			<div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
 				{basketItems.map((item) => (
-					<div key={item.id} className="flex gap-4">
+					<div
+						key={item.id}
+						className="flex gap-3 hover:bg-secondary/30 p-2 items-center rounded-2xl transition-colors duration-75"
+					>
 						<img
 							src={item.image}
 							alt={item.title}
-							className="size-14 rounded-xl object-cover shrink-0"
+							className="size-12 rounded-xl object-cover shrink-0"
 						/>
 						<div className="flex flex-col flex-1 min-w-0">
 							<div className="flex justify-between items-start gap-3">
 								<Typography.Heading
 									level={6}
-									className="line-clamp-2 uppercase"
+									className="line-clamp-1 uppercase"
 								>
 									{item.title}
 								</Typography.Heading>
-								<Typography.Paragraph className="whitespace-nowrap font-medium">
-									{item.currency} {item.price.toFixed(2)}
-								</Typography.Paragraph>
 							</div>
-							<div className="mt-auto flex items-center justify-between">
+							<div className="mt-auto flex items-center gap-2">
+								{/* ITEM TYPE (if available to choose) for example: color variant */}
 								<Typography.Paragraph
-									size={"sm"}
-									className="text-muted-foreground"
+									size={"xs"}
+									className="text-muted-foreground!"
 								>
 									#{item.id}
 								</Typography.Paragraph>
-								<Button variant={"destructive"} size={"icon-sm"}>
-									<OutlineTrash />
-								</Button>
+								<Typography.Paragraph
+									size={"xs"}
+									className="whitespace-nowrap font-medium"
+								>
+									{item.currency} {item.price.toFixed(2)}
+								</Typography.Paragraph>
 							</div>
 						</div>
+						<Button variant={"destructive"} size={"icon-lg"}>
+							<OutlineTrash />
+						</Button>
 					</div>
 				))}
 			</div>
@@ -83,12 +90,15 @@ export function BasketDropdown() {
 			<div className="p-3 border-t space-y-6">
 				<div className="flex items-end justify-between">
 					<div className="flex flex-col">
-						<Typography.Heading level={5}>Subtotal</Typography.Heading>
-						<Typography.Paragraph size={"sm"} className="text-muted-foreground">
+						<Typography.Heading level={6}>Subtotal</Typography.Heading>
+						<Typography.Paragraph
+							size={"xs"}
+							className="text-muted-foreground!"
+						>
 							Sales tax calculated at checkout
 						</Typography.Paragraph>
 					</div>
-					<Typography.Heading level={4}>
+					<Typography.Heading level={5}>
 						PLN {subtotal.toFixed(2)}
 					</Typography.Heading>
 				</div>
@@ -122,8 +132,8 @@ export function BasketDropdown() {
 		<DropdownMenu open={open} onOpenChange={setOpen}>
 			<DropdownMenuTrigger asChild>{TriggerButton}</DropdownMenuTrigger>
 			<DropdownMenuContent
-				className="w-md p-0 overflow-hidden rounded-3xl"
-				align="end"
+				className="w-sm p-0 overflow-hidden rounded-3xl"
+				align="center"
 				sideOffset={8}
 			>
 				{BasketContent}

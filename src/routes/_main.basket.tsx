@@ -7,9 +7,9 @@ import {
 	ShoppingBasket,
 	Trash2,
 } from "lucide-react";
+import { MOCK_BASKET_ITEMS } from "mock/shop";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { MOCK_BASKET_ITEMS } from "#/mock/shop";
 import {
 	OutlineChat,
 	OutlineEdit,

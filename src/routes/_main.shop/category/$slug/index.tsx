@@ -1,9 +1,9 @@
 import { Typography } from "@heroui/react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ListFilterIcon } from "lucide-react";
+import { MOCK_CATEGORIES } from "mock/shop";
 import { useMemo, useState } from "react";
 import { OutlineArrowLeft } from "@/components/icons/icons";
-import { MOCK_CATEGORIES } from "#/mock/shop";
 import { EmptyPage } from "@/components/layout/empty-page";
 import {
 	FilterBar,

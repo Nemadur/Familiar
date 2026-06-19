@@ -16,8 +16,8 @@ import {
 	TypeIcon,
 	VideoIcon,
 } from "lucide-react";
+import { MOCK_CATEGORIES } from "mock/shop";
 import { useMemo, useState } from "react";
-import { MOCK_CATEGORIES } from "#/mock/shop";
 import { EmptyPage } from "@/components/layout/empty-page";
 import {
 	FilterBar,

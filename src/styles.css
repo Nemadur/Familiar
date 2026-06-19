@@ -2,7 +2,21 @@
 @plugin "@tailwindcss/typography";
 @import 'tw-animate-css';
 
-@import "@heroui/styles";
+/* Base requirements */
+@import "@heroui/styles/base";
+
+/* Component styles */
+@import "@heroui/styles/components/button.css";
+@import "@heroui/styles/components/chip.css";
+@import "@heroui/styles/components/dropdown.css";
+@import "@heroui/styles/components/scroll-shadow.css";
+@import "@heroui/styles/components/surface.css";
+@import "@heroui/styles/components/typography.css";
+
+/* Theme variables and utilities */
+@import "@heroui/styles/themes/shared/theme.css";
+@import "@heroui/styles/themes/default";
+@import "@heroui/styles/utilities";
 
 @custom-variant dark (&:where(.dark, .oled, .dark *, .oled *));
 
@@ -171,8 +185,8 @@ code {
     --muted: var(--color-familiar-700);
     --muted-foreground: var(--color-familiar-500);
 
-    --accent: var(--color-blue-400);
-    --accent-foreground: var(--color-familiar-50);
+    --accent: var(--color-blue-300);
+    --accent-foreground: var(--color-blue-950);
 
     --destructive: var(--color-red-500);
     --destructive-foreground: var(--color-red-500);

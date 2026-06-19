@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { MOCK_SHOP_ITEMS } from "mock/shop";
 import { useMemo } from "react";
-import { MOCK_SHOP_ITEMS } from "#/mock/shop";
 import { useCommissionCategories } from "@/hooks/use-commisions";
 import type { MockShopItem } from "@/types/shop";
 
