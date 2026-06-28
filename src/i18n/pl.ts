@@ -2,16 +2,23 @@ const pl = {
 	seo: {
 		defaults: {
 			title: "Familiar",
-			description: "Twoja artystyczna przystań",
+			description: "Twoja twórczość wygląda Znajomo",
 			keywords: "sztuka, familiar, zlecenia",
 		},
 		home: {
-			title: "Witamy w Familiar",
-			description: "Twoja artystyczna przystań",
+			title: "Strona główna",
+			description: "Twoja twórczość wygląda Znajomo",
 		},
 		profile: {
 			title: "Profil (@{{username}})",
 			description: "Profil użytkownika @{{username}}",
+		},
+		shop: {
+			title: "Sklep - Ilustracje i zlecenia artystyczne na zamówienie",
+			description:
+				"Przeglądaj zlecenia artystyczne od niezależnych twórców na Familiar. Odkrywaj style, galerie i ceny, a potem zamów ilustrację stworzoną specjalnie dla Ciebie.",
+			keywords:
+				"ilustracje na zamówienie, zlecenia artystyczne, commission art Polska, zamów grafikę, custom art, digital art commission, ilustrator na zamówienie, grafika postaci, portret na zamówienie, marketplace dla artystów, Familiar shop",
 		},
 	},
 	meta: {
@@ -131,7 +138,8 @@ const pl = {
 	},
 	pages: {
 		home: {
-			title: "Witamy u Familiara - Twoja artystyczna przystań",
+			title: "Strona główna",
+			description: "Strona w trakcie renowacji.",
 		},
 	},
 	states: {

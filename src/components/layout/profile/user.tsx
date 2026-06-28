@@ -73,7 +73,7 @@ function UserButtonContent({
 				/>
 			)}
 			{showInfo && (
-				<div className="flex flex-col items-start text-left min-w-0 flex-1">
+				<div className="flex flex-col w-fit items-start text-left">
 					<span
 						className={cn(
 							"text-sm font-medium truncate w-full",
@@ -182,7 +182,7 @@ export default function User({
 	const triggerClassName = cn(
 		"flex items-center gap-2 p-0 hover:text-foreground",
 		showInfo
-			? "h-auto w-full justify-start rounded-xl"
+			? "h-auto justify-start rounded-xl"
 			: "size-10 justify-center rounded-full",
 		isDropdown ? "hover:bg-secondary/80" : "hover:bg-transparent",
 		!isDropdown && nonDropdownButtonClassName,
@@ -264,7 +264,7 @@ export default function User({
 					<Button key={item.label} variant="ghost" size="xl" asChild>
 						<Link
 							to={item.to}
-							params={item.params}
+							// params={item.params}
 							target={(item as any).target}
 							preload={false}
 							onClick={() => setOpen(false)}
@@ -359,7 +359,6 @@ export default function User({
 							<DropdownMenuItem key={item.label} asChild>
 								<Link
 									to={item.to}
-									params={item.params}
 									preload={false}
 									className="w-full cursor-pointer"
 									onClick={() => setOpen(false)}

@@ -9,7 +9,7 @@ import type {
 
 // Re-export everything consumers are likely to need so they have a single
 // import path for both types and the hook.
-export type { Tile, PlacedTile, PlacedGeneric, PackStrategy };
+export type { PackStrategy, PlacedGeneric, PlacedTile, Tile };
 export { bucketFromDimensions };
 
 // ---------------------------------------------------------------------------

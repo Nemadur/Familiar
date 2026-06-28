@@ -2,16 +2,23 @@ const en = {
 	seo: {
 		defaults: {
 			title: "Familiar",
-			description: "Your art station",
+			description: "Your art looks $t(meta.app_name)",
 			keywords: "art, familiar, commission",
 		},
 		home: {
-			title: "Welcome to Familiar",
-			description: "Your art station",
+			title: "Home",
+			description: "Your art looks $t(meta.app_name)",
 		},
 		profile: {
 			title: "Profile (@{{username}})",
 			description: "User profile for @{{username}}",
+		},
+		shop: {
+			title: "Shop - Discover Custom Art Commissions",
+			description:
+				"Browse custom art commissions from independent artists on $t(meta.app_name). Discover unique styles, compare offers, view galleries, and request artwork made just for you.",
+			keywords:
+				"custom art commissions, art commission marketplace, commission artists, digital art commissions, character art commission, illustration commission, artist shop, custom artwork, freelance artists, Familiar shop",
 		},
 	},
 	meta: {
@@ -130,7 +137,8 @@ const en = {
 	},
 	pages: {
 		home: {
-			title: "Welcome to Familiar - Your art station",
+			title: "Home",
+			description: "Page is under construction.",
 		},
 	},
 	states: {

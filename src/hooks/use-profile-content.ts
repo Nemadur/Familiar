@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import type { PostWithAuthor } from "@/types/post";
 import type { Character } from "@/types/character";
+import type { PostWithAuthor } from "@/types/post";
+
 // import type { Folder } from "@/types/folder";
 
 type Folder = {

@@ -29,10 +29,19 @@ import { CategoryCard } from "@/components/layout/shop/category-card";
 import { ShopItemCard } from "@/components/layout/shop/shop-item-card";
 import { useShopItems } from "@/hooks/shop";
 import { useCommissionCategories } from "@/hooks/use-commisions";
-import { Elevated } from "@/lib/elevated";
+import i18n from "@/lib/i18n";
+import { seo } from "@/lib/seo";
 import type { MockShopItem } from "@/types/shop";
 
 export const Route = createFileRoute("/_main/shop")({
+	head: () => ({
+		meta: seo({
+			title: i18n.t("seo.shop.title"),
+			description: i18n.t("seo.shop.description"),
+			image: `https://og-image.vercel.app/${encodeURIComponent(i18n.t(`seo.shop.title`))}.png`,
+			keywords: i18n.t("seo.shop.keywords"),
+		}),
+	}),
 	component: ShopPage,
 });
 

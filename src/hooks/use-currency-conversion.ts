@@ -1,8 +1,8 @@
-import { getStripeExchangeRates } from "@/api/stripe";
-import { useCurrency } from "@/providers/currency";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { getStripeExchangeRates } from "@/api/stripe";
+import { useCurrency } from "@/providers/currency";
 
 function hasRates(rates: Record<string, number>) {
 	return Object.keys(rates).length > 0;

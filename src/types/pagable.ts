@@ -14,6 +14,12 @@ export type TPageableObject = {
 	unpaged: boolean;
 };
 
+export type TPagableQuery = {
+	page?: number;
+	size?: number;
+	sort?: string[];
+};
+
 export type TPagination<T> = {
 	totalElements: number;
 	totalPages: number;

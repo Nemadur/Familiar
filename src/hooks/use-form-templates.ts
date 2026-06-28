@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FormTemplateResponse } from "@/types/commissions/templates";
 import {
-	getFormTemplates,
-	getFormTemplateById,
-	createFormTemplate,
 	assignFormTemplate,
+	createFormTemplate,
 	deleteFormTemplate,
+	getFormTemplateById,
+	getFormTemplates,
 	updateFormTemplate,
 } from "@/api/commisions/form-templates";
+import type { FormTemplateResponse } from "@/types/commissions/templates";
 
 export function useFormTemplates() {
 	return useQuery({

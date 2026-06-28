@@ -8,7 +8,7 @@ function Empty({ className, ...props }: ComponentProps<"div">) {
 		<div
 			data-slot="empty"
 			className={cn(
-				"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed shadow-none! p-6 text-center text-balance md:p-12",
+				"flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed shadow-none! p-6 text-center text-balance",
 				className,
 			)}
 			{...props}
@@ -66,7 +66,7 @@ type EmptyTitleProps = Omit<
 	level?: ComponentProps<typeof Typography.Heading>["level"];
 };
 
-function EmptyTitle({ className, level = 4, ...props }: EmptyTitleProps) {
+function EmptyTitle({ className, level = 5, ...props }: EmptyTitleProps) {
 	return (
 		<Typography.Heading
 			data-slot="empty-title"
@@ -87,7 +87,7 @@ function EmptyDescription({
 			data-slot="empty-description"
 			size={size}
 			className={cn(
-				"text-muted-foreground text-sm/relaxed [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+				"text-muted-foreground text-center! text-sm/relaxed [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
 				className,
 			)}
 			{...props}

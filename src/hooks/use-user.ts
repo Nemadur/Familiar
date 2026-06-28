@@ -29,7 +29,7 @@ export async function getUserByUsername(
 	}
 
 	const user = await apiFetch<TUserResponse>(
-		`/api/users/${encodeURIComponent(username)}`,
+		`/users/${encodeURIComponent(username)}`,
 	);
 
 	return toUserProfile(user);
@@ -41,14 +41,14 @@ export async function getUserById(userId: string): Promise<TUserProfile> {
 	}
 
 	const user = await apiFetch<TUserResponse>(
-		`/api/users/id/${encodeURIComponent(userId)}`,
+		`/users/id/${encodeURIComponent(userId)}`,
 	);
 
 	return toUserProfile(user);
 }
 
 export async function getMyProfile(): Promise<TUserProfile> {
-	const user = await apiFetch<TUserResponse>("/api/users/me");
+	const user = await apiFetch<TUserResponse>("/users/me");
 	return toUserProfile(user);
 }
 

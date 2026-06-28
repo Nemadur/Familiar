@@ -6,9 +6,9 @@ import type {
 	TCommissionRequest,
 	TCommissionResponse,
 	TCreateCommissionRequest,
-	TUpdateCommissionRequest,
 	TMediaJobResponse,
 	TTagResponse,
+	TUpdateCommissionRequest,
 } from "@/types/commissions";
 
 export type PaginationParams = {

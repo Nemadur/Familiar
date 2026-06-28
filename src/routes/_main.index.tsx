@@ -19,5 +19,11 @@ export const Route = createFileRoute("/_main/")({
 function App() {
 	const { t } = useTranslation();
 
-	return <EmptyPage icon={OutlineHome} title={t("pages.home.title")} />;
+	return (
+		<EmptyPage
+			icon={OutlineHome}
+			title={t("pages.home.title")}
+			description={t("pages.home.description")}
+		/>
+	);
 }

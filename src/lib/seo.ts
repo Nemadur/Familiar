@@ -4,10 +4,10 @@ import type { Meta } from "@/types/seo";
 export const getMetaDefaults = (): Meta => ({
 	title: i18n.t("seo.defaults.title"),
 	description: i18n.t("seo.defaults.description", {
-		defaultValue: "Your art station",
+		defaultValue: i18n.t("seo.defaults.description"),
 	}),
 	keywords: i18n.t("seo.defaults.keywords", {
-		defaultValue: "art, familiar, commission",
+		defaultValue: i18n.t("seo.defaults.keywords"),
 	}),
 	image: `https://og-image.vercel.app/${encodeURIComponent(i18n.t("seo.defaults.title"))}.png`,
 });
@@ -31,8 +31,10 @@ function getAlternateLocaleTags(currentLang: string) {
 
 const seo = ({ title, description, keywords, image, url }: Meta) => {
 	const defaults = getMetaDefaults();
+	// TODO: do we need  | Familiar?
+	// FIXME: on hover, it show Familiar Work
 	const mergedTitle =
-		title === defaults.title ? title : `${title} | ${defaults.title}`;
+		title === defaults.title ? title : `${title} | ${defaults.title}`; // | ${defaults.title}
 	const mergedImage = image || defaults.image;
 
 	const currentLang = i18n.language || "en";
