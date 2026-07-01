@@ -31,3 +31,5 @@ export type TMolliePaymentResponse = {
 		documentation: { href: string; type: string };
 	};
 };
+
+export type TMollieFlow = 'existing' | 'create'

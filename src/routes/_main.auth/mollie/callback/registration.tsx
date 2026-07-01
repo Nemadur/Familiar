@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/_main/auth/mollie/callback/registration/')({
+export const Route = createFileRoute('/_main/auth/mollie/callback/registration')({
   component: RouteComponent,
 })
 
