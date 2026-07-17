@@ -246,11 +246,8 @@ function OptionPriceValueField({
 								{...field}
 								value={field.value ?? undefined}
 								min={0}
-								onChange={(event) => {
-									const value = event.target.value;
-									const numericValue =
-										typeof value === "string" ? Number(value) : value || 0;
-
+								onValueChange={(val) => {
+									const numericValue = val || 0;
 									field.onChange(numericValue < 0 ? 0 : numericValue);
 								}}
 							/>
@@ -618,11 +615,7 @@ function NumberFieldLimit({
 								disabled={isBusy}
 								{...field}
 								value={field.value ?? undefined}
-								onChange={(event) =>
-									field.onChange(
-										event.target.value ? Number(event.target.value) : null,
-									)
-								}
+								onValueChange={(val) => field.onChange(val ?? null)}
 							/>
 						</InputGroup>
 					</FormControl>

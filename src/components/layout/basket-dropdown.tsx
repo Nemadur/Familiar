@@ -12,9 +12,12 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsTablet } from "@/hooks/use-mobile";
+import { localizePath } from "@/lib/i18n";
+import { useTranslation } from "react-i18next";
 import UserAvatar from "./profile/avatar";
 
 export function BasketDropdown() {
+	const { i18n } = useTranslation();
 	const isTablet = useIsTablet();
 	const [open, setOpen] = useState(false);
 
@@ -99,7 +102,7 @@ export function BasketDropdown() {
 					asChild
 					onClick={() => setOpen(false)}
 				>
-					<Link to="/basket" preload={false}>
+					<Link to={localizePath("/basket", i18n.language) as any} preload={false}>
 						Checkout
 					</Link>
 				</Button>

@@ -1,5 +1,15 @@
-import i18n, { languages } from "@/lib/i18n";
+import i18n, {
+	defaultLocale,
+	getCurrentLocale,
+	languages,
+	localizePath,
+	resolveLocale,
+} from "@/lib/i18n";
 import type { Meta } from "@/types/seo";
+
+const siteUrl =
+	(import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, "") ||
+	"https://www.familiar.art";
 
 export const getMetaDefaults = (): Meta => ({
 	title: i18n.t("seo.defaults.title"),
@@ -11,6 +21,26 @@ export const getMetaDefaults = (): Meta => ({
 	}),
 	image: `https://og-image.vercel.app/${encodeURIComponent(i18n.t("seo.defaults.title"))}.png`,
 });
+
+export function getLocalizedUrl(pathname: string, locale?: string) {
+	return `${siteUrl}${localizePath(pathname, locale)}`;
+}
+
+export function getSeoLinks(pathname: string, locale?: string) {
+	const resolvedLocale = resolveLocale(locale);
+
+	return [
+		{
+			rel: "canonical" as const,
+			href: getLocalizedUrl(pathname, resolvedLocale),
+		},
+		...languages.map((language) => ({
+			rel: "alternate" as const,
+			hrefLang: language.value === defaultLocale ? "x-default" : language.value,
+			href: getLocalizedUrl(pathname, language.value),
+		})),
+	];
+}
 
 function getAlternateLocaleTags(currentLang: string) {
 	const tags: Array<{ property: "og:locale:alternate"; content: string }> = [];
@@ -29,7 +59,15 @@ function getAlternateLocaleTags(currentLang: string) {
 	return tags;
 }
 
-const seo = ({ title, description, keywords, image, url }: Meta) => {
+const seo = ({
+	title,
+	description,
+	keywords,
+	image,
+	url,
+	pathname,
+	locale,
+}: Meta) => {
 	const defaults = getMetaDefaults();
 	// TODO: do we need  | Familiar?
 	// FIXME: on hover, it show Familiar Work
@@ -37,9 +75,11 @@ const seo = ({ title, description, keywords, image, url }: Meta) => {
 		title === defaults.title ? title : `${title} | ${defaults.title}`; // | ${defaults.title}
 	const mergedImage = image || defaults.image;
 
-	const currentLang = i18n.language || "en";
+	const currentLang = resolveLocale(locale || getCurrentLocale());
 	const resolvedDescription = description || defaults.description;
 	const resolvedKeywords = keywords || defaults.keywords;
+	const resolvedUrl =
+		url || (pathname ? getLocalizedUrl(pathname, currentLang) : undefined);
 
 	const tags = [
 		{ title: mergedTitle },
@@ -67,10 +107,10 @@ const seo = ({ title, description, keywords, image, url }: Meta) => {
 					{ property: "og:image", content: mergedImage },
 				]
 			: []),
-		...(url
+		...(resolvedUrl
 			? [
-					{ property: "og:url", content: url },
-					{ name: "twitter:url", content: url },
+					{ property: "og:url", content: resolvedUrl },
+					{ name: "twitter:url", content: resolvedUrl },
 				]
 			: []),
 	];

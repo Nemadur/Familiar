@@ -32,7 +32,7 @@ export async function getMyCommissionRequests(
 	params?: TPaginatedCommissionRequestParams,
 ) {
 	return apiFetch<TCommissionRequestResponse>(
-		`/api/commissions/requests/my${buildPaginationQuery(params)}`,
+		`commissions/requests/my${buildPaginationQuery(params)}`,
 	);
 }
 
@@ -44,7 +44,7 @@ export async function getIncomingCommissionRequests(
 	params?: TPaginatedCommissionRequestParams,
 ) {
 	return apiFetch<TCommissionRequestResponse>(
-		`/api/commission-requests/incoming${buildPaginationQuery(params)}`,
+		`commission-requests/incoming${buildPaginationQuery(params)}`,
 	);
 }
 
@@ -53,7 +53,7 @@ export async function getIncomingCommissionRequests(
  */
 export async function acceptCommissionRequest(requestId: string) {
 	return apiFetch<TCommissionRequest>(
-		`/api/commission-requests/${requestId}/accept`,
+		`commission-requests/${requestId}/accept`,
 		{
 			method: "PATCH",
 		}
@@ -65,7 +65,7 @@ export async function acceptCommissionRequest(requestId: string) {
  */
 export async function rejectCommissionRequest(requestId: string) {
 	return apiFetch<TCommissionRequest>(
-		`/api/commission-requests/${requestId}/reject`,
+		`commission-requests/${requestId}/reject`,
 		{
 			method: "PATCH",
 		}
@@ -77,7 +77,7 @@ export async function rejectCommissionRequest(requestId: string) {
  */
 export async function cancelCommissionRequest(requestId: string) {
 	return apiFetch<TCommissionRequest>(
-		`/api/commissions/requests/${requestId}/cancel`,
+		`commissions/requests/${requestId}/cancel`,
 		{
 			method: "PATCH",
 		}
@@ -92,7 +92,7 @@ export async function updateCommissionRequestMultimedia(
 	multimediaIds: string[],
 ) {
 	return apiFetch<TCommissionRequest>(
-		`/api/commissions/requests/${requestId}/multimedia`,
+		`commissions/requests/${requestId}/multimedia`,
 		{
 			method: "PATCH",
 			body: JSON.stringify({ multimediaIds }),

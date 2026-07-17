@@ -20,7 +20,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Elevated } from "@/lib/elevated";
-import { languages } from "@/lib/i18n";
+import { languages, localizePath, stripLocaleFromPathname, syncLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function LanguageSelect() {
@@ -70,8 +70,15 @@ function LanguageSelect() {
 								<CommandItem
 									key={language.value}
 									value={language.label}
-									onSelect={() => {
-										i18n.changeLanguage(language.value);
+									onSelect={async () => {
+										await syncLanguage(language.value);
+										const nextPathname = localizePath(
+											stripLocaleFromPathname(window.location.pathname),
+											language.value,
+										);
+										window.location.assign(
+											`${nextPathname}${window.location.search}${window.location.hash}`,
+										);
 										setOpen(false);
 									}}
 								>

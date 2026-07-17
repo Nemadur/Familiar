@@ -5,6 +5,8 @@ import { useState } from "react";
 import {
 	OutlineCheck,
 	OutlineClearNight,
+	OutlineFaceSmilling,
+	OutlineListBoxes,
 	OutlineLogout,
 	OutlineMonitor,
 	OutlineReceipt,
@@ -33,6 +35,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsTablet } from "@/hooks/use-mobile";
+import { getLocaleParam, localizePath } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import { useTheme } from "@/providers/theme";
@@ -145,7 +148,6 @@ type UserProps = {
 	avatarBadgeClassName?: string;
 };
 
-// eslint-disable-next-line react-doctor/no-many-boolean-props
 export default function User({
 	user,
 	showInfo = true,
@@ -168,6 +170,7 @@ export default function User({
 	const isTablet = useIsTablet();
 	const [internalOpen, setInternalOpen] = useState(false);
 	const { userTheme, setTheme } = useTheme();
+	const locale = getLocaleParam(document.documentElement.lang);
 
 	const open = openProp ?? internalOpen;
 	const setOpen = onOpenChange ?? setInternalOpen;
@@ -207,24 +210,22 @@ export default function User({
 		{
 			label: "Profile",
 			icon: <OutlineUser />,
-			to: "/$username",
-			params: { username: user?.username || "" },
+			to: localizePath(`/user/${user?.username || ""}`, locale),
 		},
 		{
-			label: "Requests",
+			label: "My Requests",
+			icon: <OutlineListBoxes />,
+			to: localizePath("/my-requests", locale),
+		},
+		{
+			label: "My Orders",
 			icon: <OutlineReceipt />,
-			to: "/my-requests",
-		},
-		{
-			label: "Orders",
-			icon: <OutlineSettings />,
-			to: "/orders" as any,
+			to: localizePath("/orders", locale),
 		},
 		{
 			label: "Characters",
-			icon: <OutlineSettings />,
-			to: "/$username/$tab",
-			params: { username: user?.username, tab: "characters" },
+			icon: <OutlineFaceSmilling />,
+			to: localizePath(`/user/${user?.username || ""}/characters`, locale),
 		},
 		// TODO: only show if not connected to Mollie
 		// TODO: only show if user has permissions to connect to Mollie (e.g., is admin)
@@ -247,14 +248,14 @@ export default function User({
 		{
 			label: "Settings",
 			icon: <OutlineSettings />,
-			to: "/settings" as any,
+			to: localizePath("/settings", locale),
 		},
-		{
-			label: "Help",
-			icon: <OutlineSettings />,
-			to: "https://help.familiar.art" as any,
-			target: "_blank",
-		},
+		// {
+		// 	label: "Help",
+		// 	icon: <OutlineSettings />,
+		// 	to: localizePath("/help", locale),
+		// 	target: "_blank",
+		// },
 	];
 
 	const menuItemsContent = (
@@ -281,7 +282,7 @@ export default function User({
 					<Button key={item.label} variant="ghost" size="xl" asChild>
 						<Link
 							to={item.to}
-							target={item.target}
+							target={(item as any).target}
 							preload={false}
 							onClick={() => setOpen(false)}
 						>
@@ -375,7 +376,7 @@ export default function User({
 							<DropdownMenuItem key={item.label} asChild>
 								<Link
 									to={item.to}
-									target={item.target}
+									target={(item as any).target}
 									preload={false}
 									className="w-full cursor-pointer"
 									onClick={() => setOpen(false)}

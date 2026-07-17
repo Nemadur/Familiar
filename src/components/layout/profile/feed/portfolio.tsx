@@ -11,6 +11,7 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import type { Folder as FolderType } from "@/data/folders";
+import { getLocaleParam } from "@/lib/i18n";
 import type { PostWithAuthor } from "@/types/post";
 import { FolderCard } from "./folder-card";
 import { ProfileFeed } from "./index";
@@ -33,6 +34,7 @@ export function ProfilePortfolio({
 	folders,
 	currentFolder: propCurrentFolder,
 }: ProfilePortfolioProps) {
+	const locale = RouteLocale();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 
@@ -144,13 +146,14 @@ export function ProfilePortfolio({
 		const backSlug = parentFolder?.slug || parentFolder?.id;
 
 		return (
-			<div className="space-y-6">
+			<div className="flex h-full flex-1 flex-col space-y-6">
 				<div className="flex items-center gap-4">
 					<Button variant="ghost" size="icon" asChild>
 						{backSlug ? (
 							<Link
-								to="/$username/$tab/folder/$folderSlug"
+								to="/{-$locale}/$username/$tab/folder/$folderSlug"
 								params={{
+									locale,
 									username: username || "",
 									tab: "portfolio",
 									folderSlug: backSlug,
@@ -160,8 +163,8 @@ export function ProfilePortfolio({
 							</Link>
 						) : (
 							<Link
-								to="/$username/$tab"
-								params={{ username: username || "", tab: "portfolio" }}
+								to="/{-$locale}/$username/$tab"
+								params={{ locale, username: username || "", tab: "portfolio" }}
 							>
 								<ArrowLeft />
 							</Link>
@@ -193,8 +196,9 @@ export function ProfilePortfolio({
 						{subfolders.map((folder) => (
 							<Link
 								key={folder.id}
-								to="/$username/$tab/folder/$folderSlug/$subfolderSlug"
+								to="/{-$locale}/$username/$tab/folder/$folderSlug/$subfolderSlug"
 								params={{
+									locale,
 									username: username || "",
 									tab: "portfolio",
 									folderSlug: currentFolder.slug || currentFolder.id,
@@ -220,8 +224,9 @@ export function ProfilePortfolio({
 								);
 								if (parentFolder) {
 									navigate({
-										to: "/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId",
+										to: "/{-$locale}/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId",
 										params: {
+											locale,
 											username: username || "",
 											tab: "portfolio",
 											folderSlug: parentFolder.slug || parentFolder.id,
@@ -233,8 +238,9 @@ export function ProfilePortfolio({
 							} else {
 								// Folder
 								navigate({
-									to: "/$username/$tab/folder/$folderSlug/$postId",
+									to: "/{-$locale}/$username/$tab/folder/$folderSlug/$postId",
 									params: {
+										locale,
 										username: username || "",
 										tab: "portfolio",
 										folderSlug: currentFolder.slug || currentFolder.id,
@@ -267,7 +273,7 @@ export function ProfilePortfolio({
 	const showFolders = !hasActiveFilters && !folderId;
 
 	return (
-		<div className="space-y-6">
+		<div className="flex h-full flex-1 flex-col space-y-6">
 			{/* Search and Filter Bar */}
 			{/* <FilterBar
 				groups={filterGroups}
@@ -290,8 +296,9 @@ export function ProfilePortfolio({
 					{filteredFolders.map((folder) => (
 						<Link
 							key={folder.id}
-							to="/$username/$tab/folder/$folderSlug"
+							to="/{-$locale}/$username/$tab/folder/$folderSlug"
 							params={{
+								locale,
 								username: username || "",
 								tab: "portfolio",
 								folderSlug: folder.slug || folder.id,
@@ -312,8 +319,9 @@ export function ProfilePortfolio({
 					posts={filteredPosts}
 					onPostClick={(post) => {
 						navigate({
-							to: "/$username/$tab/$commissionId",
+							to: "/{-$locale}/$username/$tab/$commissionId",
 							params: {
+								locale,
 								username: username || "",
 								tab: "portfolio",
 								commissionId: post.id,
@@ -325,4 +333,8 @@ export function ProfilePortfolio({
 			)}
 		</div>
 	);
+}
+
+function RouteLocale() {
+	return getLocaleParam(document.documentElement.lang);
 }

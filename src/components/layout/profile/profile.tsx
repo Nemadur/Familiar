@@ -351,6 +351,7 @@ export function UserProfileSidebar({
 			</div>
 
 			<div className="space-y-4">
+				<div>
 				<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
 					<span className="truncate">{user.displayName}</span>
 					<ProfileBadge user={user} />
@@ -358,6 +359,7 @@ export function UserProfileSidebar({
 				<p className="text-neutral-600 dark:text-neutral-400">
 					@{user.username}
 				</p>
+				</div>
 
 				<div className="hidden flex-col gap-2 sm:flex">
 					{isMe ? (

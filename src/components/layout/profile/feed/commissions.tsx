@@ -1438,7 +1438,7 @@ function ProfileCommissionsEmpty() {
 	const { t } = useTranslation();
 
 	return (
-		<div className="flex flex-1 flex-col items-center justify-center">
+		<div className="flex h-full flex-1 flex-col items-center justify-center">
 			<EmptyPage
 				icon={OutlineUser}
 				title={t("components.profile.commissions.empty.title")}

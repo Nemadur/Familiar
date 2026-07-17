@@ -113,7 +113,7 @@ export function ProfileFeed({
 
 	if (!posts.length) {
 		return (
-			<div className="flex flex-1 flex-col items-center justify-center py-12">
+			<div className="flex h-full flex-1 flex-col items-center justify-center py-12">
 				<EmptyPage
 					icon={OutlineFolderAddOuLc}
 					title={t("components.profile.portfolio.empty.title", "No posts yet.")}

@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { OutlineArrowRight, SolidLogoText } from "@/components/icons/icons";
 import { Elevated } from "@/lib/elevated";
+import { localizePath } from "@/lib/i18n";
 
 type FooterLink = {
 	label: string;
@@ -122,6 +123,7 @@ function FooterSection({ section }: { section: FooterSection }) {
 }
 
 function FooterLink({ link }: { link: FooterLink }) {
+	const { i18n } = useTranslation();
 	const isExternal = link.href.startsWith("http");
 
 	if (isExternal) {
@@ -138,7 +140,7 @@ function FooterLink({ link }: { link: FooterLink }) {
 	}
 
 	return (
-		<Link to={link.href} className={footerLinkClassName}>
+		<Link to={localizePath(link.href, i18n.language) as any} className={footerLinkClassName}>
 			<LinkContent label={link.label} />
 		</Link>
 	);

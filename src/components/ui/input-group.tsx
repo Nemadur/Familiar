@@ -278,29 +278,29 @@ function InputGroupNumberInput({
 		controlledValue ?? defaultValue,
 	);
 
-	const handleIncrement = useCallback(() => {
-		setValue((previousValue) => {
-			const nextValue =
-				previousValue === undefined
-					? (stepper ?? 1)
-					: Math.min(previousValue + (stepper ?? 1), max);
+	// TODO: Add accessibility hold to add remove numbers / InputGroupNumberInput
 
-			onValueChange?.(nextValue);
-			return nextValue;
-		});
-	}, [stepper, max, onValueChange]);
+	const handleIncrement = useCallback(() => {
+		const currentValue = value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
+		const nextValue =
+			value === undefined
+				? (stepper ?? 1)
+				: Math.min(currentValue + (stepper ?? 1), max);
+
+		setValue(nextValue);
+		onValueChange?.(nextValue);
+	}, [value, stepper, max, onValueChange]);
 
 	const handleDecrement = useCallback(() => {
-		setValue((previousValue) => {
-			const nextValue =
-				previousValue === undefined
-					? -(stepper ?? 1)
-					: Math.max(previousValue - (stepper ?? 1), min);
+		const currentValue = value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
+		const nextValue =
+			value === undefined
+				? -(stepper ?? 1)
+				: Math.max(currentValue - (stepper ?? 1), min);
 
-			onValueChange?.(nextValue);
-			return nextValue;
-		});
-	}, [stepper, min, onValueChange]);
+		setValue(nextValue);
+		onValueChange?.(nextValue);
+	}, [value, stepper, min, onValueChange]);
 
 	const handleIncrementEvent = useEffectEvent(() => {
 		handleIncrement();
@@ -338,8 +338,10 @@ function InputGroupNumberInput({
 	useEffect(() => {
 		if (controlledValue !== undefined) {
 			setValue(controlledValue);
+		} else {
+			setValue(defaultValue);
 		}
-	}, [controlledValue]);
+	}, [controlledValue, defaultValue]);
 
 	const updateNumberInputValue = (values: {
 		value: string;
@@ -386,7 +388,7 @@ function InputGroupNumberInput({
 					className="h-5 rounded-none rounded-tr-xl border-0 border-b border-primary/10 pr-1 focus-visible:z-10"
 					variant="ghost"
 					onClick={handleIncrement}
-					disabled={value === max}
+					disabled={value !== undefined && value >= max}
 				>
 					<OutlineChevronUp />
 				</Button>
@@ -398,7 +400,7 @@ function InputGroupNumberInput({
 					className="h-5 rounded-none rounded-br-xl border-0 pr-1 focus-visible:z-10"
 					variant="ghost"
 					onClick={handleDecrement}
-					disabled={value === min}
+					disabled={value !== undefined && value <= min}
 				>
 					<OutlineChevronDown />
 				</Button>

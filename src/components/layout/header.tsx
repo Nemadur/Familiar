@@ -14,6 +14,7 @@ import {
 	SolidReceipt,
 } from "@/components/icons/icons";
 import { Elevated } from "@/lib/elevated";
+import { localizePath, stripLocaleFromPathname } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import { TRoles } from "@/types/user/roles";
@@ -37,7 +38,7 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
 }
 
 export default function Header() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const { user, isPending } = useAuth();
 
 	return (
@@ -46,7 +47,10 @@ export default function Header() {
 				<div className="flex items-center gap-2">
 					<MobileNav />
 					<NavWrapper className="hidden lg:flex">
-						<Link to="/" className="mr-2 ml-3 flex items-center gap-x-2">
+						<Link
+							to={localizePath("/", i18n.language) as any}
+							className="mr-2 ml-3 flex items-center gap-x-2"
+						>
 							<span className="font-bold text-sm uppercase tracking-wider text-primary">
 								{t("header.title")}
 							</span>
@@ -64,7 +68,7 @@ export default function Header() {
 						<BasketDropdown />
 
 						<Button variant={"secondary"} size={"icon-xl"} asChild>
-							<Link to="/chat">
+							<Link to={localizePath("/chat", i18n.language) as any}>
 								<OutlineChat />
 							</Link>
 						</Button>
@@ -79,7 +83,7 @@ export default function Header() {
 									? null
 									: user?.roles?.includes(TRoles.Artist) && (
 											<Button size={"xl"} asChild>
-												<Link to="/dashboard">
+												<Link to={localizePath("/dashboard", i18n.language) as any}>
 													{t("header.artist-dashboard", "Dashboard")}
 												</Link>
 											</Button>
@@ -99,10 +103,16 @@ export default function Header() {
 								) : (
 									<div className="hidden lg:flex items-center gap-2">
 										<Button asChild variant={"secondary"} size={"xl"}>
-											<Link to="/auth/login">{t("auth.login.cta")}</Link>
+											<Link to={localizePath("/auth/login", i18n.language) as any}>
+												{t("auth.login.cta")}
+											</Link>
 										</Button>
 										<Button asChild size={"xl"}>
-											<Link to="/auth/register">{t("auth.register.cta")}</Link>
+											<Link
+												to={localizePath("/auth/register", i18n.language) as any}
+											>
+												{t("auth.register.cta")}
+											</Link>
 										</Button>
 									</div>
 								)}
@@ -116,7 +126,7 @@ export default function Header() {
 }
 
 const MobileNav = () => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const { user } = useAuth();
 
 	return (
@@ -156,10 +166,16 @@ const MobileNav = () => {
 									size={"xl"}
 									className="w-full"
 								>
-									<Link to="/auth/login">{t("auth.login.cta")}</Link>
+									<Link to={localizePath("/auth/login", i18n.language) as any}>
+										{t("auth.login.cta")}
+									</Link>
 								</Button>
 								<Button asChild className="w-full" size={"xl"}>
-									<Link to="/auth/register">{t("auth.register.cta")}</Link>
+									<Link
+										to={localizePath("/auth/register", i18n.language) as any}
+									>
+										{t("auth.register.cta")}
+									</Link>
 								</Button>
 							</div>
 						)}
@@ -171,9 +187,9 @@ const MobileNav = () => {
 };
 
 const NavLinks = memo(() => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const location = useLocation();
-	const pathname = location.pathname;
+	const pathname = stripLocaleFromPathname(location.pathname);
 
 	/**
 	 * Bierzemy odpowiedni state ikon w zależności na jakim url path jest użytkownik
@@ -219,7 +235,7 @@ const NavLinks = memo(() => {
 						size={"xl"}
 						className={cn(!isIconOnly && "justify-start")}
 					>
-						<Link to={link.path}>
+						<Link to={localizePath(link.path, i18n.language) as any}>
 							{icon}
 							{link.label}
 						</Link>
