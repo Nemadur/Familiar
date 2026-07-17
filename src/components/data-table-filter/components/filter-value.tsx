@@ -629,17 +629,28 @@ function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
 	);
 	const [options, setOptions] = useState(initialOptions);
 
+	const filterValuesStr = JSON.stringify(filter?.values);
+
 	useEffect(() => {
 		const selectedValues = filter?.values ?? [];
 
-		setOptions((previous) =>
-			previous.map((option) => ({
-				...option,
-				initialSelected: selectedValues.includes(option.value),
-				selected: selectedValues.includes(option.value),
-			})),
-		);
-	}, [filter?.values]);
+		setOptions((previous) => {
+			let hasChanges = false;
+			const next = previous.map((option) => {
+				const isSelected = selectedValues.includes(option.value);
+				if (option.selected !== isSelected || option.initialSelected !== isSelected) {
+					hasChanges = true;
+					return {
+						...option,
+						initialSelected: isSelected,
+						selected: isSelected,
+					};
+				}
+				return option;
+			});
+			return hasChanges ? next : previous;
+		});
+	}, [filterValuesStr]);
 
 	return options;
 }
@@ -960,12 +971,23 @@ export function FilterValueDateController<TData>({
 		to: filter?.values[1] ?? undefined,
 	});
 
+	const filterValuesStr = JSON.stringify(filter?.values);
+
 	useEffect(() => {
-		setDate({
-			from: filter?.values[0] ?? undefined,
-			to: filter?.values[1] ?? undefined,
+		setDate((prev) => {
+			const newFrom = filter?.values[0] ?? undefined;
+			const newTo = filter?.values[1] ?? undefined;
+
+			if (prev?.from === newFrom && prev?.to === newTo) {
+				return prev;
+			}
+
+			return {
+				from: newFrom,
+				to: newTo,
+			};
 		});
-	}, [filter?.values]);
+	}, [filterValuesStr]);
 
 	function changeDateRange(value: DateRange | undefined) {
 		const start = value?.from;
@@ -1072,6 +1094,9 @@ export function FilterValueNumberController<TData>({
 		return [Number(init[0] ?? 0), Number(init[1] ?? init[0] ?? 0)];
 	});
 
+	const isInitialized = useRef(false);
+	const boundsRef = useRef<[number, number]>([0, 0]);
+
 	const [sliderMin, sliderMax] = useMemo(() => {
 		let min = minMax && minMax[0] !== undefined ? Number(minMax[0]) : 0;
 		let max = minMax && minMax[1] !== undefined ? Number(minMax[1]) : 0;
@@ -1086,8 +1111,22 @@ export function FilterValueNumberController<TData>({
 			max = min + 100;
 		}
 
-		return [min, max];
+		if (!isInitialized.current) {
+			boundsRef.current = [min, max];
+			isInitialized.current = true;
+		} else {
+			boundsRef.current = [
+				Math.min(boundsRef.current[0], min),
+				Math.max(boundsRef.current[1], max),
+			];
+		}
+
+		return boundsRef.current;
 	}, [minMax, values]);
+
+	// TODO: Add accessibility hold to add remove numbers / InputGroupNumberInput
+
+	const filterValuesStr = JSON.stringify(filter?.values);
 
 	useEffect(() => {
 		const filterValues = filter?.values;
@@ -1109,7 +1148,7 @@ export function FilterValueNumberController<TData>({
 			}
 			return prevValues;
 		});
-	}, [filter?.values]);
+	}, [filterValuesStr]);
 
 	const isNumberRange =
 		filter && numberFilterOperators[filter.operator].target === "multiple";
