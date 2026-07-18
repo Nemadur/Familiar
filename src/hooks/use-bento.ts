@@ -204,16 +204,13 @@ type BestFitResult = {
  * that minimises the placement score, defined as:
  *
  * ```
- * score = row × 1000 + column + tileIndex × 0.001
+ * score = row × 1000 + column
  * ```
  *
  * - `row × 1000` — strong bias to fill the topmost rows first.
  * - `+ column`   — secondary left-to-right bias within a row.
- * - `+ tileIndex × 0.001` — tiny tiebreaker that preserves chronological order
- *   among tiles placed on the same cell.
  *
  * @param tile        - The tile to place.
- * @param tileIndex   - The tile's index in the incoming batch (for tiebreaking).
  * @param columnCount - Total number of grid columns.
  * @param grid        - The current occupancy grid.
  * @returns The best-fit result, or `null` if no position could be found (should
@@ -221,7 +218,6 @@ type BestFitResult = {
  */
 function findBestFitPosition(
 	tile: Tile,
-	tileIndex: number,
 	columnCount: number,
 	grid: OccupancyGrid,
 ): BestFitResult | null {
@@ -239,7 +235,10 @@ function findBestFitPosition(
 			effectiveWidth,
 			effectiveHeight,
 		);
-		const score = row * 1_000 + column + tileIndex * 0.001;
+
+		// Removed chronological tiebreaker (+ tileIndex * 0.001) to prioritize
+		// filling empty gaps higher up in the grid over preserving order.
+		const score = row * 1_000 + column;
 
 		if (score < bestScore) {
 			bestScore = score;
@@ -314,6 +313,121 @@ function compactNewTilesLeft(
 	}
 }
 
+/**
+ * Expands tiles into adjacent empty cells (gaps) to create a perfectly packed
+ * masonry grid without trailing holes. Tiles can expand up to 2x2.
+ */
+function expandToFillGaps(
+	outputTiles: PlacedTile[],
+	columnCount: number,
+	grid: OccupancyGrid,
+): void {
+	const totalRows =
+		outputTiles.length > 0
+			? Math.max(...outputTiles.map((t) => t.y + t.heightUnit))
+			: 0;
+
+	let changed = true;
+	let passes = 0;
+	// Multiple passes ensure that if one tile expanding unblocks another, it catches it.
+	while (changed && passes < 3) {
+		changed = false;
+		passes++;
+
+		for (const placedTile of outputTiles) {
+			// Try expanding Right
+			if (placedTile.widthUnit === 1 && placedTile.x + 1 < columnCount) {
+				if (
+					grid.isRegionFree(
+						placedTile.x + 1,
+						placedTile.y,
+						1,
+						placedTile.heightUnit,
+					)
+				) {
+					grid.markOccupied(
+						placedTile.x + 1,
+						placedTile.y,
+						1,
+						placedTile.heightUnit,
+					);
+					placedTile.widthUnit = 2;
+					placedTile.tile.widthUnit = 2;
+					changed = true;
+				}
+			}
+
+			// Try expanding Left
+			if (placedTile.widthUnit === 1 && placedTile.x > 0) {
+				if (
+					grid.isRegionFree(
+						placedTile.x - 1,
+						placedTile.y,
+						1,
+						placedTile.heightUnit,
+					)
+				) {
+					grid.markOccupied(
+						placedTile.x - 1,
+						placedTile.y,
+						1,
+						placedTile.heightUnit,
+					);
+					placedTile.x -= 1;
+					placedTile.widthUnit = 2;
+					placedTile.tile.widthUnit = 2;
+					changed = true;
+				}
+			}
+
+			// Try expanding Down (only up to the current totalRows, to prevent container expansion)
+			if (placedTile.heightUnit === 1 && placedTile.y + 1 < totalRows) {
+				if (
+					grid.isRegionFree(
+						placedTile.x,
+						placedTile.y + 1,
+						placedTile.widthUnit,
+						1,
+					)
+				) {
+					grid.markOccupied(
+						placedTile.x,
+						placedTile.y + 1,
+						placedTile.widthUnit,
+						1,
+					);
+					placedTile.heightUnit = 2;
+					placedTile.tile.heightUnit = 2;
+					changed = true;
+				}
+			}
+
+			// Try expanding Up
+			if (placedTile.heightUnit === 1 && placedTile.y > 0) {
+				if (
+					grid.isRegionFree(
+						placedTile.x,
+						placedTile.y - 1,
+						placedTile.widthUnit,
+						1,
+					)
+				) {
+					grid.markOccupied(
+						placedTile.x,
+						placedTile.y - 1,
+						placedTile.widthUnit,
+						1,
+					);
+					placedTile.y -= 1;
+					placedTile.heightUnit = 2;
+					placedTile.tile.heightUnit = 2;
+					changed = true;
+				}
+			}
+		}
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Public API — packAppend
 // ---------------------------------------------------------------------------
@@ -356,7 +470,7 @@ export function packAppend(
 
 	for (let tileIndex = 0; tileIndex < incomingTiles.length; tileIndex++) {
 		const tile = incomingTiles[tileIndex];
-		const bestFit = findBestFitPosition(tile, tileIndex, columnCount, grid);
+		const bestFit = findBestFitPosition(tile, columnCount, grid);
 
 		if (bestFit !== null) {
 			grid.markOccupied(
@@ -398,6 +512,7 @@ export function packAppend(
 	}
 
 	compactNewTilesLeft(outputTiles, existingTiles.length, grid);
+	expandToFillGaps(outputTiles, columnCount, grid);
 
 	return outputTiles;
 }

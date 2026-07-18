@@ -24,8 +24,21 @@ interface ProfilePortfolioProps {
 	currentFolder?: FolderType;
 }
 
+import { ListFilterIcon, Tag } from "lucide-react";
 import { ColorPaletteDebugger } from "@/components/debug/color-palette-debugger";
-import { FilterBar, type FilterGroup } from "@/components/layout/filter-bar";
+import {
+	FilterBar,
+	type FilterGroup,
+	type FilterValue,
+	type ManagedFilterValue,
+} from "@/components/layout/filter-bar";
+
+type ManagedFiltersState = Record<string, ManagedFilterValue>;
+
+const INITIAL_FILTER_STATE: ManagedFiltersState = {
+	commissionsOnly: { value: [] },
+	tags: { value: [] },
+};
 
 export function ProfilePortfolio({
 	posts,
@@ -39,10 +52,8 @@ export function ProfilePortfolio({
 	const { t } = useTranslation();
 
 	// Initialize filter state
-	const [filters, setFilters] = useState<Record<string, string[] | boolean>>({
-		commissionsOnly: false,
-		tags: [],
-	});
+	const [filters, setFilters] =
+		useState<ManagedFiltersState>(INITIAL_FILTER_STATE);
 	const [searchQuery, setSearchQuery] = useState("");
 
 	// Extract options
@@ -60,14 +71,14 @@ export function ProfilePortfolio({
 	);
 
 	// Define filter groups
-	const filterGroups = useMemo<FilterGroup[]>(
+	const filterGroups = useMemo<FilterGroup<PostWithAuthor>[]>(
 		() => [
 			{
 				id: "commissionsOnly",
 				label: t("components.portfolio.filters.commissions_only"),
-				type: "select", // Actually a boolean toggle, but using select/checkbox logic in FilterBarV2 for now
-				// But wait, FilterBarV2 'select' renders checkboxes.
-				// Let's treat it as a single option "Show only commissions"
+				type: "select",
+				icon: ListFilterIcon,
+				getItemValue: (post) => (post.isCommission ? "true" : "false"),
 				options: [
 					{
 						id: "true",
@@ -81,6 +92,8 @@ export function ProfilePortfolio({
 							id: "tags",
 							label: "Tags",
 							type: "multiselect" as const,
+							icon: Tag,
+							getItemValue: (post) => post.tags || [],
 							options: availableTags.map((tag) => ({
 								id: tag,
 								label: tag,
@@ -94,39 +107,58 @@ export function ProfilePortfolio({
 
 	const filteredPosts = useMemo(() => {
 		let result = posts;
+		const query = searchQuery.trim().toLowerCase();
+
+		// Search
+		if (query) {
+			result = result.filter(
+				(p) =>
+					p.title?.toLowerCase().includes(query) ||
+					p.description?.toLowerCase().includes(query) ||
+					p.tags?.some((tag) => tag.toLowerCase().includes(query)),
+			);
+		}
 
 		// 1. Commissions Only
+		const commissionsOnlyValues = filters.commissionsOnly?.value;
 		if (
-			filters.commissionsOnly === true ||
-			(Array.isArray(filters.commissionsOnly) &&
-				filters.commissionsOnly.includes("true"))
+			Array.isArray(commissionsOnlyValues) &&
+			commissionsOnlyValues.includes("true")
 		) {
 			result = result.filter((p) => p.isCommission);
 		}
 
 		// 2. Tags
-		const selectedTags = filters.tags as string[];
-		if (selectedTags?.length > 0) {
-			result = result.filter((p) =>
-				selectedTags.some((tag) => p.tags?.includes(tag)),
-			);
+		const selectedTags = filters.tags?.value;
+		if (Array.isArray(selectedTags) && selectedTags.length > 0) {
+			const tagOperator = filters.tags?.operator;
+			result = result.filter((p) => {
+				const tagIds = p.tags || [];
+				if (tagOperator === "is all of") {
+					return selectedTags.every((tag) => tagIds.includes(tag as string));
+				} else if (tagOperator === "is not" || tagOperator === "is none of") {
+					return selectedTags.every((tag) => !tagIds.includes(tag as string));
+				}
+				return selectedTags.some((tag) => tagIds.includes(tag as string));
+			});
 		}
 
 		return result;
-	}, [filters, posts]);
+	}, [filters, posts, searchQuery]);
 
-	const handleFilterChange = (groupId: string, value: string[] | boolean) => {
+	const handleFilterChange = (
+		groupId: string,
+		value: FilterValue,
+		operator?: ManagedFilterValue["operator"],
+	) => {
 		setFilters((prev) => ({
 			...prev,
-			[groupId]: value,
+			[groupId]: { value, operator },
 		}));
 	};
 
 	const handleClearAll = () => {
-		setFilters({
-			commissionsOnly: [],
-			tags: [],
-		});
+		setFilters(INITIAL_FILTER_STATE);
 		setSearchQuery("");
 	};
 
@@ -266,29 +298,28 @@ export function ProfilePortfolio({
 	// Original logic: activeType === "ALL" && !folderId
 	// New logic: no specific filters selected
 	const hasActiveFilters =
-		(Array.isArray(filters.commissionsOnly) &&
-			filters.commissionsOnly.length > 0) ||
-		(Array.isArray(filters.tags) && filters.tags.length > 0);
+		(Array.isArray(filters.commissionsOnly?.value) &&
+			filters.commissionsOnly.value.length > 0) ||
+		(Array.isArray(filters.tags?.value) && filters.tags.value.length > 0);
 
 	const showFolders = !hasActiveFilters && !folderId;
 
 	return (
 		<div className="flex h-full flex-1 flex-col space-y-6">
 			{/* Search and Filter Bar */}
-			{/* <FilterBar
+			<FilterBar
+				data={posts}
 				groups={filterGroups}
 				values={filters}
 				onFilterChange={handleFilterChange}
 				searchQuery={searchQuery}
 				onSearchChange={setSearchQuery}
 				onClearAll={handleClearAll}
-				extraActions={
-					<Button variant={"outline"} size={"lg"}>
-						<OutlineFolderAddOuLc />
-						Add Folder
-					</Button>
-				}
-			/> */}
+				searchPlaceholder={t(
+					"components.portfolio.filters.search_placeholder",
+					"Search portfolio...",
+				)}
+			/>
 
 			{/* Folders Grid */}
 			{showFolders && filteredFolders.length > 0 && (

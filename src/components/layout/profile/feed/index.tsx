@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { OutlineFolderAddOuLc } from "@/components/icons/icons";
 import { EmptyPage } from "@/components/layout/empty-page";
 import { useBento } from "@/hooks/use-bento";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { bucketFromDimensions, type Tile, toPixels } from "@/lib/bento";
 import { cn } from "@/lib/utils";
 import type { PostWithAuthor } from "@/types/post";
@@ -15,15 +16,15 @@ interface ProfileFeedProps {
 	variant?: "feed" | "portfolio";
 }
 
+const GAP = 16;
+
 function createTiles(posts: PostWithAuthor[]) {
 	const tiles: Tile[] = [];
 
 	for (const post of posts) {
 		const img = post.images?.[0];
 
-		if (!img) {
-			continue;
-		}
+		if (!img) continue;
 
 		const bucket = bucketFromDimensions(img.width, img.height);
 
@@ -61,57 +62,79 @@ export function ProfileFeed({
 }: ProfileFeedProps) {
 	const { t } = useTranslation();
 	const containerRef = useRef<HTMLDivElement>(null);
+	const resizeFrameRef = useRef<number | null>(null);
 	const [width, setWidth] = useState(0);
 	const [animateGate, setAnimateGate] = useState(false);
+	const isCompact = useMediaQuery("(max-width: 1279px)");
 
 	const tiles = useMemo(() => createTiles(posts), [posts]);
 	const postById = useMemo(() => createPostById(posts), [posts]);
-
 	const { cols, placed } = useBento(tiles);
 
 	useEffect(() => {
-		if (!containerRef.current) return;
+		const container = containerRef.current;
+		if (!container) return;
 
-		const observer = new ResizeObserver((entries) => {
-			const entry = entries[0];
+		const observer = new ResizeObserver(([entry]) => {
+			const nextWidth = Math.round(entry?.contentRect.width ?? 0);
+			if (nextWidth <= 0) return;
 
-			if (entry?.contentRect.width && entry.contentRect.width > 0) {
-				setWidth(entry.contentRect.width);
+			if (resizeFrameRef.current !== null) {
+				cancelAnimationFrame(resizeFrameRef.current);
 			}
+
+			resizeFrameRef.current = requestAnimationFrame(() => {
+				setWidth((currentWidth) =>
+					currentWidth === nextWidth ? currentWidth : nextWidth,
+				);
+			});
 		});
 
-		observer.observe(containerRef.current);
+		observer.observe(container);
 
-		return () => observer.disconnect();
+		return () => {
+			observer.disconnect();
+			if (resizeFrameRef.current !== null) {
+				cancelAnimationFrame(resizeFrameRef.current);
+			}
+		};
 	}, []);
 
 	useEffect(() => {
-		if (posts.length === 0) {
-			setAnimateGate(false);
-			return;
-		}
+		// Portfolio grids are frequently filtered and navigated. Keep them static.
+		if (variant === "portfolio" || tiles.length === 0) return;
+
+		setAnimateGate(false);
+		let secondFrame = 0;
 
 		const firstFrame = requestAnimationFrame(() => {
-			requestAnimationFrame(() => setAnimateGate(true));
+			secondFrame = requestAnimationFrame(() => setAnimateGate(true));
 		});
 
-		return () => cancelAnimationFrame(firstFrame);
-	}, [posts.length]);
+		return () => {
+			cancelAnimationFrame(firstFrame);
+			if (secondFrame) cancelAnimationFrame(secondFrame);
+		};
+	}, [tiles.length, variant]);
 
-	const handlePostClick = (postId: string) => {
-		const post = postById.get(postId);
+	const handlePostClick = useCallback(
+		(postId: string) => {
+			const post = postById.get(postId);
+			if (post) onPostClick?.(post);
+		},
+		[onPostClick, postById],
+	);
 
-		if (post) {
-			onPostClick?.(post);
+	const { nodes, containerHeight } = useMemo(() => {
+		if (width <= 0 || cols <= 0) {
+			return { nodes: [], containerHeight: 0 };
 		}
-	};
 
-	const gap = 16;
-	const cell = width ? (width - (cols - 1) * gap) / cols : 0;
+		const cell = Math.max(0, (width - (cols - 1) * GAP) / cols);
+		return toPixels(placed as any, cell, GAP);
+	}, [cols, placed, width]);
 
-	const { nodes, containerHeight } = toPixels(placed as any, cell, gap);
-
-	if (!posts.length) {
+	if (tiles.length === 0) {
 		return (
 			<div className="flex h-full flex-1 flex-col items-center justify-center py-12">
 				<EmptyPage
@@ -130,7 +153,7 @@ export function ProfileFeed({
 		<div
 			ref={containerRef}
 			className={cn(
-				"relative w-full transition-all duration-300 ease-in-out",
+				"relative w-full transition-opacity duration-150 ease-out motion-reduce:transition-none",
 				width === 0 ? "opacity-0" : "opacity-100",
 				className,
 			)}
@@ -142,13 +165,14 @@ export function ProfileFeed({
 
 				return (
 					<FeedItem
-						key={node.key}
+						key={node.tile.id}
 						p={node.tile}
 						post={post}
-						animateGate={animateGate}
+						animateGate={variant === "portfolio" ? false : animateGate}
 						handlePostClick={handlePostClick}
 						style={node.style}
 						variant={variant}
+						isCompact={isCompact}
 					/>
 				);
 			})}

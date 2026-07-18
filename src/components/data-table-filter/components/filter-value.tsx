@@ -25,6 +25,10 @@ import {
 	CommandSeparator,
 } from "src/components/ui/command";
 import {
+	InputGroup,
+	InputGroupNumberInput,
+} from "src/components/ui/input-group";
+import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
@@ -52,7 +56,6 @@ import { take } from "../lib/array";
 import { createNumberRange } from "../lib/helpers";
 import { type Locale, t } from "../lib/i18n";
 import { DebouncedInput } from "../ui/debounced-input";
-import { InputGroup, InputGroupNumberInput } from "src/components/ui/input-group";
 
 interface FilterValueProps<TData, TType extends ColumnDataType> {
 	filter: FilterModel<TType>;
@@ -638,7 +641,10 @@ function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
 			let hasChanges = false;
 			const next = previous.map((option) => {
 				const isSelected = selectedValues.includes(option.value);
-				if (option.selected !== isSelected || option.initialSelected !== isSelected) {
+				if (
+					option.selected !== isSelected ||
+					option.initialSelected !== isSelected
+				) {
 					hasChanges = true;
 					return {
 						...option,
@@ -650,7 +656,7 @@ function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
 			});
 			return hasChanges ? next : previous;
 		});
-	}, [filterValuesStr]);
+	}, [filter?.values]);
 
 	return options;
 }
@@ -1126,7 +1132,7 @@ export function FilterValueNumberController<TData>({
 
 	// TODO: Add accessibility hold to add remove numbers / InputGroupNumberInput
 
-	const filterValuesStr = JSON.stringify(filter?.values);
+	// const filterValuesStr = JSON.stringify(filter?.values);
 
 	useEffect(() => {
 		const filterValues = filter?.values;
@@ -1148,7 +1154,7 @@ export function FilterValueNumberController<TData>({
 			}
 			return prevValues;
 		});
-	}, [filterValuesStr]);
+	}, [filter?.values]);
 
 	const isNumberRange =
 		filter && numberFilterOperators[filter.operator].target === "multiple";
@@ -1276,7 +1282,10 @@ export function FilterValueNumberController<TData>({
 										</InputGroup>
 									</div>
 								</TabsContent>
-								<TabsContent value="range" className="flex flex-col gap-4 mt-4 px-2 pb-1">
+								<TabsContent
+									value="range"
+									className="flex flex-col gap-4 mt-4 px-2 pb-1"
+								>
 									<div className="px-1">
 										<Slider
 											value={values}
