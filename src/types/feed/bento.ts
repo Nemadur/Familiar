@@ -11,21 +11,14 @@ import type React from "react";
  * a double-wide/tall cell (2).
  */
 export interface Tile {
-	/** Stable, unique identifier used as the React `key` and for diffing. */
 	id: string;
-	/** Number of grid columns this tile occupies (1 = normal, 2 = wide). */
 	widthUnit: 1 | 2;
-	/** Number of grid rows this tile occupies (1 = normal, 2 = tall). */
 	heightUnit: 1 | 2;
-	/** Metadata about the tile's cover image. */
+	createdAt?: string;
 	cover: {
-		/** Relative or absolute path / URL of the image source. */
 		path: string;
-		/** Intrinsic pixel width of the image (used for aspect-ratio bucketing). */
 		width: number;
-		/** Intrinsic pixel height of the image (used for aspect-ratio bucketing). */
 		height: number;
-		/** Accessible alt-text for the image. */
 		alt: string;
 	};
 }

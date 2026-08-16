@@ -11,7 +11,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useIsTablet } from "@/hooks/use-mobile";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
 import { localizePath } from "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import UserAvatar from "./profile/avatar";

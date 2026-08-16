@@ -21,7 +21,7 @@ import {
 } from "@/components/kibo-ui/reel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useIsTablet } from "@/hooks/use-mobile";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
 import { getLocaleParam } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { MockShopItem } from "@/types/shop";

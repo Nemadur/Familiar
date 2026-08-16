@@ -233,7 +233,7 @@ export function ChatSidebar({
 						/>
 					</InputGroup>
 
-					<TabsList variant={"line"} className="w-full">
+					<TabsList className="w-full">
 						{chatSidebarTabs.map((tab) => {
 							const count =
 								tab.value === "requests"

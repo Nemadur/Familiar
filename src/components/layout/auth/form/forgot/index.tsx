@@ -15,7 +15,7 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import useFormValidation from "@/hooks/use-form-validation";
+import useFormValidation from "@/hooks/form/use-form-validation";
 import { supabase } from "@/lib/supabase";
 import { forgotPassword } from "@/schemas/auth/forgot-password";
 import type { ForgotFormProps } from "@/types/auth/form/forgot";

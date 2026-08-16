@@ -28,7 +28,7 @@ import {
 import { CategoryCard } from "@/components/layout/shop/category-card";
 import { ShopItemCard } from "@/components/layout/shop/shop-item-card";
 import { useShopItems } from "@/hooks/shop";
-import { useCommissionCategories } from "@/hooks/use-commisions";
+import { useCommissionCategories } from "@/hooks/commissions/use-commissions";
 import i18n, { stripLocaleFromPathname } from "@/lib/i18n";
 import { getSeoLinks, seo } from "@/lib/seo";
 import type { MockShopItem } from "@/types/shop";

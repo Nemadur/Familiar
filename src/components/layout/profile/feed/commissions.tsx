@@ -51,9 +51,9 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useBlurredImage } from "@/hooks/use-blurred-image";
-import { useCurrencyConversion } from "@/hooks/use-currency-conversion";
-import { useIsTablet } from "@/hooks/use-mobile";
+import { useBlurredImage } from "@/hooks/ui/use-blurred-image";
+import { useCurrencyConversion } from "@/hooks/utils/use-currency-conversion";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
 import { calculateCommissionPricing } from "@/lib/commission-utils";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";

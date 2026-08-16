@@ -29,7 +29,7 @@ import {
 	OutlinePlus,
 } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
-import { useIncomingCommissionRequests } from "@/hooks/use-commisions";
+import { useIncomingCommissionRequests } from "@/hooks/commissions/use-commissions";
 import { useAuth } from "@/providers/auth";
 import { TCommissionRequestStatus } from "@/types/commissions";
 import { TPaymentStatus } from "@/types/payment";

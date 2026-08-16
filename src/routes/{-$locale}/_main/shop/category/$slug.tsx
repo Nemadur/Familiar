@@ -14,7 +14,7 @@ import {
 import { ShopItemCard } from "@/components/layout/shop/shop-item-card";
 import { Button } from "@/components/ui/button";
 import { useShopItems } from "@/hooks/shop";
-import { useCommissionCategories } from "@/hooks/use-commisions";
+import { useCommissionCategories } from "@/hooks/commissions/use-commissions";
 import type { MockShopItem } from "@/types/shop";
 
 export const Route = createFileRoute("/{-$locale}/_main/shop/category/$slug")({

@@ -1,6 +1,6 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { useUserById } from "@/hooks/use-user";
+import { useUserById } from "@/hooks/user/use-user";
 import i18n from "@/lib/i18n";
 import { getStoredSupabaseUser, supabase } from "@/lib/supabase";
 import type { LoginData } from "@/types/auth/schema/login";

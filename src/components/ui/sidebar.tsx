@@ -18,7 +18,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "src/components/ui/tooltip";
-import { useIsMobile } from "src/hooks/use-mobile";
+import { useIsMobile } from "src/hooks/ui/use-mobile";
 import { cn, setCookie } from "@/lib/utils";
 import {
 	createContext,

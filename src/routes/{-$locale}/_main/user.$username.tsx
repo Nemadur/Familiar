@@ -8,10 +8,12 @@ import {
 	redirect,
 } from "@tanstack/react-router";
 import { ProfileCommissions } from "@/components/layout/profile/feed/commissions";
+import { ProfilePortfolio } from "@/components/layout/profile/feed/portfolio";
 import { TabContentSkeleton } from "@/components/layout/profile/profile";
 import UserProfileWrapper from "@/components/layout/profile/wrapper";
-import { useProfileCommissions } from "@/hooks/use-commisions";
-import { userByUsernameQueryOptions } from "@/hooks/use-user";
+import { useProfileCommissions } from "@/hooks/commissions/use-commissions";
+import { useProfileContent } from "@/hooks/user/use-profile-content";
+import { userByUsernameQueryOptions } from "@/hooks/user/use-user";
 import i18n from "@/lib/i18n";
 import { getSeoLinks, seo } from "@/lib/seo";
 
@@ -86,6 +88,38 @@ export function DefaultProfileTabContent({ username }: { username: string }) {
 	return <ProfileCommissions artist={artist} commissions={commissions} />;
 }
 
+export function DefaultPortfolioTabContent({ username }: { username: string }) {
+	const {
+		data: artist,
+		isPending: isArtistPending,
+		isError: isArtistError,
+	} = useQuery(userByUsernameQueryOptions(username));
+
+	const artistId = artist?.userId ?? "";
+
+	const { data: content, isPending: isContentPending } = useProfileContent(
+		username,
+		artistId,
+		"portfolio",
+	);
+
+	if (isArtistPending || (artistId && isContentPending)) {
+		return <TabContentSkeleton tab="portfolio" />;
+	}
+
+	if (isArtistError || !artist) {
+		throw notFound();
+	}
+
+	return (
+		<ProfilePortfolio
+			posts={content?.posts || []}
+			folders={content?.folders || []}
+			username={username}
+		/>
+	);
+}
+
 function RouteComponent() {
 	const { username } = Route.useLoaderData();
 	const navigate = useNavigate();
@@ -98,7 +132,7 @@ function RouteComponent() {
 	};
 
 	const routeTab = typeof params.tab === "string" ? params.tab : undefined;
-	const activeTab = routeTab ?? "commissions";
+	const activeTab = routeTab ?? "portfolio";
 
 	const isModalOpen = Boolean(params.commissionId || params.commisionId);
 
@@ -120,7 +154,7 @@ function RouteComponent() {
 				});
 			}}
 		>
-			{routeTab ? <Outlet /> : <DefaultProfileTabContent username={username} />}
+			{routeTab ? <Outlet /> : <DefaultPortfolioTabContent username={username} />}
 		</UserProfileWrapper>
 	);
 }

@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useUserByUsername } from "@/hooks/use-user";
+import { ProfilePortfolio } from "@/components/layout/profile/feed/portfolio";
+import { TabContentSkeleton } from "@/components/layout/profile/profile";
+import { useProfileContent } from "@/hooks/user/use-profile-content";
+import { useUserByUsername } from "@/hooks/user/use-user";
 import type { TUserProfile } from "@/types/user";
 
-export const Route = createFileRoute("/{-$locale}/_main/user/$username/$tab/folder/$folderSlug/")({
+export const Route = createFileRoute(
+	"/{-$locale}/_main/user/$username/$tab/folder/$folderSlug/",
+)({
 	component: RouteComponent,
 });
 
@@ -14,7 +19,13 @@ function RouteComponent() {
 		return <div>User not found</div>;
 	}
 
-	return <FolderContent user={user} tab={tab} folderSlug={folderSlug} />;
+	return (
+		<FolderContent
+			user={user as TUserProfile}
+			tab={tab}
+			folderSlug={folderSlug}
+		/>
+	);
 }
 
 function FolderContent({
@@ -26,59 +37,48 @@ function FolderContent({
 	tab: string;
 	folderSlug: string;
 }) {
-	// TODO: fetch post from API
-	// const { posts, categories, folders } = useSuspenseProfileContent(
-	// 	user.uuid,
-	// 	"portfolio",
-	// );
+	const { data: content, isPending, isCurrentUser } = useProfileContent(
+		user.username,
+		user.userId,
+		tab,
+	);
 
-	// const portfolioPosts = useMemo(
-	// 	() => [
-	// 		...posts.map((post: any) => mapPostToPostWithAuthor(post, user)),
-	// 		...(categories || [])
-	// 			.flatMap((cat: any) => cat.items || [])
-	// 			.map((comm: any) => mapCommissionToPostWithAuthor(comm, user)),
-	// 	],
-	// 	[posts, categories, user],
-	// );
+	if (isPending) {
+		return <TabContentSkeleton tab={tab} />;
+	}
 
-	// const portfolioFolders = useMemo(
-	// 	() =>
-	// 		folders.map((folder: any) => {
-	// 			const mappedFolder = mapFolderToFolderType(folder, posts);
-	// 			// Calculate subfolders count
-	// 			const subfoldersCount = folders.filter(
-	// 				(f: any) => f.parentId === mappedFolder.id,
-	// 			).length;
-	// 			return {
-	// 				...mappedFolder,
-	// 				count: mappedFolder.count + subfoldersCount,
-	// 				hasSubfolders: subfoldersCount > 0,
-	// 			};
-	// 		}),
-	// 	[folders, posts],
-	// );
+	if (tab !== "portfolio") {
+		return (
+			<div className="p-4 text-center text-muted-foreground">
+				Folder not found for tab {tab}
+			</div>
+		);
+	}
 
-	// if (tab === "portfolio") {
-	// 	// Find folder by slug from mapped folders
-	// 	const currentFolder = portfolioFolders.find(
-	// 		(f) => f.slug === folderSlug || f.id === folderSlug,
-	// 	);
+	const posts = content?.portfolioPosts ?? [];
+	const folders = content?.folders ?? [];
 
-	// 	return (
-	// 		<ProfilePortfolio
-	// 			posts={portfolioPosts}
-	// 			currentFolder={currentFolder}
-	// 			folderId={currentFolder?.id}
-	// 			username={user.username}
-	// 			folders={portfolioFolders}
-	// 		/>
-	// 	);
-	// }
+	// The link currently passes folder.id as folderSlug.
+	const currentFolder = folders.find(
+		(folder) => folder.id === folderSlug,
+	);
+
+	if (!currentFolder) {
+		return (
+			<div className="p-4 text-center text-muted-foreground">
+				Portfolio folder not found
+			</div>
+		);
+	}
 
 	return (
-		<div>
-			Detail for {tab} - {folderSlug}
-		</div>
-	)
+		<ProfilePortfolio
+			posts={posts}
+			currentFolder={currentFolder}
+			folderId={currentFolder.id}
+			username={user.username}
+			folders={folders}
+			canManageCatalogs={isCurrentUser}
+		/>
+	);
 }

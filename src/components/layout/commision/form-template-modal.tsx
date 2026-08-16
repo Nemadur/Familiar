@@ -70,8 +70,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
 	useCreateFormTemplate,
 	useUpdateFormTemplate,
-} from "@/hooks/use-form-templates";
-import useFormValidation from "@/hooks/use-form-validation";
+} from "@/hooks/commissions/use-form-templates";
+import useFormValidation from "@/hooks/form/use-form-validation";
 import {
 	formTemplateSchema,
 	type FormTemplateData,

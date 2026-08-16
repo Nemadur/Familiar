@@ -51,7 +51,7 @@ import {
 	useMyCommissions,
 	usePublishCommission,
 	useUpdateCommission,
-} from "@/hooks/use-commisions";
+} from "@/hooks/commissions/use-commissions";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import { getSelectedValues } from "./commissions_requests";

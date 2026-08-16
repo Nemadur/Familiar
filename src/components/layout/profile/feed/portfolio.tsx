@@ -1,44 +1,83 @@
-import { ScrollShadow } from "@heroui/react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Edit2, MoreHorizontal, Plus, Tag, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { OutlineFolderAddOuLc, OutlineSearch } from "@/components/icons/icons";
-import { Button } from "@/components/ui/button";
-import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from "@/components/ui/input-group";
-import type { Folder as FolderType } from "@/data/folders";
-import { getLocaleParam } from "@/lib/i18n";
-import type { PostWithAuthor } from "@/types/post";
-import { FolderCard } from "./folder-card";
-import { ProfileFeed } from "./index";
-
-interface ProfilePortfolioProps {
-	posts: PostWithAuthor[];
-	folderId?: string;
-	username?: string;
-	folders: FolderType[];
-	currentFolder?: FolderType;
-}
-
-import { ListFilterIcon, Tag } from "lucide-react";
-import { ColorPaletteDebugger } from "@/components/debug/color-palette-debugger";
+import type { CatalogResponse, CreateCatalogRequest } from "@/api/portfolio/catalogs/catalog-types";
+import type { CreatePortfolioPostRequest, PortfolioPostResponse } from "@/api/portfolio/posts/post-types";
+import { OutlineFolderAddOuLc, SolidFolderAddOuLc, SolidPlus } from "@/components/icons/icons";
 import {
 	FilterBar,
 	type FilterGroup,
 	type FilterValue,
 	type ManagedFilterValue,
 } from "@/components/layout/filter-bar";
+import { CreatePostModal } from "@/components/layout/modal/profile/portfolio/create-post-modal";
+import { CreateCatalogModal, RenameCatalogModal } from "@/components/layout/modal/profile/portfolio/portfolio";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { useDeleteCatalog, useRemovePortfolioPostFromCatalog, useUpdateCatalog } from "@/hooks/portfolio/use-portfolio";
+import { getLocaleParam } from "@/lib/i18n";
+import { FolderCard } from "./folder-card";
+import { ProfileFeed } from "./profile-feed";
+
+interface ProfilePortfolioProps {
+	posts: PortfolioPostResponse[];
+	folderId?: string;
+	username?: string;
+	folders: CatalogResponse[];
+	currentFolder?: CatalogResponse;
+	canManageCatalogs?: boolean;
+	onCreateCatalog?: (
+		data: CreateCatalogRequest,
+	) => Promise<CatalogResponse>;
+	isCreatingCatalog?: boolean;
+	onCreatePost?: (data: CreatePortfolioPostRequest) => Promise<void>;
+	isCreatingPost?: boolean;
+}
 
 type ManagedFiltersState = Record<string, ManagedFilterValue>;
 
 const INITIAL_FILTER_STATE: ManagedFiltersState = {
-	commissionsOnly: { value: [] },
 	tags: { value: [] },
 };
+
+function getStringFilterValues(
+	value: FilterValue | undefined,
+): string[] {
+	if (typeof value === "string") {
+		return value ? [value] : [];
+	}
+
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value.filter(
+		(item): item is string => typeof item === "string",
+	);
+}
+
+function getFallbackCover(
+	posts: PortfolioPostResponse[],
+): string | undefined {
+	return posts
+		.flatMap((post) => post.images ?? [])
+		.sort(
+			(a, b) =>
+				(a.position ?? Number.MAX_SAFE_INTEGER) -
+				(b.position ?? Number.MAX_SAFE_INTEGER),
+		)
+		.map(
+			(image) =>
+				image.fullSize?.path ?? image.thumbnail?.path,
+		)
+		.find(
+			(path): path is string =>
+				typeof path === "string" && path.length > 0,
+		);
+}
 
 export function ProfilePortfolio({
 	posts,
@@ -46,114 +85,171 @@ export function ProfilePortfolio({
 	username,
 	folders,
 	currentFolder: propCurrentFolder,
+	canManageCatalogs = false,
+	onCreateCatalog,
+	isCreatingCatalog = false,
+	onCreatePost,
+	isCreatingPost = false,
 }: ProfilePortfolioProps) {
 	const locale = RouteLocale();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 
-	// Initialize filter state
 	const [filters, setFilters] =
 		useState<ManagedFiltersState>(INITIAL_FILTER_STATE);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [createCatalogOpen, setCreateCatalogOpen] = useState(false);
+	const [createPostOpen, setCreatePostOpen] = useState(false);
+	const [renameCatalogOpen, setRenameCatalogOpen] = useState(false);
+	const [deleteCatalogOpen, setDeleteCatalogOpen] = useState(false);
 
-	// Extract options
+	const updateCatalogMutation = useUpdateCatalog();
+	const deleteCatalogMutation = useDeleteCatalog();
+	const removePostMutation = useRemovePortfolioPostFromCatalog();
+
+	const handleRenameCatalog = async (catalogId: string, data: any) => {
+		return updateCatalogMutation.mutateAsync({ catalogId, data });
+	};
+
+	const handleDeleteCatalog = async () => {
+		if (!currentFolder) return;
+		await deleteCatalogMutation.mutateAsync(currentFolder.id);
+		setDeleteCatalogOpen(false);
+		navigate({
+			to: "/{-$locale}/user/$username/$tab",
+			params: { locale, username: username ?? "", tab: "portfolio" },
+		});
+	};
+
+	const handleRemovePostFromCatalog = async (postId: string) => {
+		if (!currentFolder) return;
+		await removePostMutation.mutateAsync({ postId, catalogId: currentFolder.id });
+	};
+
 	const availableTags = useMemo(
 		() =>
 			Array.from(
-				new Set(
-					posts.reduce<string[]>((acc, p) => {
-						if (p.tags) acc.push(...p.tags);
-						return acc;
-					}, []),
-				),
-			).sort(),
+				new Set(posts.flatMap((post) => post.tags ?? [])),
+			).sort((a, b) => a.localeCompare(b)),
 		[posts],
 	);
 
-	// Define filter groups
-	const filterGroups = useMemo<FilterGroup<PostWithAuthor>[]>(
-		() => [
-			{
-				id: "commissionsOnly",
-				label: t("components.portfolio.filters.commissions_only"),
-				type: "select",
-				icon: ListFilterIcon,
-				getItemValue: (post) => (post.isCommission ? "true" : "false"),
-				options: [
-					{
-						id: "true",
-						label: t("components.portfolio.filters.commissions_only"),
-					},
-				],
-			},
-			...(availableTags.length > 0
+	const filterGroups = useMemo<FilterGroup<PortfolioPostResponse>[]>(
+		() =>
+			availableTags.length > 0
 				? [
-						{
-							id: "tags",
-							label: "Tags",
-							type: "multiselect" as const,
-							icon: Tag,
-							getItemValue: (post) => post.tags || [],
-							options: availableTags.map((tag) => ({
-								id: tag,
-								label: tag,
-							})),
-						},
-					]
-				: []),
-		],
+					{
+						id: "tags",
+						label: t(
+							"components.portfolio.filters.tags",
+							"Tags",
+						),
+						type: "multiselect",
+						icon: Tag,
+						getItemValue: (post) => post.tags ?? [],
+						options: availableTags.map((tag) => ({
+							id: tag,
+							label: tag,
+						})),
+					},
+				]
+				: [],
 		[availableTags, t],
 	);
 
 	const filteredPosts = useMemo(() => {
-		let result = posts;
+		let result = [...posts];
 		const query = searchQuery.trim().toLowerCase();
 
-		// Search
 		if (query) {
-			result = result.filter(
-				(p) =>
-					p.title?.toLowerCase().includes(query) ||
-					p.description?.toLowerCase().includes(query) ||
-					p.tags?.some((tag) => tag.toLowerCase().includes(query)),
-			);
+			result = result.filter((post) => {
+				const titleMatches = post.title
+					?.toLowerCase()
+					.includes(query);
+				const descriptionMatches = post.description
+					?.toLowerCase()
+					.includes(query);
+				const tagMatches = post.tags?.some((tag) =>
+					tag.toLowerCase().includes(query),
+				);
+
+				return Boolean(
+					titleMatches || descriptionMatches || tagMatches,
+				);
+			});
 		}
 
-		// 1. Commissions Only
-		const commissionsOnlyValues = filters.commissionsOnly?.value;
-		if (
-			Array.isArray(commissionsOnlyValues) &&
-			commissionsOnlyValues.includes("true")
-		) {
-			result = result.filter((p) => p.isCommission);
-		}
+		const selectedTags = getStringFilterValues(filters.tags?.value);
 
-		// 2. Tags
-		const selectedTags = filters.tags?.value;
-		if (Array.isArray(selectedTags) && selectedTags.length > 0) {
-			const tagOperator = filters.tags?.operator;
-			result = result.filter((p) => {
-				const tagIds = p.tags || [];
-				if (tagOperator === "is all of") {
-					return selectedTags.every((tag) => tagIds.includes(tag as string));
-				} else if (tagOperator === "is not" || tagOperator === "is none of") {
-					return selectedTags.every((tag) => !tagIds.includes(tag as string));
+		if (selectedTags.length > 0) {
+			const operator = filters.tags?.operator;
+
+			result = result.filter((post) => {
+				const postTags = post.tags ?? [];
+
+				if (operator === "contains") {
+					return selectedTags.every((tag) =>
+						postTags.includes(tag),
+					);
 				}
-				return selectedTags.some((tag) => tagIds.includes(tag as string));
+
+				if (
+					operator === "is not" ||
+					operator === "is none of"
+				) {
+					return selectedTags.every(
+						(tag) => !postTags.includes(tag),
+					);
+				}
+
+				return selectedTags.some((tag) =>
+					postTags.includes(tag),
+				);
 			});
 		}
 
 		return result;
 	}, [filters, posts, searchQuery]);
 
+	const postsByCatalogId = useMemo(() => {
+		const result = new Map<string, PortfolioPostResponse[]>();
+
+		for (const post of posts) {
+			for (const catalogId of post.catalogIds ?? []) {
+				const catalogPosts = result.get(catalogId);
+
+				if (catalogPosts) {
+					catalogPosts.push(post);
+				} else {
+					result.set(catalogId, [post]);
+				}
+			}
+		}
+
+		return result;
+	}, [posts]);
+
+	const currentFolder =
+		propCurrentFolder ??
+		(folderId
+			? folders.find((folder) => folder.id === folderId)
+			: undefined);
+
+	const currentFolderPosts = currentFolder
+		? postsByCatalogId.get(currentFolder.id) ?? []
+		: [];
+
 	const handleFilterChange = (
 		groupId: string,
 		value: FilterValue,
 		operator?: ManagedFilterValue["operator"],
 	) => {
-		setFilters((prev) => ({
-			...prev,
-			[groupId]: { value, operator },
+		setFilters((previous) => ({
+			...previous,
+			[groupId]: {
+				value,
+				operator,
+			},
 		}));
 	};
 
@@ -162,207 +258,264 @@ export function ProfilePortfolio({
 		setSearchQuery("");
 	};
 
-	const currentFolder =
-		propCurrentFolder ||
-		(folderId ? folders.find((f) => f.id === folderId) : null);
+	const handlePostClick = (post: PortfolioPostResponse) => {
+		if (!post.id) return;
+
+		if (folderId) {
+			navigate({
+				to: "/{-$locale}/user/$username/$tab/folder/$folderSlug/$postId",
+				params: {
+					locale,
+					username: username ?? "",
+					tab: "portfolio",
+					folderSlug: folderId,
+					postId: post.id,
+				},
+				resetScroll: false,
+			});
+		} else {
+			navigate({
+				to: "/{-$locale}/user/$username/$tab/$commissionId",
+				params: {
+					locale,
+					username: username ?? "",
+					tab: "portfolio",
+					commissionId: post.id,
+				},
+				resetScroll: false,
+			});
+		}
+	};
 
 	if (folderId && currentFolder) {
-		const folderPosts = posts.filter((p) =>
-			p.folderIds?.includes(currentFolder.id),
-		);
-
-		const subfolders = folders.filter((f) => f.parentId === folderId);
-		const parentFolder = currentFolder.parentId
-			? folders.find((f) => f.id === currentFolder.parentId)
-			: null;
-		const backSlug = parentFolder?.slug || parentFolder?.id;
-
 		return (
-			<div className="flex h-full flex-1 flex-col space-y-6">
+			<div className="flex h-full flex-1 flex-col gap-6">
 				<div className="flex items-center gap-4">
 					<Button variant="ghost" size="icon" asChild>
-						{backSlug ? (
-							<Link
-								to="/{-$locale}/$username/$tab/folder/$folderSlug"
-								params={{
-									locale,
-									username: username || "",
-									tab: "portfolio",
-									folderSlug: backSlug,
-								}}
-							>
-								<ArrowLeft />
-							</Link>
-						) : (
-							<Link
-								to="/{-$locale}/$username/$tab"
-								params={{ locale, username: username || "", tab: "portfolio" }}
-							>
-								<ArrowLeft />
-							</Link>
-						)}
+						<Link
+							to="/{-$locale}/user/$username/$tab"
+							params={{
+								locale,
+								username: username ?? "",
+								tab: "portfolio",
+							}}
+						>
+							<ArrowLeft aria-hidden="true" />
+							<span className="sr-only">
+								{t(
+									"components.portfolio.folder.back",
+									"Back to portfolio",
+								)}
+							</span>
+						</Link>
 					</Button>
-					<div>
-						<div className="flex items-center gap-2 text-xl font-bold">
-							{parentFolder && (
-								<>
-									<span className="text-muted-foreground">
-										{parentFolder.name}
-									</span>
-									<span className="text-muted-foreground">/</span>
-								</>
-							)}
-							<span>{currentFolder.name}</span>
-						</div>
-						<p className="text-muted-foreground text-sm">
+
+					<div className="flex min-w-0 flex-col gap-0.5">
+						<h2 className="truncate text-xl font-bold">
+							{currentFolder.name}
+						</h2>
+
+						<p className="text-sm text-muted-foreground">
 							{t("components.portfolio.folder.items", {
-								count: folderPosts.length + subfolders.length,
+								count: currentFolderPosts.length,
 							})}
 						</p>
 					</div>
+
+					{canManageCatalogs && (
+						<div className="ml-auto">
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="ghost" size="icon">
+										<MoreHorizontal className="size-5" />
+										<span className="sr-only">Manage folder</span>
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									<DropdownMenuItem onClick={() => setRenameCatalogOpen(true)}>
+										<Edit2 className="mr-2" />
+										{t("components.portfolio.folder.manage.rename", "Rename folder")}
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem
+										variant="destructive"
+										onClick={() => setDeleteCatalogOpen(true)}
+									>
+										<Trash2 className="mr-2" />
+										{t("components.portfolio.folder.manage.delete", "Delete folder")}
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+
+							<RenameCatalogModal
+								open={renameCatalogOpen}
+								onOpenChange={setRenameCatalogOpen}
+								catalog={currentFolder}
+								onRenameCatalog={handleRenameCatalog}
+								isRenaming={updateCatalogMutation.isPending}
+							/>
+
+							<AlertDialog open={deleteCatalogOpen} onOpenChange={setDeleteCatalogOpen}>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>
+											{t("components.portfolio.folder.delete.title", "Delete folder?")}
+										</AlertDialogTitle>
+										<AlertDialogDescription>
+											{t(
+												"components.portfolio.folder.delete.description",
+												"Are you sure you want to delete this folder? Posts inside it will not be deleted."
+											)}
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>
+											{t("components.portfolio.folder.delete.cancel", "Cancel")}
+										</AlertDialogCancel>
+										<AlertDialogAction
+											onClick={(e) => {
+												e.preventDefault();
+												handleDeleteCatalog();
+											}}
+											className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+										>
+											{deleteCatalogMutation.isPending
+												? t("components.portfolio.folder.delete.deleting", "Deleting...")
+												: t("components.portfolio.folder.delete.confirm", "Delete")}
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+						</div>
+					)}
 				</div>
 
-				{/* Subfolders Grid */}
-				{subfolders.length > 0 && (
-					<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-						{subfolders.map((folder) => (
-							<Link
-								key={folder.id}
-								to="/{-$locale}/$username/$tab/folder/$folderSlug/$subfolderSlug"
-								params={{
-									locale,
-									username: username || "",
-									tab: "portfolio",
-									folderSlug: currentFolder.slug || currentFolder.id,
-									subfolderSlug: folder.slug || folder.id,
-								}}
-								className="block"
-							>
-								<FolderCard folder={folder} />
-							</Link>
-						))}
-					</div>
-				)}
-
-				{/* Folder Content */}
-				<div className="space-y-2">
-					<ProfileFeed
-						posts={folderPosts}
-						onPostClick={(post) => {
-							if (currentFolder.parentId) {
-								// Subfolder
-								const parentFolder = folders.find(
-									(f) => f.id === currentFolder.parentId,
-								);
-								if (parentFolder) {
-									navigate({
-										to: "/{-$locale}/$username/$tab/folder/$folderSlug/$subfolderSlug/$postId",
-										params: {
-											locale,
-											username: username || "",
-											tab: "portfolio",
-											folderSlug: parentFolder.slug || parentFolder.id,
-											subfolderSlug: currentFolder.slug || currentFolder.id,
-											postId: post.id,
-										},
-									});
-								}
-							} else {
-								// Folder
-								navigate({
-									to: "/{-$locale}/$username/$tab/folder/$folderSlug/$postId",
-									params: {
-										locale,
-										username: username || "",
-										tab: "portfolio",
-										folderSlug: currentFolder.slug || currentFolder.id,
-										postId: post.id,
-									},
-								});
-							}
-						}}
-						variant="portfolio"
-					/>
-				</div>
+				<ProfileFeed
+					posts={currentFolderPosts}
+					onPostClick={handlePostClick}
+					variant="portfolio"
+					onRemoveFromCatalog={canManageCatalogs ? handleRemovePostFromCatalog : undefined}
+				/>
 			</div>
 		);
 	}
 
-	const filteredFolders = folders.filter(
-		(f) =>
-			!f.parentId && f.name.toLowerCase().includes(searchQuery.toLowerCase()),
+	const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+
+	const filteredFolders = folders.filter((folder) =>
+		folder.name.toLowerCase().includes(normalizedSearchQuery),
 	);
 
-	// Show folders only when no filters are active (except search)
-	// Or maybe show folders always when not in a folder?
-	// Original logic: activeType === "ALL" && !folderId
-	// New logic: no specific filters selected
-	const hasActiveFilters =
-		(Array.isArray(filters.commissionsOnly?.value) &&
-			filters.commissionsOnly.value.length > 0) ||
-		(Array.isArray(filters.tags?.value) && filters.tags.value.length > 0);
-
+	const selectedTags = getStringFilterValues(filters.tags?.value);
+	const hasActiveFilters = selectedTags.length > 0;
 	const showFolders = !hasActiveFilters && !folderId;
 
 	return (
-		<div className="flex h-full flex-1 flex-col space-y-6">
-			{/* Search and Filter Bar */}
-			<FilterBar
-				data={posts}
-				groups={filterGroups}
-				values={filters}
-				onFilterChange={handleFilterChange}
-				searchQuery={searchQuery}
-				onSearchChange={setSearchQuery}
-				onClearAll={handleClearAll}
-				searchPlaceholder={t(
-					"components.portfolio.filters.search_placeholder",
-					"Search portfolio...",
+		<>
+			<div className="flex h-full flex-1 flex-col gap-6">
+				<FilterBar
+					className="px-4"
+					data={posts}
+					groups={filterGroups}
+					values={filters}
+					onFilterChange={handleFilterChange}
+					searchQuery={searchQuery}
+					onSearchChange={setSearchQuery}
+					onClearAll={handleClearAll}
+					searchPlaceholder={t(
+						"components.portfolio.filters.search_placeholder",
+						"Search portfolio...",
+					)}
+					endAction={
+						<div className="flex items-center gap-2">
+							{canManageCatalogs && onCreateCatalog && (
+								<Button
+									type="button"
+									size="xl"
+									variant={"secondary"}
+									onClick={() => setCreateCatalogOpen(true)}
+								>
+									<OutlineFolderAddOuLc />
+									{t(
+										"components.portfolio.folder.create.title",
+										"New folder",
+									)}
+								</Button>
+							)}
+							<Button size="xl" type="button" onClick={() => setCreatePostOpen(true)}>
+								<SolidPlus />
+								{t("components.profile.actions.add_post", "Create post")}
+							</Button>
+						</div>
+					}
+				/>
+
+				{showFolders && filteredFolders.length > 0 && (
+					<section
+						aria-label={t(
+							"components.portfolio.folder.catalogs",
+							"Portfolio folders",
+						)}
+						className="px-4"
+					>
+						<div className="scroll-fade-x scroll-fade-4 flex w-full min-w-0 px-3 gap-4 overflow-x-auto overscroll-x-contain pb-3">
+							{filteredFolders.map((folder) => {
+								const catalogPosts =
+									postsByCatalogId.get(folder.id) ?? [];
+
+								return (
+									<Link
+										key={folder.id}
+										to="/{-$locale}/user/$username/$tab/folder/$folderSlug"
+										params={{
+											locale,
+											username: username ?? "",
+											tab: "portfolio",
+											folderSlug: folder.id,
+										}}
+										className="w-40 shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+									>
+										<FolderCard
+											folder={folder}
+											fallbackCoverSrc={getFallbackCover(
+												catalogPosts,
+											)}
+											itemCount={catalogPosts.length}
+										/>
+									</Link>
+								);
+							})}
+						</div>
+					</section>
 				)}
-			/>
 
-			{/* Folders Grid */}
-			{showFolders && filteredFolders.length > 0 && (
-				<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-					{filteredFolders.map((folder) => (
-						<Link
-							key={folder.id}
-							to="/{-$locale}/$username/$tab/folder/$folderSlug"
-							params={{
-								locale,
-								username: username || "",
-								tab: "portfolio",
-								folderSlug: folder.slug || folder.id,
-							}}
-							className="block"
-						>
-							<FolderCard folder={folder} />
-						</Link>
-					))}
-				</div>
-			)}
-
-			{/* <ColorPaletteDebugger /> */}
-
-			{/* Posts Grid */}
-			{(!folderId || !currentFolder) && (
 				<ProfileFeed
 					posts={filteredPosts}
-					onPostClick={(post) => {
-						navigate({
-							to: "/{-$locale}/$username/$tab/$commissionId",
-							params: {
-								locale,
-								username: username || "",
-								tab: "portfolio",
-								commissionId: post.id,
-							},
-						});
-					}}
+					onPostClick={handlePostClick}
 					variant="portfolio"
+					className="mx-4"
+				/>
+			</div>
+
+			{canManageCatalogs && onCreateCatalog && (
+				<CreateCatalogModal
+					open={createCatalogOpen}
+					onOpenChange={setCreateCatalogOpen}
+					onCreateCatalog={onCreateCatalog}
+					isCreating={isCreatingCatalog}
 				/>
 			)}
-		</div>
+
+			{canManageCatalogs && onCreatePost && (
+				<CreatePostModal
+					open={createPostOpen}
+					onOpenChange={setCreatePostOpen}
+					onCreatePost={onCreatePost}
+					isCreating={isCreatingPost}
+					catalogs={folders}
+				/>
+			)}
+		</>
 	);
 }
 

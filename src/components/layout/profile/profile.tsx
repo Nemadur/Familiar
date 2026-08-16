@@ -13,9 +13,10 @@ import { EmptyPage } from "@/components/layout/empty-page";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAvailableFeeds } from "@/hooks/use-available-feeds";
-import { useBento } from "@/hooks/use-bento";
+import { useAvailableFeeds } from "@/hooks/feed/use-available-feeds";
+import { useBento } from "@/hooks/ui/use-bento";
 import { type Tile, toPixels } from "@/lib/bento";
+import { createStaticList } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import type { TUserProfile } from "@/types/user";
 import { TRoles } from "@/types/user/roles";
@@ -25,7 +26,6 @@ import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
 import { ProfileDetailsContent } from "./profile-details";
-import { createStaticList } from "@/lib/utils";
 
 const CHARACTER_SKELETON_ITEMS = createStaticList("character-skeleton", 10);
 const COMMISSION_SKELETON_ITEMS = createStaticList("commission-skeleton", 2);
@@ -276,7 +276,7 @@ export default function UserProfile({
 			<ProfileCover user={user} />
 			<div className="flex min-h-0 flex-1 flex-col">
 				<div className="flex flex-1 flex-col gap-4 sm:flex-row md:gap-8 max-lg:px-5">
-					<div className="shrink-0 md:w-[240px] lg:w-[280px]">
+					<div className="shrink-0 md:w-60">
 						<UserProfileSidebar user={user} isMe={isMe} isSuspended={false} />
 					</div>
 
@@ -310,7 +310,7 @@ export function UserProfileSidebar({
 	const { t } = useTranslation();
 
 	return (
-		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10">
+		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10 pl-4">
 			<div className="relative z-10 flex flex-row items-start justify-between gap-4 lg:flex-col lg:justify-start">
 				<UserAvatar user={user} isHuge hasOutline />
 				<div className="flex w-fit max-w-full shrink-0 gap-2 self-end sm:hidden">
@@ -320,7 +320,7 @@ export function UserProfileSidebar({
 								isFollowing={false}
 								loading={false}
 								canFollow={true}
-								onToggle={() => {}}
+								onToggle={() => { }}
 								showText={true}
 							/>
 							{user.roles.includes(TRoles.Artist) && user.isVerified && (
@@ -337,11 +337,11 @@ export function UserProfileSidebar({
 						</>
 					) : (
 						<>
-							<Button className="flex-1" size={"xl"} onClick={onEditProfile}>
+							<Button className="flex-1" size={"xl"} variant={"secondary"} onClick={onEditProfile}>
 								{t("components.profile.actions.edit_profile")}
 							</Button>
 							{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button variant="secondary" size={"icon-xl"}>
+								<Button variant="secondary" size={"icon-2xl"}>
 									<OutlineListBoxes />
 								</Button>
 							)}
@@ -352,21 +352,22 @@ export function UserProfileSidebar({
 
 			<div className="space-y-4">
 				<div>
-				<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
-					<span className="truncate">{user.displayName}</span>
-					<ProfileBadge user={user} />
-				</h3>
-				<p className="text-neutral-600 dark:text-neutral-400">
-					@{user.username}
-				</p>
+					<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
+						<span className="truncate">{user.displayName}</span>
+						<ProfileBadge user={user} />
+					</h3>
+					<p className="text-neutral-600 dark:text-neutral-400">
+						@{user.username}
+					</p>
 				</div>
 
 				<div className="hidden flex-col gap-2 sm:flex">
 					{isMe ? (
 						<div className="flex gap-2">
-							<Button className="flex-1" size={"xl"} onClick={onEditProfile}>
+							<Button className="flex-1" size={"xl"} variant={"secondary"} onClick={onEditProfile}>
 								{t("components.profile.actions.edit_profile")}
 							</Button>
+							{/* <Button variant={"secondary"} size={"xl"}>{t("components.profile.actions.share_profile", "share profile")}</Button> */}
 							{user.roles.includes(TRoles.Artist) && user.isVerified && (
 								<Button variant="secondary" size={"icon-xl"}>
 									<OutlineListBoxes />
@@ -380,7 +381,7 @@ export function UserProfileSidebar({
 									isFollowing={false}
 									loading={false}
 									canFollow={true}
-									onToggle={() => {}}
+									onToggle={() => { }}
 									showText={true}
 									className={"flex-1"}
 								/>

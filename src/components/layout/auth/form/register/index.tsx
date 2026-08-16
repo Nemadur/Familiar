@@ -10,7 +10,7 @@ import {
 } from "@/components/reui/stepper";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import useFormValidation from "@/hooks/use-form-validation";
+import useFormValidation from "@/hooks/form/use-form-validation";
 import { useAuth } from "@/providers/auth";
 import { register } from "@/schemas/auth/register";
 import type { RegisterFormProps } from "@/types/auth/form/register";

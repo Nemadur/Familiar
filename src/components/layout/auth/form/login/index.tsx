@@ -21,7 +21,7 @@ import {
 	InputGroupButton,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import useFormValidation from "@/hooks/use-form-validation";
+import useFormValidation from "@/hooks/form/use-form-validation";
 import { useAuth } from "@/providers/auth";
 import { login } from "@/schemas/auth/login";
 import type { LoginFormProps } from "@/types/auth/form/login";

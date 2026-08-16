@@ -42,7 +42,7 @@ export default function Header() {
 	const { user, isPending } = useAuth();
 
 	return (
-		<header className="sticky top-0 z-50 px-4">
+		<header className="sticky top-0 z-50 px-8">
 			<div className="flex h-16 items-center justify-between gap-4">
 				<div className="flex items-center gap-2">
 					<MobileNav />
@@ -82,12 +82,12 @@ export default function Header() {
 								{isPending
 									? null
 									: user?.roles?.includes(TRoles.Artist) && (
-											<Button size={"xl"} asChild>
-												<Link to={localizePath("/dashboard", i18n.language) as any}>
-													{t("header.artist-dashboard", "Dashboard")}
-												</Link>
-											</Button>
-										)}
+										<Button size={"xl"} asChild>
+											<Link to={localizePath("/dashboard", i18n.language) as any}>
+												{t("header.artist-dashboard", "Dashboard")}
+											</Link>
+										</Button>
+									)}
 							</Skeleton>
 						</ClientOnly>
 

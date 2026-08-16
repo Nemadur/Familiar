@@ -97,11 +97,11 @@ import {
 	useTags,
 	useUpdateCommission,
 	useUploadCommissionMedia,
-} from "@/hooks/use-commisions";
+} from "@/hooks/commissions/use-commissions";
 import {
 	useAssignFormTemplate,
 	useFormTemplates,
-} from "@/hooks/use-form-templates";
+} from "@/hooks/commissions/use-form-templates";
 import { cn } from "@/lib/utils";
 import {
 	commissionMediaFileSchema,

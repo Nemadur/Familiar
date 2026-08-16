@@ -18,7 +18,7 @@ import {
 } from "@/components/layout/requests/my/page-state";
 import { useMyRequestFilterGroups } from "@/components/layout/requests/my/page-filters";
 import { RequestList } from "@/components/layout/requests/my/list";
-import { useMyCommissionRequests } from "@/hooks/use-commisions";
+import { useMyCommissionRequests } from "@/hooks/commissions/use-commissions";
 
 export const Route = createFileRoute("/{-$locale}/_main/my-requests")({
 	component: RouteComponent,

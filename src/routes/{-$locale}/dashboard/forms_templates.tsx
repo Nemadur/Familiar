@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import {
 	useDeleteFormTemplate,
 	useFormTemplates,
-} from "@/hooks/use-form-templates";
+} from "@/hooks/commissions/use-form-templates";
 
 export const Route = createFileRoute("/{-$locale}/dashboard/forms_templates")({
 	component: DashboardForms,

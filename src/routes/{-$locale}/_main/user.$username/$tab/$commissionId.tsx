@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CommissionForm } from "@/components/layout/commision/commission-form";
 import { CommissionModal } from "@/components/layout/modal/commission";
-import { useUserByUsername } from "@/hooks/use-user";
+import { PortfolioPostModal } from "@/components/layout/modal/portfolio-post";
+import { useUserByUsername } from "@/hooks/user/use-user";
 
 export const Route = createFileRoute("/{-$locale}/_main/user/$username/$tab/$commissionId")({
 	component: RouteComponent,
@@ -11,16 +12,16 @@ function RouteComponent() {
 	const { username, tab, commissionId } = Route.useParams();
 	const { user } = useUserByUsername(username);
 
-	// if (tab === "portfolio") {
-	// 	return (
-	// 		<PortfolioPostRoute
-	// 			username={username}
-	// 			tab={tab}
-	// 			postId={commissionId}
-	// 			user={user}
-	// 		/>
-	// 	);
-	// }
+	if (tab === "portfolio") {
+		return (
+			<PortfolioPostRoute
+				username={username}
+				tab={tab}
+				postId={commissionId}
+				user={user}
+			/>
+		);
+	}
 
 	return (
 		<CommissionRoute
@@ -32,38 +33,40 @@ function RouteComponent() {
 	);
 }
 
-// function PortfolioPostRoute({
-// 	username,
-// 	tab,
-// }: {
-// 	username: string;
-// 	tab: string;
-// 	postId: string;
-// 	user: Awaited<ReturnType<typeof useUserByUsername>>["user"];
-// }) {
-// 	const navigate = useNavigate();
+function PortfolioPostRoute({
+	username,
+	tab,
+	postId,
+	user,
+}: {
+	username: string;
+	tab: string;
+	postId: string;
+	user: Awaited<ReturnType<typeof useUserByUsername>>["user"];
+}) {
+	const navigate = useNavigate();
+	const { locale } = Route.useParams();
 
-// 	const post = null;
+	const handleClose = () => {
+		navigate({
+			to: "/{-$locale}/user/$username/$tab",
+			params: { locale, username, tab },
+			replace: true,
+			resetScroll: false,
+		});
+	};
 
-// 	if (!post) return null;
-
-// 	return (
-// 		<PortfolioPostModal
-// 			post={post}
-// 			open={true}
-// 			onOpenChange={(open) => {
-// 				if (!open) {
-// 					navigate({
-// 						to: `/user/${username}/${tab}`,
-// 						replace: true,
-// 						resetScroll: false,
-// 						search: (old) => old,
-// 					})
-// 				}
-// 			}}
-// 		/>
-// 	)
-// }
+	return (
+		<PortfolioPostModal
+			postId={postId}
+			username={username}
+			open={true}
+			onOpenChange={(open) => {
+				if (!open) handleClose();
+			}}
+		/>
+	);
+}
 
 function CommissionRoute({
 	username,

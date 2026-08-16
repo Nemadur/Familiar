@@ -1,4 +1,3 @@
-import { MoreHorizontal, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
 import {
@@ -11,21 +10,22 @@ import { useLocalAction } from "@/components/layout/feed/ctas";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
-	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogTitle,
 } from "@/components/ui/dialog";
 import {
 	Drawer,
-	DrawerClose,
 	DrawerContent,
 	DrawerDescription,
-	DrawerFooter,
-	DrawerHeader,
 	DrawerTitle,
 } from "@/components/ui/drawer";
-import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface UniversalModalLayoutProps {
@@ -38,6 +38,7 @@ interface UniversalModalLayoutProps {
 	isBookmarked?: boolean;
 	onBookmark?: (e: React.MouseEvent) => void;
 	mediaClassName?: string;
+	moreMenuContent?: ReactNode;
 }
 
 export function UniversalModalLayout({
@@ -50,6 +51,7 @@ export function UniversalModalLayout({
 	isBookmarked = false,
 	onBookmark,
 	mediaClassName,
+	moreMenuContent,
 }: UniversalModalLayoutProps) {
 	const isTablet = useIsTablet();
 	const { active: bookmarked, handleAction } = useLocalAction({
@@ -101,9 +103,22 @@ export function UniversalModalLayout({
 										{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 									</Button>
 								)}
-								<Button variant="ghost" size="icon">
-									<OutlineMore />
-								</Button>
+								{moreMenuContent ? (
+									<DropdownMenu modal={false}>
+										<DropdownMenuTrigger asChild>
+											<Button variant="ghost" size="icon">
+												<OutlineMore />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent align="end">
+											{moreMenuContent}
+										</DropdownMenuContent>
+									</DropdownMenu>
+								) : (
+									<Button variant="ghost" size="icon">
+										<OutlineMore />
+									</Button>
+								)}
 							</div>
 						</div>
 
@@ -124,6 +139,12 @@ export function UniversalModalLayout({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
 				showCloseButton={false}
+				onInteractOutside={(e) => {
+					// Prevent closing when interacting with toast notifications or dropdown menus
+					if (e.target instanceof Element && (e.target.closest('[data-sonner-toast]') || e.target.closest('[data-radix-menu-content]'))) {
+						e.preventDefault();
+					}
+				}}
 				className="flex h-[85vh] md:min-w-2xl lg:min-w-4xl xl:max-w-6xl flex-col overflow-hidden border-none bg-background p-0 sm:rounded-3xl"
 			>
 				<DialogTitle className="sr-only">{title}</DialogTitle>
@@ -133,7 +154,7 @@ export function UniversalModalLayout({
 					{/* Left Column: Media */}
 					<div
 						className={cn(
-							"group relative w-full lg:w-[60%] lg:h-full lg:overflow-y-auto shrink-0 flex flex-col min-h-[300px] lg:min-h-0",
+							"group relative w-full lg:w-[60%] lg:h-full lg:overflow-y-auto shrink-0 flex flex-col min-h-75 lg:min-h-0",
 							// Use justify-center only if no scroll needed, but safe way is m-auto on child.
 							// Removing justify-center to prevent top clipping on overflow.
 							mediaClassName,
@@ -172,9 +193,22 @@ export function UniversalModalLayout({
 										{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 									</Button>
 								)}
-								<Button variant="ghost" size="icon">
-									<OutlineMore />
-								</Button>
+								{moreMenuContent ? (
+									<DropdownMenu modal={false}>
+										<DropdownMenuTrigger asChild>
+											<Button variant="ghost" size="icon">
+												<OutlineMore />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent align="end">
+											{moreMenuContent}
+										</DropdownMenuContent>
+									</DropdownMenu>
+								) : (
+									<Button variant="ghost" size="icon">
+										<OutlineMore />
+									</Button>
+								)}
 								<Button
 									variant="ghost"
 									size="icon"

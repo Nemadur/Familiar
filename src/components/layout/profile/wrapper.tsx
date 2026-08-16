@@ -1,6 +1,6 @@
 import { notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { userByUsernameQueryOptions } from "@/hooks/use-user";
+import { userByUsernameQueryOptions } from "@/hooks/user/use-user";
 import UserProfile, {
 	UserProfileSkeleton,
 } from "@/components/layout/profile/profile";
