@@ -7,13 +7,11 @@ import {
 import type { PortfolioPostResponse } from "@/api/portfolio/posts/post-types";
 import {
 	bucketFromDimensions,
-	type TileHeightUnit,
-	type TileWidthUnit,
+	type TileBucket as BentoTileBucket,
 } from "@/lib/bento";
 
-export interface TileBucket {
-	widthUnit: TileWidthUnit;
-	heightUnit: TileHeightUnit;
+export interface TileBucket
+	extends BentoTileBucket {
 	imageWidth: number;
 	imageHeight: number;
 }
@@ -40,7 +38,7 @@ const bucketCache = new Map<
 function getFirstImagePath(
 	post: PortfolioPostResponse,
 ): string | null {
-	const firstRenderableImage = [
+	const image = [
 		...(post.images ?? []),
 	]
 		.sort(
@@ -51,28 +49,26 @@ function getFirstImagePath(
 					Number.MAX_SAFE_INTEGER),
 		)
 		.find(
-			(image) =>
+			(item) =>
 				Boolean(
-					image.fullSize?.path,
+					item.fullSize?.path,
 				) ||
 				Boolean(
-					image.thumbnail?.path,
+					item.thumbnail?.path,
 				),
 		);
 
-	if (!firstRenderableImage) {
+	if (!image) {
 		return null;
 	}
 
 	/*
-	 * Prefer the original image because thumbnails may be cropped to a
-	 * square, which would incorrectly classify portrait images as 1x1.
+	 * Prefer the original image. Thumbnails may be square-cropped and produce
+	 * an incorrect 1x1 bucket.
 	 */
 	return (
-		firstRenderableImage.fullSize
-			?.path ??
-		firstRenderableImage.thumbnail
-			?.path ??
+		image.fullSize?.path ??
+		image.thumbnail?.path ??
 		null
 	);
 }
@@ -98,7 +94,9 @@ function measureImageBucket(
 					bucket: TileBucket,
 					keepCached: boolean,
 				) => {
-					if (finished) return;
+					if (finished) {
+						return;
+					}
 
 					finished = true;
 
@@ -281,7 +279,9 @@ export function usePortfolioImageBuckets(
 				},
 			),
 		).then((entries) => {
-			if (cancelled) return;
+			if (cancelled) {
+				return;
+			}
 
 			setBuckets(
 				new Map(entries),

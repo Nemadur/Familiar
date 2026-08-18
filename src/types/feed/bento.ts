@@ -48,17 +48,6 @@ export interface PixelLayout {
 	containerHeight: number;
 }
 
-/**
- * recency:
- * Exact newest-first ordering. Empty spaces may remain.
- *
- * balanced:
- * Publication date has priority, but large tiles move slightly later and
- * toward the right. Later small tiles can fill available holes.
- *
- * fit:
- * Uses the provided order and prioritizes compact placement.
- */
 export type PackStrategy =
 	| "recency"
 	| "balanced"
