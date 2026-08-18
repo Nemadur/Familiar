@@ -124,7 +124,7 @@ const ROADMAP_ENTRIES: RoadmapEntry[] = [
 			id: "availability-queues",
 			events: [[
 				{ type: "text", value: "Artist availability and queue management. " },
-				{ type: "link", value: "test", href: "https://familiar.art" },
+				{ type: "link", value: "test ", href: "https://familiar.art" },
 				{ type: "text", value: "Commission slots, waitlists, estimated start dates, and clearer workload visibility." },
 				{ type: "button", variant: "secondary", className: "mr-2", value: "Test", action: () => console.log("Test") },
 			]],

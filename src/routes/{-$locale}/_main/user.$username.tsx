@@ -1,16 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
+	Link,
+	Navigate,
+	notFound,
 	Outlet,
+	redirect,
 	useNavigate,
 	useParams,
-	notFound,
-	redirect,
 } from "@tanstack/react-router";
+import { t } from "i18next";
+import { OutlineUser } from "@/components/icons/icons";
+import { EmptyPage } from "@/components/layout/empty-page";
 import { ProfileCommissions } from "@/components/layout/profile/feed/commissions";
 import { ProfilePortfolio } from "@/components/layout/profile/feed/portfolio";
 import { TabContentSkeleton } from "@/components/layout/profile/profile";
 import UserProfileWrapper from "@/components/layout/profile/wrapper";
+import { Button } from "@/components/ui/button";
 import { useProfileCommissions } from "@/hooks/commissions/use-commissions";
 import { useProfileContent } from "@/hooks/user/use-profile-content";
 import { userByUsernameQueryOptions } from "@/hooks/user/use-user";
@@ -50,13 +56,19 @@ function UserNotFoundComponent() {
 	// TODO Empty Page component
 	return (
 		<div className="flex min-h-screen flex-1 flex-col items-center justify-center p-8 text-center">
-			<h2 className="mb-2 text-2xl font-semibold">
-				User "{username}" not found
-			</h2>
-			<p className="text-muted-foreground">
-				The user "{username}" does not exist.
-			</p>
-		</div>
+			<EmptyPage
+				icon={OutlineUser}
+				title={t("states.empty.user_not_found", `User "${username}" do not found`)}
+				description={t("states.empty.user_not_found_description")}
+
+			>
+				<Button asChild size={"2xl"}>
+					<Link to="/{-$locale}">
+						{t("states.empty.back_to_home")}
+					</Link>
+				</Button>
+			</EmptyPage>
+		</div >
 	);
 }
 

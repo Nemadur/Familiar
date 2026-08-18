@@ -6,14 +6,14 @@ import { cn } from "@/lib/utils";
 import type { TUserProfile } from "@/types/user";
 
 export default function UserAvatar({
-	user,
+	user = undefined,
 	isHuge = false,
 	hasOutline = false,
 	size = "default",
 	isOnline = false,
 	badgeClassName,
 }: {
-	user: TUserProfile;
+	user?: TUserProfile | undefined;
 	isHuge?: boolean;
 	hasOutline?: boolean;
 	size?: "sm" | "default" | "lg" | "xl";

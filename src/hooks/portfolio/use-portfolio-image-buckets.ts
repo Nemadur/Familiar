@@ -1,18 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import type { PortfolioPostResponse } from "@/api/portfolio/posts/post-types";
-import { bucketFromDimensions } from "@/lib/bento";
+import {
+	bucketFromDimensions,
+	type TileHeightUnit,
+	type TileWidthUnit,
+} from "@/lib/bento";
 
-export type TileBucket = {
-	widthUnit: 1 | 2;
-	heightUnit: 1 | 2;
+export interface TileBucket {
+	widthUnit: TileWidthUnit;
+	heightUnit: TileHeightUnit;
 	imageWidth: number;
 	imageHeight: number;
-};
+}
 
-type PostImageSource = {
+interface PostImageSource {
 	postId: string;
 	path: string | null;
-};
+}
 
 const FALLBACK_BUCKET: TileBucket = {
 	widthUnit: 1,
@@ -21,84 +30,231 @@ const FALLBACK_BUCKET: TileBucket = {
 	imageHeight: 800,
 };
 
-// Re-visiting a profile should not download and measure the same image again.
-const bucketCache = new Map<string, Promise<TileBucket>>();
+const MEASUREMENT_TIMEOUT = 10_000;
 
-function getFirstImagePath(post: PortfolioPostResponse): string | null {
-	const firstImage = [...(post.images ?? [])].sort(
-		(a, b) =>
-			(a.position ?? Number.MAX_SAFE_INTEGER) -
-			(b.position ?? Number.MAX_SAFE_INTEGER),
-	)[0];
+const bucketCache = new Map<
+	string,
+	Promise<TileBucket>
+>();
 
-	return firstImage?.fullSize?.path ?? firstImage?.thumbnail?.path ?? null;
+function getFirstImagePath(
+	post: PortfolioPostResponse,
+): string | null {
+	const firstRenderableImage = [
+		...(post.images ?? []),
+	]
+		.sort(
+			(a, b) =>
+				(a.position ??
+					Number.MAX_SAFE_INTEGER) -
+				(b.position ??
+					Number.MAX_SAFE_INTEGER),
+		)
+		.find(
+			(image) =>
+				Boolean(
+					image.fullSize?.path,
+				) ||
+				Boolean(
+					image.thumbnail?.path,
+				),
+		);
+
+	if (!firstRenderableImage) {
+		return null;
+	}
+
+	/*
+	 * Prefer the original image because thumbnails may be cropped to a
+	 * square, which would incorrectly classify portrait images as 1x1.
+	 */
+	return (
+		firstRenderableImage.fullSize
+			?.path ??
+		firstRenderableImage.thumbnail
+			?.path ??
+		null
+	);
 }
 
-function measureImageBucket(path: string): Promise<TileBucket> {
+function measureImageBucket(
+	path: string,
+): Promise<TileBucket> {
 	const cached = bucketCache.get(path);
-	if (cached) return cached;
 
-	const measurement = new Promise<TileBucket>((resolve) => {
-		const image = new Image();
+	if (cached) {
+		return cached;
+	}
 
-		image.onload = () => {
-			const imageWidth = image.naturalWidth;
-			const imageHeight = image.naturalHeight;
+	const measurement =
+		new Promise<TileBucket>(
+			(resolve) => {
+				const image =
+					new Image();
 
-			if (imageWidth <= 0 || imageHeight <= 0) {
-				resolve(FALLBACK_BUCKET);
-				return;
-			}
+				let finished = false;
 
-			resolve({
-				...bucketFromDimensions(imageWidth, imageHeight),
-				imageWidth,
-				imageHeight,
-			});
-		};
-		image.onerror = () => resolve(FALLBACK_BUCKET);
-		image.src = path;
-	});
+				const finish = (
+					bucket: TileBucket,
+					keepCached: boolean,
+				) => {
+					if (finished) return;
+
+					finished = true;
+
+					window.clearTimeout(
+						timeoutId,
+					);
+
+					image.onload = null;
+					image.onerror = null;
+
+					if (!keepCached) {
+						bucketCache.delete(
+							path,
+						);
+					}
+
+					resolve(bucket);
+				};
+
+				const timeoutId =
+					window.setTimeout(
+						() => {
+							finish(
+								FALLBACK_BUCKET,
+								false,
+							);
+						},
+						MEASUREMENT_TIMEOUT,
+					);
+
+				image.onload = () => {
+					const imageWidth =
+						image.naturalWidth;
+
+					const imageHeight =
+						image.naturalHeight;
+
+					if (
+						imageWidth <= 0 ||
+						imageHeight <= 0
+					) {
+						finish(
+							FALLBACK_BUCKET,
+							false,
+						);
+
+						return;
+					}
+
+					finish(
+						{
+							...bucketFromDimensions(
+								imageWidth,
+								imageHeight,
+							),
+							imageWidth,
+							imageHeight,
+						},
+						true,
+					);
+				};
+
+				image.onerror = () => {
+					finish(
+						FALLBACK_BUCKET,
+						false,
+					);
+				};
+
+				image.decoding = "async";
+				image.src = path;
+			},
+		);
 
 	bucketCache.set(path, measurement);
+
 	return measurement;
 }
 
-/**
- * Measures the first image of every post before exposing the bucket map.
- * Waiting for the whole batch prevents cards from appearing as 1x1 and then
- * jumping to 2x1/1x2 one at a time.
- */
-export function usePortfolioImageBuckets(posts: PortfolioPostResponse[]): {
-	buckets: ReadonlyMap<string, TileBucket>;
+export function usePortfolioImageBuckets(
+	posts: PortfolioPostResponse[],
+): {
+	buckets: ReadonlyMap<
+		string,
+		TileBucket
+	>;
 	isMeasuring: boolean;
 } {
-	const imageSources = useMemo<PostImageSource[]>(
+	const imageSources =
+		useMemo<PostImageSource[]>(
+			() =>
+				posts.flatMap(
+					(post) => {
+						if (!post.id) {
+							return [];
+						}
+
+						return [
+							{
+								postId:
+									post.id,
+								path: getFirstImagePath(
+									post,
+								),
+							},
+						];
+					},
+				),
+			[posts],
+		);
+
+	const sourceSignature = useMemo(
 		() =>
-			posts.flatMap((post) =>
-				post.id
-					? [{ postId: post.id, path: getFirstImagePath(post) }]
-					: [],
-			),
-		[posts],
+			imageSources
+				.map(
+					({
+						postId,
+						path,
+					}) =>
+						`${postId}\u0000${path ?? ""}`,
+				)
+				.join("\u0001"),
+		[imageSources],
 	);
-	const sourceSignature = imageSources
-		.map(({ postId, path }) => `${postId}\u0000${path ?? ""}`)
-		.join("\u0001");
-	const imageSourcesRef = useRef(imageSources);
-	imageSourcesRef.current = imageSources;
-	const [buckets, setBuckets] = useState<ReadonlyMap<string, TileBucket>>(
-		() => new Map(),
+
+	const imageSourcesRef =
+		useRef(imageSources);
+
+	imageSourcesRef.current =
+		imageSources;
+
+	const [buckets, setBuckets] =
+		useState<
+			ReadonlyMap<
+				string,
+				TileBucket
+			>
+		>(() => new Map());
+
+	const [
+		isMeasuring,
+		setIsMeasuring,
+	] = useState(
+		imageSources.length > 0,
 	);
-	const [isMeasuring, setIsMeasuring] = useState(imageSources.length > 0);
 
 	useEffect(() => {
 		let cancelled = false;
-		const sources = imageSourcesRef.current;
+
+		const sources =
+			imageSourcesRef.current;
 
 		if (sources.length === 0) {
 			setBuckets(new Map());
 			setIsMeasuring(false);
+
 			return () => {
 				cancelled = true;
 			};
@@ -107,22 +263,40 @@ export function usePortfolioImageBuckets(posts: PortfolioPostResponse[]): {
 		setIsMeasuring(true);
 
 		void Promise.all(
-			sources.map(async ({ postId, path }) => {
-				const bucket = path
-					? await measureImageBucket(path)
-					: FALLBACK_BUCKET;
-				return [postId, bucket] as const;
-			}),
+			sources.map(
+				async ({
+					postId,
+					path,
+				}) => {
+					const bucket = path
+						? await measureImageBucket(
+								path,
+							)
+						: FALLBACK_BUCKET;
+
+					return [
+						postId,
+						bucket,
+					] as const;
+				},
+			),
 		).then((entries) => {
 			if (cancelled) return;
-			setBuckets(new Map(entries));
+
+			setBuckets(
+				new Map(entries),
+			);
+
 			setIsMeasuring(false);
 		});
 
 		return () => {
 			cancelled = true;
 		};
-	}, []);
+	}, [sourceSignature]);
 
-	return { buckets, isMeasuring };
+	return {
+		buckets,
+		isMeasuring,
+	};
 }

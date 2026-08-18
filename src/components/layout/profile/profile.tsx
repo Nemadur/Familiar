@@ -26,6 +26,7 @@ import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
 import { ProfileDetailsContent } from "./profile-details";
+import { UserSettingsModal } from "../modal/profile/settings/settings-modal";
 
 const CHARACTER_SKELETON_ITEMS = createStaticList("character-skeleton", 10);
 const COMMISSION_SKELETON_ITEMS = createStaticList("commission-skeleton", 2);
@@ -155,7 +156,10 @@ export function PortfolioContentSkeleton() {
 		});
 	}, []);
 
-	const { cols, placed } = useBento(tiles);
+	const { cols, placed } = useBento(
+		tiles,
+		"balanced",
+	);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -306,141 +310,277 @@ export function UserProfileSidebar({
 	isMe: boolean;
 	isSuspended: boolean;
 }) {
-	const onEditProfile = () => toast("open settings");
 	const { t } = useTranslation();
 
+	const [settingsOpen, setSettingsOpen] =
+		useState(false);
+
+	const handleOpenSettings = () => {
+		setSettingsOpen(true);
+	};
+
+	const handleSaveSettings = () => {
+		// TODO: Connect this to the settings API.
+		setSettingsOpen(false);
+	};
+
 	return (
-		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10 pl-4">
-			<div className="relative z-10 flex flex-row items-start justify-between gap-4 lg:flex-col lg:justify-start">
-				<UserAvatar user={user} isHuge hasOutline />
-				<div className="flex w-fit max-w-full shrink-0 gap-2 self-end sm:hidden">
-					{!isMe ? (
-						<>
-							<FollowButton
-								isFollowing={false}
-								loading={false}
-								canFollow={true}
-								onToggle={() => { }}
-								showText={true}
-							/>
-							{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button variant="secondary" size={"icon-xl"}>
-									<OutlineListBoxes />
-								</Button>
-							)}
-							<Button variant="secondary" disabled size="icon-xl">
-								<OutlineChat />
-							</Button>
-							<Button variant="ghost" size="icon-xl">
-								<OutlineMore />
-							</Button>
-						</>
-					) : (
-						<>
-							<Button className="flex-1" size={"xl"} variant={"secondary"} onClick={onEditProfile}>
-								{t("components.profile.actions.edit_profile")}
-							</Button>
-							{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button variant="secondary" size={"icon-2xl"}>
-									<OutlineListBoxes />
-								</Button>
-							)}
-						</>
-					)}
-				</div>
-			</div>
+		<>
+			<aside className="-mt-12 h-fit space-y-3 pl-4 md:sticky md:top-20 md:-mt-16 md:pb-10">
+				<div className="relative z-10 flex flex-row items-start justify-between gap-4 lg:flex-col lg:justify-start">
+					<UserAvatar
+						user={user}
+						isHuge
+						hasOutline
+					/>
 
-			<div className="space-y-4">
-				<div>
-					<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
-						<span className="truncate">{user.displayName}</span>
-						<ProfileBadge user={user} />
-					</h3>
-					<p className="text-neutral-600 dark:text-neutral-400">
-						@{user.username}
-					</p>
-				</div>
-
-				<div className="hidden flex-col gap-2 sm:flex">
-					{isMe ? (
-						<div className="flex gap-2">
-							<Button className="flex-1" size={"xl"} variant={"secondary"} onClick={onEditProfile}>
-								{t("components.profile.actions.edit_profile")}
-							</Button>
-							{/* <Button variant={"secondary"} size={"xl"}>{t("components.profile.actions.share_profile", "share profile")}</Button> */}
-							{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button variant="secondary" size={"icon-xl"}>
-									<OutlineListBoxes />
-								</Button>
-							)}
-						</div>
-					) : (
-						<div className="flex gap-2">
-							<div className="flex w-full gap-2">
+					{/* Mobile actions */}
+					<div className="flex w-fit max-w-full shrink-0 gap-2 self-end sm:hidden">
+						{!isMe ? (
+							<>
 								<FollowButton
 									isFollowing={false}
 									loading={false}
-									canFollow={true}
+									canFollow
 									onToggle={() => { }}
-									showText={true}
-									className={"flex-1"}
+									showText
 								/>
-								{user.roles.includes(TRoles.Artist) && user.isVerified && (
-									<Button variant="secondary" size={"icon-xl"}>
-										<OutlineListBoxes />
-									</Button>
-								)}
-								<Button variant="secondary" disabled size="icon-xl">
+
+								{user.roles.includes(
+									TRoles.Artist,
+								) &&
+									user.isVerified && (
+										<Button
+											type="button"
+											variant="secondary"
+											size="icon-xl"
+										>
+											<OutlineListBoxes />
+										</Button>
+									)}
+
+								<Button
+									type="button"
+									variant="secondary"
+									disabled
+									size="icon-xl"
+								>
 									<OutlineChat />
 								</Button>
-								<Button variant="ghost" size="icon-xl">
+
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-xl"
+								>
 									<OutlineMore />
 								</Button>
-							</div>
-						</div>
-					)}
+							</>
+						) : (
+							<>
+								<Button
+									type="button"
+									className="flex-1"
+									size="xl"
+									variant="secondary"
+									onClick={
+										handleOpenSettings
+									}
+								>
+									{t(
+										"components.profile.actions.edit_profile",
+										"Edit profile",
+									)}
+								</Button>
+
+								{user.roles.includes(
+									TRoles.Artist,
+								) &&
+									user.isVerified && (
+										<Button
+											type="button"
+											variant="secondary"
+											size="icon-2xl"
+										>
+											<OutlineListBoxes />
+										</Button>
+									)}
+							</>
+						)}
+					</div>
 				</div>
 
-				<div className="flex gap-2 text-xs text-neutral-500">
-					<div className="flex items-center gap-2">
-						<span className="flex items-center gap-2">
-							<span className="font-semibold text-primary">0</span>{" "}
-							{t("components.profile.actions.followers", "followers")}
-						</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<span className="flex items-center gap-2">
-							<span className="font-semibold text-primary">0</span>{" "}
-							{t("components.profile.actions.following", "following")}
-						</span>
-					</div>
-				</div>
+				<div className="space-y-4">
+					{/* User identity */}
+					<div>
+						<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
+							<span className="truncate">
+								{user.displayName}
+							</span>
 
-				{!isSuspended ? (
-					<ProfileBio user={user} isShort />
-				) : (
-					!isMe && (
-						<p className="text-sm text-muted-foreground">
-							{t("components.profile.info.suspended")}
+							<ProfileBadge user={user} />
+						</h3>
+
+						<p className="text-neutral-600 dark:text-neutral-400">
+							@{user.username}
 						</p>
-					)
-				)}
+					</div>
 
-				<Dialog>
-					<DialogTrigger asChild>
-						<Button
-							variant={"link"}
-							size={"sm"}
-							className="link h-auto text-xs text-muted-foreground hover:text-foreground"
-						>
-							{t("components.profile.info.about_me")}
-							<OutlineChevronRight />
-						</Button>
-					</DialogTrigger>
-					<ProfileDetailsContent user={user} />
-				</Dialog>
-			</div>
-		</aside>
+					{/* Desktop actions */}
+					<div className="hidden flex-col gap-2 sm:flex">
+						{isMe ? (
+							<div className="flex gap-2">
+								<Button
+									type="button"
+									className="flex-1"
+									size="xl"
+									variant="secondary"
+									onClick={
+										handleOpenSettings
+									}
+								>
+									{t(
+										"components.profile.actions.edit_profile",
+										"Edit profile",
+									)}
+								</Button>
+
+								{user.roles.includes(
+									TRoles.Artist,
+								) &&
+									user.isVerified && (
+										<Button
+											type="button"
+											variant="secondary"
+											size="icon-xl"
+										>
+											<OutlineListBoxes />
+										</Button>
+									)}
+							</div>
+						) : (
+							<div className="flex gap-2">
+								<div className="flex w-full gap-2">
+									<FollowButton
+										isFollowing={false}
+										loading={false}
+										canFollow
+										onToggle={() => { }}
+										showText
+										className="flex-1"
+									/>
+
+									{user.roles.includes(
+										TRoles.Artist,
+									) &&
+										user.isVerified && (
+											<Button
+												type="button"
+												variant="secondary"
+												size="icon-xl"
+											>
+												<OutlineListBoxes />
+											</Button>
+										)}
+
+									<Button
+										type="button"
+										variant="secondary"
+										disabled
+										size="icon-xl"
+									>
+										<OutlineChat />
+									</Button>
+
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon-xl"
+									>
+										<OutlineMore />
+									</Button>
+								</div>
+							</div>
+						)}
+					</div>
+
+					{/* Follow statistics */}
+					<div className="flex gap-2 text-xs text-neutral-500">
+						<div className="flex items-center gap-2">
+							<span className="flex items-center gap-2">
+								<span className="font-semibold text-primary">
+									0
+								</span>
+
+								{t(
+									"components.profile.actions.followers",
+									"followers",
+								)}
+							</span>
+						</div>
+
+						<div className="flex items-center gap-2">
+							<span className="flex items-center gap-2">
+								<span className="font-semibold text-primary">
+									0
+								</span>
+
+								{t(
+									"components.profile.actions.following",
+									"following",
+								)}
+							</span>
+						</div>
+					</div>
+
+					{/* Biography */}
+					{!isSuspended ? (
+						<ProfileBio user={user} isShort />
+					) : (
+						!isMe && (
+							<p className="text-sm text-muted-foreground">
+								{t(
+									"components.profile.info.suspended",
+									"This account is suspended.",
+								)}
+							</p>
+						)
+					)}
+
+					{/* About dialog */}
+					<Dialog>
+						<DialogTrigger asChild>
+							<Button
+								type="button"
+								variant="link"
+								size="sm"
+								className="link h-auto text-xs text-muted-foreground hover:text-foreground"
+							>
+								{t(
+									"components.profile.info.about_me",
+									"About me",
+								)}
+
+								<OutlineChevronRight />
+							</Button>
+						</DialogTrigger>
+
+						<ProfileDetailsContent
+							user={user}
+						/>
+					</Dialog>
+				</div>
+			</aside>
+
+			{/* User settings modal */}
+			{isMe && (
+				<UserSettingsModal
+					open={settingsOpen}
+					onOpenChange={setSettingsOpen}
+					onSave={handleSaveSettings}
+				/>
+			)}
+		</>
 	);
 }
 

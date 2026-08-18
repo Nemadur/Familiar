@@ -71,7 +71,7 @@ function EmptyTitle({ className, level = 5, ...props }: EmptyTitleProps) {
 		<Typography.Heading
 			data-slot="empty-title"
 			level={level}
-			className={cn(className)}
+			className={cn("text-foreground", className)}
 			{...props}
 		/>
 	);
