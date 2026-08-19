@@ -33,7 +33,7 @@ const inputGroupVariants = cva(
 
 export interface InputGroupProps
 	extends React.ComponentProps<"fieldset">,
-		VariantProps<typeof inputGroupVariants> {}
+	VariantProps<typeof inputGroupVariants> { }
 
 function assignRef<T>(targetRef: React.Ref<T> | undefined, value: T | null) {
 	if (!targetRef) return;
@@ -69,8 +69,8 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 				"h-10 min-w-0 has-[>textarea]:h-auto peer",
 
 				// Focus state.
-				"has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
-				"has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-ring/50",
+				"has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-primary/40",
+				"has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-primary/40",
 
 				// Error state.
 				"has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
@@ -793,7 +793,7 @@ function useDateInputController({
 						event.currentTarget.selectionEnd === 0);
 				const isWholeSegmentSelected =
 					event.currentTarget.selectionStart !==
-						event.currentTarget.selectionEnd &&
+					event.currentTarget.selectionEnd &&
 					event.currentTarget.selectionStart === 0 &&
 					event.currentTarget.selectionEnd === event.currentTarget.value.length;
 

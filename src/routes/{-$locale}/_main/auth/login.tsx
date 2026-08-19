@@ -15,7 +15,7 @@ function LoginPage() {
 
 	return (
 		<article className="flex h-full flex-1 flex-col">
-			<header className="flex flex-col py-6">
+			<header className="flex flex-col py-3">
 				<Typography.Heading level={3}>
 					{t("auth.login.title", "Login")}
 				</Typography.Heading>

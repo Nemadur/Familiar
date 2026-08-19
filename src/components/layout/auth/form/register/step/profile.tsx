@@ -11,6 +11,7 @@ export function RegisterStepProfile({
 	return (
 		<ProfileEditor
 			displayNameRef={displayNameRef}
+			bioClassName="min-h-22"
 		/>
 	);
 }

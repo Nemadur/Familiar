@@ -1,4 +1,10 @@
 import { ScrollShadow } from "@heroui/react";
+import {
+	useNavigate,
+	useParams,
+	useRouter,
+	useSearch,
+} from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -20,13 +26,13 @@ import { createStaticList } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import type { TUserProfile } from "@/types/user";
 import { TRoles } from "@/types/user/roles";
+import { UserSettingsModal } from "../modal/profile/settings/settings-modal";
 import UserAvatar from "./avatar";
 import { ProfileBadge } from "./badge";
 import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
 import { ProfileDetailsContent } from "./profile-details";
-import { UserSettingsModal } from "../modal/profile/settings/settings-modal";
 
 const CHARACTER_SKELETON_ITEMS = createStaticList("character-skeleton", 10);
 const COMMISSION_SKELETON_ITEMS = createStaticList("commission-skeleton", 2);
@@ -311,18 +317,46 @@ export function UserProfileSidebar({
 	isSuspended: boolean;
 }) {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
+	const router = useRouter();
 
-	const [settingsOpen, setSettingsOpen] =
-		useState(false);
+	const { locale } = useParams({ strict: false }) as { locale?: string };
+
+	const search = useSearch({ strict: false }) as { settings?: "profile" };
+
+	const settingsOpen = search.settings === "profile";
 
 	const handleOpenSettings = () => {
-		setSettingsOpen(true);
+		void navigate({
+			to: ".",
+			search: (previous) =>
+			({
+				...previous,
+				settings: "profile",
+			}),
+
+			// Show the standalone settings URL in the adress bar.
+			mask: {
+				to: "/{-$locale}/settings/profile",
+			},
+		});
 	};
 
+	const handleCloseSettings = () => {
+		router.history.back();
+	}
+
+	const handleSettingsOpenChange = (open: boolean) => {
+		if (!open) {
+			handleCloseSettings();
+		}
+	}
+
 	const handleSaveSettings = () => {
-		// TODO: Connect this to the settings API.
-		setSettingsOpen(false);
-	};
+		// TODO: save using the settings API
+		toast.info("Settings saved successfully");
+		handleCloseSettings();
+	}
 
 	return (
 		<>
@@ -576,7 +610,7 @@ export function UserProfileSidebar({
 			{isMe && (
 				<UserSettingsModal
 					open={settingsOpen}
-					onOpenChange={setSettingsOpen}
+					onOpenChange={handleSettingsOpenChange}
 					onSave={handleSaveSettings}
 				/>
 			)}

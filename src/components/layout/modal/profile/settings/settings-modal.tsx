@@ -1,5 +1,6 @@
 "use client";
 
+import { Typography } from "@heroui/react";
 import {
     Accessibility,
     Bell,
@@ -17,6 +18,8 @@ import {
     type CSSProperties,
     useState,
 } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { ProfileEditor, type ProfileEditorValues } from "@/components/layout/profile/profile-editor";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -47,11 +50,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { Elevated } from "@/lib/elevated";
-import { Typography } from "@heroui/react";
-import { FormProvider, useForm } from "react-hook-form";
-import { ProfileEditor, type ProfileEditorValues } from "@/components/layout/profile/profile-editor";
+import { cn } from "@/lib/utils";
 
 type SettingsSection =
     | "profile"
@@ -132,23 +132,8 @@ export function UserSettingsModal({
     onOpenChange,
     onSave,
 }: UserSettingsModalProps) {
-    const [activeSection, setActiveSection] =
-        useState<SettingsSection>("profile");
-
-    const activeItem =
-        navigation.find(
-            (item) => item.id === activeSection,
-        ) ?? navigation[0];
-
-    const handleSave = () => {
-        onSave?.();
-    };
-
     return (
-        <Dialog
-            open={open}
-            onOpenChange={onOpenChange}
-        >
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 className={cn(
                     "flex h-[calc(100dvh-2rem)] max-h-190 w-[calc(100vw-2rem)] overflow-hidden p-0",
@@ -160,198 +145,226 @@ export function UserSettingsModal({
                 </DialogTitle>
 
                 <DialogDescription className="sr-only">
-                    Manage your profile, account and application
-                    preferences.
+                    Manage your profile, account and application preferences.
                 </DialogDescription>
 
-                <SidebarProvider
-                    className="min-h-0 items-stretch"
-                    style={
-                        {
-                            "--sidebar-width": "16rem",
-                        } as CSSProperties
-                    }
-                >
-                    <Sidebar
-                        collapsible="none"
-                        className="hidden h-full border-r md:flex"
-                    >
-                        <SidebarContent>
-                            <div className="flex h-16 shrink-0 items-center px-4">
-                                <div>
-                                    <p className="font-semibold">
-                                        Settings
-                                    </p>
-
-                                    <p className="text-xs text-muted-foreground">
-                                        Manage your account
-                                    </p>
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            <SidebarGroup className="py-4">
-                                <SidebarGroupLabel>
-                                    User settings
-                                </SidebarGroupLabel>
-
-                                <SidebarGroupContent>
-                                    <SidebarMenu>
-                                        {navigation.map((item) => {
-                                            const isActive =
-                                                activeSection === item.id;
-
-                                            return (
-                                                <SidebarMenuItem key={item.id}>
-                                                    <SidebarMenuButton
-                                                        type="button"
-                                                        isActive={isActive}
-                                                        tooltip={item.name}
-                                                        className="h-auto items-center py-2.5"
-                                                        onClick={() =>
-                                                            setActiveSection(item.id)
-                                                        }
-                                                    >
-                                                        <item.icon className="size-4" />
-
-                                                        <div className="min-w-0 text-left">
-                                                            <p className="truncate text-sm font-medium">
-                                                                {item.name}
-                                                            </p>
-
-                                                            {/* <p
-                                                                className={cn(
-                                                                    "truncate text-xs transition-colors",
-                                                                    isActive
-                                                                        ? "text-primary-foreground/65"
-                                                                        : "text-muted-foreground",
-                                                                )}
-                                                            >
-                                                                {item.description}
-                                                            </p> */}
-                                                        </div>
-                                                    </SidebarMenuButton>
-                                                </SidebarMenuItem>
-                                            );
-                                        })}
-                                    </SidebarMenu>
-                                </SidebarGroupContent>
-                            </SidebarGroup>
-                        </SidebarContent>
-                    </Sidebar>
-
-                    <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                        <header className="flex min-h-16 shrink-0 items-center border-b px-4 pr-12 md:px-6">
-                            <Breadcrumb className="hidden md:block">
-                                <BreadcrumbList>
-                                    <BreadcrumbItem>
-                                        <BreadcrumbLink
-                                            href="#"
-                                            onClick={(
-                                                event,
-                                            ) =>
-                                                event.preventDefault()
-                                            }
-                                        >
-                                            Settings
-                                        </BreadcrumbLink>
-                                    </BreadcrumbItem>
-
-                                    <BreadcrumbSeparator />
-
-                                    <BreadcrumbItem>
-                                        <BreadcrumbPage>
-                                            {activeItem.name}
-                                        </BreadcrumbPage>
-                                    </BreadcrumbItem>
-                                </BreadcrumbList>
-                            </Breadcrumb>
-
-                            <div className="min-w-0 md:hidden">
-                                <p className="truncate font-semibold">
-                                    User settings
-                                </p>
-
-                                <p className="truncate text-xs text-muted-foreground">
-                                    {activeItem.name}
-                                </p>
-                            </div>
-                        </header>
-
-                        {/* Mobile section selector */}
-                        <div className="shrink-0 border-b p-3 md:hidden">
-                            <label
-                                htmlFor="mobile-settings-section"
-                                className="sr-only"
-                            >
-                                Settings section
-                            </label>
-
-                            <select
-                                id="mobile-settings-section"
-                                value={activeSection}
-                                className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                onChange={(event) =>
-                                    setActiveSection(
-                                        event.target
-                                            .value as SettingsSection,
-                                    )
-                                }
-                            >
-                                {navigation.map((item) => (
-                                    <option
-                                        key={item.id}
-                                        value={item.id}
-                                    >
-                                        {item.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                            <div className="mx-auto w-full max-w-3xl p-4 md:p-8">
-
-                                <SettingsSectionContent
-                                    section={activeSection}
-                                />
-                            </div>
-                        </div>
-
-                        <footer className="flex shrink-0 items-center justify-end gap-2 border-t bg-background p-4">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() =>
-                                    onOpenChange(false)
-                                }
-                            >
-                                Cancel
-                            </Button>
-
-                            <Button
-                                type="button"
-                                onClick={handleSave}
-                            >
-                                Save changes
-                            </Button>
-                        </footer>
-                    </main>
-                </SidebarProvider>
+                <UserSettingsPanel
+                    className="min-h-0"
+                    onCancel={() => onOpenChange(false)}
+                    onSave={onSave}
+                />
             </DialogContent>
         </Dialog>
     );
 }
 
+interface UserSettingsPanelProps {
+    className?: string;
+    onCancel?: () => void;
+    onSave?: () => void;
+}
+
+// TODO: get user data and put into fields (if user is logged in)
+export function UserSettingsPanel({
+    className,
+    onCancel,
+    onSave,
+}: UserSettingsPanelProps) {
+    const [activeSection, setActiveSection] =
+        useState<SettingsSection>("profile");
+
+    const activeItem =
+        navigation.find(
+            (item) => item.id === activeSection,
+        ) ?? navigation[0];
+
+    return (
+        <SidebarProvider
+            className={cn("min-h-0 items-stretch", className)}
+            style={
+                {
+                    "--sidebar-width": "16rem",
+                } as CSSProperties
+            }
+        >
+            <Sidebar
+                collapsible="none"
+                className="hidden h-full border-r md:flex"
+            >
+                <SidebarContent>
+                    <div className="flex h-16 shrink-0 items-center px-4">
+                        <div>
+                            <p className="font-semibold">
+                                Settings
+                            </p>
+
+                            <p className="text-xs text-muted-foreground">
+                                Manage your account
+                            </p>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <SidebarGroup className="py-4">
+                        <SidebarGroupLabel>
+                            User settings
+                        </SidebarGroupLabel>
+
+                        <SidebarGroupContent>
+                            {/* TODO: change URL to active section and make breadcrumb work */}
+                            <SidebarMenu>
+                                {navigation.map((item) => {
+                                    const isActive =
+                                        activeSection === item.id;
+
+                                    return (
+                                        <SidebarMenuItem key={item.id}>
+                                            <SidebarMenuButton
+                                                type="button"
+                                                isActive={isActive}
+                                                tooltip={item.name}
+                                                className="h-auto items-center py-2.5"
+                                                onClick={() =>
+                                                    setActiveSection(item.id)
+                                                }
+                                            >
+                                                <item.icon className="size-4" />
+
+                                                <div className="min-w-0 text-left">
+                                                    <p className="truncate text-sm font-medium">
+                                                        {item.name}
+                                                    </p>
+                                                </div>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    );
+                                })}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </SidebarContent>
+            </Sidebar>
+
+            <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <header className="flex min-h-16 shrink-0 items-center border-b px-4 pr-12 md:px-6">
+                    <Breadcrumb className="hidden md:block">
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink
+                                    href="#"
+                                    onClick={(event) =>
+                                        event.preventDefault()
+                                    }
+                                >
+                                    Settings
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+
+                            <BreadcrumbSeparator />
+
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>
+                                    {activeItem.name}
+                                </BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+
+                    <div className="min-w-0 md:hidden">
+                        <p className="truncate font-semibold">
+                            User settings
+                        </p>
+
+                        <p className="truncate text-xs text-muted-foreground">
+                            {activeItem.name}
+                        </p>
+                    </div>
+                </header>
+
+                <div className="shrink-0 border-b p-3 md:hidden">
+                    <label
+                        htmlFor="mobile-settings-section"
+                        className="sr-only"
+                    >
+                        Settings section
+                    </label>
+
+                    <select
+                        id="mobile-settings-section"
+                        value={activeSection}
+                        className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onChange={(event) =>
+                            setActiveSection(
+                                event.target.value as SettingsSection,
+                            )
+                        }
+                    >
+                        {navigation.map((item) => (
+                            <option key={item.id} value={item.id}>
+                                {item.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                    <div className="mx-auto w-full max-w-3xl p-4 md:p-8">
+                        <SettingsSectionContent
+                            section={activeSection}
+                            onSave={onSave}
+                        />
+                    </div>
+                </div>
+
+                <footer className="flex shrink-0 items-center justify-end gap-2 border-t p-4">
+                    {onCancel && (
+                        <Button
+                            size="xl"
+                            type="button"
+                            variant="outline"
+                            onClick={onCancel}
+                        >
+                            Cancel
+                        </Button>
+                    )}
+
+                    <Button
+                        size="xl"
+                        type="submit"
+                        form={
+                            activeSection === "profile"
+                                ? "profile-settings-form"
+                                : undefined
+                        }
+                        onClick={
+                            activeSection === "profile"
+                                ? undefined
+                                : onSave
+                        }
+                    >
+                        Save changes
+                    </Button>
+                </footer>
+            </main>
+        </SidebarProvider>
+    );
+}
+
 function SettingsSectionContent({
     section,
+    onSave,
 }: {
     section: SettingsSection;
+    onSave?: () => void;
 }) {
     switch (section) {
         case "profile":
-            return <ProfileSettings />;
+            return (
+                <ProfileSettings
+                    onSubmit={() => onSave?.()}
+                />
+            );
 
         case "account":
             return <AccountSettings />;
@@ -380,30 +393,30 @@ function SettingsSectionContent({
 }
 
 interface ProfileSettingsProps {
-	initialValues: ProfileEditorValues;
-	onSubmit?: (values: ProfileEditorValues) => void;
+    initialValues?: ProfileEditorValues;
+    onSubmit?: (values: ProfileEditorValues) => void;
 }
 
 export function ProfileSettings({
-	initialValues,
-	onSubmit,
+    initialValues,
+    onSubmit,
 }: ProfileSettingsProps) {
-	const form = useForm<ProfileEditorValues>({
-		defaultValues: initialValues,
-	});
+    const form = useForm<ProfileEditorValues>({
+        defaultValues: initialValues,
+    });
 
-	return (
-		<FormProvider {...form}>
-			<form
-				id="profile-settings-form"
-				onSubmit={form.handleSubmit((values) =>
-					onSubmit?.(values),
-				)}
-			>
-				<ProfileEditor />
-			</form>
-		</FormProvider>
-	);
+    return (
+        <FormProvider {...form}>
+            <form
+                id="profile-settings-form"
+                onSubmit={form.handleSubmit((values) =>
+                    onSubmit?.(values),
+                )}
+            >
+                <ProfileEditor bioClassName="min-h-32" />
+            </form>
+        </FormProvider>
+    );
 }
 
 function AccountSettings() {

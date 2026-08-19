@@ -159,7 +159,7 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 			<form
 				onSubmit={handleSubmit(onFinalSubmit)}
 				onKeyDown={handleKeyDown}
-				className="flex flex-col h-full min-h-[450px]"
+				className="flex flex-col h-full min-h-112.5"
 			>
 				<div className="flex flex-1 flex-col">
 					<div className="flex flex-1 flex-col">
@@ -187,7 +187,7 @@ function RegisterForm({ onModeChange, onSuccess }: RegisterFormProps) {
 								</StepperNav>
 							</Stepper>
 
-							<div className="min-h-[300px]">
+							<div className="min-h-75">
 								{step === 0 && (
 									<RegisterStepAccount
 										control={control}

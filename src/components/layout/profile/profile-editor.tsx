@@ -1,5 +1,6 @@
 // components/profile/profile-editor.tsx
 
+import { Typography } from "@heroui/react";
 import type { RefObject } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -29,9 +30,11 @@ import {
     InputGroup,
     InputGroupAddon,
     InputGroupInput,
+    InputGroupTextArea,
 } from "@/components/ui/input-group";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Elevated } from "@/lib/elevated";
+import UserAvatar from "./avatar";
 
 export interface ProfileEditorValues {
     avatar_url?: string;
@@ -43,10 +46,12 @@ export interface ProfileEditorValues {
 
 interface ProfileEditorProps {
     displayNameRef?: RefObject<HTMLInputElement | null>;
+    bioClassName?: string;
 }
 
 export function ProfileEditor({
     displayNameRef,
+    bioClassName,
 }: ProfileEditorProps) {
     const { t } = useTranslation();
 
@@ -92,7 +97,7 @@ export function ProfileEditor({
             {/* Visual profile preview */}
             <div className="relative w-full overflow-hidden">
                 {/* Cover */}
-                <div className="relative h-40 w-full overflow-hidden rounded-3xl bg-muted/50 sm:h-44 lg:h-48">
+                <div className="relative bg-surface-3 shadow-none! h-40 w-full overflow-hidden rounded-3xl sm:h-44 lg:h-48">
                     {watchedCover ? (
                         <img
                             src={watchedCover}
@@ -118,9 +123,10 @@ export function ProfileEditor({
                             className={cn(
                                 buttonVariants({
                                     variant: "secondary",
-                                    size: "icon-sm",
+                                    size: "icon",
                                 }),
-                                "cursor-pointer rounded-full bg-background/90 backdrop-blur-sm",
+                                "bg-surface-2",
+                                "hover:bg-surface-2/90",
                             )}
                         >
                             <OutlineEdit />
@@ -143,12 +149,11 @@ export function ProfileEditor({
                             <Button
                                 type="button"
                                 variant="destructive"
-                                size="icon-sm"
+                                size="icon"
                                 aria-label={t(
                                     "settings.profile.remove_cover",
                                     "Remove cover image",
                                 )}
-                                className="rounded-full bg-destructive/90 backdrop-blur-sm hover:bg-destructive"
                                 onClick={() =>
                                     setValue("cover_url", "", {
                                         shouldDirty: true,
@@ -164,18 +169,7 @@ export function ProfileEditor({
                 {/* Avatar */}
                 <div className="absolute left-4 top-28 sm:top-32 lg:top-36">
                     <div className="relative">
-                        <Avatar className="size-24 ring-4 ring-background">
-                            <AvatarImage
-                                src={watchedAvatar}
-                                alt={watchedDisplayName}
-                            />
-
-                            <AvatarFallback className="text-xl">
-                                {watchedDisplayName
-                                    ?.slice(0, 2)
-                                    .toUpperCase() || "??"}
-                            </AvatarFallback>
-                        </Avatar>
+                        <UserAvatar className={"ring-surface-2"} size={"2xl"} hasOutline user={undefined} />
 
                         <label
                             htmlFor="profile-avatar-upload"
@@ -185,13 +179,14 @@ export function ProfileEditor({
                             )}
                             className={cn(
                                 buttonVariants({
-                                    size: "icon-sm",
+                                    size: "icon",
                                     variant: "secondary",
                                 }),
-                                "absolute -bottom-1 -right-1 cursor-pointer rounded-full border-3 border-background bg-secondary hover:bg-secondary/90",
+                                "absolute -bottom-1 -right-1 ring-3 ring-surface-3 bg-surface-3 hover:bg-surface-3/90",
                             )}
                         >
-                            <OutlineEdit className="size-3.5" />
+                            {/* TODO: add remove avatar button like in cover */}
+                            <OutlineEdit />
 
                             <input
                                 id="profile-avatar-upload"
@@ -211,22 +206,22 @@ export function ProfileEditor({
 
                 {/* Profile identity */}
                 <div className="px-4 pb-4 pt-16">
-                    <p className="text-sm font-semibold">
+                    <Typography.Paragraph size={"sm"} className="font-semibold">
                         {watchedDisplayName ||
                             t(
                                 "settings.profile.display_name",
                                 "Display name",
                             )}
-                    </p>
+                    </Typography.Paragraph>
 
-                    <p className="text-xs text-muted-foreground">
+                    <Typography.Paragraph size={"xs"} className="text-muted-foreground!">
                         @
                         {watchedUsername ||
                             t(
                                 "settings.profile.username",
                                 "username",
                             )}
-                    </p>
+                    </Typography.Paragraph>
                 </div>
             </div>
 
@@ -317,21 +312,18 @@ export function ProfileEditor({
                             </FormLabel>
 
                             <FormControl>
-                                <Textarea
-                                    placeholder={t(
+                                <InputGroup className="rounded-2xl">
+                                    <InputGroupTextArea className={bioClassName} placeholder={t(
                                         "auth.bio.placeholder",
                                         "Tell us about yourself...",
-                                    )}
-                                    className="min-h-25 resize-none rounded-2xl"
-                                    maxLength={160}
-                                    {...field}
-                                    value={field.value ?? ""}
-                                />
+                                    )} {...field} />
+                                </InputGroup>
                             </FormControl>
 
-                            <div className="flex justify-end text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <Typography.Paragraph size={"xs"} className="flex justify-end uppercase tracking-wider text-muted-foreground!">
                                 {field.value?.length ?? 0} / 160
-                            </div>
+                                {/* TODO: get max length from backend */}
+                            </Typography.Paragraph>
 
                             <FormMessage />
                         </FormItem>
