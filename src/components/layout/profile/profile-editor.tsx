@@ -32,8 +32,8 @@ import {
     InputGroupInput,
     InputGroupTextArea,
 } from "@/components/ui/input-group";
-import { cn } from "@/lib/utils";
 import { Elevated } from "@/lib/elevated";
+import { cn } from "@/lib/utils";
 import UserAvatar from "./avatar";
 
 export interface ProfileEditorValues {
@@ -167,7 +167,7 @@ export function ProfileEditor({
                 </div>
 
                 {/* Avatar */}
-                <div className="absolute left-4 top-28 sm:top-32 lg:top-36">
+                <div className="absolute left-4 bottom-16">
                     <div className="relative">
                         <UserAvatar className={"ring-surface-2"} size={"2xl"} hasOutline user={undefined} />
 

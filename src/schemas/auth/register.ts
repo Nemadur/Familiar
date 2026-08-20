@@ -1,22 +1,36 @@
 import z from "zod";
+
 import { accountTypes } from "@/types/auth/schema/accounts";
 import { email } from ".";
 
 const password = z
 	.string()
-	.min(8, "Password must be at least 8 characters.")
-	.regex(/[a-z]/, "Password must contain at least one lowercase letter.")
-	.regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
-	.regex(/[0-9]/, "Password must contain at least one number.")
-	.regex(
-		/[!@#$%^&*(),.?":{}|<>]/,
-		"Password must contain at least one special character.",
-	);
+	.min(8, "Password must be at least 8 characters.");
+
+// .regex(
+//     /[a-z]/,
+//     "Password must contain at least one lowercase letter.",
+// )
+// .regex(
+//     /[A-Z]/,
+//     "Password must contain at least one uppercase letter.",
+// )
+// .regex(
+//     /[0-9]/,
+//     "Password must contain at least one number.",
+// )
+// .regex(
+//     /[!@#$%^&*(),.?":{}|<>]/,
+//     "Password must contain at least one special character.",
+// );
 
 const displayName = z
 	.string()
 	.min(2, "Display name must be at least 2 characters.")
-	.max(50, "Display name must be less than 50 characters.");
+	.max(
+		50,
+		"Display name must be less than 50 characters.",
+	);
 
 const username = z
 	.string()
@@ -29,7 +43,10 @@ const username = z
 
 const inviteKey = z
 	.string()
-	.regex(/^FAM-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{3}$/, "Invalid invite key.")
+	.regex(
+		/^FAM-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{3}$/,
+		"Invalid invite key.",
+	)
 	.or(z.literal(""));
 
 const bio = z
@@ -37,59 +54,105 @@ const bio = z
 	.max(160, "Bio must be less than 160 characters.")
 	.optional();
 
-const socialLink = z.object({
-	platform: z.string(),
-	url: z.union([z.literal(""), z.string().trim().url("Invalid URL")]),
-});
+const SOCIAL_PLATFORM_IDS = [
+	"twitter",
+	"instagram",
+	"discord",
+	"tiktok",
+	"youtube",
+	"twitch",
+	"facebook",
+	"linkedin",
+	"github",
+	"behance",
+	"dribbble",
+	"pinterest",
+	"website",
+] as const;
 
-const socials = z.array(socialLink).optional();
+const socialUsername = z
+	.string()
+	.trim()
+	.min(1, "Username is required.")
+	.max(
+		100,
+		"Social media username must be less than 100 characters.",
+	);
+
+const socials = z
+	.record(z.string(), socialUsername)
+	.refine(
+		(value) => Object.keys(value).length <= 5,
+		{
+			message:
+				"You can add up to 5 social media accounts.",
+		},
+	)
+	.refine(
+		(value) =>
+			Object.keys(value).every((platform) =>
+				SOCIAL_PLATFORM_IDS.includes(
+					platform as (typeof SOCIAL_PLATFORM_IDS)[number],
+				),
+			),
+		{
+			message: "Unsupported social media platform.",
+		},
+	)
+	.default({});
 
 const registerBase = z.object({
 	account_type: accountTypes,
-	email: email,
-	password: password,
+	email,
+	password,
 	display_name: displayName,
-	username: username,
+	username,
 	invite_key: inviteKey,
 	avatar_url: z.string().optional(),
 	cover_url: z.string().optional(),
-	bio: bio,
-	socials: socials,
+	bio,
+	socials,
 });
 
-const register = registerBase.superRefine((data, ctx) => {
-	if (data.account_type === "artist" && !data.invite_key) {
-		ctx.addIssue({
-			code: z.ZodIssueCode.custom,
-			message: "Invite key is required for artists.",
-			path: ["invite_key"],
-		});
-	}
-});
+const register = registerBase.superRefine(
+	(data, ctx) => {
+		if (
+			data.account_type === "artist" &&
+			!data.invite_key
+		) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message:
+					"Invite key is required for artists.",
+				path: ["invite_key"],
+			});
+		}
+	},
+);
 
 const registerStep0 = z.object({
 	account_type: accountTypes,
-	email: email,
+	email,
 });
 
 const registerStep1 = z.object({
-	password: password,
+	password,
 	invite_key: inviteKey,
 });
 
 const registerStep2 = z.object({
-	username: username,
+	username,
 	display_name: displayName,
 	avatar_url: z.string().optional(),
 	cover_url: z.string().optional(),
 });
 
 const registerStep3 = z.object({
-	bio: bio,
+	bio,
 });
 
 const registerStep4 = z.object({
-	socials: socials,
+	socials,
 });
 
 export {
@@ -99,4 +162,10 @@ export {
 	registerStep2,
 	registerStep3,
 	registerStep4,
+	SOCIAL_PLATFORM_IDS,
 };
+
+export type RegisterData = z.infer<typeof register>;
+export type SocialPlatform =
+	(typeof SOCIAL_PLATFORM_IDS)[number];
+export type Socials = z.infer<typeof socials>;

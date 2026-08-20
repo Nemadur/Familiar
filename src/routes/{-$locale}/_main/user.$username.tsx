@@ -132,6 +132,9 @@ export function DefaultPortfolioTabContent({ username }: { username: string }) {
 	);
 }
 
+// TODO: middleware redirect user to portfolio tab if no tab is provided
+// FIXME: when user is not logged in and open portfolio detailed page, there's no creator info
+
 function RouteComponent() {
 	const { username } = Route.useLoaderData();
 	const navigate = useNavigate();
