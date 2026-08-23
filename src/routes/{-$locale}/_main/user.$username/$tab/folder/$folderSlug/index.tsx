@@ -28,7 +28,7 @@ function RouteComponent() {
 	);
 }
 
-function FolderContent({
+export function FolderContent({
 	user,
 	tab,
 	folderSlug,
@@ -37,11 +37,11 @@ function FolderContent({
 	tab: string;
 	folderSlug: string;
 }) {
-	const { data: content, isPending, isCurrentUser } = useProfileContent(
-		user.username,
-		user.userId,
-		tab,
-	);
+	const {
+		data: content,
+		isPending,
+		isCurrentUser,
+	} = useProfileContent(user.username, user.userId, tab);
 
 	if (isPending) {
 		return <TabContentSkeleton tab={tab} />;
@@ -59,9 +59,7 @@ function FolderContent({
 	const folders = content?.folders ?? [];
 
 	// The link currently passes folder.id as folderSlug.
-	const currentFolder = folders.find(
-		(folder) => folder.id === folderSlug,
-	);
+	const currentFolder = folders.find((folder) => folder.id === folderSlug);
 
 	if (!currentFolder) {
 		return (

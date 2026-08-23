@@ -92,12 +92,9 @@ export function publishCommission(commissionId: string) {
 }
 
 export function deleteCommission(commissionId: string) {
-	return apiFetch<void>(
-		`commissions/${encodeURIComponent(commissionId)}`,
-		{
-			method: "DELETE",
-		},
-	);
+	return apiFetch<void>(`commissions/${encodeURIComponent(commissionId)}`, {
+		method: "DELETE",
+	});
 }
 
 export function uploadCommissionMedia({

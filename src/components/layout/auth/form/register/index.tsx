@@ -58,14 +58,7 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 		},
 	});
 
-	const {
-		isPending,
-		handleSubmit,
-		control,
-		setValue,
-		watch,
-		trigger,
-	} = form;
+	const { isPending, handleSubmit, control, setValue, watch, trigger } = form;
 
 	const watchedAccountType = watch("account_type");
 	const watchedEmail = watch("email");
@@ -103,29 +96,14 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 				case 0:
 					return trigger(
 						showInviteKey
-							? [
-								"account_type",
-								"email",
-								"password",
-								"invite_key",
-							]
-							: [
-								"account_type",
-								"email",
-								"password",
-							],
+							? ["account_type", "email", "password", "invite_key"]
+							: ["account_type", "email", "password"],
 						{ shouldFocus: true },
 					);
 
 				case 1:
 					return trigger(
-						[
-							"display_name",
-							"username",
-							"avatar_url",
-							"cover_url",
-							"bio",
-						],
+						["display_name", "username", "avatar_url", "cover_url", "bio"],
 						{ shouldFocus: true },
 					);
 
@@ -164,10 +142,7 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 					return currentStep;
 				}
 
-				return Math.min(
-					currentStep + 1,
-					LAST_STEP,
-				) as Step;
+				return Math.min(currentStep + 1, LAST_STEP) as Step;
 			});
 		} finally {
 			setIsChangingStep(false);
@@ -206,25 +181,16 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 		}
 
 		void handleSubmit(onFinalSubmit)();
-	}, [
-		handleSubmit,
-		isChangingStep,
-		isPending,
-		onFinalSubmit,
-		step,
-	]);
+	}, [handleSubmit, isChangingStep, isPending, onFinalSubmit, step]);
 
-	const blockNativeSubmit = useCallback(
-		(event: FormEvent<HTMLFormElement>) => {
-			/*
-			 * Native form submission is always disabled.
-			 * Registration is started only by submitRegistration().
-			 */
-			event.preventDefault();
-			event.stopPropagation();
-		},
-		[],
-	);
+	const blockNativeSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+		/*
+		 * Native form submission is always disabled.
+		 * Registration is started only by submitRegistration().
+		 */
+		event.preventDefault();
+		event.stopPropagation();
+	}, []);
 
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent<HTMLFormElement>) => {
@@ -253,13 +219,7 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 
 			void goNext();
 		},
-		[
-			goNext,
-			isChangingStep,
-			isPending,
-			step,
-			submitRegistration,
-		],
+		[goNext, isChangingStep, isPending, step, submitRegistration],
 	);
 
 	const steps = [
@@ -285,38 +245,28 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 				<div className="flex flex-1 flex-col">
 					<div className="flex flex-1 flex-col">
 						<div className="space-y-6">
-							<Stepper
-								value={step}
-								className="w-full"
-							>
+							<Stepper value={step} className="w-full">
 								<StepperNav className="pointer-events-none grid w-full grid-cols-3 gap-3">
-									{steps.map(
-										(item, stepIndex) => (
-											<StepperItem
-												key={item.title}
-												step={stepIndex}
-												completed={
-													step >
-													stepIndex
-												}
-												className="min-w-0"
+									{steps.map((item, stepIndex) => (
+										<StepperItem
+											key={item.title}
+											step={stepIndex}
+											completed={step > stepIndex}
+											className="min-w-0"
+										>
+											<StepperTrigger
+												type="button"
+												tabIndex={-1}
+												className="pointer-events-none flex w-full flex-col items-center justify-start gap-2 text-center"
 											>
-												<StepperTrigger
-													type="button"
-													tabIndex={-1}
-													className="pointer-events-none flex w-full flex-col items-center justify-start gap-2 text-center"
-												>
-													<StepperIndicator className="h-1 w-full rounded-full bg-border data-[state=active]:bg-primary data-[state=completed]:bg-primary" />
+												<StepperIndicator className="h-1 w-full rounded-full bg-border data-[state=active]:bg-primary data-[state=completed]:bg-primary" />
 
-													<StepperTitle className="block w-full text-center text-xs leading-tight text-muted-foreground data-[state=active]:text-primary data-[state=completed]:text-primary md:text-sm">
-														{
-															item.title
-														}
-													</StepperTitle>
-												</StepperTrigger>
-											</StepperItem>
-										),
-									)}
+												<StepperTitle className="block w-full text-center text-xs leading-tight text-muted-foreground data-[state=active]:text-primary data-[state=completed]:text-primary md:text-sm">
+													{item.title}
+												</StepperTitle>
+											</StepperTrigger>
+										</StepperItem>
+									))}
 								</StepperNav>
 							</Stepper>
 
@@ -324,29 +274,17 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 								{step === 0 && (
 									<RegisterStepAccount
 										control={control}
-										onAccountTypeChange={
-											handleAccountTypeChange
-										}
+										onAccountTypeChange={handleAccountTypeChange}
 										emailRef={emailRef}
-										showInviteKey={
-											showInviteKey
-										}
+										showInviteKey={showInviteKey}
 									/>
 								)}
 
 								{step === 1 && (
-									<RegisterStepProfile
-										displayNameRef={
-											displayNameRef
-										}
-									/>
+									<RegisterStepProfile displayNameRef={displayNameRef} />
 								)}
 
-								{step === 2 && (
-									<RegisterStepSocials
-										control={control}
-									/>
-								)}
+								{step === 2 && <RegisterStepSocials control={control} />}
 							</div>
 						</div>
 					</div>
@@ -358,10 +296,7 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 									type="button"
 									variant="ghost"
 									onClick={goBack}
-									disabled={
-										isPending ||
-										isChangingStep
-									}
+									disabled={isPending || isChangingStep}
 									className="w-1/3"
 									size="2xl"
 								>
@@ -373,41 +308,25 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 								<Button
 									key="register-submit"
 									type="button"
-									onClick={
-										submitRegistration
-									}
-									disabled={
-										isPending ||
-										isChangingStep
-									}
+									onClick={submitRegistration}
+									disabled={isPending || isChangingStep}
 									className="w-full flex-1"
 									size="2xl"
 								>
-									{t(
-										"auth.register.submit",
-										"Submit",
-									)}
+									{t("auth.register.submit", "Submit")}
 								</Button>
 							) : (
 								<Button
 									key="register-continue"
 									type="button"
-									onClick={() =>
-										void goNext()
-									}
+									onClick={() => void goNext()}
 									disabled={
-										isPending ||
-										isChangingStep ||
-										(step === 0 &&
-											!isStep0Valid)
+										isPending || isChangingStep || (step === 0 && !isStep0Valid)
 									}
 									className="w-full flex-1"
 									size="2xl"
 								>
-									{t(
-										"auth.continue",
-										"Continue",
-									)}
+									{t("auth.continue", "Continue")}
 								</Button>
 							)}
 						</div>

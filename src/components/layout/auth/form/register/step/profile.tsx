@@ -9,9 +9,6 @@ export function RegisterStepProfile({
 	displayNameRef,
 }: RegisterStepProfileProps) {
 	return (
-		<ProfileEditor
-			displayNameRef={displayNameRef}
-			bioClassName="min-h-22"
-		/>
+		<ProfileEditor displayNameRef={displayNameRef} bioClassName="min-h-22" />
 	);
 }

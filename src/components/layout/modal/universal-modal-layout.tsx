@@ -1,10 +1,6 @@
 import { DialogPortal } from "@radix-ui/react-dialog";
 import type { MouseEvent, ReactNode } from "react";
-import {
-	useCallback,
-	useRef,
-	useState,
-} from "react";
+import { useCallback, useRef, useState } from "react";
 import {
 	OutlineBookmark,
 	OutlineClose,
@@ -80,14 +76,14 @@ export function UniversalModalLayout({
 }: UniversalModalLayoutProps) {
 	const isTablet = useIsTablet();
 
-	const { active: bookmarked, handleAction } =
-		useLocalAction({
-			initialActive: isBookmarked,
-			initialCount: 0,
-		});
+	const { active: bookmarked, handleAction } = useLocalAction({
+		initialActive: isBookmarked,
+		initialCount: 0,
+	});
 
-	const [detectedMediaAspectRatio, setDetectedMediaAspectRatio] =
-		useState(mediaAspectRatio ?? 1);
+	const [detectedMediaAspectRatio, setDetectedMediaAspectRatio] = useState(
+		mediaAspectRatio ?? 1,
+	);
 
 	/**
 	 * Prevent later carousel images from changing the modal size.
@@ -114,20 +110,13 @@ export function UniversalModalLayout({
 
 			hasMeasuredFirstMedia.current = true;
 
-			setDetectedMediaAspectRatio(
-				width / height,
-			);
+			setDetectedMediaAspectRatio(width / height);
 		},
 		[],
 	);
 
-	const safeMediaAspectRatio = Number.isFinite(
-		detectedMediaAspectRatio,
-	)
-		? Math.min(
-				Math.max(detectedMediaAspectRatio, 0.25),
-				4,
-			)
+	const safeMediaAspectRatio = Number.isFinite(detectedMediaAspectRatio)
+		? Math.min(Math.max(detectedMediaAspectRatio, 0.25), 4)
 		: 1;
 
 	const handleBookmarkClick = useCallback(
@@ -152,9 +141,7 @@ export function UniversalModalLayout({
 				</Button>
 			</DropdownMenuTrigger>
 
-			<DropdownMenuContent align="end">
-				{moreMenuContent}
-			</DropdownMenuContent>
+			<DropdownMenuContent align="end">{moreMenuContent}</DropdownMenuContent>
 		</DropdownMenu>
 	) : (
 		<Button
@@ -169,14 +156,9 @@ export function UniversalModalLayout({
 
 	if (isTablet) {
 		return (
-			<Drawer
-				open={open}
-				onOpenChange={onOpenChange}
-			>
+			<Drawer open={open} onOpenChange={onOpenChange}>
 				<DrawerContent className="flex max-h-[96dvh] flex-col overflow-hidden p-0">
-					<DrawerTitle className="sr-only">
-						{title}
-					</DrawerTitle>
+					<DrawerTitle className="sr-only">{title}</DrawerTitle>
 
 					<DrawerDescription className="sr-only">
 						View details
@@ -189,16 +171,12 @@ export function UniversalModalLayout({
 								size="icon"
 								aria-label="Close"
 								className="rounded-full"
-								onClick={() =>
-									onOpenChange(false)
-								}
+								onClick={() => onOpenChange(false)}
 							>
 								<OutlineClose />
 							</Button>
 
-							<div className="min-w-0 flex-1 px-2">
-								{detailsHeaderContent}
-							</div>
+							<div className="min-w-0 flex-1 px-2">{detailsHeaderContent}</div>
 
 							<div className="flex shrink-0 items-center gap-1">
 								{showBookmark && (
@@ -206,24 +184,12 @@ export function UniversalModalLayout({
 										variant="ghost"
 										size="icon"
 										aria-label={
-											bookmarked
-												? "Remove bookmark"
-												: "Save bookmark"
+											bookmarked ? "Remove bookmark" : "Save bookmark"
 										}
-										className={cn(
-											"rounded-full",
-											bookmarked &&
-												"text-primary",
-										)}
-										onClick={
-											handleBookmarkClick
-										}
+										className={cn("rounded-full", bookmarked && "text-primary")}
+										onClick={handleBookmarkClick}
 									>
-										{bookmarked ? (
-											<SolidBookmark />
-										) : (
-											<OutlineBookmark />
-										)}
+										{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 									</Button>
 								)}
 
@@ -261,10 +227,7 @@ export function UniversalModalLayout({
 	}
 
 	return (
-		<Dialog
-			open={open}
-			onOpenChange={onOpenChange}
-		>
+		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogPortal>
 				<Button
 					variant="ghost"
@@ -282,17 +245,9 @@ export function UniversalModalLayout({
 				onInteractOutside={(event) => {
 					if (
 						event.target instanceof Element &&
-						(
-							event.target.closest(
-								"[data-sonner-toast]",
-							) ||
-							event.target.closest(
-								"[data-radix-menu-content]",
-							) ||
-							event.target.closest(
-								'[role="alertdialog"]',
-							)
-						)
+						(event.target.closest("[data-sonner-toast]") ||
+							event.target.closest("[data-radix-menu-content]") ||
+							event.target.closest('[role="alertdialog"]'))
 					) {
 						event.preventDefault();
 					}
@@ -305,46 +260,28 @@ export function UniversalModalLayout({
 					"rounded-sm",
 				)}
 			>
-				<DialogTitle className="sr-only">
-					{title}
-				</DialogTitle>
+				<DialogTitle className="sr-only">{title}</DialogTitle>
 
-				<DialogDescription className="sr-only">
-					View details
-				</DialogDescription>
+				<DialogDescription className="sr-only">View details</DialogDescription>
 
 				{/* Dynamic media section */}
 				<section
 					style={{
-						aspectRatio:
-							safeMediaAspectRatio,
-						maxWidth:
-							"calc(100vw - clamp(400px, 31vw, 500px) - 3rem)",
+						aspectRatio: safeMediaAspectRatio,
+						maxWidth: "calc(100vw - clamp(400px, 31vw, 500px) - 3rem)",
 					}}
 					onLoadCapture={(event) => {
 						const target = event.target;
 
-						if (
-							target instanceof
-							HTMLImageElement
-						) {
-							updateMediaAspectRatio(
-								target.naturalWidth,
-								target.naturalHeight,
-							);
+						if (target instanceof HTMLImageElement) {
+							updateMediaAspectRatio(target.naturalWidth, target.naturalHeight);
 						}
 					}}
 					onLoadedMetadataCapture={(event) => {
 						const target = event.target;
 
-						if (
-							target instanceof
-							HTMLVideoElement
-						) {
-							updateMediaAspectRatio(
-								target.videoWidth,
-								target.videoHeight,
-							);
+						if (target instanceof HTMLVideoElement) {
+							updateMediaAspectRatio(target.videoWidth, target.videoHeight);
 						}
 					}}
 					className={cn(
@@ -366,34 +303,18 @@ export function UniversalModalLayout({
 					)}
 				>
 					<header className="flex min-h-15 shrink-0 items-center gap-3 border-b px-4 py-2">
-						<div className="min-w-0 flex-1">
-							{detailsHeaderContent}
-						</div>
+						<div className="min-w-0 flex-1">{detailsHeaderContent}</div>
 
 						<div className="flex shrink-0 items-center gap-1">
 							{showBookmark && (
 								<Button
 									variant="ghost"
 									size="icon"
-									aria-label={
-										bookmarked
-											? "Remove bookmark"
-											: "Save bookmark"
-									}
-									className={cn(
-										"rounded-full",
-										bookmarked &&
-											"text-primary",
-									)}
-									onClick={
-										handleBookmarkClick
-									}
+									aria-label={bookmarked ? "Remove bookmark" : "Save bookmark"}
+									className={cn("rounded-full", bookmarked && "text-primary")}
+									onClick={handleBookmarkClick}
 								>
-									{bookmarked ? (
-										<SolidBookmark />
-									) : (
-										<OutlineBookmark />
-									)}
+									{bookmarked ? <SolidBookmark /> : <OutlineBookmark />}
 								</Button>
 							)}
 

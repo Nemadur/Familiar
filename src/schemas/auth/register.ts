@@ -3,9 +3,7 @@ import z from "zod";
 import { accountTypes } from "@/types/auth/schema/accounts";
 import { email } from ".";
 
-const password = z
-	.string()
-	.min(8, "Password must be at least 8 characters.");
+const password = z.string().min(8, "Password must be at least 8 characters.");
 
 // .regex(
 //     /[a-z]/,
@@ -27,10 +25,7 @@ const password = z
 const displayName = z
 	.string()
 	.min(2, "Display name must be at least 2 characters.")
-	.max(
-		50,
-		"Display name must be less than 50 characters.",
-	);
+	.max(50, "Display name must be less than 50 characters.");
 
 const username = z
 	.string()
@@ -43,10 +38,7 @@ const username = z
 
 const inviteKey = z
 	.string()
-	.regex(
-		/^FAM-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{3}$/,
-		"Invalid invite key.",
-	)
+	.regex(/^FAM-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{3}$/, "Invalid invite key.")
 	.or(z.literal(""));
 
 const bio = z
@@ -74,20 +66,13 @@ const socialUsername = z
 	.string()
 	.trim()
 	.min(1, "Username is required.")
-	.max(
-		100,
-		"Social media username must be less than 100 characters.",
-	);
+	.max(100, "Social media username must be less than 100 characters.");
 
 const socials = z
 	.record(z.string(), socialUsername)
-	.refine(
-		(value) => Object.keys(value).length <= 5,
-		{
-			message:
-				"You can add up to 5 social media accounts.",
-		},
-	)
+	.refine((value) => Object.keys(value).length <= 5, {
+		message: "You can add up to 5 social media accounts.",
+	})
 	.refine(
 		(value) =>
 			Object.keys(value).every((platform) =>
@@ -114,21 +99,15 @@ const registerBase = z.object({
 	socials,
 });
 
-const register = registerBase.superRefine(
-	(data, ctx) => {
-		if (
-			data.account_type === "artist" &&
-			!data.invite_key
-		) {
-			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
-				message:
-					"Invite key is required for artists.",
-				path: ["invite_key"],
-			});
-		}
-	},
-);
+const register = registerBase.superRefine((data, ctx) => {
+	if (data.account_type === "artist" && !data.invite_key) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			message: "Invite key is required for artists.",
+			path: ["invite_key"],
+		});
+	}
+});
 
 const registerStep0 = z.object({
 	account_type: accountTypes,
@@ -166,6 +145,5 @@ export {
 };
 
 export type RegisterData = z.infer<typeof register>;
-export type SocialPlatform =
-	(typeof SOCIAL_PLATFORM_IDS)[number];
+export type SocialPlatform = (typeof SOCIAL_PLATFORM_IDS)[number];
 export type Socials = z.infer<typeof socials>;

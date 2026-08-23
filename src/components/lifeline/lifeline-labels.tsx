@@ -1,8 +1,4 @@
-import {
-	createContext,
-	type ReactNode,
-	useContext,
-} from "react";
+import { createContext, type ReactNode, useContext } from "react";
 
 export const LIFELINE_LABEL_COLUMN_WIDTH = 56;
 export const LIFELINE_LABEL_GAP = 16;

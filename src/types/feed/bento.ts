@@ -48,7 +48,4 @@ export interface PixelLayout {
 	containerHeight: number;
 }
 
-export type PackStrategy =
-	| "recency"
-	| "balanced"
-	| "fit";
+export type PackStrategy = "recency" | "balanced" | "fit";

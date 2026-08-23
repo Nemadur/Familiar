@@ -107,24 +107,17 @@ const SOCIAL_PLATFORMS = {
 type SocialPlatform = keyof typeof SOCIAL_PLATFORMS;
 type SocialsValue = Partial<Record<SocialPlatform, string>>;
 
-const SOCIAL_PLATFORM_ENTRIES = Object.entries(
-	SOCIAL_PLATFORMS,
-) as Array<
-	[
-		SocialPlatform,
-		(typeof SOCIAL_PLATFORMS)[SocialPlatform],
-	]
+const SOCIAL_PLATFORM_ENTRIES = Object.entries(SOCIAL_PLATFORMS) as Array<
+	[SocialPlatform, (typeof SOCIAL_PLATFORMS)[SocialPlatform]]
 >;
 
-export function RegisterStepSocials({
-	control,
-}: RegisterStepSocialsProps) {
+export function RegisterStepSocials({ control }: RegisterStepSocialsProps) {
 	const { t } = useTranslation();
 	const { setValue } = useFormContext<RegisterData>();
 
-	const [selectedPlatform, setSelectedPlatform] = useState<
-		SocialPlatform | ""
-	>("");
+	const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform | "">(
+		"",
+	);
 
 	const watchedSocials = useWatch({
 		control,
@@ -140,25 +133,18 @@ export function RegisterStepSocials({
 		() =>
 			SOCIAL_PLATFORM_ENTRIES.filter(
 				([platform]) =>
-					!Object.prototype.hasOwnProperty.call(
-						socials,
-						platform,
-					),
+					!Object.prototype.hasOwnProperty.call(socials, platform),
 			),
 		[socials],
 	);
 
-	const hasReachedLimit =
-		selectedSocials.length >= MAX_SOCIALS;
+	const hasReachedLimit = selectedSocials.length >= MAX_SOCIALS;
 
 	const addSocial = () => {
 		if (
 			!selectedPlatform ||
 			hasReachedLimit ||
-			Object.hasOwn(
-				socials,
-				selectedPlatform,
-			)
+			Object.hasOwn(socials, selectedPlatform)
 		) {
 			return;
 		}
@@ -194,25 +180,15 @@ export function RegisterStepSocials({
 	return (
 		<div className="space-y-5">
 			<div className="space-y-2">
-				<FormLabel>
-					{t(
-						"auth.socials.add_label",
-						"Add social media",
-					)}
-				</FormLabel>
+				<FormLabel>{t("auth.socials.add_label", "Add social media")}</FormLabel>
 
 				<div className="flex items-center gap-2">
 					<Select
 						value={selectedPlatform}
 						onValueChange={(value) =>
-							setSelectedPlatform(
-								value as SocialPlatform,
-							)
+							setSelectedPlatform(value as SocialPlatform)
 						}
-						disabled={
-							hasReachedLimit ||
-							availablePlatforms.length === 0
-						}
+						disabled={hasReachedLimit || availablePlatforms.length === 0}
 					>
 						<SelectTrigger className="min-w-0 flex-1">
 							<SelectValue
@@ -224,16 +200,11 @@ export function RegisterStepSocials({
 						</SelectTrigger>
 
 						<SelectContent>
-							{availablePlatforms.map(
-								([platform, config]) => (
-									<SelectItem
-										key={platform}
-										value={platform}
-									>
-										{config.label}
-									</SelectItem>
-								),
-							)}
+							{availablePlatforms.map(([platform, config]) => (
+								<SelectItem key={platform} value={platform}>
+									{config.label}
+								</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
 
@@ -242,10 +213,7 @@ export function RegisterStepSocials({
 						size={"xl"}
 						variant="secondary"
 						onClick={addSocial}
-						disabled={
-							!selectedPlatform ||
-							hasReachedLimit
-						}
+						disabled={!selectedPlatform || hasReachedLimit}
 					>
 						{t("auth.socials.add", "Add")}
 					</Button>
@@ -267,20 +235,15 @@ export function RegisterStepSocials({
 
 			{selectedSocials.length === 0 && (
 				<div className="rounded-2xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-					{t(
-						"auth.socials.empty",
-						"No social media added yet.",
-					)}
+					{t("auth.socials.empty", "No social media added yet.")}
 				</div>
 			)}
 
 			<div className="space-y-4">
 				{selectedSocials.map(([platform]) => {
-					const config =
-						SOCIAL_PLATFORMS[platform];
+					const config = SOCIAL_PLATFORMS[platform];
 
-					const fieldName =
-						`socials.${platform}` as FieldPath<RegisterData>;
+					const fieldName = `socials.${platform}` as FieldPath<RegisterData>;
 
 					return (
 						<FormField
@@ -290,9 +253,7 @@ export function RegisterStepSocials({
 							render={({ field }) => (
 								<FormItem>
 									<div className="flex items-center justify-between gap-3">
-										<FormLabel>
-											{config.label}
-										</FormLabel>
+										<FormLabel>{config.label}</FormLabel>
 
 										<Button
 											type="button"
@@ -302,11 +263,7 @@ export function RegisterStepSocials({
 												"auth.socials.remove",
 												"Remove social media",
 											)}
-											onClick={() =>
-												removeSocial(
-													platform,
-												)
-											}
+											onClick={() => removeSocial(platform)}
 										>
 											<OutlineTrash />
 										</Button>
@@ -314,51 +271,27 @@ export function RegisterStepSocials({
 
 									<FormControl>
 										<InputGroup>
-											{"prefix" in config &&
-												config.prefix && (
-													<InputGroupAddon>
-														<InputGroupText>
-															{
-																config.prefix
-															}
-														</InputGroupText>
-													</InputGroupAddon>
-												)}
+											{"prefix" in config && config.prefix && (
+												<InputGroupAddon>
+													<InputGroupText>{config.prefix}</InputGroupText>
+												</InputGroupAddon>
+											)}
 
 											<InputGroupInput
-												placeholder={
-													config.placeholder
-												}
+												placeholder={config.placeholder}
 												autoComplete="off"
 												{...field}
 												value={
-													typeof field.value ===
-														"string"
-														? field.value
-														: ""
+													typeof field.value === "string" ? field.value : ""
 												}
-												onChange={(
-													event,
-												) => {
-													let value =
-														event
-															.target
-															.value;
+												onChange={(event) => {
+													let value = event.target.value;
 
-													if (
-														platform !==
-														"website"
-													) {
-														value =
-															value.replace(
-																/^@/,
-																"",
-															);
+													if (platform !== "website") {
+														value = value.replace(/^@/, "");
 													}
 
-													field.onChange(
-														value,
-													);
+													field.onChange(value);
 												}}
 											/>
 										</InputGroup>

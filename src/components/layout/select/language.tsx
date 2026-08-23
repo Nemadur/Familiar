@@ -20,7 +20,12 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Elevated } from "@/lib/elevated";
-import { languages, localizePath, stripLocaleFromPathname, syncLanguage } from "@/lib/i18n";
+import {
+	languages,
+	localizePath,
+	stripLocaleFromPathname,
+	syncLanguage,
+} from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function LanguageSelect() {

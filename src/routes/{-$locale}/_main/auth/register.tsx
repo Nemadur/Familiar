@@ -27,9 +27,7 @@ function RegisterPage() {
 
 			<section aria-labelledby="auth-page-title" className="mt-4 h-full">
 				<RegisterForm
-					onSuccess={() =>
-						navigate({ to: "/{-$locale}", params: { locale } })
-					}
+					onSuccess={() => navigate({ to: "/{-$locale}", params: { locale } })}
 					onModeChange={() =>
 						navigate({ to: "/{-$locale}/auth/login", params: { locale } })
 					}

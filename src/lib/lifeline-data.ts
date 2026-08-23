@@ -78,18 +78,18 @@ export function defineLifeline(input: DefineLifelineInput): LifelineRecord {
 			input.birthday &&
 			(today.getMonth() + 1 < input.birthday.month ||
 				(today.getMonth() + 1 === input.birthday.month &&
-					today.getDate() < input.birthday.day))
-		const age = birthdayPending ? year - input.birthYear - 1 : undefined
+					today.getDate() < input.birthday.day));
+		const age = birthdayPending ? year - input.birthYear - 1 : undefined;
 
 		markers.push(
 			milestone
 				? { year, ...(age !== undefined && { age }), ...milestone }
 				: {
-					id: `year-${year}`,
-					year,
-					events: [],
-					...(age !== undefined && { age }),
-				},
+						id: `year-${year}`,
+						year,
+						events: [],
+						...(age !== undefined && { age }),
+					},
 		);
 	}
 

@@ -42,7 +42,7 @@ export default function Header() {
 	const { user, isPending } = useAuth();
 
 	return (
-		<header className="sticky top-0 z-50 px-8">
+		<header className="sticky top-0 z-50 px-4 lg:px-8">
 			<div className="flex h-16 items-center justify-between gap-4">
 				<div className="flex items-center gap-2">
 					<MobileNav />
@@ -74,49 +74,33 @@ export default function Header() {
 						</Button>
 
 						<ClientOnly>
-							<Skeleton
-								name="header-artist_dashboard"
-								loading={isPending}
-								className="hidden lg:flex"
-							>
-								{isPending
-									? null
-									: user?.roles?.includes(TRoles.Artist) && (
-										<Button size={"xl"} asChild>
-											<Link to={localizePath("/dashboard", i18n.language) as any}>
-												{t("header.artist-dashboard", "Dashboard")}
-											</Link>
-										</Button>
-									)}
-							</Skeleton>
+							{!isPending && user?.roles?.includes(TRoles.Artist) && (
+								<Button size={"xl"} asChild>
+									<Link to={localizePath("/dashboard", i18n.language)}>
+										{t("header.artist-dashboard", "Dashboard")}
+									</Link>
+								</Button>
+							)}
 						</ClientOnly>
 
 						{/* TODO: add language and theme to mobile sidebar */}
 						<ClientOnly>
-							<Skeleton
-								name="header-user_menu"
-								loading={isPending}
-								className="hidden lg:flex"
-							>
-								{isPending ? null : user ? (
-									<User user={user} showInfo={false} isDropdown />
-								) : (
-									<div className="hidden lg:flex items-center gap-2">
-										<Button asChild variant={"secondary"} size={"xl"}>
-											<Link to={localizePath("/auth/login", i18n.language) as any}>
-												{t("auth.login.cta")}
-											</Link>
-										</Button>
-										<Button asChild size={"xl"}>
-											<Link
-												to={localizePath("/auth/register", i18n.language) as any}
-											>
-												{t("auth.register.cta")}
-											</Link>
-										</Button>
-									</div>
-								)}
-							</Skeleton>
+							{!isPending && user ? (
+								<User user={user} showInfo={false} isDropdown />
+							) : (
+								<div className="hidden lg:flex items-center gap-2">
+									<Button asChild variant={"secondary"} size={"xl"}>
+										<Link to={localizePath("/auth/login", i18n.language)}>
+											{t("auth.login.cta")}
+										</Link>
+									</Button>
+									<Button asChild size={"xl"}>
+										<Link to={localizePath("/auth/register", i18n.language)}>
+											{t("auth.register.cta")}
+										</Link>
+									</Button>
+								</div>
+							)}
 						</ClientOnly>
 					</NavWrapper>
 				</div>
@@ -138,7 +122,7 @@ const MobileNav = () => {
 					</Button>
 				</SheetTrigger>
 			</NavWrapper>
-			<SheetContent side="left" className="w-[300px] sm:w-[400px]">
+			<SheetContent side="left" className="w-75 sm:w-100">
 				<SheetHeader className="text-left px-4">
 					<SheetTitle className="text-xl font-bold uppercase tracking-wider">
 						{t("header.title")}

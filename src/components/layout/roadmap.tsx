@@ -2,9 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Lifeline } from "@/components/lifeline";
-import {
-	LifelineAxisLabelsProvider,
-} from "@/components/lifeline/lifeline-labels";
+import { LifelineAxisLabelsProvider } from "@/components/lifeline/lifeline-labels";
 import {
 	LifelineFooter,
 	LifelineShell,
@@ -16,10 +14,7 @@ export function Roadmap() {
 	const { t, i18n } = useTranslation();
 
 	const roadmap = useMemo(
-		() =>
-			createRoadmapLifeline(
-				i18n.language,
-			),
+		() => createRoadmapLifeline(i18n.language),
 		[i18n.language],
 	);
 
@@ -33,21 +28,14 @@ export function Roadmap() {
 					// 	"roadmap.axis.status",
 					// 	"Status",
 					// ),
-					bottom: t(
-						"roadmap.axis.year",
-						"Year",
-					),
+					bottom: t("roadmap.axis.year", "Year"),
 				}}
 			>
 				<LifelineShell>
 					<LifelineStage>
 						<Lifeline
-							markers={
-								roadmap.markers
-							}
-							birthYear={
-								roadmap.birthYear
-							}
+							markers={roadmap.markers}
+							birthYear={roadmap.birthYear}
 							title={roadmap.name}
 							className="h-full"
 							mode="page"

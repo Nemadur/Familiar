@@ -23,7 +23,12 @@ export function FolderCard({
 	const coverSrc = fullSize?.path ?? thumbnail?.path ?? fallbackCoverSrc;
 
 	return (
-		<article className={cn("group flex min-w-0 flex-col gap-2 group h-full", className)}>
+		<article
+			className={cn(
+				"group flex min-w-0 flex-col gap-2 group h-full",
+				className,
+			)}
+		>
 			<div className="relative aspect-4/3 w-full transition-transform group-hover:-translate-y-0.5 duration-100">
 				<div
 					aria-hidden="true"
@@ -32,7 +37,6 @@ export function FolderCard({
 					<div className="absolute -top-2 left-0 h-5 w-[40%] rounded-t-xl bg-input" />
 					<div className="absolute -top-px left-px h-3 w-[calc(40%-2px)] bg-input" />
 				</div>
-
 
 				<div className="absolute inset-x-0 bottom-0 h-[86%] overflow-hidden rounded-2xl bg-muted">
 					{coverSrc ? (
@@ -54,7 +58,10 @@ export function FolderCard({
 					)}
 
 					{typeof itemCount === "number" && (
-						<Badge size={"sm"} className="shrink-0 tabular-nums absolute bottom-2 right-2 bg-primary/50 backdrop-blur-md">
+						<Badge
+							size={"sm"}
+							className="shrink-0 tabular-nums absolute bottom-2 right-2 bg-primary/50 backdrop-blur-md"
+						>
 							{/* {t("components.portfolio.folder.items", {
 								count: itemCount,
 							})} */}

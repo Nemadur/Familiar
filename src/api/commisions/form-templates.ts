@@ -23,7 +23,10 @@ export function createFormTemplate(data: {
 	});
 }
 
-export function assignFormTemplate(commissionId: string, templateId: string | null) {
+export function assignFormTemplate(
+	commissionId: string,
+	templateId: string | null,
+) {
 	return apiFetch<void>(`form-templates/commissions/${commissionId}/assign`, {
 		method: "POST",
 		body: JSON.stringify({ templateId }),

@@ -1,8 +1,4 @@
-import {
-	ArrowDownIcon,
-	ArrowUpIcon,
-	ChevronsUpDownIcon,
-} from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "src/lib/utils";
 

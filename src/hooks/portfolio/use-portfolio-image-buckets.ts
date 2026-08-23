@@ -1,17 +1,11 @@
-import {
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PortfolioPostResponse } from "@/api/portfolio/posts/post-types";
 import {
 	bucketFromDimensions,
 	type TileBucket as BentoTileBucket,
 } from "@/lib/bento";
 
-export interface TileBucket
-	extends BentoTileBucket {
+export interface TileBucket extends BentoTileBucket {
 	imageWidth: number;
 	imageHeight: number;
 }
@@ -30,32 +24,17 @@ const FALLBACK_BUCKET: TileBucket = {
 
 const MEASUREMENT_TIMEOUT = 10_000;
 
-const bucketCache = new Map<
-	string,
-	Promise<TileBucket>
->();
+const bucketCache = new Map<string, Promise<TileBucket>>();
 
-function getFirstImagePath(
-	post: PortfolioPostResponse,
-): string | null {
-	const image = [
-		...(post.images ?? []),
-	]
+function getFirstImagePath(post: PortfolioPostResponse): string | null {
+	const image = [...(post.images ?? [])]
 		.sort(
 			(a, b) =>
-				(a.position ??
-					Number.MAX_SAFE_INTEGER) -
-				(b.position ??
-					Number.MAX_SAFE_INTEGER),
+				(a.position ?? Number.MAX_SAFE_INTEGER) -
+				(b.position ?? Number.MAX_SAFE_INTEGER),
 		)
 		.find(
-			(item) =>
-				Boolean(
-					item.fullSize?.path,
-				) ||
-				Boolean(
-					item.thumbnail?.path,
-				),
+			(item) => Boolean(item.fullSize?.path) || Boolean(item.thumbnail?.path),
 		);
 
 	if (!image) {
@@ -66,188 +45,121 @@ function getFirstImagePath(
 	 * Prefer the original image. Thumbnails may be square-cropped and produce
 	 * an incorrect 1x1 bucket.
 	 */
-	return (
-		image.fullSize?.path ??
-		image.thumbnail?.path ??
-		null
-	);
+	return image.fullSize?.path ?? image.thumbnail?.path ?? null;
 }
 
-function measureImageBucket(
-	path: string,
-): Promise<TileBucket> {
+function measureImageBucket(path: string): Promise<TileBucket> {
 	const cached = bucketCache.get(path);
 
 	if (cached) {
 		return cached;
 	}
 
-	const measurement =
-		new Promise<TileBucket>(
-			(resolve) => {
-				const image =
-					new Image();
+	const measurement = new Promise<TileBucket>((resolve) => {
+		const image = new Image();
 
-				let finished = false;
+		let finished = false;
 
-				const finish = (
-					bucket: TileBucket,
-					keepCached: boolean,
-				) => {
-					if (finished) {
-						return;
-					}
+		const finish = (bucket: TileBucket, keepCached: boolean) => {
+			if (finished) {
+				return;
+			}
 
-					finished = true;
+			finished = true;
 
-					window.clearTimeout(
-						timeoutId,
-					);
+			window.clearTimeout(timeoutId);
 
-					image.onload = null;
-					image.onerror = null;
+			image.onload = null;
+			image.onerror = null;
 
-					if (!keepCached) {
-						bucketCache.delete(
-							path,
-						);
-					}
+			if (!keepCached) {
+				bucketCache.delete(path);
+			}
 
-					resolve(bucket);
-				};
+			resolve(bucket);
+		};
 
-				const timeoutId =
-					window.setTimeout(
-						() => {
-							finish(
-								FALLBACK_BUCKET,
-								false,
-							);
-						},
-						MEASUREMENT_TIMEOUT,
-					);
+		const timeoutId = window.setTimeout(() => {
+			finish(FALLBACK_BUCKET, false);
+		}, MEASUREMENT_TIMEOUT);
 
-				image.onload = () => {
-					const imageWidth =
-						image.naturalWidth;
+		image.onload = () => {
+			const imageWidth = image.naturalWidth;
 
-					const imageHeight =
-						image.naturalHeight;
+			const imageHeight = image.naturalHeight;
 
-					if (
-						imageWidth <= 0 ||
-						imageHeight <= 0
-					) {
-						finish(
-							FALLBACK_BUCKET,
-							false,
-						);
+			if (imageWidth <= 0 || imageHeight <= 0) {
+				finish(FALLBACK_BUCKET, false);
 
-						return;
-					}
+				return;
+			}
 
-					finish(
-						{
-							...bucketFromDimensions(
-								imageWidth,
-								imageHeight,
-							),
-							imageWidth,
-							imageHeight,
-						},
-						true,
-					);
-				};
+			finish(
+				{
+					...bucketFromDimensions(imageWidth, imageHeight),
+					imageWidth,
+					imageHeight,
+				},
+				true,
+			);
+		};
 
-				image.onerror = () => {
-					finish(
-						FALLBACK_BUCKET,
-						false,
-					);
-				};
+		image.onerror = () => {
+			finish(FALLBACK_BUCKET, false);
+		};
 
-				image.decoding = "async";
-				image.src = path;
-			},
-		);
+		image.decoding = "async";
+		image.src = path;
+	});
 
 	bucketCache.set(path, measurement);
 
 	return measurement;
 }
 
-export function usePortfolioImageBuckets(
-	posts: PortfolioPostResponse[],
-): {
-	buckets: ReadonlyMap<
-		string,
-		TileBucket
-	>;
+export function usePortfolioImageBuckets(posts: PortfolioPostResponse[]): {
+	buckets: ReadonlyMap<string, TileBucket>;
 	isMeasuring: boolean;
 } {
-	const imageSources =
-		useMemo<PostImageSource[]>(
-			() =>
-				posts.flatMap(
-					(post) => {
-						if (!post.id) {
-							return [];
-						}
+	const imageSources = useMemo<PostImageSource[]>(
+		() =>
+			posts.flatMap((post) => {
+				if (!post.id) {
+					return [];
+				}
 
-						return [
-							{
-								postId:
-									post.id,
-								path: getFirstImagePath(
-									post,
-								),
-							},
-						];
+				return [
+					{
+						postId: post.id,
+						path: getFirstImagePath(post),
 					},
-				),
-			[posts],
-		);
+				];
+			}),
+		[posts],
+	);
 
 	const sourceSignature = useMemo(
 		() =>
 			imageSources
-				.map(
-					({
-						postId,
-						path,
-					}) =>
-						`${postId}\u0000${path ?? ""}`,
-				)
+				.map(({ postId, path }) => `${postId}\u0000${path ?? ""}`)
 				.join("\u0001"),
 		[imageSources],
 	);
 
-	const imageSourcesRef =
-		useRef(imageSources);
+	const imageSourcesRef = useRef(imageSources);
 
-	imageSourcesRef.current =
-		imageSources;
+	imageSourcesRef.current = imageSources;
 
-	const [buckets, setBuckets] =
-		useState<
-			ReadonlyMap<
-				string,
-				TileBucket
-			>
-		>(() => new Map());
-
-	const [
-		isMeasuring,
-		setIsMeasuring,
-	] = useState(
-		imageSources.length > 0,
+	const [buckets, setBuckets] = useState<ReadonlyMap<string, TileBucket>>(
+		() => new Map(),
 	);
+
+	const [isMeasuring, setIsMeasuring] = useState(imageSources.length > 0);
 
 	useEffect(() => {
 		let cancelled = false;
 
-		const sources =
-			imageSourcesRef.current;
+		const sources = imageSourcesRef.current;
 
 		if (sources.length === 0) {
 			setBuckets(new Map());
@@ -261,31 +173,17 @@ export function usePortfolioImageBuckets(
 		setIsMeasuring(true);
 
 		void Promise.all(
-			sources.map(
-				async ({
-					postId,
-					path,
-				}) => {
-					const bucket = path
-						? await measureImageBucket(
-								path,
-							)
-						: FALLBACK_BUCKET;
+			sources.map(async ({ postId, path }) => {
+				const bucket = path ? await measureImageBucket(path) : FALLBACK_BUCKET;
 
-					return [
-						postId,
-						bucket,
-					] as const;
-				},
-			),
+				return [postId, bucket] as const;
+			}),
 		).then((entries) => {
 			if (cancelled) {
 				return;
 			}
 
-			setBuckets(
-				new Map(entries),
-			);
+			setBuckets(new Map(entries));
 
 			setIsMeasuring(false);
 		});

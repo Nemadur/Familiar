@@ -3,8 +3,6 @@ import type { CompanyIconId } from "./company-icon";
 import { buttonVariants } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
 
-
-
 export interface LifelineMentor {
 	name: string;
 	role?: string;
@@ -30,7 +28,13 @@ type ButtonVariant = NonNullable<
 export type LifelineEventSegment =
 	| { type: "text"; value: string }
 	| { type: "link"; value: string; href: string }
-	| { type: "button"; variant?: ButtonVariant; className?: string; value: string; action: () => void };
+	| {
+			type: "button";
+			variant?: ButtonVariant;
+			className?: string;
+			value: string;
+			action: () => void;
+	  };
 
 export interface LifelineEventImage {
 	src: string;
@@ -55,7 +59,10 @@ export interface LifelinePhoto extends LifelineEventImage {
 	width?: number;
 }
 
-export type LifelineEventEffect = "fireworks" | "fireworks-argentina" | "confetti";
+export type LifelineEventEffect =
+	| "fireworks"
+	| "fireworks-argentina"
+	| "confetti";
 
 /**
  * Object form lets an event carry a cursor-following hover image
@@ -73,14 +80,14 @@ export type LifelineEvent =
 	| LifelineEventObject;
 
 /**
-* A marker badge rendered from a React SVG component.
-*
-* Example:
-* {
-*   icon: ArrowRightIcon,
-*   label: "Messaging",
-* }
-*/
+ * A marker badge rendered from a React SVG component.
+ *
+ * Example:
+ * {
+ *   icon: ArrowRightIcon,
+ *   label: "Messaging",
+ * }
+ */
 export interface LifelineBadge {
 	icon: ComponentType<{ className?: string }>;
 	label: string;

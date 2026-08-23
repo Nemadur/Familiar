@@ -13,7 +13,6 @@ export default function UserAvatar({
 	isOnline = false,
 	badgeClassName = "",
 	className,
-
 }: {
 	user?: TUserProfile | undefined;
 	isHuge?: boolean;
@@ -52,7 +51,11 @@ export default function UserAvatar({
 	return (
 		<div className="relative inline-flex shrink-0">
 			<Avatar
-				className={cn(sizeClasses, hasOutline && "ring-6 ring-background", className)}
+				className={cn(
+					sizeClasses,
+					hasOutline && "ring-6 ring-background",
+					className,
+				)}
 			>
 				<AvatarImage src={user?.avatarPath || undefined} alt={altText} />
 				<AvatarFallback>

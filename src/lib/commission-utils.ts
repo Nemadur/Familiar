@@ -1,4 +1,6 @@
-export function calculateReviewStats(reviews: { rating: number }[] | undefined) {
+export function calculateReviewStats(
+	reviews: { rating: number }[] | undefined,
+) {
 	if (!reviews) return { count: 0, average: "0.0", formatted: "0.0 (0)" };
 	const count = reviews.length;
 	const total = reviews.reduce((acc, r) => acc + r.rating, 0);

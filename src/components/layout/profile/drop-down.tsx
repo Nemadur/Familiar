@@ -86,7 +86,10 @@ export default function UserDropDown({
 		{
 			label: "Characters",
 			icon: <OutlineSettings />,
-			to: localizePath(`/user/${user?.username || ""}/characters`, locale) as any,
+			to: localizePath(
+				`/user/${user?.username || ""}/characters`,
+				locale,
+			) as any,
 		},
 	];
 
@@ -109,11 +112,7 @@ export default function UserDropDown({
 			<div className="flex flex-col gap-1 p-1">
 				{MenuItems.map((item) => (
 					<Button key={item.label} variant="ghost" size={"xl"} asChild>
-						<Link
-							to={item.to}
-							preload={false}
-							onClick={() => setOpen(false)}
-						>
+						<Link to={item.to} preload={false} onClick={() => setOpen(false)}>
 							{item.icon}
 							<span>{item.label}</span>
 						</Link>

@@ -26,7 +26,6 @@ export type TChatMessageAttachment = {
 	fullSizeUrl: string;
 };
 
-
 export type TChatMessage = {
 	id: string;
 	conversationId: string;

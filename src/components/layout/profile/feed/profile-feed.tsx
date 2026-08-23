@@ -26,15 +26,11 @@ type PortfolioPostWithId = PortfolioPostResponse & {
 
 const GAP = 1;
 
-function hasPostId(
-	post: PortfolioPostResponse,
-): post is PortfolioPostWithId {
+function hasPostId(post: PortfolioPostResponse): post is PortfolioPostWithId {
 	return typeof post.id === "string" && post.id.length > 0;
 }
 
-function getImagePath(
-	image?: PortfolioPostImageResponse,
-): string | undefined {
+function getImagePath(image?: PortfolioPostImageResponse): string | undefined {
 	return image?.fullSize?.path ?? image?.thumbnail?.path;
 }
 

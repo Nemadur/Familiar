@@ -41,22 +41,17 @@ interface IndexedTile {
 	createdAt: number;
 }
 
-interface PlacementCandidate
-	extends IndexedTile,
-		GridPosition {
+interface PlacementCandidate extends IndexedTile, GridPosition {
 	width: TileWidthUnit;
 	height: TileHeightUnit;
 }
 
-type HorizontalPreference =
-	| "left"
-	| "right";
+type HorizontalPreference = "left" | "right";
 
 const MAX_COLUMN_COUNT = 4;
 const BALANCED_LOOKAHEAD = 6;
 
-const BALANCED_DATE_WINDOW_MS =
-	3 * 24 * 60 * 60 * 1000;
+const BALANCED_DATE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
 /**
  * Converts the original image ratio into a grid span.
@@ -77,8 +72,7 @@ export function bucketFromDimensions(
 		};
 	}
 
-	const aspectRatio =
-		imageWidth / imageHeight;
+	const aspectRatio = imageWidth / imageHeight;
 
 	// Extremely narrow portrait.
 	if (aspectRatio <= 0.58) {
@@ -112,30 +106,20 @@ export function bucketFromDimensions(
 }
 
 class OccupancyGrid {
-	private readonly cells: boolean[][] =
-		[];
+	private readonly cells: boolean[][] = [];
 
-	constructor(
-		private readonly columnCount: number,
-	) {}
+	constructor(private readonly columnCount: number) {}
 
-	private ensureRow(
-		rowIndex: number,
-	): boolean[] {
+	private ensureRow(rowIndex: number): boolean[] {
 		if (!this.cells[rowIndex]) {
-			this.cells[rowIndex] =
-				new Array<boolean>(
-					this.columnCount,
-				).fill(false);
+			this.cells[rowIndex] = new Array<boolean>(this.columnCount).fill(false);
 		}
 
 		return this.cells[rowIndex];
 	}
 
 	isEmpty(): boolean {
-		return !this.cells.some((row) =>
-			row.some(Boolean),
-		);
+		return !this.cells.some((row) => row.some(Boolean));
 	}
 
 	markOccupied(
@@ -144,22 +128,11 @@ class OccupancyGrid {
 		width: number,
 		height: number,
 	): void {
-		for (
-			let y = 0;
-			y < height;
-			y += 1
-		) {
-			const row = this.ensureRow(
-				startRow + y,
-			);
+		for (let y = 0; y < height; y += 1) {
+			const row = this.ensureRow(startRow + y);
 
-			for (
-				let x = 0;
-				x < width;
-				x += 1
-			) {
-				row[startColumn + x] =
-					true;
+			for (let x = 0; x < width; x += 1) {
+				row[startColumn + x] = true;
 			}
 		}
 	}
@@ -173,29 +146,16 @@ class OccupancyGrid {
 		if (
 			startColumn < 0 ||
 			startRow < 0 ||
-			startColumn + width >
-				this.columnCount
+			startColumn + width > this.columnCount
 		) {
 			return false;
 		}
 
-		for (
-			let y = 0;
-			y < height;
-			y += 1
-		) {
-			const row = this.ensureRow(
-				startRow + y,
-			);
+		for (let y = 0; y < height; y += 1) {
+			const row = this.ensureRow(startRow + y);
 
-			for (
-				let x = 0;
-				x < width;
-				x += 1
-			) {
-				if (
-					row[startColumn + x]
-				) {
+			for (let x = 0; x < width; x += 1) {
+				if (row[startColumn + x]) {
 					return false;
 				}
 			}
@@ -209,29 +169,12 @@ class OccupancyGrid {
 		height: number,
 		preference: HorizontalPreference = "left",
 	): GridPosition {
-		for (
-			let row = 0;
-			;
-			row += 1
-		) {
-			const maximumColumn =
-				this.columnCount - width;
+		for (let row = 0; ; row += 1) {
+			const maximumColumn = this.columnCount - width;
 
 			if (preference === "right") {
-				for (
-					let column =
-						maximumColumn;
-					column >= 0;
-					column -= 1
-				) {
-					if (
-						this.isRegionFree(
-							column,
-							row,
-							width,
-							height,
-						)
-					) {
+				for (let column = maximumColumn; column >= 0; column -= 1) {
+					if (this.isRegionFree(column, row, width, height)) {
 						return {
 							column,
 							row,
@@ -242,19 +185,8 @@ class OccupancyGrid {
 				continue;
 			}
 
-			for (
-				let column = 0;
-				column <= maximumColumn;
-				column += 1
-			) {
-				if (
-					this.isRegionFree(
-						column,
-						row,
-						width,
-						height,
-					)
-				) {
+			for (let column = 0; column <= maximumColumn; column += 1) {
+				if (this.isRegionFree(column, row, width, height)) {
 					return {
 						column,
 						row,
@@ -265,9 +197,7 @@ class OccupancyGrid {
 	}
 }
 
-function getCreatedAt(
-	tile: Tile,
-): number {
+function getCreatedAt(tile: Tile): number {
 	const datedTile = tile as Tile & {
 		createdAt?: string | null;
 		post?: {
@@ -275,9 +205,7 @@ function getCreatedAt(
 		};
 	};
 
-	const value =
-		datedTile.createdAt ??
-		datedTile.post?.createdAt;
+	const value = datedTile.createdAt ?? datedTile.post?.createdAt;
 
 	if (!value) {
 		return Number.NEGATIVE_INFINITY;
@@ -285,15 +213,10 @@ function getCreatedAt(
 
 	const timestamp = Date.parse(value);
 
-	return Number.isFinite(timestamp)
-		? timestamp
-		: Number.NEGATIVE_INFINITY;
+	return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
 }
 
-function getEffectiveSize(
-	tile: Tile,
-	columnCount: number,
-): EffectiveSize {
+function getEffectiveSize(tile: Tile, columnCount: number): EffectiveSize {
 	if (columnCount === 1) {
 		return {
 			width: 1,
@@ -302,31 +225,18 @@ function getEffectiveSize(
 	}
 
 	return {
-		width: Math.min(
-			tile.widthUnit,
-			columnCount,
-		) as TileWidthUnit,
+		width: Math.min(tile.widthUnit, columnCount) as TileWidthUnit,
 		height: tile.heightUnit,
 	};
 }
 
-function sortNewestFirst(
-	tiles: IndexedTile[],
-): IndexedTile[] {
+function sortNewestFirst(tiles: IndexedTile[]): IndexedTile[] {
 	return [...tiles].sort((a, b) => {
-		if (
-			a.createdAt !== b.createdAt
-		) {
-			return (
-				b.createdAt -
-				a.createdAt
-			);
+		if (a.createdAt !== b.createdAt) {
+			return b.createdAt - a.createdAt;
 		}
 
-		return (
-			a.inputIndex -
-			b.inputIndex
-		);
+		return a.inputIndex - b.inputIndex;
 	});
 }
 
@@ -355,46 +265,25 @@ function getHorizontalPreference(
 function getBalancedCandidatePool(
 	remainingTiles: IndexedTile[],
 ): IndexedTile[] {
-	const candidates =
-		remainingTiles.slice(
-			0,
-			BALANCED_LOOKAHEAD,
-		);
+	const candidates = remainingTiles.slice(0, BALANCED_LOOKAHEAD);
 
-	const newestTimestamp =
-		remainingTiles[0]?.createdAt;
+	const newestTimestamp = remainingTiles[0]?.createdAt;
 
-	if (
-		newestTimestamp === undefined ||
-		!Number.isFinite(
-			newestTimestamp,
-		)
-	) {
+	if (newestTimestamp === undefined || !Number.isFinite(newestTimestamp)) {
 		return candidates.slice(0, 1);
 	}
 
-	const nearbyCandidates =
-		candidates.filter(
-			(candidate, index) => {
-				if (index === 0) {
-					return true;
-				}
+	const nearbyCandidates = candidates.filter((candidate, index) => {
+		if (index === 0) {
+			return true;
+		}
 
-				if (
-					!Number.isFinite(
-						candidate.createdAt,
-					)
-				) {
-					return false;
-				}
+		if (!Number.isFinite(candidate.createdAt)) {
+			return false;
+		}
 
-				return (
-					newestTimestamp -
-						candidate.createdAt <=
-					BALANCED_DATE_WINDOW_MS
-				);
-			},
-		);
+		return newestTimestamp - candidate.createdAt <= BALANCED_DATE_WINDOW_MS;
+	});
 
 	return nearbyCandidates.length > 0
 		? nearbyCandidates
@@ -407,27 +296,13 @@ function createCandidate(
 	grid: OccupancyGrid,
 	strategy: PackStrategy,
 ): PlacementCandidate {
-	const { width, height } =
-		getEffectiveSize(
-			indexedTile.tile,
-			columnCount,
-		);
+	const { width, height } = getEffectiveSize(indexedTile.tile, columnCount);
 
-	const preference =
-		getHorizontalPreference(
-			strategy,
-			width,
-			height,
-			grid,
-		);
+	const preference = getHorizontalPreference(strategy, width, height, grid);
 
 	return {
 		...indexedTile,
-		...grid.findFirstAvailablePosition(
-			width,
-			height,
-			preference,
-		),
+		...grid.findFirstAvailablePosition(width, height, preference),
 		width,
 		height,
 	};
@@ -438,31 +313,20 @@ function isEarlierPosition(
 	current: PlacementCandidate,
 ): boolean {
 	if (candidate.row !== current.row) {
-		return (
-			candidate.row < current.row
-		);
+		return candidate.row < current.row;
 	}
 
-	return (
-		candidate.column <
-		current.column
-	);
+	return candidate.column < current.column;
 }
 
 function isSamePosition(
 	candidate: PlacementCandidate,
 	current: PlacementCandidate,
 ): boolean {
-	return (
-		candidate.row === current.row &&
-		candidate.column ===
-			current.column
-	);
+	return candidate.row === current.row && candidate.column === current.column;
 }
 
-function isTallCandidate(
-	candidate: PlacementCandidate,
-): boolean {
+function isTallCandidate(candidate: PlacementCandidate): boolean {
 	return candidate.height > 1;
 }
 
@@ -476,67 +340,34 @@ function isBetterBalancedShape(
 	candidate: PlacementCandidate,
 	current: PlacementCandidate,
 ): boolean {
-	const candidateIsTall =
-		isTallCandidate(candidate);
+	const candidateIsTall = isTallCandidate(candidate);
 
-	const currentIsTall =
-		isTallCandidate(current);
+	const currentIsTall = isTallCandidate(current);
 
 	// Short items go before tall items.
-	if (
-		candidateIsTall !==
-		currentIsTall
-	) {
+	if (candidateIsTall !== currentIsTall) {
 		return !candidateIsTall;
 	}
 
 	// Prefer 2x1 over 1x1.
-	if (
-		!candidateIsTall &&
-		!currentIsTall &&
-		candidate.width !==
-			current.width
-	) {
-		return (
-			candidate.width >
-			current.width
-		);
+	if (!candidateIsTall && !currentIsTall && candidate.width !== current.width) {
+		return candidate.width > current.width;
 	}
 
-	const candidateArea =
-		candidate.width *
-		candidate.height;
+	const candidateArea = candidate.width * candidate.height;
 
-	const currentArea =
-		current.width *
-		current.height;
+	const currentArea = current.width * current.height;
 
 	// For two tall items, prefer the smaller footprint.
-	if (
-		candidateIsTall &&
-		currentIsTall &&
-		candidateArea !== currentArea
-	) {
-		return (
-			candidateArea <
-			currentArea
-		);
+	if (candidateIsTall && currentIsTall && candidateArea !== currentArea) {
+		return candidateArea < currentArea;
 	}
 
-	if (
-		candidate.createdAt !==
-		current.createdAt
-	) {
-		return (
-			candidate.createdAt >
-			current.createdAt
-		);
+	if (candidate.createdAt !== current.createdAt) {
+		return candidate.createdAt > current.createdAt;
 	}
 
-	return (
-		candidate.inputIndex <
-		current.inputIndex
-	);
+	return candidate.inputIndex < current.inputIndex;
 }
 
 function chooseBalancedCandidate(
@@ -544,52 +375,36 @@ function chooseBalancedCandidate(
 	columnCount: number,
 	grid: OccupancyGrid,
 ): PlacementCandidate {
-	let best:
-		| PlacementCandidate
-		| undefined;
+	let best: PlacementCandidate | undefined;
 
 	for (const indexedTile of candidates) {
-		const candidate =
-			createCandidate(
-				indexedTile,
-				columnCount,
-				grid,
-				"balanced",
-			);
+		const candidate = createCandidate(
+			indexedTile,
+			columnCount,
+			grid,
+			"balanced",
+		);
 
 		if (!best) {
 			best = candidate;
 			continue;
 		}
 
-		if (
-			isEarlierPosition(
-				candidate,
-				best,
-			)
-		) {
+		if (isEarlierPosition(candidate, best)) {
 			best = candidate;
 			continue;
 		}
 
 		if (
-			isSamePosition(
-				candidate,
-				best,
-			) &&
-			isBetterBalancedShape(
-				candidate,
-				best,
-			)
+			isSamePosition(candidate, best) &&
+			isBetterBalancedShape(candidate, best)
 		) {
 			best = candidate;
 		}
 	}
 
 	if (!best) {
-		throw new Error(
-			"Cannot select a tile from an empty collection.",
-		);
+		throw new Error("Cannot select a tile from an empty collection.");
 	}
 
 	return best;
@@ -600,59 +415,33 @@ function chooseFitCandidate(
 	columnCount: number,
 	grid: OccupancyGrid,
 ): PlacementCandidate {
-	let best:
-		| PlacementCandidate
-		| undefined;
+	let best: PlacementCandidate | undefined;
 
 	for (const indexedTile of remainingTiles) {
-		const candidate =
-			createCandidate(
-				indexedTile,
-				columnCount,
-				grid,
-				"fit",
-			);
+		const candidate = createCandidate(indexedTile, columnCount, grid, "fit");
 
 		if (!best) {
 			best = candidate;
 			continue;
 		}
 
-		const candidateArea =
-			candidate.width *
-			candidate.height;
+		const candidateArea = candidate.width * candidate.height;
 
-		const bestArea =
-			best.width * best.height;
+		const bestArea = best.width * best.height;
 
 		if (
-			isEarlierPosition(
-				candidate,
-				best,
-			) ||
-			(isSamePosition(
-				candidate,
-				best,
-			) &&
-				candidateArea >
-					bestArea) ||
-			(isSamePosition(
-				candidate,
-				best,
-			) &&
-				candidateArea ===
-					bestArea &&
-				candidate.createdAt >
-					best.createdAt)
+			isEarlierPosition(candidate, best) ||
+			(isSamePosition(candidate, best) && candidateArea > bestArea) ||
+			(isSamePosition(candidate, best) &&
+				candidateArea === bestArea &&
+				candidate.createdAt > best.createdAt)
 		) {
 			best = candidate;
 		}
 	}
 
 	if (!best) {
-		throw new Error(
-			"Cannot select a tile from an empty collection.",
-		);
+		throw new Error("Cannot select a tile from an empty collection.");
 	}
 
 	return best;
@@ -665,35 +454,22 @@ function chooseNextTile(
 	strategy: PackStrategy,
 ): PlacementCandidate {
 	if (remainingTiles.length === 0) {
-		throw new Error(
-			"Cannot select a tile from an empty collection.",
-		);
+		throw new Error("Cannot select a tile from an empty collection.");
 	}
 
 	if (strategy === "recency") {
-		return createCandidate(
-			remainingTiles[0],
-			columnCount,
-			grid,
-			"recency",
-		);
+		return createCandidate(remainingTiles[0], columnCount, grid, "recency");
 	}
 
 	if (strategy === "balanced") {
 		return chooseBalancedCandidate(
-			getBalancedCandidatePool(
-				remainingTiles,
-			),
+			getBalancedCandidatePool(remainingTiles),
 			columnCount,
 			grid,
 		);
 	}
 
-	return chooseFitCandidate(
-		remainingTiles,
-		columnCount,
-		grid,
-	);
+	return chooseFitCandidate(remainingTiles, columnCount, grid);
 }
 
 export function packAppend(
@@ -702,27 +478,16 @@ export function packAppend(
 	columnCount: number,
 	strategy: PackStrategy = "balanced",
 ): PlacedTile[] {
-	const safeColumnCount = Math.max(
-		1,
-		Math.min(
-			columnCount,
-			MAX_COLUMN_COUNT,
-		),
-	);
+	const safeColumnCount = Math.max(1, Math.min(columnCount, MAX_COLUMN_COUNT));
 
-	const grid = new OccupancyGrid(
-		safeColumnCount,
-	);
+	const grid = new OccupancyGrid(safeColumnCount);
 
-	const outputTiles =
-		existingTiles.map(
-			(placedTile) => ({
-				...placedTile,
-				tile: {
-					...placedTile.tile,
-				},
-			}),
-		);
+	const outputTiles = existingTiles.map((placedTile) => ({
+		...placedTile,
+		tile: {
+			...placedTile.tile,
+		},
+	}));
 
 	for (const placedTile of outputTiles) {
 		grid.markOccupied(
@@ -733,21 +498,15 @@ export function packAppend(
 		);
 	}
 
-	const remainingTiles =
-		sortNewestFirst(
-			incomingTiles.map(
-				(tile, inputIndex) => ({
-					tile,
-					inputIndex,
-					createdAt:
-						getCreatedAt(tile),
-				}),
-			),
-		);
+	const remainingTiles = sortNewestFirst(
+		incomingTiles.map((tile, inputIndex) => ({
+			tile,
+			inputIndex,
+			createdAt: getCreatedAt(tile),
+		})),
+	);
 
-	while (
-		remainingTiles.length > 0
-	) {
+	while (remainingTiles.length > 0) {
 		const next = chooseNextTile(
 			remainingTiles,
 			safeColumnCount,
@@ -755,12 +514,7 @@ export function packAppend(
 			strategy,
 		);
 
-		grid.markOccupied(
-			next.column,
-			next.row,
-			next.width,
-			next.height,
-		);
+		grid.markOccupied(next.column, next.row, next.width, next.height);
 
 		outputTiles.push({
 			x: next.column,
@@ -772,18 +526,12 @@ export function packAppend(
 			},
 		});
 
-		const selectedIndex =
-			remainingTiles.findIndex(
-				(item) =>
-					item.inputIndex ===
-					next.inputIndex,
-			);
+		const selectedIndex = remainingTiles.findIndex(
+			(item) => item.inputIndex === next.inputIndex,
+		);
 
 		if (selectedIndex >= 0) {
-			remainingTiles.splice(
-				selectedIndex,
-				1,
-			);
+			remainingTiles.splice(selectedIndex, 1);
 		}
 	}
 
@@ -800,21 +548,11 @@ export function packAppendGeneric<
 	incomingTiles: TileData[],
 	columnCount: number,
 ): PlacedGeneric<TileData>[] {
-	const safeColumnCount = Math.max(
-		1,
-		Math.min(
-			columnCount,
-			MAX_COLUMN_COUNT,
-		),
-	);
+	const safeColumnCount = Math.max(1, Math.min(columnCount, MAX_COLUMN_COUNT));
 
-	const grid = new OccupancyGrid(
-		safeColumnCount,
-	);
+	const grid = new OccupancyGrid(safeColumnCount);
 
-	const outputTiles = [
-		...existingTiles,
-	];
+	const outputTiles = [...existingTiles];
 
 	for (const placedTile of existingTiles) {
 		grid.markOccupied(
@@ -829,28 +567,13 @@ export function packAppendGeneric<
 		const width =
 			safeColumnCount === 1
 				? 1
-				: Math.min(
-						tile.widthUnit,
-						safeColumnCount,
-					) as TileWidthUnit;
+				: (Math.min(tile.widthUnit, safeColumnCount) as TileWidthUnit);
 
-		const height =
-			safeColumnCount === 1
-				? 1
-				: tile.heightUnit;
+		const height = safeColumnCount === 1 ? 1 : tile.heightUnit;
 
-		const { column, row } =
-			grid.findFirstAvailablePosition(
-				width,
-				height,
-			);
+		const { column, row } = grid.findFirstAvailablePosition(width, height);
 
-		grid.markOccupied(
-			column,
-			row,
-			width,
-			height,
-		);
+		grid.markOccupied(column, row, width, height);
 
 		outputTiles.push({
 			x: column,
@@ -869,65 +592,35 @@ export function toPixels(
 	cellSize: number,
 	gapSize: number,
 ): PixelLayout {
-	const safeCellSize = Math.max(
-		0,
-		cellSize,
-	);
+	const safeCellSize = Math.max(0, cellSize);
 
-	const safeGapSize = Math.max(
-		0,
-		gapSize,
-	);
+	const safeGapSize = Math.max(0, gapSize);
 
-	const toOffsetPx = (
-		index: number,
-	): number =>
-		index *
-		(safeCellSize + safeGapSize);
+	const toOffsetPx = (index: number): number =>
+		index * (safeCellSize + safeGapSize);
 
-	const toSpanPx = (
-		span: number,
-	): number =>
-		span * safeCellSize +
-		(span - 1) * safeGapSize;
+	const toSpanPx = (span: number): number =>
+		span * safeCellSize + (span - 1) * safeGapSize;
 
-	const nodes: PixelNode[] =
-		placedTiles.map((placedTile) => ({
-			key: placedTile.tile.id,
-			tile: placedTile.tile,
-			style: {
-				position: "absolute",
-				left: toOffsetPx(
-					placedTile.x,
-				),
-				top: toOffsetPx(
-					placedTile.y,
-				),
-				width: toSpanPx(
-					placedTile.widthUnit,
-				),
-				height: toSpanPx(
-					placedTile.heightUnit,
-				),
-			},
-		}));
+	const nodes: PixelNode[] = placedTiles.map((placedTile) => ({
+		key: placedTile.tile.id,
+		tile: placedTile.tile,
+		style: {
+			position: "absolute",
+			left: toOffsetPx(placedTile.x),
+			top: toOffsetPx(placedTile.y),
+			width: toSpanPx(placedTile.widthUnit),
+			height: toSpanPx(placedTile.heightUnit),
+		},
+	}));
 
 	const totalRows =
 		placedTiles.length > 0
-			? Math.max(
-					...placedTiles.map(
-						(tile) =>
-							tile.y +
-							tile.heightUnit,
-					),
-				)
+			? Math.max(...placedTiles.map((tile) => tile.y + tile.heightUnit))
 			: 0;
 
 	return {
 		nodes,
-		containerHeight:
-			totalRows > 0
-				? toSpanPx(totalRows)
-				: 0,
+		containerHeight: totalRows > 0 ? toSpanPx(totalRows) : 0,
 	};
 }

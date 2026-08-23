@@ -33,7 +33,7 @@ const inputGroupVariants = cva(
 
 export interface InputGroupProps
 	extends React.ComponentProps<"fieldset">,
-	VariantProps<typeof inputGroupVariants> { }
+		VariantProps<typeof inputGroupVariants> {}
 
 function assignRef<T>(targetRef: React.Ref<T> | undefined, value: T | null) {
 	if (!targetRef) return;
@@ -281,7 +281,8 @@ function InputGroupNumberInput({
 	// TODO: Add accessibility hold to add remove numbers / InputGroupNumberInput
 
 	const handleIncrement = useCallback(() => {
-		const currentValue = value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
+		const currentValue =
+			value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
 		const nextValue =
 			value === undefined
 				? (stepper ?? 1)
@@ -292,7 +293,8 @@ function InputGroupNumberInput({
 	}, [value, stepper, max, onValueChange]);
 
 	const handleDecrement = useCallback(() => {
-		const currentValue = value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
+		const currentValue =
+			value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
 		const nextValue =
 			value === undefined
 				? -(stepper ?? 1)
@@ -793,7 +795,7 @@ function useDateInputController({
 						event.currentTarget.selectionEnd === 0);
 				const isWholeSegmentSelected =
 					event.currentTarget.selectionStart !==
-					event.currentTarget.selectionEnd &&
+						event.currentTarget.selectionEnd &&
 					event.currentTarget.selectionStart === 0 &&
 					event.currentTarget.selectionEnd === event.currentTarget.value.length;
 

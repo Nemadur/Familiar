@@ -8,6 +8,7 @@ import {
 	getMyPortfolioPosts,
 	getArtistPortfolioPosts,
 	getArtistPortfolioPost,
+	getPortfolioPost,
 	getArtistCatalogPosts,
 	createPortfolioPost,
 	updatePortfolioPost,
@@ -90,6 +91,18 @@ export function useArtistPortfolioPost(username: string, postId: string) {
 	return useQuery(artistPortfolioPostQueryOptions(username, postId));
 }
 
+export function portfolioPostQueryOptions(postId: string) {
+	return queryOptions({
+		queryKey: ["portfolio", "post", postId],
+		queryFn: () => getPortfolioPost(postId),
+		enabled: !!postId,
+	});
+}
+
+export function usePortfolioPost(postId: string) {
+	return useQuery(portfolioPostQueryOptions(postId));
+}
+
 export function artistCatalogPostsQueryOptions(
 	username: string,
 	catalogId: string,
@@ -115,9 +128,7 @@ export function useArtistCatalogPosts(
 	catalogId: string,
 	params?: PostPageableParams,
 ) {
-	return useQuery(
-		artistCatalogPostsQueryOptions(username, catalogId, params),
-	);
+	return useQuery(artistCatalogPostsQueryOptions(username, catalogId, params));
 }
 
 // ------------------------------------------------------------------
@@ -175,7 +186,9 @@ export function useUpdatePortfolioPost() {
 		onSuccess: (_, { postId }) => {
 			queryClient.invalidateQueries({ queryKey: ["portfolio", "me", "posts"] });
 			queryClient.invalidateQueries({ queryKey: ["portfolio", "artist"] });
-			queryClient.invalidateQueries({ queryKey: ["portfolio", "post", postId] });
+			queryClient.invalidateQueries({
+				queryKey: ["portfolio", "post", postId],
+			});
 		},
 	});
 }
@@ -208,7 +221,9 @@ export function useUploadPortfolioPostMedia() {
 			uploadPortfolioPostMedia(postId, file),
 		onSuccess: (_, { postId }) => {
 			queryClient.invalidateQueries({ queryKey: ["portfolio", "me", "posts"] });
-			queryClient.invalidateQueries({ queryKey: ["portfolio", "post", postId] });
+			queryClient.invalidateQueries({
+				queryKey: ["portfolio", "post", postId],
+			});
 		},
 	});
 }
@@ -220,7 +235,9 @@ export function useDeletePortfolioPostImage() {
 			deletePortfolioPostImage(postId, imageId),
 		onSuccess: (_, { postId }) => {
 			queryClient.invalidateQueries({ queryKey: ["portfolio", "me", "posts"] });
-			queryClient.invalidateQueries({ queryKey: ["portfolio", "post", postId] });
+			queryClient.invalidateQueries({
+				queryKey: ["portfolio", "post", postId],
+			});
 		},
 	});
 }
@@ -237,7 +254,9 @@ export function useReorderPortfolioPostImages() {
 		}) => reorderPortfolioPostImages(postId, data),
 		onSuccess: (_, { postId }) => {
 			queryClient.invalidateQueries({ queryKey: ["portfolio", "me", "posts"] });
-			queryClient.invalidateQueries({ queryKey: ["portfolio", "post", postId] });
+			queryClient.invalidateQueries({
+				queryKey: ["portfolio", "post", postId],
+			});
 		},
 	});
 }
@@ -254,7 +273,9 @@ export function useAddPortfolioPostToCatalog() {
 		}) => addPortfolioPostToCatalog(postId, catalogId),
 		onSuccess: (_, { postId, catalogId }) => {
 			queryClient.invalidateQueries({ queryKey: ["portfolio", "me", "posts"] });
-			queryClient.invalidateQueries({ queryKey: ["portfolio", "post", postId] });
+			queryClient.invalidateQueries({
+				queryKey: ["portfolio", "post", postId],
+			});
 			queryClient.invalidateQueries({
 				queryKey: ["portfolio", "artist", "catalog", catalogId],
 			});
@@ -274,7 +295,9 @@ export function useRemovePortfolioPostFromCatalog() {
 		}) => removePortfolioPostFromCatalog(postId, catalogId),
 		onSuccess: (_, { postId, catalogId }) => {
 			queryClient.invalidateQueries({ queryKey: ["portfolio", "me", "posts"] });
-			queryClient.invalidateQueries({ queryKey: ["portfolio", "post", postId] });
+			queryClient.invalidateQueries({
+				queryKey: ["portfolio", "post", postId],
+			});
 			queryClient.invalidateQueries({
 				queryKey: ["portfolio", "artist", "catalog", catalogId],
 			});

@@ -1,11 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/{-$locale}/_main/auth/mollie/callback")({
-  component: RouteComponent,
-})
+	component: RouteComponent,
+});
 
 function RouteComponent() {
-  return <div>Hello "/_main/auth/mollie/callback"!</div>
+	return <div>Hello "/_main/auth/mollie/callback"!</div>;
 }
 
 // TODO: handle the callback from Mollie after user completes onboarding

@@ -1,9 +1,5 @@
 import { Film, Image as ImageIcon } from "lucide-react";
-import {
-	type CSSProperties,
-	forwardRef,
-	type KeyboardEvent,
-} from "react";
+import { type CSSProperties, forwardRef, type KeyboardEvent } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -17,10 +13,7 @@ import {
 } from "./lifeline-event";
 import { useLifelineFireworks } from "./lifeline-fireworks";
 import { useLifelineHoverImage } from "./lifeline-hover-image";
-import {
-	aggregateLifelinePeople,
-	LifelinePeople,
-} from "./lifeline-people";
+import { aggregateLifelinePeople, LifelinePeople } from "./lifeline-people";
 import type { LifelineMarker } from "./types";
 
 interface LifelineMarkerColumnProps {
@@ -59,19 +52,12 @@ export const LifelineMarkerColumn = forwardRef<
 			aria-label={marker.label ?? `${marker.year}`}
 		>
 			<div
-				className={cn(
-					"relative",
-					animateIntro &&
-						"lifeline-marker-intro",
-				)}
+				className={cn("relative", animateIntro && "lifeline-marker-intro")}
 				style={{
-					animationDelay: animateIntro
-						? `${introDelay}ms`
-						: undefined,
+					animationDelay: animateIntro ? `${introDelay}ms` : undefined,
 					...(animateIntro
 						? ({
-								"--lifeline-marker-fade-ms":
-									`${introDuration}ms`,
+								"--lifeline-marker-fade-ms": `${introDuration}ms`,
 							} as CSSProperties)
 						: {}),
 				}}
@@ -94,202 +80,118 @@ export const LifelineMarkerColumn = forwardRef<
 						<div
 							className={cn(
 								"flex w-full flex-col items-start pt-6",
-								people.length > 0 &&
-									"min-h-(--lifeline-people-top) pb-6",
+								people.length > 0 && "min-h-(--lifeline-people-top) pb-6",
 							)}
 						>
-							{marker.badges &&
-								marker.badges.length > 0 && (
-									<LifelineBadges
-										badges={marker.badges}
-										className="mb-3"
-									/>
-								)}
+							{marker.badges && marker.badges.length > 0 && (
+								<LifelineBadges badges={marker.badges} className="mb-3" />
+							)}
 
-							{marker.companies &&
-								marker.companies.length >
-									0 && (
-									<div className="mb-2 flex items-center justify-start gap-1.5">
-										{marker.companies.map(
-											(company) => (
-												<CompanyIcon
-													key={
-														company.id
-													}
-													id={
-														company.id
-													}
-													label={
-														company.name
-													}
-													className="opacity-70 transition-opacity duration-300 group-hover:opacity-100"
-												/>
-											),
-										)}
-									</div>
-								)}
+							{marker.companies && marker.companies.length > 0 && (
+								<div className="mb-2 flex items-center justify-start gap-1.5">
+									{marker.companies.map((company) => (
+										<CompanyIcon
+											key={company.id}
+											id={company.id}
+											label={company.name}
+											className="opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+										/>
+									))}
+								</div>
+							)}
 
 							<div className="min-h-13 space-y-4">
-								{marker.events.map(
-									(event, index) => {
-										const image =
-											getLifelineEventImage(
-												event,
-											);
-										const effect =
-											getLifelineEventEffect(
-												event,
-											);
-										const isInteractive =
-											Boolean(
-												effect &&
-													fireworks,
-											);
+								{marker.events.map((event, index) => {
+									const image = getLifelineEventImage(event);
+									const effect = getLifelineEventEffect(event);
+									const isInteractive = Boolean(effect && fireworks);
 
-										const launchEffect =
-											() => {
-												if (
-													!effect ||
-													!fireworks
-												) {
-													return;
-												}
+									const launchEffect = () => {
+										if (!effect || !fireworks) {
+											return;
+										}
 
-												if (
-													import.meta
-														.env.DEV
-												) {
-													console.debug(
-														"[LifelineEffect] launching from desktop event",
-														{
-															effect,
-															markerId:
-																marker.id,
-														},
-													);
-												}
-
-												fireworks.launch(
+										if (import.meta.env.DEV) {
+											console.debug(
+												"[LifelineEffect] launching from desktop event",
+												{
 													effect,
-												);
-											};
+													markerId: marker.id,
+												},
+											);
+										}
 
-										const handleKeyDown =
-											(
-												keyboardEvent: KeyboardEvent<HTMLParagraphElement>,
-											) => {
-												if (
-													!isInteractive
-												) {
-													return;
-												}
+										fireworks.launch(effect);
+									};
 
-												if (
-													keyboardEvent.key !==
-														"Enter" &&
-													keyboardEvent.key !==
-														" "
-												) {
-													return;
-												}
+									const handleKeyDown = (
+										keyboardEvent: KeyboardEvent<HTMLParagraphElement>,
+									) => {
+										if (!isInteractive) {
+											return;
+										}
 
-												keyboardEvent.preventDefault();
-												launchEffect();
-											};
+										if (
+											keyboardEvent.key !== "Enter" &&
+											keyboardEvent.key !== " "
+										) {
+											return;
+										}
 
-										return (
-											<p
-												key={getLifelineEventKey(
-													event,
-													index,
-												)}
-												className={cn(
-													"max-w-[18rem] text-left text-[14px] leading-[1.55] tracking-[-0.01em]",
-													isInteractive &&
-														"cursor-pointer",
-												)}
-												data-lifeline-interactive={
-													isInteractive
-														? ""
-														: undefined
-												}
-												role={
-													isInteractive
-														? "button"
-														: undefined
-												}
-												tabIndex={
-													isInteractive
-														? 0
-														: undefined
-												}
-												onMouseEnter={
-													image &&
-													hoverImage
-														? () =>
-																hoverImage.show(
-																	image,
-																)
-														: undefined
-												}
-												onMouseLeave={
-													image &&
-													hoverImage
-														? hoverImage.hide
-														: undefined
-												}
-												onClick={
-													isInteractive
-														? launchEffect
-														: undefined
-												}
-												onKeyDown={
-													isInteractive
-														? handleKeyDown
-														: undefined
-												}
-											>
-												<LifelineEventText
-													event={
-														event
-													}
-												/>
+										keyboardEvent.preventDefault();
+										launchEffect();
+									};
 
-												{image && (
-													<span className="whitespace-nowrap">
-														{" "}
+									return (
+										<p
+											key={getLifelineEventKey(event, index)}
+											className={cn(
+												"max-w-[18rem] text-left text-[14px] leading-[1.55] tracking-[-0.01em]",
+												isInteractive && "cursor-pointer",
+											)}
+											data-lifeline-interactive={isInteractive ? "" : undefined}
+											role={isInteractive ? "button" : undefined}
+											tabIndex={isInteractive ? 0 : undefined}
+											onMouseEnter={
+												image && hoverImage
+													? () => hoverImage.show(image)
+													: undefined
+											}
+											onMouseLeave={
+												image && hoverImage ? hoverImage.hide : undefined
+											}
+											onClick={isInteractive ? launchEffect : undefined}
+											onKeyDown={isInteractive ? handleKeyDown : undefined}
+										>
+											<LifelineEventText event={event} />
 
-														{image.video ? (
-															<Film
-																className="ml-0.5 inline-block h-3 w-3 -translate-y-px text-zinc-400 transition-colors duration-300 dark:text-zinc-600"
-																strokeWidth={
-																	1.75
-																}
-																aria-hidden="true"
-															/>
-														) : (
-															<ImageIcon
-																className="ml-0.5 inline-block h-3 w-3 -translate-y-px text-zinc-400 transition-colors duration-300 dark:text-zinc-600"
-																strokeWidth={
-																	1.75
-																}
-																aria-hidden="true"
-															/>
-														)}
-													</span>
-												)}
-											</p>
-										);
-									},
-								)}
+											{image && (
+												<span className="whitespace-nowrap">
+													{" "}
+													{image.video ? (
+														<Film
+															className="ml-0.5 inline-block h-3 w-3 -translate-y-px text-zinc-400 transition-colors duration-300 dark:text-zinc-600"
+															strokeWidth={1.75}
+															aria-hidden="true"
+														/>
+													) : (
+														<ImageIcon
+															className="ml-0.5 inline-block h-3 w-3 -translate-y-px text-zinc-400 transition-colors duration-300 dark:text-zinc-600"
+															strokeWidth={1.75}
+															aria-hidden="true"
+														/>
+													)}
+												</span>
+											)}
+										</p>
+									);
+								})}
 							</div>
 						</div>
 
 						{people.length > 0 && (
 							<div className="w-full">
-								<LifelinePeople
-									people={people}
-								/>
+								<LifelinePeople people={people} />
 							</div>
 						)}
 					</div>

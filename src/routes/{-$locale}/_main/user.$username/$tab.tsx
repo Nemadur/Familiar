@@ -1,8 +1,4 @@
-import {
-	createFileRoute,
-	Outlet,
-	useLocation,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { OutlineReceipt } from "@/components/icons/icons";
 import { EmptyPage } from "@/components/layout/empty-page";
 import { ProfileCharacters } from "@/components/layout/profile/feed/characters";
@@ -11,28 +7,35 @@ import { ProfileFeed } from "@/components/layout/profile/feed/profile-feed";
 import { TabContentSkeleton } from "@/components/layout/profile/profile";
 import { useProfileContent } from "@/hooks/user/use-profile-content";
 import { useUserByUsername } from "@/hooks/user/use-user";
+import { useIsMobile } from "@/hooks/ui/use-mobile";
 import type { TUserProfile } from "@/types/user";
 import { DefaultProfileTabContent } from "../user.$username";
 
-export const Route = createFileRoute(
-	"/{-$locale}/_main/user/$username/$tab",
-)({
+export const Route = createFileRoute("/{-$locale}/_main/user/$username/$tab")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const { username, tab } = Route.useParams();
 	const location = useLocation();
+	const params = Route.useParams({ strict: false });
 	const { user } = useUserByUsername(username);
+	const isMobile = useIsMobile();
 
-	const isFolderRoute =
-		location.pathname.includes("/folder/");
+	const isFolderRoute = location.pathname.includes("/folder/");
 
-	/*
+	// Determine if we are currently viewing a post directly under the portfolio tab
+	const pathParts = location.pathname.split("/").filter(Boolean);
+	const isPostRoute = tab === "portfolio" && pathParts[pathParts.length - 2] === "portfolio";
+
+	const isModal = (location.state as any)?.isModal === true;
+
+	/**
 	 * The nested folder route renders its own ProfilePortfolio.
 	 * Do not render the main portfolio underneath it.
+	 * Also hide the portfolio grid if we are viewing a specific post page directly (not via modal), or on mobile.
 	 */
-	if (isFolderRoute) {
+	if (isFolderRoute || (isPostRoute && (!isModal || isMobile))) {
 		return <Outlet />;
 	}
 
@@ -42,17 +45,13 @@ function RouteComponent() {
 
 	return (
 		<>
-			<UserFeedContent
-				user={user as TUserProfile}
-				tab={tab}
-			/>
-
+			<UserFeedContent user={user as TUserProfile} tab={tab} />
 			<Outlet />
 		</>
 	);
 }
 
-function UserFeedContent({
+export function UserFeedContent({
 	user,
 	tab,
 }: {
@@ -69,11 +68,7 @@ function UserFeedContent({
 		isCreatingCatalog,
 		createPost,
 		isCreatingPost,
-	} = useProfileContent(
-		user.username,
-		user.userId,
-		tab,
-	);
+	} = useProfileContent(user.username, user.userId, tab);
 
 	if (isPending) {
 		return <TabContentSkeleton tab={tab} />;
@@ -82,10 +77,7 @@ function UserFeedContent({
 	if (isError) {
 		return (
 			<div className="flex min-h-64 flex-col items-center justify-center gap-2 p-6 text-center">
-				<h2 className="font-semibold">
-					Could not load profile content
-				</h2>
-
+				<h2 className="font-semibold">Could not load profile content</h2>
 				<p className="max-w-md text-sm text-muted-foreground">
 					{error instanceof Error
 						? error.message
@@ -97,38 +89,25 @@ function UserFeedContent({
 
 	switch (tab) {
 		case "commissions":
-			return (
-				<DefaultProfileTabContent
-					username={user.username}
-				/>
-			);
+			return <DefaultProfileTabContent username={user.username} />;
 
 		case "portfolio":
 			return (
 				<ProfilePortfolio
-					posts={
-						content?.portfolioPosts ?? []
-					}
+					posts={content?.portfolioPosts ?? []}
 					folders={content?.folders ?? []}
 					username={user.username}
 					canManageCatalogs={isCurrentUser}
+					canCreatePosts={isCurrentUser}
 					onCreateCatalog={createCatalog}
-					isCreatingCatalog={
-						isCreatingCatalog
-					}
+					isCreatingCatalog={isCreatingCatalog}
 					onCreatePost={createPost}
 					isCreatingPost={isCreatingPost}
 				/>
 			);
 
 		case "characters":
-			return (
-				<ProfileCharacters
-					characters={
-						content?.characters ?? []
-					}
-				/>
-			);
+			return <ProfileCharacters characters={content?.characters ?? []} />;
 
 		case "shop":
 			return (
@@ -143,12 +122,7 @@ function UserFeedContent({
 
 		case "liked":
 		case "saved":
-			return (
-				<ProfileFeed
-					posts={content?.feedPosts ?? []}
-					variant="feed"
-				/>
-			);
+			return <ProfileFeed posts={content?.feedPosts ?? []} variant="feed" />;
 
 		default:
 			return (

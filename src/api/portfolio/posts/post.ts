@@ -127,6 +127,10 @@ export async function getArtistPortfolioPosts(
 	);
 }
 
+export async function getPortfolioPost(postId: string) {
+	return apiFetch<PortfolioPostResponse>(`portfolio/posts/${postId}`);
+}
+
 export async function getArtistPortfolioPost(username: string, postId: string) {
 	return apiFetch<PortfolioPostResponse>(
 		`portfolio/artists/${encodeURIComponent(username)}/posts/${postId}`,

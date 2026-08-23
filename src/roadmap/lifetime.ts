@@ -1,8 +1,5 @@
 import { OutlineArrowLeft } from "@/components/icons/icons";
-import {
-	defineLifeline,
-	type LifelineMilestones,
-} from "@/lib/lifeline-data";
+import { defineLifeline, type LifelineMilestones } from "@/lib/lifeline-data";
 
 interface RoadmapEntry {
 	id: string;
@@ -122,12 +119,24 @@ const ROADMAP_ENTRIES: RoadmapEntry[] = [
 		title: "Artist Availability and Queue Management",
 		milestone: {
 			id: "availability-queues",
-			events: [[
-				{ type: "text", value: "Artist availability and queue management. " },
-				{ type: "link", value: "test ", href: "https://familiar.art" },
-				{ type: "text", value: "Commission slots, waitlists, estimated start dates, and clearer workload visibility." },
-				{ type: "button", variant: "secondary", className: "mr-2", value: "Test", action: () => console.log("Test") },
-			]],
+			events: [
+				[
+					{ type: "text", value: "Artist availability and queue management. " },
+					{ type: "link", value: "test ", href: "https://familiar.art" },
+					{
+						type: "text",
+						value:
+							"Commission slots, waitlists, estimated start dates, and clearer workload visibility.",
+					},
+					{
+						type: "button",
+						variant: "secondary",
+						className: "mr-2",
+						value: "Test",
+						action: () => console.log("Test"),
+					},
+				],
+			],
 		},
 	},
 	{
@@ -167,13 +176,9 @@ const ROADMAP_ENTRIES: RoadmapEntry[] = [
 	},
 ];
 
-function quarterLabel(
-	dateValue: string,
-	locale: string,
-) {
+function quarterLabel(dateValue: string, locale: string) {
 	const date = new Date(`${dateValue}T00:00:00Z`);
-	const quarter =
-		Math.floor(date.getUTCMonth() / 3) + 1;
+	const quarter = Math.floor(date.getUTCMonth() / 3) + 1;
 	const year = date.getUTCFullYear();
 
 	if (locale.toLowerCase().startsWith("pl")) {
@@ -183,9 +188,7 @@ function quarterLabel(
 	return `Q${quarter} ${year}`;
 }
 
-export function createRoadmapLifeline(
-	locale = "en-US",
-) {
+export function createRoadmapLifeline(locale = "en-US") {
 	const milestones = ROADMAP_ENTRIES.reduce<LifelineMilestones>(
 		(result, entry, index) => {
 			const position = index + 1;
@@ -216,22 +219,15 @@ export function createRoadmapLifeline(
 	return {
 		...record,
 		markers: record.markers.map((marker) => {
-			const entry =
-				ROADMAP_ENTRIES[marker.year - 1];
+			const entry = ROADMAP_ENTRIES[marker.year - 1];
 
 			return {
 				...marker,
-				label: entry
-					? quarterLabel(
-						entry.date,
-						locale,
-					)
-					: "",
+				label: entry ? quarterLabel(entry.date, locale) : "",
 				age: marker.age ?? "",
 			};
 		}),
 	};
 }
 
-export const roadmapLifeline =
-	createRoadmapLifeline();
+export const roadmapLifeline = createRoadmapLifeline();

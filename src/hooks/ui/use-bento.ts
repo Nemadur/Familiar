@@ -1,14 +1,6 @@
-import {
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import { packAppend } from "@/lib/bento";
-import type {
-	PackStrategy,
-	PlacedTile,
-	Tile,
-} from "@/types/feed/bento";
+import type { PackStrategy, PlacedTile, Tile } from "@/types/feed/bento";
 
 export type {
 	PackStrategy,
@@ -17,9 +9,7 @@ export type {
 	Tile,
 } from "@/types/feed/bento";
 
-function computeColumnCount(
-	windowWidth: number,
-): number {
+function computeColumnCount(windowWidth: number): number {
 	if (windowWidth < 640) {
 		return 1;
 	}
@@ -46,71 +36,39 @@ export function useBento(
 	 * Start with four columns for SSR and hydration consistency.
 	 * The effect corrects it immediately on smaller screens.
 	 */
-	const [columnCount, setColumnCount] =
-		useState(4);
+	const [columnCount, setColumnCount] = useState(4);
 
 	useEffect(() => {
 		let animationFrame = 0;
 
 		const handleResize = (): void => {
-			cancelAnimationFrame(
-				animationFrame,
-			);
+			cancelAnimationFrame(animationFrame);
 
-			animationFrame =
-				requestAnimationFrame(() => {
-					setColumnCount(
-						computeColumnCount(
-							window.innerWidth,
-						),
-					);
-				});
+			animationFrame = requestAnimationFrame(() => {
+				setColumnCount(computeColumnCount(window.innerWidth));
+			});
 		};
 
 		handleResize();
 
-		window.addEventListener(
-			"resize",
-			handleResize,
-			{ passive: true },
-		);
+		window.addEventListener("resize", handleResize, { passive: true });
 
-		window.addEventListener(
-			"orientationchange",
-			handleResize,
-			{ passive: true },
-		);
+		window.addEventListener("orientationchange", handleResize, {
+			passive: true,
+		});
 
 		return () => {
-			cancelAnimationFrame(
-				animationFrame,
-			);
+			cancelAnimationFrame(animationFrame);
 
-			window.removeEventListener(
-				"resize",
-				handleResize,
-			);
+			window.removeEventListener("resize", handleResize);
 
-			window.removeEventListener(
-				"orientationchange",
-				handleResize,
-			);
+			window.removeEventListener("orientationchange", handleResize);
 		};
 	}, []);
 
 	const placed = useMemo(
-		() =>
-			packAppend(
-				[],
-				tiles,
-				columnCount,
-				strategy,
-			),
-		[
-			tiles,
-			columnCount,
-			strategy,
-		],
+		() => packAppend([], tiles, columnCount, strategy),
+		[tiles, columnCount, strategy],
 	);
 
 	return {

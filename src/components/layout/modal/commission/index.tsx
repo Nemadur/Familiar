@@ -807,9 +807,9 @@ export function CommissionModal({
 
 	const { basePrice, originalPrice } = commission
 		? calculateCommissionPricing(
-			commission.basePrice,
-			0, // TODO: commission.discountRate
-		)
+				commission.basePrice,
+				0, // TODO: commission.discountRate
+			)
 		: { basePrice: 0, originalPrice: 0 };
 
 	function openRequestModal() {

@@ -49,10 +49,7 @@ export function RegisterStepAccount({
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>
-							{t(
-								"auth.account_type.label",
-								"Account Type",
-							)}
+							{t("auth.account_type.label", "Account Type")}
 						</FormLabel>
 
 						<FormControl>
@@ -72,9 +69,7 @@ export function RegisterStepAccount({
 				name="email"
 				render={({ field }) => (
 					<FormItem>
-						<FormLabel>
-							{t("auth.email.label", "Email")}
-						</FormLabel>
+						<FormLabel>{t("auth.email.label", "Email")}</FormLabel>
 
 						<FormControl>
 							<InputGroup>
@@ -85,10 +80,7 @@ export function RegisterStepAccount({
 								<InputGroupInput
 									type="email"
 									autoComplete="email"
-									placeholder={t(
-										"auth.email.placeholder",
-										"Email address",
-									)}
+									placeholder={t("auth.email.placeholder", "Email address")}
 									{...field}
 									ref={(element) => {
 										field.ref(element);
@@ -108,9 +100,7 @@ export function RegisterStepAccount({
 				name="password"
 				render={({ field }) => (
 					<FormItem>
-						<FormLabel>
-							{t("auth.password.label", "Password")}
-						</FormLabel>
+						<FormLabel>{t("auth.password.label", "Password")}</FormLabel>
 
 						<FormControl>
 							<InputGroup>
@@ -119,43 +109,23 @@ export function RegisterStepAccount({
 								</InputGroupAddon>
 
 								<InputGroupInput
-									type={
-										showPassword
-											? "text"
-											: "password"
-									}
+									type={showPassword ? "text" : "password"}
 									autoComplete="new-password"
-									placeholder={t(
-										"auth.password.placeholder",
-										"Password",
-									)}
+									placeholder={t("auth.password.placeholder", "Password")}
 									{...field}
 								/>
 
-								<InputGroupAddon
-									align="inline-end"
-									className="pr-3"
-								>
+								<InputGroupAddon align="inline-end" className="pr-3">
 									<InputGroupButton
 										type="button"
 										variant="ghost"
 										size="icon-xs"
 										aria-label={
 											showPassword
-												? t(
-													"auth.password.hide",
-													"Hide password",
-												)
-												: t(
-													"auth.password.show",
-													"Show password",
-												)
+												? t("auth.password.hide", "Hide password")
+												: t("auth.password.show", "Show password")
 										}
-										onClick={() =>
-											setShowPassword(
-												(current) => !current,
-											)
-										}
+										onClick={() => setShowPassword((current) => !current)}
 									>
 										{showPassword ? (
 											<OutlineEyeOff className="text-muted-foreground" />
@@ -178,20 +148,12 @@ export function RegisterStepAccount({
 					name="invite_key"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>
-								{t(
-									"auth.invite_key.label",
-									"Invite key",
-								)}
-							</FormLabel>
+							<FormLabel>{t("auth.invite_key.label", "Invite key")}</FormLabel>
 
 							<FormControl>
 								<InputGroup>
 									<InputGroupAddon>
-										{t(
-											"auth.invite_key.prefix",
-											"FAM-",
-										)}
+										{t("auth.invite_key.prefix", "FAM-")}
 									</InputGroupAddon>
 
 									<InputGroupInput
@@ -200,59 +162,29 @@ export function RegisterStepAccount({
 										placeholder={t(
 											"auth.invite_key.placeholder",
 											"FAM-XXXX-XXXX-XXX",
-										).replace(
-											t(
-												"auth.invite_key.prefix",
-												"FAM-",
-											),
-											"",
-										)}
+										).replace(t("auth.invite_key.prefix", "FAM-"), "")}
 										{...field}
-										value={
-											field.value?.replace(
-												/^FAM-/,
-												"",
-											) ?? ""
-										}
+										value={field.value?.replace(/^FAM-/, "") ?? ""}
 										onChange={(event) => {
-											let input =
-												event.target.value.toUpperCase();
+											let input = event.target.value.toUpperCase();
 
-											input = input.replace(
-												/\s/g,
-												"",
-											);
-											input = input.replace(
-												/FAM-?/g,
-												"",
-											);
-											input = input.replace(
-												/[^0-9A-Z]/g,
-												"",
-											);
+											input = input.replace(/\s/g, "");
+											input = input.replace(/FAM-?/g, "");
+											input = input.replace(/[^0-9A-Z]/g, "");
 											input = input.slice(0, 11);
 
-											let formatted =
-												input.slice(0, 4);
+											let formatted = input.slice(0, 4);
 
 											if (input.length > 4) {
-												formatted += `-${input.slice(
-													4,
-													8,
-												)}`;
+												formatted += `-${input.slice(4, 8)}`;
 											}
 
 											if (input.length > 8) {
-												formatted += `-${input.slice(
-													8,
-													11,
-												)}`;
+												formatted += `-${input.slice(8, 11)}`;
 											}
 
 											field.onChange(
-												input.length === 0
-													? ""
-													: `FAM-${formatted}`,
+												input.length === 0 ? "" : `FAM-${formatted}`,
 											);
 										}}
 										maxLength={13}

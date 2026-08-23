@@ -1,7 +1,4 @@
-import type {
-	ComponentType,
-	ReactNode,
-} from "react";
+import type { ComponentType, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { OutlineCircle } from "../icons/icons";
 import type { IconProps } from "../icons/icons-props";
@@ -52,29 +49,21 @@ export function EmptyPage({
 					<Icon className={iconClassName} />
 				</EmptyMedia>
 
-				<EmptyTitle className={titleClassName}>
-					{title}
-				</EmptyTitle>
+				<EmptyTitle className={titleClassName}>{title}</EmptyTitle>
 
-				<EmptyDescription
-					className={descriptionClassName}
-				>
+				<EmptyDescription className={descriptionClassName}>
 					{resolvedDescription}
 				</EmptyDescription>
 
 				{error && (
-					<EmptyDescription
-						className={descriptionClassName}
-					>
+					<EmptyDescription className={descriptionClassName}>
 						{error.message}
 					</EmptyDescription>
 				)}
 			</EmptyHeader>
 
 			{children && (
-				<EmptyContent className={contentClassName}>
-					{children}
-				</EmptyContent>
+				<EmptyContent className={contentClassName}>{children}</EmptyContent>
 			)}
 		</Empty>
 	);

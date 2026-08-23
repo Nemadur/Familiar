@@ -15,14 +15,13 @@ const FIREWORKS_DURATION_S = 7.5;
 const CONFETTI_DURATION_S = 5;
 const MAX_DPR = 1.5;
 const NIGHTFALL_MS = 400;
-const DEBUG = Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
+const DEBUG = Boolean(
+	(import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV,
+);
 
 type Palette = [number[], number[], number[]];
 
-const PALETTES: Record<
-	Exclude<LifelineEventEffect, "confetti">,
-	Palette
-> = {
+const PALETTES: Record<Exclude<LifelineEventEffect, "confetti">, Palette> = {
 	fireworks: [
 		[0.9, 0.15, 0.25],
 		[1, 1, 1],
@@ -125,8 +124,7 @@ interface LifelineEffectsApi {
 	launch: (effect: LifelineEventEffect) => void;
 }
 
-const LifelineEffectsContext =
-	createContext<LifelineEffectsApi | null>(null);
+const LifelineEffectsContext = createContext<LifelineEffectsApi | null>(null);
 
 export function useLifelineFireworks() {
 	return useContext(LifelineEffectsContext);
@@ -187,10 +185,7 @@ function FireworksCanvas({
 		});
 
 		if (!context) {
-			debugLog(
-				"error",
-				"WebGL is unavailable; fireworks cannot start.",
-			);
+			debugLog("error", "WebGL is unavailable; fireworks cannot start.");
 			onDoneRef.current();
 			return;
 		}
@@ -198,11 +193,7 @@ function FireworksCanvas({
 		const gl: WebGLRenderingContext = context;
 		debugLog("debug", "WebGL fireworks context created.");
 
-		const vertexShader = compileShader(
-			gl,
-			gl.VERTEX_SHADER,
-			VERTEX_SHADER,
-		);
+		const vertexShader = compileShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER);
 		const fragmentShader = compileShader(
 			gl,
 			gl.FRAGMENT_SHADER,
@@ -263,16 +254,10 @@ function FireworksCanvas({
 			gl.STATIC_DRAW,
 		);
 
-		const positionLocation = gl.getAttribLocation(
-			program,
-			"a_pos",
-		);
+		const positionLocation = gl.getAttribLocation(program, "a_pos");
 
 		if (positionLocation < 0) {
-			debugLog(
-				"error",
-				"Fireworks shader attribute a_pos is missing.",
-			);
+			debugLog("error", "Fireworks shader attribute a_pos is missing.");
 			gl.deleteBuffer(buffer);
 			gl.deleteProgram(program);
 			gl.deleteShader(vertexShader);
@@ -282,27 +267,14 @@ function FireworksCanvas({
 		}
 
 		gl.enableVertexAttribArray(positionLocation);
-		gl.vertexAttribPointer(
-			positionLocation,
-			2,
-			gl.FLOAT,
-			false,
-			0,
-			0,
-		);
+		gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-		const resolutionLocation =
-			gl.getUniformLocation(program, "u_res");
-		const timeLocation =
-			gl.getUniformLocation(program, "u_time");
-		const durationLocation =
-			gl.getUniformLocation(program, "u_dur");
-		const color0Location =
-			gl.getUniformLocation(program, "u_c0");
-		const color1Location =
-			gl.getUniformLocation(program, "u_c1");
-		const color2Location =
-			gl.getUniformLocation(program, "u_c2");
+		const resolutionLocation = gl.getUniformLocation(program, "u_res");
+		const timeLocation = gl.getUniformLocation(program, "u_time");
+		const durationLocation = gl.getUniformLocation(program, "u_dur");
+		const color0Location = gl.getUniformLocation(program, "u_c0");
+		const color1Location = gl.getUniformLocation(program, "u_c1");
+		const color2Location = gl.getUniformLocation(program, "u_c2");
 
 		const [color0, color1, color2] = palette;
 
@@ -326,22 +298,10 @@ function FireworksCanvas({
 		);
 
 		const resize = () => {
-			const dpr = Math.min(
-				window.devicePixelRatio || 1,
-				MAX_DPR,
-			);
-			canvas.width = Math.round(
-				window.innerWidth * dpr,
-			);
-			canvas.height = Math.round(
-				window.innerHeight * dpr,
-			);
-			gl.viewport(
-				0,
-				0,
-				canvas.width,
-				canvas.height,
-			);
+			const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+			canvas.width = Math.round(window.innerWidth * dpr);
+			canvas.height = Math.round(window.innerHeight * dpr);
+			gl.viewport(0, 0, canvas.width, canvas.height);
 		};
 
 		resize();
@@ -366,23 +326,14 @@ function FireworksCanvas({
 				return;
 			}
 
-			gl.uniform2f(
-				resolutionLocation,
-				canvas.width,
-				canvas.height,
-			);
+			gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
 			gl.uniform1f(timeLocation, elapsed);
-			gl.uniform1f(
-				durationLocation,
-				FIREWORKS_DURATION_S,
-			);
+			gl.uniform1f(durationLocation, FIREWORKS_DURATION_S);
 			gl.clearColor(0, 0, 0, 0);
 			gl.clear(gl.COLOR_BUFFER_BIT);
 			gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-			frame = window.requestAnimationFrame(
-				renderFrame,
-			);
+			frame = window.requestAnimationFrame(renderFrame);
 		};
 
 		frame = window.requestAnimationFrame(renderFrame);
@@ -418,11 +369,7 @@ interface ConfettiParticle {
 	hue: number;
 }
 
-function ConfettiCanvas({
-	onDone,
-}: {
-	onDone: () => void;
-}) {
+function ConfettiCanvas({ onDone }: { onDone: () => void }) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const onDoneRef = useRef(onDone);
 	onDoneRef.current = onDone;
@@ -439,10 +386,7 @@ function ConfettiCanvas({
 		const context = canvas.getContext("2d");
 
 		if (!context) {
-			debugLog(
-				"error",
-				"Canvas 2D is unavailable; confetti cannot start.",
-			);
+			debugLog("error", "Canvas 2D is unavailable; confetti cannot start.");
 			onDoneRef.current();
 			return;
 		}
@@ -451,16 +395,9 @@ function ConfettiCanvas({
 		let dpr = 1;
 
 		const resize = () => {
-			dpr = Math.min(
-				window.devicePixelRatio || 1,
-				MAX_DPR,
-			);
-			canvas.width = Math.round(
-				window.innerWidth * dpr,
-			);
-			canvas.height = Math.round(
-				window.innerHeight * dpr,
-			);
+			dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+			canvas.width = Math.round(window.innerWidth * dpr);
+			canvas.height = Math.round(window.innerHeight * dpr);
 			canvas.style.width = `${window.innerWidth}px`;
 			canvas.style.height = `${window.innerHeight}px`;
 			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -469,31 +406,23 @@ function ConfettiCanvas({
 		resize();
 		window.addEventListener("resize", resize);
 
-		const particles: ConfettiParticle[] =
-			Array.from({ length: 160 }, (_, index) => {
+		const particles: ConfettiParticle[] = Array.from(
+			{ length: 160 },
+			(_, index) => {
 				const side = index % 2 === 0 ? -1 : 1;
 
 				return {
-					x:
-						side < 0
-							? window.innerWidth * 0.2
-							: window.innerWidth * 0.8,
+					x: side < 0 ? window.innerWidth * 0.2 : window.innerWidth * 0.8,
 					y: window.innerHeight,
-					vx:
-						side *
-						(2 + Math.random() * 8),
+					vx: side * (2 + Math.random() * 8),
 					vy: -(8 + Math.random() * 12),
 					size: 5 + Math.random() * 7,
-					rotation:
-						Math.random() * Math.PI * 2,
-					spin:
-						-0.2 + Math.random() * 0.4,
-					hue:
-						(index * 47 +
-							Math.random() * 40) %
-						360,
+					rotation: Math.random() * Math.PI * 2,
+					spin: -0.2 + Math.random() * 0.4,
+					hue: (index * 47 + Math.random() * 40) % 360,
 				};
-			});
+			},
+		);
 
 		debugLog("debug", "Confetti particles created.", {
 			count: particles.length,
@@ -513,20 +442,14 @@ function ConfettiCanvas({
 		};
 
 		const renderFrame = (now: number) => {
-			const elapsed =
-				(now - startedAt) / 1000;
+			const elapsed = (now - startedAt) / 1000;
 
 			if (elapsed >= CONFETTI_DURATION_S) {
 				finish();
 				return;
 			}
 
-			ctx.clearRect(
-				0,
-				0,
-				window.innerWidth,
-				window.innerHeight,
-			);
+			ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
 			for (const particle of particles) {
 				particle.vy += 0.24;
@@ -536,10 +459,7 @@ function ConfettiCanvas({
 				particle.rotation += particle.spin;
 
 				ctx.save();
-				ctx.translate(
-					particle.x,
-					particle.y,
-				);
+				ctx.translate(particle.x, particle.y);
 				ctx.rotate(particle.rotation);
 				ctx.fillStyle = `hsl(${particle.hue} 85% 58%)`;
 				ctx.fillRect(
@@ -551,9 +471,7 @@ function ConfettiCanvas({
 				ctx.restore();
 			}
 
-			frame = window.requestAnimationFrame(
-				renderFrame,
-			);
+			frame = window.requestAnimationFrame(renderFrame);
 		};
 
 		frame = window.requestAnimationFrame(renderFrame);
@@ -580,8 +498,7 @@ export function LifelineFireworksProvider({
 	children: ReactNode;
 }) {
 	const [playing, setPlaying] = useState(false);
-	const [effect, setEffect] =
-		useState<LifelineEventEffect>("fireworks");
+	const [effect, setEffect] = useState<LifelineEventEffect>("fireworks");
 	const { resolvedTheme, setTheme } = useTheme();
 
 	const restoreThemeRef = useRef<string | null>(null);
@@ -593,9 +510,7 @@ export function LifelineFireworksProvider({
 
 		return () => {
 			if (nightfallRef.current !== null) {
-				window.clearTimeout(
-					nightfallRef.current,
-				);
+				window.clearTimeout(nightfallRef.current);
 			}
 			debugLog("debug", "Effect provider unmounted.");
 		};
@@ -609,49 +524,30 @@ export function LifelineFireworksProvider({
 			});
 
 			if (playingRef.current) {
-				debugLog(
-					"warn",
-					"Launch ignored because another effect is active.",
-				);
+				debugLog("warn", "Launch ignored because another effect is active.");
 				return;
 			}
 
-			if (
-				window.matchMedia(
-					"(prefers-reduced-motion: reduce)",
-				).matches
-			) {
-				debugLog(
-					"warn",
-					"Launch skipped because reduced motion is enabled.",
-				);
+			if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+				debugLog("warn", "Launch skipped because reduced motion is enabled.");
 				return;
 			}
 
 			playingRef.current = true;
 			setEffect(nextEffect);
 
-			if (
-				nextEffect !== "confetti" &&
-				resolvedTheme === "light"
-			) {
+			if (nextEffect !== "confetti" && resolvedTheme === "light") {
 				restoreThemeRef.current = "light";
 				setTheme("dark");
 
 				if (nightfallRef.current !== null) {
-					window.clearTimeout(
-						nightfallRef.current,
-					);
+					window.clearTimeout(nightfallRef.current);
 				}
 
-				nightfallRef.current =
-					window.setTimeout(() => {
-						debugLog(
-							"debug",
-							"Nightfall delay finished.",
-						);
-						setPlaying(true);
-					}, NIGHTFALL_MS);
+				nightfallRef.current = window.setTimeout(() => {
+					debugLog("debug", "Nightfall delay finished.");
+					setPlaying(true);
+				}, NIGHTFALL_MS);
 				return;
 			}
 
@@ -682,10 +578,7 @@ export function LifelineFireworksProvider({
 				(effect === "confetti" ? (
 					<ConfettiCanvas onDone={done} />
 				) : (
-					<FireworksCanvas
-						palette={PALETTES[effect]}
-						onDone={done}
-					/>
+					<FireworksCanvas palette={PALETTES[effect]} onDone={done} />
 				))}
 		</LifelineEffectsContext.Provider>
 	);

@@ -68,17 +68,12 @@ export function LifelineEventText({
 						key={getLifelineEventKey(event, index)}
 						onClick={segment.action}
 						variant={segment.variant}
-						className={cn(
-							"mx-2 inline-flex align-middle",
-							segment.className,
-						)}
+						className={cn("mx-2 inline-flex align-middle", segment.className)}
 					>
 						{segment.value}
 					</Button>
 				) : (
-					<span key={getLifelineEventKey(event, index)}>
-						{segment.value}
-					</span>
+					<span key={getLifelineEventKey(event, index)}>{segment.value}</span>
 				),
 			)}
 		</span>

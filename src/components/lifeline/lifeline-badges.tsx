@@ -14,12 +14,7 @@ export function LifelineBadges({
 	}
 
 	return (
-		<div
-			className={cn(
-				"flex items-center justify-start gap-2",
-				className,
-			)}
-		>
+		<div className={cn("flex items-center justify-start gap-2", className)}>
 			{badges.map((badge, index) => {
 				const Icon = badge.icon;
 

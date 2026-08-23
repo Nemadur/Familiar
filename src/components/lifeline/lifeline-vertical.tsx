@@ -116,9 +116,7 @@ function LifelineVerticalEvent({ event }: { event: LifelineEvent }) {
 		}
 	};
 
-	const handleKeyDown = (
-		event: React.KeyboardEvent<HTMLParagraphElement>,
-	) => {
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLParagraphElement>) => {
 		if (!isInteractive) return;
 		if (event.key !== "Enter" && event.key !== " ") return;
 
@@ -134,9 +132,7 @@ function LifelineVerticalEvent({ event }: { event: LifelineEvent }) {
 					"max-w-[18rem] text-left text-[14px] leading-[1.55] tracking-[-0.01em]",
 					isInteractive && "cursor-pointer",
 				)}
-				data-lifeline-interactive={
-					isInteractive ? "" : undefined
-				}
+				data-lifeline-interactive={isInteractive ? "" : undefined}
 				role={isInteractive ? "button" : undefined}
 				tabIndex={isInteractive ? 0 : undefined}
 				onClick={isInteractive ? activateEvent : undefined}
@@ -257,10 +253,7 @@ const LifelineVerticalEntry = forwardRef<
 						<div aria-hidden="true" />
 						<div className="min-w-0 text-zinc-500 transition-colors duration-300 dark:text-zinc-400">
 							{marker.badges && marker.badges.length > 0 && (
-								<LifelineBadges
-									badges={marker.badges}
-									className="mb-3"
-								/>
+								<LifelineBadges badges={marker.badges} className="mb-3" />
 							)}
 
 							{marker.companies && marker.companies.length > 0 && (

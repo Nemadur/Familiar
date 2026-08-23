@@ -1,4 +1,4 @@
-import { ScrollShadow } from "@heroui/react";
+import { ScrollShadow, Typography } from "@heroui/react";
 import {
 	useNavigate,
 	useParams,
@@ -162,10 +162,7 @@ export function PortfolioContentSkeleton() {
 		});
 	}, []);
 
-	const { cols, placed } = useBento(
-		tiles,
-		"balanced",
-	);
+	const { cols, placed } = useBento(tiles, "balanced");
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -285,7 +282,7 @@ export default function UserProfile({
 		<div className="flex flex-1 flex-col">
 			<ProfileCover user={user} />
 			<div className="flex min-h-0 flex-1 flex-col">
-				<div className="flex flex-1 flex-col gap-4 sm:flex-row md:gap-8 max-lg:px-5">
+				<div className="flex flex-1 flex-col gap-4 sm:flex-row md:gap-8">
 					<div className="shrink-0 md:w-60">
 						<UserProfileSidebar user={user} isMe={isMe} isSuspended={false} />
 					</div>
@@ -329,8 +326,7 @@ export function UserProfileSidebar({
 	const handleOpenSettings = () => {
 		void navigate({
 			to: ".",
-			search: (previous) =>
-			({
+			search: (previous) => ({
 				...previous,
 				settings: "profile",
 			}),
@@ -344,32 +340,28 @@ export function UserProfileSidebar({
 
 	const handleCloseSettings = () => {
 		router.history.back();
-	}
+	};
 
 	const handleSettingsOpenChange = (open: boolean) => {
 		if (!open) {
 			handleCloseSettings();
 		}
-	}
+	};
 
 	const handleSaveSettings = () => {
 		// TODO: save using the settings API
 		toast.info("Settings saved successfully");
 		handleCloseSettings();
-	}
+	};
 
 	return (
 		<>
-			<aside className="-mt-12 h-fit space-y-3 pl-4 md:sticky md:top-20 md:-mt-16 md:pb-10">
+			<aside className="-mt-12 h-fit space-y-3 lg:pl-4 md:sticky md:top-20 md:-mt-16 md:pb-10 max-lg:px-4">
 				<div className="relative z-10 flex flex-row items-start justify-between gap-4 lg:flex-col lg:justify-start">
-					<UserAvatar
-						user={user}
-						isHuge
-						hasOutline
-					/>
+					<UserAvatar user={user} isHuge hasOutline />
 
 					{/* Mobile actions */}
-					<div className="flex w-fit max-w-full shrink-0 gap-2 self-end sm:hidden">
+					{/* <div className="flex w-fit max-w-full shrink-0 gap-2 self-end sm:hidden">
 						{!isMe ? (
 							<>
 								<FollowButton
@@ -441,16 +433,14 @@ export function UserProfileSidebar({
 									)}
 							</>
 						)}
-					</div>
+					</div> */}
 				</div>
 
 				<div className="space-y-4">
 					{/* User identity */}
 					<div>
 						<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
-							<span className="truncate">
-								{user.displayName}
-							</span>
+							<span className="truncate">{user.displayName}</span>
 
 							<ProfileBadge user={user} />
 						</h3>
@@ -461,7 +451,7 @@ export function UserProfileSidebar({
 					</div>
 
 					{/* Desktop actions */}
-					<div className="hidden flex-col gap-2 sm:flex">
+					<div className="flex-col gap-2">
 						{isMe ? (
 							<div className="flex gap-2">
 								<Button
@@ -469,28 +459,16 @@ export function UserProfileSidebar({
 									className="flex-1"
 									size="xl"
 									variant="secondary"
-									onClick={
-										handleOpenSettings
-									}
+									onClick={handleOpenSettings}
 								>
-									{t(
-										"components.profile.actions.edit_profile",
-										"Edit profile",
-									)}
+									{t("components.profile.actions.edit_profile", "Edit profile")}
 								</Button>
 
-								{user.roles.includes(
-									TRoles.Artist,
-								) &&
-									user.isVerified && (
-										<Button
-											type="button"
-											variant="secondary"
-											size="icon-xl"
-										>
-											<OutlineListBoxes />
-										</Button>
-									)}
+								{user.roles.includes(TRoles.Artist) && user.isVerified && (
+									<Button type="button" variant="secondary" size="icon-xl">
+										<OutlineListBoxes />
+									</Button>
+								)}
 							</div>
 						) : (
 							<div className="flex gap-2">
@@ -499,38 +477,31 @@ export function UserProfileSidebar({
 										isFollowing={false}
 										loading={false}
 										canFollow
-										onToggle={() => { }}
+										onToggle={() => {}}
 										showText
 										className="flex-1"
 									/>
 
-									{user.roles.includes(
-										TRoles.Artist,
-									) &&
-										user.isVerified && (
-											<Button
-												type="button"
-												variant="secondary"
-												size="icon-xl"
-											>
-												<OutlineListBoxes />
-											</Button>
-										)}
+									{user.roles.includes(TRoles.Artist) && user.isVerified && (
+										<Button type="button" variant="secondary" size="icon-xl">
+											<OutlineListBoxes />
+										</Button>
+									)}
 
+									{/* TODO: attach create dm function */}
 									<Button
 										type="button"
 										variant="secondary"
+										className="flex-1"
 										disabled
 										size="icon-xl"
 									>
-										<OutlineChat />
+										{t("components.profile.actions.message", "Message")}
+										{/* <OutlineChat /> */}
 									</Button>
 
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon-xl"
-									>
+									{/* TODO: add dropdown with report user, block user and share profile*/}
+									<Button type="button" variant="ghost" size="icon-xl">
 										<OutlineMore />
 									</Button>
 								</div>
@@ -539,30 +510,24 @@ export function UserProfileSidebar({
 					</div>
 
 					{/* Follow statistics */}
-					<div className="flex gap-2 text-xs text-neutral-500">
+					<div className="flex gap-2 text-xs text-muted-foreground">
 						<div className="flex items-center gap-2">
 							<span className="flex items-center gap-2">
-								<span className="font-semibold text-primary">
+								<Typography.Root type={"body-xs"} className="font-semibold">
 									0
-								</span>
+								</Typography.Root>
 
-								{t(
-									"components.profile.actions.followers",
-									"followers",
-								)}
+								{t("components.profile.actions.following", "following")}
 							</span>
 						</div>
 
 						<div className="flex items-center gap-2">
 							<span className="flex items-center gap-2">
-								<span className="font-semibold text-primary">
+								<Typography.Root type={"body-xs"} className="font-semibold">
 									0
-								</span>
+								</Typography.Root>
 
-								{t(
-									"components.profile.actions.following",
-									"following",
-								)}
+								{t("components.profile.actions.followers", "followers")}
 							</span>
 						</div>
 					</div>
@@ -590,18 +555,13 @@ export function UserProfileSidebar({
 								size="sm"
 								className="link h-auto text-xs text-muted-foreground hover:text-foreground"
 							>
-								{t(
-									"components.profile.info.about_me",
-									"About me",
-								)}
+								{t("components.profile.info.about_me", "About me")}
 
 								<OutlineChevronRight />
 							</Button>
 						</DialogTrigger>
 
-						<ProfileDetailsContent
-							user={user}
-						/>
+						<ProfileDetailsContent user={user} />
 					</Dialog>
 				</div>
 			</aside>
@@ -667,7 +627,8 @@ function UserFeeds({
 
 	return (
 		<div className="flex h-full flex-1 flex-col">
-			<div className="mb-6 shrink-0 justify-start pb-0 pt-2 transition-all">
+			{/* TODO: TABS DISABLED TILL WE WILL NOT TAKE CARE OF COMMMISSIONS AND OTHER STUFF */}
+			{/* <div className="mb-6 shrink-0 justify-start pb-0 pt-2 transition-all">
 				<ScrollShadow
 					orientation="horizontal"
 					className="h-full w-full"
@@ -682,9 +643,9 @@ function UserFeeds({
 						/>
 					</div>
 				</ScrollShadow>
-			</div>
+			</div> */}
 
-			<div className="mt-0 flex h-full min-h-0 flex-1 flex-col pb-24">
+			<div className="mt-6 flex h-full min-h-0 flex-1 flex-col pb-24">
 				{children}
 			</div>
 		</div>

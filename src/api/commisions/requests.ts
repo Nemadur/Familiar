@@ -56,7 +56,7 @@ export async function acceptCommissionRequest(requestId: string) {
 		`commission-requests/${requestId}/accept`,
 		{
 			method: "PATCH",
-		}
+		},
 	);
 }
 
@@ -68,7 +68,7 @@ export async function rejectCommissionRequest(requestId: string) {
 		`commission-requests/${requestId}/reject`,
 		{
 			method: "PATCH",
-		}
+		},
 	);
 }
 
@@ -80,7 +80,7 @@ export async function cancelCommissionRequest(requestId: string) {
 		`commissions/requests/${requestId}/cancel`,
 		{
 			method: "PATCH",
-		}
+		},
 	);
 }
 
@@ -96,6 +96,6 @@ export async function updateCommissionRequestMultimedia(
 		{
 			method: "PATCH",
 			body: JSON.stringify({ multimediaIds }),
-		}
+		},
 	);
 }

@@ -36,8 +36,7 @@ export async function waitForMediaJob(
 		timeoutMs?: number;
 	} = {},
 ) {
-	const pollIntervalMs =
-		options.pollIntervalMs ?? MEDIA_JOB_POLL_INTERVAL_MS;
+	const pollIntervalMs = options.pollIntervalMs ?? MEDIA_JOB_POLL_INTERVAL_MS;
 	const timeoutMs = options.timeoutMs ?? MEDIA_JOB_POLL_TIMEOUT_MS;
 	const startedAt = Date.now();
 	let lastError: unknown = null;
@@ -89,7 +88,9 @@ export async function uploadMediaAndGetJobIds(files: File[]) {
 		.filter((jobId): jobId is string => Boolean(jobId));
 
 	if (jobIds.length !== files.length) {
-		throw new Error("Media upload accepted, but not every file returned a job id.");
+		throw new Error(
+			"Media upload accepted, but not every file returned a job id.",
+		);
 	}
 
 	await waitForMediaJobs(jobIds);

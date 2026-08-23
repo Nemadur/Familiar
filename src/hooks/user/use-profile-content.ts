@@ -1,7 +1,4 @@
-import {
-	useQuery,
-	useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPortfolioPostsByUserId } from "@/api/portfolio";
 import {
 	getArtistCatalogs,
@@ -16,7 +13,10 @@ import {
 	getMyPortfolioPosts,
 } from "@/api/portfolio/posts/post";
 import type { PortfolioPostResponse } from "@/api/portfolio/posts/post-types";
-import { useCreateCatalog, useCreatePortfolioPost } from "@/hooks/portfolio/use-portfolio";
+import {
+	useCreateCatalog,
+	useCreatePortfolioPost,
+} from "@/hooks/portfolio/use-portfolio";
 import { useAuth } from "@/providers/auth";
 import type { Character } from "@/types/character";
 import type { PostWithAuthor } from "@/types/post";
@@ -53,11 +53,9 @@ export function useProfileContent(
 
 	const isCurrentUser = Boolean(
 		authenticatedUser &&
-		(
-			authenticatedUser.userId === userId ||
-			normalizeUsername(authenticatedUser.username) ===
-			normalizeUsername(username)
-		),
+			(authenticatedUser.userId === userId ||
+				normalizeUsername(authenticatedUser.username) ===
+					normalizeUsername(username)),
 	);
 
 	const queryKey = [
@@ -73,48 +71,35 @@ export function useProfileContent(
 
 	const query = useQuery<ProfileContent>({
 		queryKey,
-		enabled:
-			Boolean(username && userId) &&
-			!isAuthPending,
+		enabled: Boolean(username && userId) && !isAuthPending,
 
 		queryFn: async () => {
 			if (tab === "portfolio") {
-				const [postsResponse, catalogsResponse] =
-					await Promise.all([
-						isCurrentUser
-							? getMyPortfolioPosts({
+				const [postsResponse, catalogsResponse] = await Promise.all([
+					isCurrentUser
+						? getMyPortfolioPosts({
 								page: 0,
 								size: 100,
 							})
-							: getArtistPortfolioPosts(
-								username,
-								{
-									page: 0,
-									size: 100,
-								},
-							),
-						isCurrentUser
-							? getMyCatalogs()
-							: getArtistCatalogs(username),
-					]);
+						: getArtistPortfolioPosts(username, {
+								page: 0,
+								size: 100,
+							}),
+					isCurrentUser ? getMyCatalogs() : getArtistCatalogs(username),
+				]);
 
 				return {
-					portfolioPosts: Array.isArray(
-						postsResponse.content,
-					)
+					portfolioPosts: Array.isArray(postsResponse.content)
 						? postsResponse.content
 						: [],
 					feedPosts: [],
-					folders: Array.isArray(catalogsResponse)
-						? catalogsResponse
-						: [],
+					folders: Array.isArray(catalogsResponse) ? catalogsResponse : [],
 					characters: [],
 				};
 			}
 
 			if (tab === "liked" || tab === "saved") {
-				const feedPosts =
-					await getPortfolioPostsByUserId(userId);
+				const feedPosts = await getPortfolioPostsByUserId(userId);
 
 				return {
 					portfolioPosts: [],
@@ -137,40 +122,29 @@ export function useProfileContent(
 		data: CreateCatalogRequest,
 	): Promise<CatalogResponse> {
 		if (!isCurrentUser || tab !== "portfolio") {
-			throw new Error(
-				"You cannot create catalogs for this profile.",
-			);
+			throw new Error("You cannot create catalogs for this profile.");
 		}
 
-		const createdCatalog =
-			await createCatalogMutation.mutateAsync(data);
+		const createdCatalog = await createCatalogMutation.mutateAsync(data);
 
-		queryClient.setQueryData<ProfileContent>(
-			queryKey,
-			(currentContent) => {
-				if (!currentContent) {
-					return currentContent;
-				}
+		queryClient.setQueryData<ProfileContent>(queryKey, (currentContent) => {
+			if (!currentContent) {
+				return currentContent;
+			}
 
-				const alreadyExists =
-					currentContent.folders.some(
-						(folder) =>
-							folder.id === createdCatalog.id,
-					);
+			const alreadyExists = currentContent.folders.some(
+				(folder) => folder.id === createdCatalog.id,
+			);
 
-				if (alreadyExists) {
-					return currentContent;
-				}
+			if (alreadyExists) {
+				return currentContent;
+			}
 
-				return {
-					...currentContent,
-					folders: [
-						...currentContent.folders,
-						createdCatalog,
-					],
-				};
-			},
-		);
+			return {
+				...currentContent,
+				folders: [...currentContent.folders, createdCatalog],
+			};
+		});
 
 		return createdCatalog;
 	}
@@ -184,22 +158,16 @@ export function useProfileContent(
 
 		const createdPost = await createPostMutation.mutateAsync(data);
 
-		queryClient.setQueryData<ProfileContent>(
-			queryKey,
-			(currentContent) => {
-				if (!currentContent) {
-					return currentContent;
-				}
+		queryClient.setQueryData<ProfileContent>(queryKey, (currentContent) => {
+			if (!currentContent) {
+				return currentContent;
+			}
 
-				return {
-					...currentContent,
-					portfolioPosts: [
-						createdPost,
-						...currentContent.portfolioPosts,
-					],
-				};
-			},
-		);
+			return {
+				...currentContent,
+				portfolioPosts: [createdPost, ...currentContent.portfolioPosts],
+			};
+		});
 
 		// Force invalidate to ensure images/fresh data loads if it was altered elsewhere
 		queryClient.invalidateQueries({ queryKey: ["portfolio"] });
@@ -211,15 +179,12 @@ export function useProfileContent(
 	return {
 		...query,
 
-		isPending:
-			isAuthPending || query.isPending,
+		isPending: isAuthPending || query.isPending,
 
 		isCurrentUser,
 		createCatalog: createProfileCatalog,
-		isCreatingCatalog:
-			createCatalogMutation.isPending,
-		createCatalogError:
-			createCatalogMutation.error,
+		isCreatingCatalog: createCatalogMutation.isPending,
+		createCatalogError: createCatalogMutation.error,
 
 		createPost: createProfilePost,
 		isCreatingPost: createPostMutation.isPending,

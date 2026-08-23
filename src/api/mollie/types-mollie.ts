@@ -14,7 +14,14 @@ export type TMolliePaymentResponse = {
 	id: string;
 	mode: "live" | "test";
 	createdAt: string;
-	status: "open" | "canceled" | "pending" | "authorized" | "expired" | "failed" | "paid";
+	status:
+		| "open"
+		| "canceled"
+		| "pending"
+		| "authorized"
+		| "expired"
+		| "failed"
+		| "paid";
 	isCancelable: boolean;
 	expiresAt: string;
 	amount: {

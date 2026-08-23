@@ -102,7 +102,10 @@ export function BasketDropdown() {
 					asChild
 					onClick={() => setOpen(false)}
 				>
-					<Link to={localizePath("/basket", i18n.language) as any} preload={false}>
+					<Link
+						to={localizePath("/basket", i18n.language) as any}
+						preload={false}
+					>
 						Checkout
 					</Link>
 				</Button>

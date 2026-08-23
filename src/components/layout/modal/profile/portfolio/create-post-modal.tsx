@@ -7,13 +7,28 @@ import { toast } from "sonner";
 import { getCommissionCategories } from "@/api/commisions/categories";
 import { getTags } from "@/api/commisions/index";
 import type { CatalogResponse } from "@/api/portfolio/catalogs/catalog-types";
-import type { CreatePortfolioPostRequest, PortfolioPostResponse } from "@/api/portfolio/posts/post-types";
-import { OutlineClose, OutlineEdit, OutlinePlus, SolidPlus } from "@/components/icons/icons";
+import type {
+	CreatePortfolioPostRequest,
+	PortfolioPostResponse,
+} from "@/api/portfolio/posts/post-types";
+import {
+	OutlineClose,
+	OutlineEdit,
+	OutlinePlus,
+	SolidPlus,
+} from "@/components/icons/icons";
 import { UniversalModalLayout } from "@/components/layout/modal/universal-modal-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
 import {
 	Field,
 	FieldDescription,
@@ -26,8 +41,18 @@ import {
 	InputGroupInput,
 	InputGroupTextArea,
 } from "@/components/ui/input-group";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { useUploadPortfolioPostMedia } from "@/hooks/portfolio/use-portfolio";
@@ -71,7 +96,8 @@ function MultiSelectPopover({
 					<div className="flex flex-wrap gap-1.5 items-center">
 						{selected.length > 0 ? (
 							selected.map((val) => {
-								const label = options.find((opt) => opt.value === val)?.label || val;
+								const label =
+									options.find((opt) => opt.value === val)?.label || val;
 								return (
 									<Badge
 										key={val}
@@ -94,7 +120,10 @@ function MultiSelectPopover({
 					<ChevronDown className="size-4 shrink-0 opacity-50" />
 				</button>
 			</PopoverTrigger>
-			<PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+			<PopoverContent
+				className="w-(--radix-popover-trigger-width) p-0"
+				align="start"
+			>
 				<Command>
 					<CommandInput placeholder={`Search ${title.toLowerCase()}...`} />
 					<CommandEmpty>{emptyText}</CommandEmpty>
@@ -114,7 +143,7 @@ function MultiSelectPopover({
 											className={cn(
 												"opacity-0 border-primary/12 transition-opacity",
 												isSelected && "opacity-100",
-												"group-hover:opacity-100"
+												"group-hover:opacity-100",
 											)}
 										/>
 										<span>{option.label}</span>
@@ -132,7 +161,9 @@ function MultiSelectPopover({
 interface CreatePostModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onCreatePost: (data: CreatePortfolioPostRequest) => Promise<PortfolioPostResponse | void>;
+	onCreatePost: (
+		data: CreatePortfolioPostRequest,
+	) => Promise<PortfolioPostResponse | void>;
 	isCreating: boolean;
 	catalogs: CatalogResponse[];
 }
@@ -153,7 +184,9 @@ export function CreatePostModal({
 	const [description, setDescription] = useState("");
 	const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
-	const [selectedContentWarnings, setSelectedContentWarnings] = useState<string[]>([]);
+	const [selectedContentWarnings, setSelectedContentWarnings] = useState<
+		string[]
+	>([]);
 	const [selectedCatalogs, setSelectedCatalogs] = useState<string[]>([]);
 
 	const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -252,7 +285,9 @@ export function CreatePostModal({
 			if (createdPost?.id && imageFiles.length > 0) {
 				// Upload all selected images
 				await Promise.all(
-					imageFiles.map((file) => uploadMediaMutation.mutateAsync({ postId: createdPost.id!, file }))
+					imageFiles.map((file) =>
+						uploadMediaMutation.mutateAsync({ postId: createdPost.id!, file }),
+					),
 				);
 
 				// Invalidate portfolio so the newly uploaded images appear in the grid
@@ -260,13 +295,22 @@ export function CreatePostModal({
 				await queryClient.invalidateQueries({ queryKey: ["profile-content"] });
 			}
 
-			toast.success(t("components.portfolio.post.create.success", "Post created successfully!"));
+			toast.success(
+				t(
+					"components.portfolio.post.create.success",
+					"Post created successfully!",
+				),
+			);
 			onOpenChange(false);
 		} catch (error) {
 			setSubmitError(
-				error instanceof Error ? error.message : "The post could not be created."
+				error instanceof Error
+					? error.message
+					: "The post could not be created.",
 			);
-			toast.error(t("components.portfolio.post.create.error", "Failed to create post."));
+			toast.error(
+				t("components.portfolio.post.create.error", "Failed to create post."),
+			);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -281,7 +325,9 @@ export function CreatePostModal({
 			mediaContent={
 				<div className="flex flex-col h-full min-h-0">
 					<div className="flex items-center justify-between p-6 pb-4 shrink-0">
-						<Typography.Heading level={4}>{t("components.portfolio.post.create.media.title", "IMAGES")}</Typography.Heading>
+						<Typography.Heading level={4}>
+							{t("components.portfolio.post.create.media.title", "IMAGES")}
+						</Typography.Heading>
 						<label className={cn(buttonVariants({ variant: "secondary" }))}>
 							<OutlinePlus />
 							{t("components.portfolio.post.create.media.upload", "Add images")}
@@ -300,7 +346,12 @@ export function CreatePostModal({
 							{imagePreviewUrls.length === 0 ? (
 								<label className="flex flex-col items-center justify-center h-full min-h-64 border-2 border-dashed rounded-xl border-muted-foreground/20 text-muted-foreground cursor-pointer hover:bg-muted/50 transition-colors">
 									<Upload className="size-8 mb-2 opacity-50" />
-									<p className="text-sm">{t("components.portfolio.post.create.media.upload", "Click to upload image")}</p>
+									<p className="text-sm">
+										{t(
+											"components.portfolio.post.create.media.upload",
+											"Click to upload image",
+										)}
+									</p>
 									<input
 										type="file"
 										className="hidden"
@@ -311,8 +362,15 @@ export function CreatePostModal({
 								</label>
 							) : (
 								imagePreviewUrls.map((url, idx) => (
-									<div key={url} className="relative w-full rounded-xl overflow-hidden border bg-muted/50 group shrink-0">
-										<img src={url} alt={`Preview ${idx}`} className="w-full h-auto object-cover" />
+									<div
+										key={url}
+										className="relative w-full rounded-xl overflow-hidden border bg-muted/50 group shrink-0"
+									>
+										<img
+											src={url}
+											alt={`Preview ${idx}`}
+											className="w-full h-auto object-cover"
+										/>
 										<button
 											type="button"
 											onClick={() => removeImage(idx)}
@@ -325,7 +383,7 @@ export function CreatePostModal({
 							)}
 						</div>
 					</div>
-				</ div>
+				</div>
 			}
 			detailsContent={
 				<form className="flex h-full min-h-0 flex-col" onSubmit={handleSubmit}>
@@ -335,10 +393,16 @@ export function CreatePostModal({
 								<FieldGroup>
 									<Field data-invalid={titleInvalid || undefined}>
 										<FieldLabel htmlFor="post-title">
-											{t("components.portfolio.post.create.fields.title", "TITLE *")}
+											{t(
+												"components.portfolio.post.create.fields.title",
+												"TITLE *",
+											)}
 										</FieldLabel>
 
-										<InputGroup className="h-12" data-invalid={titleInvalid || undefined}>
+										<InputGroup
+											className="h-12"
+											data-invalid={titleInvalid || undefined}
+										>
 											{/* <InputGroupAddon>
 												<OutlineEdit />
 											</InputGroupAddon> */}
@@ -352,7 +416,7 @@ export function CreatePostModal({
 												aria-describedby={titleDescriptionId}
 												placeholder={t(
 													"components.portfolio.post.create.placeholders.title",
-													"e.g. Character portrait"
+													"e.g. Character portrait",
 												)}
 												onChange={(event) => setTitle(event.target.value)}
 											/>
@@ -360,14 +424,23 @@ export function CreatePostModal({
 
 										<FieldDescription id={titleDescriptionId}>
 											{titleInvalid
-												? t("components.portfolio.post.create.errors.title_required", "Title is required.")
-												: t("components.portfolio.post.create.hints.title_length", "Maximum 100 characters.")}
+												? t(
+														"components.portfolio.post.create.errors.title_required",
+														"Title is required.",
+													)
+												: t(
+														"components.portfolio.post.create.hints.title_length",
+														"Maximum 100 characters.",
+													)}
 										</FieldDescription>
 									</Field>
 
 									<Field>
 										<FieldLabel htmlFor="post-description">
-											{t("components.portfolio.post.create.fields.description", "DESCRIPTION")}
+											{t(
+												"components.portfolio.post.create.fields.description",
+												"DESCRIPTION",
+											)}
 										</FieldLabel>
 
 										<InputGroup className="rounded-xl">
@@ -377,7 +450,7 @@ export function CreatePostModal({
 												rows={5}
 												placeholder={t(
 													"components.portfolio.post.create.placeholders.description",
-													"Optional description..."
+													"Optional description...",
 												)}
 												onChange={(event) => setDescription(event.target.value)}
 											/>
@@ -386,21 +459,32 @@ export function CreatePostModal({
 
 									<Field>
 										<FieldLabel htmlFor="post-visibility">
-											{t("components.portfolio.post.create.fields.visibility", "VISIBILITY")}
+											{t(
+												"components.portfolio.post.create.fields.visibility",
+												"VISIBILITY",
+											)}
 										</FieldLabel>
 										<Select
 											value={visibility}
-											onValueChange={(value: "PUBLIC" | "PRIVATE") => setVisibility(value)}
+											onValueChange={(value: "PUBLIC" | "PRIVATE") =>
+												setVisibility(value)
+											}
 										>
 											<SelectTrigger id="post-visibility">
 												<SelectValue />
 											</SelectTrigger>
 											<SelectContent>
 												<SelectItem value="PUBLIC">
-													{t("components.portfolio.post.create.visibility.public", "Public")}
+													{t(
+														"components.portfolio.post.create.visibility.public",
+														"Public",
+													)}
 												</SelectItem>
 												<SelectItem value="PRIVATE">
-													{t("components.portfolio.post.create.visibility.private", "Private")}
+													{t(
+														"components.portfolio.post.create.visibility.private",
+														"Private",
+													)}
 												</SelectItem>
 											</SelectContent>
 										</Select>
@@ -408,28 +492,43 @@ export function CreatePostModal({
 
 									<Field>
 										<FieldLabel>
-											{t("components.portfolio.post.create.fields.categories", "CATEGORIES (TAGS)")}
+											{t(
+												"components.portfolio.post.create.fields.categories",
+												"CATEGORIES (TAGS)",
+											)}
 										</FieldLabel>
 										<MultiSelectPopover
 											title="Categories"
-											options={allCategories.map((c) => ({ label: c.name, value: c.name }))}
+											options={allCategories.map((c) => ({
+												label: c.name,
+												value: c.name,
+											}))}
 											selected={selectedTags}
 											onChange={setSelectedTags}
 											placeholder="Select categories..."
 											emptyText="No categories found."
 										/>
 										<FieldDescription>
-											{t("components.portfolio.post.create.hints.categories", "Select from available categories.")}
+											{t(
+												"components.portfolio.post.create.hints.categories",
+												"Select from available categories.",
+											)}
 										</FieldDescription>
 									</Field>
 
 									<Field>
 										<FieldLabel>
-											{t("components.portfolio.post.create.fields.cws", "CONTENT WARNINGS")}
+											{t(
+												"components.portfolio.post.create.fields.cws",
+												"CONTENT WARNINGS",
+											)}
 										</FieldLabel>
 										<MultiSelectPopover
 											title="Warnings"
-											options={availableCWs.map((cw) => ({ label: cw.name, value: cw.name }))}
+											options={availableCWs.map((cw) => ({
+												label: cw.name,
+												value: cw.name,
+											}))}
 											selected={selectedContentWarnings}
 											onChange={setSelectedContentWarnings}
 											placeholder="Select warnings..."
@@ -437,17 +536,26 @@ export function CreatePostModal({
 											chipClassName="bg-destructive/10 text-destructive hover:bg-destructive/20"
 										/>
 										<FieldDescription>
-											{t("components.portfolio.post.create.hints.cws", "Select applicable content warnings.")}
+											{t(
+												"components.portfolio.post.create.hints.cws",
+												"Select applicable content warnings.",
+											)}
 										</FieldDescription>
 									</Field>
 
 									<Field>
 										<FieldLabel>
-											{t("components.portfolio.post.create.fields.catalogs", "ADD TO CATALOGS")}
+											{t(
+												"components.portfolio.post.create.fields.catalogs",
+												"ADD TO CATALOGS",
+											)}
 										</FieldLabel>
 										<MultiSelectPopover
 											title="Catalogs"
-											options={catalogs.map((c) => ({ label: c.name, value: c.id }))}
+											options={catalogs.map((c) => ({
+												label: c.name,
+												value: c.id,
+											}))}
 											selected={selectedCatalogs}
 											onChange={setSelectedCatalogs}
 											placeholder="Select catalogs..."
@@ -457,7 +565,11 @@ export function CreatePostModal({
 								</FieldGroup>
 
 								{submitError && (
-									<p id={submitErrorId} role="alert" className="text-sm text-destructive">
+									<p
+										id={submitErrorId}
+										role="alert"
+										className="text-sm text-destructive"
+									>
 										{submitError}
 									</p>
 								)}
@@ -491,8 +603,14 @@ export function CreatePostModal({
 							)}
 
 							{isSubmitting
-								? t("components.portfolio.post.create.actions.creating", "Creating...")
-								: t("components.portfolio.post.create.actions.create", "Create")}
+								? t(
+										"components.portfolio.post.create.actions.creating",
+										"Creating...",
+									)
+								: t(
+										"components.portfolio.post.create.actions.create",
+										"Create",
+									)}
 						</Button>
 					</div>
 				</form>

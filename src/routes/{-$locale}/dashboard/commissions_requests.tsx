@@ -34,7 +34,9 @@ import { useAuth } from "@/providers/auth";
 import { TCommissionRequestStatus } from "@/types/commissions";
 import { TPaymentStatus } from "@/types/payment";
 
-export const Route = createFileRoute("/{-$locale}/dashboard/commissions_requests")({
+export const Route = createFileRoute(
+	"/{-$locale}/dashboard/commissions_requests",
+)({
 	component: DashboardCommissionsRequests,
 });
 

@@ -1,18 +1,10 @@
-import {
-	type FormEvent,
-	useEffect,
-	useId,
-	useState,
-} from "react";
+import { type FormEvent, useEffect, useId, useState } from "react";
 import type {
 	CatalogResponse,
 	CreateCatalogRequest,
 	UpdateCatalogRequest,
 } from "@/api/portfolio/catalogs/catalog-types";
-import {
-	OutlineFolder,
-	OutlineFolderAddOuLc,
-} from "@/components/icons/icons";
+import { OutlineFolder, OutlineFolderAddOuLc } from "@/components/icons/icons";
 import { UniversalModalLayout } from "@/components/layout/modal/universal-modal-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 interface CreateCatalogModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	onCreateCatalog: (
-		data: CreateCatalogRequest,
-	) => Promise<CatalogResponse>;
+	onCreateCatalog: (data: CreateCatalogRequest) => Promise<CatalogResponse>;
 	isCreating: boolean;
 }
 
@@ -47,18 +37,13 @@ export function CreateCatalogModal({
 	const submitErrorId = useId();
 
 	const [name, setName] = useState("");
-	const [description, setDescription] =
-		useState("");
-	const [submitted, setSubmitted] =
-		useState(false);
-	const [submitError, setSubmitError] =
-		useState<string | null>(null);
+	const [description, setDescription] = useState("");
+	const [submitted, setSubmitted] = useState(false);
+	const [submitError, setSubmitError] = useState<string | null>(null);
 
 	const trimmedName = name.trim();
 
-	const nameInvalid =
-		submitted &&
-		trimmedName.length === 0;
+	const nameInvalid = submitted && trimmedName.length === 0;
 
 	useEffect(() => {
 		if (!open) {
@@ -69,9 +54,7 @@ export function CreateCatalogModal({
 		}
 	}, [open]);
 
-	async function handleSubmit(
-		event: FormEvent<HTMLFormElement>,
-	) {
+	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 
 		if (isCreating) {
@@ -88,9 +71,7 @@ export function CreateCatalogModal({
 		try {
 			await onCreateCatalog({
 				name: trimmedName,
-				description:
-					description.trim() ||
-					undefined,
+				description: description.trim() || undefined,
 			});
 
 			onOpenChange(false);
@@ -109,17 +90,10 @@ export function CreateCatalogModal({
 			onOpenChange={onOpenChange}
 			title="Create portfolio folder"
 			mediaClassName="bg-muted/30"
-			mediaContent={
-				<CatalogPreview
-					name={name}
-					description={description}
-				/>
-			}
+			mediaContent={<CatalogPreview name={name} description={description} />}
 			detailsHeaderContent={
 				<div className="min-w-0">
-					<h2 className="truncate text-sm font-semibold">
-						Create folder
-					</h2>
+					<h2 className="truncate text-sm font-semibold">Create folder</h2>
 
 					<p className="truncate text-xs text-muted-foreground">
 						New portfolio catalog
@@ -137,19 +111,8 @@ export function CreateCatalogModal({
 					</p>
 
 					<FieldGroup>
-						<Field
-							data-invalid={
-								nameInvalid ||
-								undefined
-							}
-						>
-							<FieldLabel
-								htmlFor={
-									nameInputId
-								}
-							>
-								Folder name
-							</FieldLabel>
+						<Field data-invalid={nameInvalid || undefined}>
+							<FieldLabel htmlFor={nameInputId}>Folder name</FieldLabel>
 
 							<Input
 								id={nameInputId}
@@ -157,33 +120,14 @@ export function CreateCatalogModal({
 								maxLength={100}
 								required
 								autoFocus
-								disabled={
-									isCreating
-								}
-								aria-invalid={
-									nameInvalid ||
-									undefined
-								}
-								aria-describedby={
-									nameDescriptionId
-								}
+								disabled={isCreating}
+								aria-invalid={nameInvalid || undefined}
+								aria-describedby={nameDescriptionId}
 								placeholder="Character illustrations"
-								onChange={(
-									event,
-								) =>
-									setName(
-										event
-											.target
-											.value,
-									)
-								}
+								onChange={(event) => setName(event.target.value)}
 							/>
 
-							<FieldDescription
-								id={
-									nameDescriptionId
-								}
-							>
+							<FieldDescription id={nameDescriptionId}>
 								{nameInvalid
 									? "Folder name is required."
 									: "Maximum 100 characters."}
@@ -191,40 +135,19 @@ export function CreateCatalogModal({
 						</Field>
 
 						<Field>
-							<FieldLabel
-								htmlFor={
-									descriptionInputId
-								}
-							>
-								Description
-							</FieldLabel>
+							<FieldLabel htmlFor={descriptionInputId}>Description</FieldLabel>
 
 							<Textarea
-								id={
-									descriptionInputId
-								}
-								value={
-									description
-								}
+								id={descriptionInputId}
+								value={description}
 								rows={5}
-								disabled={
-									isCreating
-								}
+								disabled={isCreating}
 								placeholder="A selected collection of finished character artwork."
-								onChange={(
-									event,
-								) =>
-									setDescription(
-										event
-											.target
-											.value,
-									)
-								}
+								onChange={(event) => setDescription(event.target.value)}
 							/>
 
 							<FieldDescription>
-								Optional. You can edit
-								this later.
+								Optional. You can edit this later.
 							</FieldDescription>
 						</Field>
 					</FieldGroup>
@@ -246,11 +169,7 @@ export function CreateCatalogModal({
 						type="button"
 						variant="outline"
 						disabled={isCreating}
-						onClick={() =>
-							onOpenChange(
-								false,
-							)
-						}
+						onClick={() => onOpenChange(false)}
 					>
 						Cancel
 					</Button>
@@ -258,15 +177,8 @@ export function CreateCatalogModal({
 					<Button
 						type="submit"
 						form={formId}
-						disabled={
-							isCreating ||
-							!trimmedName
-						}
-						aria-describedby={
-							submitError
-								? submitErrorId
-								: undefined
-						}
+						disabled={isCreating || !trimmedName}
+						aria-describedby={submitError ? submitErrorId : undefined}
 					>
 						{isCreating ? (
 							<Spinner data-icon="inline-start" />
@@ -277,9 +189,7 @@ export function CreateCatalogModal({
 							/>
 						)}
 
-						{isCreating
-							? "Creating..."
-							: "Create folder"}
+						{isCreating ? "Creating..." : "Create folder"}
 					</Button>
 				</div>
 			}
@@ -311,26 +221,17 @@ export function RenameCatalogModal({
 	const nameDescriptionId = useId();
 	const submitErrorId = useId();
 
-	const [name, setName] = useState(
-		catalog.name,
-	);
+	const [name, setName] = useState(catalog.name);
 
-	const [description, setDescription] =
-		useState(
-			catalog.description || "",
-		);
+	const [description, setDescription] = useState(catalog.description || "");
 
-	const [submitted, setSubmitted] =
-		useState(false);
+	const [submitted, setSubmitted] = useState(false);
 
-	const [submitError, setSubmitError] =
-		useState<string | null>(null);
+	const [submitError, setSubmitError] = useState<string | null>(null);
 
 	const trimmedName = name.trim();
 
-	const nameInvalid =
-		submitted &&
-		trimmedName.length === 0;
+	const nameInvalid = submitted && trimmedName.length === 0;
 
 	useEffect(() => {
 		if (!open) {
@@ -338,21 +239,12 @@ export function RenameCatalogModal({
 		}
 
 		setName(catalog.name);
-		setDescription(
-			catalog.description || "",
-		);
+		setDescription(catalog.description || "");
 		setSubmitted(false);
 		setSubmitError(null);
-	}, [
-		open,
-		catalog.id,
-		catalog.name,
-		catalog.description,
-	]);
+	}, [open, catalog.id, catalog.name, catalog.description]);
 
-	async function handleSubmit(
-		event: FormEvent<HTMLFormElement>,
-	) {
+	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 
 		if (isRenaming) {
@@ -367,19 +259,15 @@ export function RenameCatalogModal({
 		}
 
 		try {
-			await onRenameCatalog(
-				catalog.id,
-				{
-					name: trimmedName,
+			await onRenameCatalog(catalog.id, {
+				name: trimmedName,
 
-					/*
-					 * Keep an empty string so an existing description can
-					 * be removed by the user.
-					 */
-					description:
-						description.trim(),
-				},
-			);
+				/*
+				 * Keep an empty string so an existing description can
+				 * be removed by the user.
+				 */
+				description: description.trim(),
+			});
 
 			onOpenChange(false);
 		} catch (error) {
@@ -397,17 +285,10 @@ export function RenameCatalogModal({
 			onOpenChange={onOpenChange}
 			title="Rename portfolio folder"
 			mediaClassName="bg-muted/30"
-			mediaContent={
-				<CatalogPreview
-					name={name}
-					description={description}
-				/>
-			}
+			mediaContent={<CatalogPreview name={name} description={description} />}
 			detailsHeaderContent={
 				<div className="min-w-0">
-					<h2 className="truncate text-sm font-semibold">
-						Rename folder
-					</h2>
+					<h2 className="truncate text-sm font-semibold">Rename folder</h2>
 
 					<p className="truncate text-xs text-muted-foreground">
 						{catalog.name}
@@ -421,24 +302,12 @@ export function RenameCatalogModal({
 					onSubmit={handleSubmit}
 				>
 					<p className="text-pretty text-sm text-muted-foreground">
-						Update the name and description
-						of this portfolio catalog.
+						Update the name and description of this portfolio catalog.
 					</p>
 
 					<FieldGroup>
-						<Field
-							data-invalid={
-								nameInvalid ||
-								undefined
-							}
-						>
-							<FieldLabel
-								htmlFor={
-									nameInputId
-								}
-							>
-								Folder name
-							</FieldLabel>
+						<Field data-invalid={nameInvalid || undefined}>
+							<FieldLabel htmlFor={nameInputId}>Folder name</FieldLabel>
 
 							<Input
 								id={nameInputId}
@@ -446,33 +315,14 @@ export function RenameCatalogModal({
 								maxLength={100}
 								required
 								autoFocus
-								disabled={
-									isRenaming
-								}
-								aria-invalid={
-									nameInvalid ||
-									undefined
-								}
-								aria-describedby={
-									nameDescriptionId
-								}
+								disabled={isRenaming}
+								aria-invalid={nameInvalid || undefined}
+								aria-describedby={nameDescriptionId}
 								placeholder="Character illustrations"
-								onChange={(
-									event,
-								) =>
-									setName(
-										event
-											.target
-											.value,
-									)
-								}
+								onChange={(event) => setName(event.target.value)}
 							/>
 
-							<FieldDescription
-								id={
-									nameDescriptionId
-								}
-							>
+							<FieldDescription id={nameDescriptionId}>
 								{nameInvalid
 									? "Folder name is required."
 									: "Maximum 100 characters."}
@@ -480,41 +330,19 @@ export function RenameCatalogModal({
 						</Field>
 
 						<Field>
-							<FieldLabel
-								htmlFor={
-									descriptionInputId
-								}
-							>
-								Description
-							</FieldLabel>
+							<FieldLabel htmlFor={descriptionInputId}>Description</FieldLabel>
 
 							<Textarea
-								id={
-									descriptionInputId
-								}
-								value={
-									description
-								}
+								id={descriptionInputId}
+								value={description}
 								rows={5}
-								disabled={
-									isRenaming
-								}
+								disabled={isRenaming}
 								placeholder="A selected collection of finished character artwork."
-								onChange={(
-									event,
-								) =>
-									setDescription(
-										event
-											.target
-											.value,
-									)
-								}
+								onChange={(event) => setDescription(event.target.value)}
 							/>
 
 							<FieldDescription>
-								Optional. Leave this
-								empty to remove the
-								current description.
+								Optional. Leave this empty to remove the current description.
 							</FieldDescription>
 						</Field>
 					</FieldGroup>
@@ -536,11 +364,7 @@ export function RenameCatalogModal({
 						type="button"
 						variant="outline"
 						disabled={isRenaming}
-						onClick={() =>
-							onOpenChange(
-								false,
-							)
-						}
+						onClick={() => onOpenChange(false)}
 					>
 						Cancel
 					</Button>
@@ -548,28 +372,16 @@ export function RenameCatalogModal({
 					<Button
 						type="submit"
 						form={formId}
-						disabled={
-							isRenaming ||
-							!trimmedName
-						}
-						aria-describedby={
-							submitError
-								? submitErrorId
-								: undefined
-						}
+						disabled={isRenaming || !trimmedName}
+						aria-describedby={submitError ? submitErrorId : undefined}
 					>
 						{isRenaming ? (
 							<Spinner data-icon="inline-start" />
 						) : (
-							<OutlineFolder
-								data-icon="inline-start"
-								aria-hidden="true"
-							/>
+							<OutlineFolder data-icon="inline-start" aria-hidden="true" />
 						)}
 
-						{isRenaming
-							? "Renaming..."
-							: "Save changes"}
+						{isRenaming ? "Renaming..." : "Save changes"}
 					</Button>
 				</div>
 			}
@@ -582,13 +394,9 @@ interface CatalogPreviewProps {
 	description: string;
 }
 
-function CatalogPreview({
-	name,
-	description,
-}: CatalogPreviewProps) {
+function CatalogPreview({ name, description }: CatalogPreviewProps) {
 	const trimmedName = name.trim();
-	const trimmedDescription =
-		description.trim();
+	const trimmedDescription = description.trim();
 
 	return (
 		<div className="flex min-h-64 size-full items-center justify-center p-8">
@@ -609,15 +417,12 @@ function CatalogPreview({
 
 					<div className="relative flex min-w-0 flex-col gap-1">
 						<h3 className="line-clamp-2 text-pretty font-semibold">
-							{trimmedName ||
-								"New portfolio folder"}
+							{trimmedName || "New portfolio folder"}
 						</h3>
 
 						{trimmedDescription && (
 							<p className="line-clamp-2 text-pretty text-xs text-muted-foreground">
-								{
-									trimmedDescription
-								}
+								{trimmedDescription}
 							</p>
 						)}
 					</div>

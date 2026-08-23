@@ -140,7 +140,10 @@ function FooterLink({ link }: { link: FooterLink }) {
 	}
 
 	return (
-		<Link to={localizePath(link.href, i18n.language) as any} className={footerLinkClassName}>
+		<Link
+			to={localizePath(link.href, i18n.language) as any}
+			className={footerLinkClassName}
+		>
 			<LinkContent label={link.label} />
 		</Link>
 	);
