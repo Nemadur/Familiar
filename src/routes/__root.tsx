@@ -15,10 +15,10 @@ import { seo } from "@/lib/seo";
 import { AbilityProvider } from "@/providers/ability";
 import { AuthProvider } from "@/providers/auth";
 import { CurrencyProvider } from "@/providers/currency";
+// import "@/bones/registry";
+import { MotionProvider } from "@/providers/motion";
 import { ThemeProvider } from "@/providers/theme";
 import appCss from "../styles.css?url";
-import "@/bones/registry";
-import { MotionProvider } from "@/providers/motion";
 
 /**
  * TODO: for multiple language SEO, we need to make Domain/{language}/routes, where default is Domain/routes (EN)

@@ -9,6 +9,7 @@ import {
 	OutlineHome,
 	OutlineMenu,
 	OutlineReceipt,
+	SolidChat,
 	SolidFileText,
 	SolidHome,
 	SolidReceipt,
@@ -62,10 +63,10 @@ export default function Header() {
 				<div className="flex shrink-0 items-center gap-2">
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
-						<CurrencySelect display={"compact"} variant={"secondary"} />
+						{/* <CurrencySelect display={"compact"} variant={"secondary"} /> */}
 						{/* <LanguageSelect /> */}
 
-						<BasketDropdown />
+						{/* <BasketDropdown /> */}
 
 						<Button variant={"secondary"} size={"icon-xl"} asChild>
 							<Link to={localizePath("/chat", i18n.language) as any}>
@@ -191,6 +192,8 @@ const NavLinks = memo(() => {
 				return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/blog":
 				return isActive ? <SolidFileText /> : <OutlineFileText />;
+			// case "/chat":
+			// 	return isActive ? <SolidChat /> : <OutlineChat />;
 			default:
 				return null;
 		}
@@ -200,6 +203,7 @@ const NavLinks = memo(() => {
 		{ path: "/", label: t("header.navigation.home", "Home") },
 		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
 		{ path: "/shop", label: t("header.navigation.shop", "Shop") },
+		// { path: "/chat", label: t("header.navigation.messages", "Messages") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },
 	];

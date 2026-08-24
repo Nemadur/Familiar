@@ -85,18 +85,53 @@ function getStringFilterValues(value: FilterValue | undefined): string[] {
 	return value.filter((item): item is string => typeof item === "string");
 }
 
-function getFallbackCover(posts: PortfolioPostResponse[]): string | undefined {
-	return posts
-		.flatMap((post) => post.images ?? [])
+interface FolderPreview {
+	coverSrc?: string;
+	contentWarnings: string[];
+}
+
+function getFolderPreview(
+	folder: CatalogResponse,
+	posts: PortfolioPostResponse[],
+): FolderPreview {
+	const folderCoverPaths = new Set(
+		[folder.fullSize?.path, folder.thumbnail?.path].filter(
+			(path): path is string => Boolean(path),
+		),
+	);
+
+	const postMatchingFolderCover = posts.find((post) =>
+		(post.images ?? []).some((image) =>
+			[image.fullSize?.path, image.thumbnail?.path].some(
+				(path) => Boolean(path && folderCoverPaths.has(path)),
+			),
+		),
+	);
+
+	const previewPost =
+		postMatchingFolderCover ??
+		posts.find((post) =>
+			(post.images ?? []).some(
+				(image) => image.fullSize?.path || image.thumbnail?.path,
+			),
+		);
+
+	const previewImage = [...(previewPost?.images ?? [])]
 		.sort(
 			(a, b) =>
 				(a.position ?? Number.MAX_SAFE_INTEGER) -
 				(b.position ?? Number.MAX_SAFE_INTEGER),
 		)
-		.map((image) => image.fullSize?.path ?? image.thumbnail?.path)
-		.find(
-			(path): path is string => typeof path === "string" && path.length > 0,
-		);
+		.find((image) => image.fullSize?.path || image.thumbnail?.path);
+
+	return {
+		coverSrc:
+			folder.fullSize?.path ??
+			folder.thumbnail?.path ??
+			previewImage?.fullSize?.path ??
+			previewImage?.thumbnail?.path,
+		contentWarnings: previewPost?.contentWarnings ?? [],
+	};
 }
 
 export function ProfilePortfolio({
@@ -518,6 +553,7 @@ export function ProfilePortfolio({
 						<div className="relative scroll-fade-x scroll-fade-4 flex w-full min-w-0 gap-4 overflow-x-auto overscroll-x-contain px-3 pb-3">
 							{filteredFolders.map((folder) => {
 								const catalogPosts = postsByCatalogId.get(folder.id) ?? [];
+								const preview = getFolderPreview(folder, catalogPosts);
 
 								return (
 									<Link
@@ -533,7 +569,8 @@ export function ProfilePortfolio({
 									>
 										<FolderCard
 											folder={folder}
-											fallbackCoverSrc={getFallbackCover(catalogPosts)}
+											fallbackCoverSrc={preview.coverSrc}
+											contentWarnings={preview.contentWarnings}
 											itemCount={catalogPosts.length}
 										/>
 									</Link>

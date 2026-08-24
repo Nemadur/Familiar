@@ -7,8 +7,8 @@ import {
 	PortfolioPostPage,
 	PortfolioPostModal,
 } from "@/components/layout/modal/portfolio-post";
-import { useUserByUsername } from "@/hooks/user/use-user";
 import { useIsMobile } from "@/hooks/ui/use-mobile";
+import { useUserByUsername } from "@/hooks/user/use-user";
 import type { TUserProfile } from "@/types/user";
 import { FolderContent } from "./index";
 
@@ -82,7 +82,7 @@ function PostContent({
 					onDeleted={handleClose}
 				/>
 				{!isMobile && (
-					<div className="mx-auto w-full max-w-[1440px] md:px-4 lg:px-6 mb-12 border-t pt-8">
+					<div className="mx-auto w-full max-w-360 md:px-4 lg:px-6 mb-12 border-t pt-8">
 						<h2 className="text-xl font-semibold mb-6">
 							More from {user.username} in folder
 						</h2>

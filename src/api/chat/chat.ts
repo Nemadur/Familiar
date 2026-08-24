@@ -1,6 +1,8 @@
 import { apiFetch } from "@/lib/fetch";
 import type { TPagableQuery } from "@/types/pagable";
+
 import type {
+	TChatConversation,
 	TChatConversationPage,
 	TChatMessage,
 	TChatMessagePage,
@@ -62,7 +64,7 @@ export async function postConversationRead(conversationId: string) {
 }
 
 export async function postConversationDirect(otherUserId: string) {
-	return apiFetch<TChatMessage>("chat/conversations/direct", {
+	return apiFetch<TChatConversation>("chat/conversations/direct", {
 		method: "POST",
 		body: JSON.stringify({ otherUserId }),
 	});
@@ -71,7 +73,7 @@ export async function postConversationDirect(otherUserId: string) {
 export async function postOpenConversationForRequest(
 	commissionRequestId: string,
 ) {
-	return apiFetch<TChatMessage>(
+	return apiFetch<TChatConversation>(
 		`chat/conversations/for-request/${commissionRequestId}`,
 		{
 			method: "POST",

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+
 import { OutlineSend } from "@/components/icons/assets/user_interface/send";
 import {
 	Attachment,
@@ -32,6 +33,7 @@ import {
 	InputGroupTextArea,
 } from "@/components/ui/input-group";
 import { usePostChatMessage } from "@/hooks/chat/use-chat";
+
 import {
 	type MessageComposerValues,
 	messageComposerSchema,
@@ -39,6 +41,8 @@ import {
 
 const EMPTY_MESSAGE_ERROR = "Write a message or attach media.";
 const MAX_MEDIA_COUNT = 10;
+const MIN_COMPOSER_HEIGHT = 36;
+const MAX_COMPOSER_HEIGHT = 144;
 const ACCEPTED_MEDIA_TYPES = [
 	"image/jpeg",
 	"image/png",
@@ -59,6 +63,7 @@ export function MessageComposer({
 	conversationId: string;
 }) {
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
+	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 	const [files, setFiles] = useState<File[]>([]);
 	const sendMessage = usePostChatMessage(conversationId);
 
@@ -69,6 +74,7 @@ export function MessageComposer({
 		},
 		mode: "onChange",
 	});
+	const bodyField = form.register("body");
 
 	const bodyValue = form.watch("body");
 	const bodyError = form.formState.errors.body?.message;
@@ -99,10 +105,9 @@ export function MessageComposer({
 			files,
 		});
 
-		form.reset({
-			body: "",
-		});
+		form.reset({ body: "" });
 		setFiles([]);
+		resetTextareaHeight(textareaRef.current);
 
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
@@ -110,9 +115,7 @@ export function MessageComposer({
 	});
 
 	function addFiles(nextFiles: FileList | null) {
-		if (!nextFiles || nextFiles.length === 0) {
-			return;
-		}
+		if (!nextFiles?.length) return;
 
 		const mediaFiles = Array.from(nextFiles).filter(isSupportedMediaFile);
 
@@ -136,18 +139,22 @@ export function MessageComposer({
 	}
 
 	return (
-		<footer className="border-t p-4">
-			<form onSubmit={submitMessage} className="flex w-full">
-				<FieldGroup className="w-full">
-					<Field data-invalid={Boolean(bodyError)}>
+		<footer className="shrink-0 border-t p-3">
+			<form onSubmit={submitMessage} className="w-full">
+				<FieldGroup className="gap-0">
+					<Field
+						data-invalid={Boolean(bodyError)}
+						data-disabled={isSubmitting || undefined}
+						className="gap-2"
+					>
 						<FieldLabel htmlFor="chat-message-body" className="sr-only">
 							Message
 						</FieldLabel>
 
-						{files.length > 0 ? (
-							<div className="mb-3 max-w-full overflow-x-auto pb-1">
+						{files.length > 0 && (
+							<div className="max-w-full overflow-x-auto pb-1">
 								<AttachmentGroup
-									className="w-max max-w-none"
+									className="w-max max-w-none gap-2"
 									role="group"
 									aria-label="Selected media"
 								>
@@ -161,15 +168,27 @@ export function MessageComposer({
 									))}
 								</AttachmentGroup>
 							</div>
-						) : null}
+						)}
 
-						<InputGroup>
-							<InputGroupAddon align="inline-start">
+						<input
+							ref={fileInputRef}
+							type="file"
+							accept={ACCEPTED_MEDIA_TYPES.join(",")}
+							multiple
+							className="sr-only"
+							onChange={(event) => addFiles(event.target.files)}
+						/>
+
+						<InputGroup className="min-h-12 items-end gap-1 rounded-[26px] p-1.5">
+							<InputGroupAddon
+								align="inline-start"
+								className="self-end py-0 pr-0 pl-2"
+							>
 								<InputGroupButton
 									type="button"
 									variant="ghost"
 									size="icon-sm"
-									className="shrink-0 text-muted-foreground hover:text-foreground"
+									className="size-9 rounded-full"
 									disabled={isSubmitting}
 									onClick={() => fileInputRef.current?.click()}
 									aria-label="Attach media"
@@ -178,23 +197,23 @@ export function MessageComposer({
 								</InputGroupButton>
 							</InputGroupAddon>
 
-							<input
-								ref={fileInputRef}
-								type="file"
-								accept={ACCEPTED_MEDIA_TYPES.join(",")}
-								multiple
-								className="sr-only"
-								onChange={(event) => addFiles(event.target.files)}
-							/>
-
 							<InputGroupTextArea
 								id="chat-message-body"
 								placeholder="Write a message or attach media..."
 								rows={1}
 								aria-invalid={Boolean(bodyError)}
 								disabled={isSubmitting}
-								className="max-h-32 min-h-[40px] text-sm"
-								{...form.register("body")}
+								className="h-9 max-h-36 min-h-9 min-w-0 flex-1 resize-none overflow-y-hidden px-2 py-2 text-sm leading-5"
+								name={bodyField.name}
+								ref={(element) => {
+									textareaRef.current = element;
+									bodyField.ref(element);
+								}}
+								onBlur={bodyField.onBlur}
+								onChange={(event) => {
+									bodyField.onChange(event);
+									resizeTextarea(event.currentTarget);
+								}}
 								onKeyDown={(event) => {
 									if (event.key === "Enter" && !event.shiftKey) {
 										event.preventDefault();
@@ -203,26 +222,33 @@ export function MessageComposer({
 								}}
 							/>
 
-							<InputGroupAddon align="inline-end">
+							<InputGroupAddon
+								align="inline-end"
+								className="self-end py-0 pr-2 pl-0"
+							>
 								<InputGroupButton
 									type="submit"
 									size="icon-sm"
 									disabled={!canSubmit}
-									className="shrink-0 bg-accent text-accent-foreground hover:bg-accent/90"
+									className="size-9 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+									aria-label="Send message"
 								>
 									<OutlineSend data-icon="inline-start" />
 								</InputGroupButton>
 							</InputGroupAddon>
 						</InputGroup>
 
-						{bodyError ? (
-							<FieldDescription>{bodyError}</FieldDescription>
-						) : null}
-						{sendMessage.error ? (
-							<FieldDescription className="text-destructive">
+						{bodyError && (
+							<FieldDescription className="px-1 text-destructive">
+								{bodyError}
+							</FieldDescription>
+						)}
+
+						{sendMessage.error && (
+							<FieldDescription className="px-1 text-destructive">
 								{sendMessage.error.message}
 							</FieldDescription>
-						) : null}
+						)}
 					</Field>
 				</FieldGroup>
 			</form>
@@ -256,7 +282,7 @@ function SelectedMediaAttachment({
 	return (
 		<Attachment
 			state={isUploading ? "uploading" : "idle"}
-			className="w-64 shrink-0"
+			className="w-56 shrink-0 rounded-xl"
 		>
 			{previewUrl && (isImage || isVideo) ? (
 				<AttachmentMedia variant="image">
@@ -310,25 +336,33 @@ function getFileTypeLabel(file: File) {
 		return extension;
 	}
 
-	if (file.type.startsWith("image/")) {
-		return "Image";
-	}
-
-	if (file.type.startsWith("video/")) {
-		return "Video";
-	}
-
+	if (file.type.startsWith("image/")) return "Image";
+	if (file.type.startsWith("video/")) return "Video";
 	return "File";
 }
 
 function formatFileSize(size: number) {
-	if (size < 1024) {
-		return `${size} B`;
-	}
-
-	if (size < 1024 * 1024) {
-		return `${(size / 1024).toFixed(1)} KB`;
-	}
-
+	if (size < 1024) return `${size} B`;
+	if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
 	return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function resizeTextarea(textarea: HTMLTextAreaElement) {
+	textarea.style.height = "auto";
+
+	const nextHeight = Math.min(
+		Math.max(textarea.scrollHeight, MIN_COMPOSER_HEIGHT),
+		MAX_COMPOSER_HEIGHT,
+	);
+
+	textarea.style.height = `${nextHeight}px`;
+	textarea.style.overflowY =
+		textarea.scrollHeight > MAX_COMPOSER_HEIGHT ? "auto" : "hidden";
+}
+
+function resetTextareaHeight(textarea: HTMLTextAreaElement | null) {
+	if (!textarea) return;
+
+	textarea.style.height = `${MIN_COMPOSER_HEIGHT}px`;
+	textarea.style.overflowY = "hidden";
 }

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import {
 	getChatConversations,
 	getChatMessages,
@@ -9,6 +10,7 @@ import {
 	postOpenConversationForRequest,
 } from "@/api/chat/chat";
 import type {
+	TChatConversation,
 	TChatConversationPage,
 	TChatMessage,
 	TChatMessagePage,
@@ -19,20 +21,21 @@ import type { TPagableQuery } from "@/types/pagable";
 
 export const chatQueryKeys = {
 	all: ["chat"] as const,
-
 	conversationsRoot: () => ["chat", "conversations"] as const,
-
 	conversations: (params: TPagableQuery) =>
 		["chat", "conversations", params] as const,
-
 	messagesRoot: (conversationId: string) =>
 		["chat", "messages", conversationId] as const,
-
 	messages: (conversationId: string, params: TPagableQuery) =>
 		["chat", "messages", conversationId, params] as const,
-
 	messagesSince: (conversationId: string, after: Date) =>
-		["chat", "messages", conversationId, "since", after.toISOString()] as const,
+		[
+			"chat",
+			"messages",
+			conversationId,
+			"since",
+			after.toISOString(),
+		] as const,
 };
 
 export function useGetChatConversations(params: TPagableQuery) {
@@ -59,7 +62,6 @@ export function useGetChatMessages(
 			if (!conversationId) {
 				throw new Error("conversationId is required");
 			}
-
 			return getChatMessages(conversationId, params);
 		},
 		enabled: Boolean(conversationId),
@@ -86,7 +88,6 @@ export function useGetChatMessagesSince(
 			if (!conversationId || !after) {
 				throw new Error("conversationId and after date are required");
 			}
-
 			return getChatMessagesSince(conversationId, after);
 		},
 		enabled: Boolean(conversationId && after),
@@ -142,7 +143,7 @@ export function usePostConversationRead() {
 export function usePostConversationDirect() {
 	const queryClient = useQueryClient();
 
-	return useMutation<TChatMessage, Error, string>({
+	return useMutation<TChatConversation, Error, string>({
 		mutationFn: (otherUserId) => postConversationDirect(otherUserId),
 		onSuccess: async () => {
 			await queryClient.invalidateQueries({
@@ -155,7 +156,7 @@ export function usePostConversationDirect() {
 export function usePostOpenConversationForRequest() {
 	const queryClient = useQueryClient();
 
-	return useMutation<TChatMessage, Error, string>({
+	return useMutation<TChatConversation, Error, string>({
 		mutationFn: (commissionRequestId) =>
 			postOpenConversationForRequest(commissionRequestId),
 		onSuccess: async () => {

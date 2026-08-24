@@ -16,13 +16,20 @@ import {
 	OutlineUser,
 } from "@/components/icons/icons";
 import { EmptyPage } from "@/components/layout/empty-page";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePostConversationDirect } from "@/hooks/chat/use-chat";
 import { useAvailableFeeds } from "@/hooks/feed/use-available-feeds";
 import { useBento } from "@/hooks/ui/use-bento";
 import { type Tile, toPixels } from "@/lib/bento";
-import { createStaticList } from "@/lib/utils";
+import { cn, createStaticList } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import type { TUserProfile } from "@/types/user";
 import { TRoles } from "@/types/user/roles";
@@ -262,6 +269,72 @@ export function UserProfileSkeleton() {
 	);
 }
 
+function UserProfileMoreMenu({ user }: { user: TUserProfile }) {
+	const { t } = useTranslation();
+
+	const handleReportUser = () => {
+		// TODO: open the report flow when the reporting API is available
+		toast.info(`Report user: @${user.username}`);
+	};
+
+	const handleBlockUser = () => {
+		// TODO: block the user when the blocking API is available
+		toast.info(`Block user: @${user.username}`);
+	};
+
+	const handleShareProfile = () => {
+		// TODO: share the profile when the sharing API is available
+		//copy to clipboard
+		navigator.clipboard.writeText(`https://familiar.com/user/${user.username}`);
+		toast.success(`Successfully copied profile link`);
+	};
+
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild className="absolute top-2 right-2">
+				<Button
+					type="button"
+					variant="secondary"
+					size="icon-xl"
+					className="bg-background/80 backdrop-blur-sm hover:bg-background"
+					aria-label={t(
+						"components.profile.actions.more",
+						"More actions",
+					)}
+				>
+					<OutlineMore />
+				</Button>
+			</DropdownMenuTrigger>
+
+			<DropdownMenuContent align="end" className="w-48">
+				<DropdownMenuItem onClick={handleReportUser} variant="destructive">
+					{t(
+						"components.profile.actions.report_user",
+						"Report",
+					)}
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					variant="destructive"
+					onClick={handleBlockUser}
+				>
+					{t(
+						"components.profile.actions.block_user",
+						"Block user",
+					)}
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					onClick={handleShareProfile}
+				>
+					{t(
+						"components.profile.actions.share_profile",
+						"Share Profile",
+					)}
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
+}
+
 export default function UserProfile({
 	user,
 	children,
@@ -280,10 +353,15 @@ export default function UserProfile({
 
 	return (
 		<div className="flex flex-1 flex-col">
-			<ProfileCover user={user} />
+			<div className="relative">
+				<ProfileCover user={user} />
+				{!isMe && (
+					<UserProfileMoreMenu user={user} />
+				)}
+			</div>
 			<div className="flex min-h-0 flex-1 flex-col">
 				<div className="flex flex-1 flex-col gap-4 sm:flex-row md:gap-8">
-					<div className="shrink-0 md:w-60">
+					<div className="shrink-0 md:w-72">
 						<UserProfileSidebar user={user} isMe={isMe} isSuspended={false} />
 					</div>
 
@@ -316,6 +394,8 @@ export function UserProfileSidebar({
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const router = useRouter();
+	const { user: currentUser } = useAuth();
+	const createDirectConversation = usePostConversationDirect();
 
 	const { locale } = useParams({ strict: false }) as { locale?: string };
 
@@ -352,6 +432,65 @@ export function UserProfileSidebar({
 		// TODO: save using the settings API
 		toast.info("Settings saved successfully");
 		handleCloseSettings();
+	};
+
+	const requireAuthentication = (action: "follow" | "message") => {
+		if (currentUser) return true;
+
+		toast.info(
+			action === "follow"
+				? t(
+						"components.profile.actions.sign_in_to_follow",
+						"Please sign in to follow this user.",
+					)
+				: t(
+						"components.profile.actions.sign_in_to_message",
+						"Please sign in to message this user.",
+					),
+		);
+
+		return false;
+	};
+
+	const handleFollow = () => {
+		if (!requireAuthentication("follow")) return;
+
+		// TODO: replace this toast with the follow-user mutation
+		toast.info(`Follow user: @${user.username}`);
+	};
+
+	const handleMessage = () => {
+		if (!requireAuthentication("message")) return;
+
+		createDirectConversation.mutate(user.userId, {
+			onSuccess: (conversation) => {
+				if (!conversation.id) {
+					toast.error(
+						t(
+							"components.profile.actions.message_failed",
+							"Could not start the conversation. Please try again.",
+						),
+					);
+					return;
+				}
+
+				void navigate({
+					to: "/{-$locale}/chat/conversation/$conversationId",
+					params: {
+						locale,
+						conversationId: conversation.id,
+					},
+				});
+			},
+			onError: () => {
+				toast.error(
+					t(
+						"components.profile.actions.message_failed",
+						"Could not start the conversation. Please try again.",
+					),
+				);
+			},
+		});
 	};
 
 	return (
@@ -439,15 +578,15 @@ export function UserProfileSidebar({
 				<div className="space-y-4">
 					{/* User identity */}
 					<div>
-						<h3 className="inline-flex w-full items-center gap-2 text-2xl font-semibold text-neutral-950 dark:text-neutral-50">
+						<Typography.Heading level={3} className="inline-flex w-full items-center gap-2 font-semibold">
 							<span className="truncate">{user.displayName}</span>
 
 							<ProfileBadge user={user} />
-						</h3>
+						</Typography.Heading>
 
-						<p className="text-neutral-600 dark:text-neutral-400">
+						<Typography.Paragraph size={"base"} className="text-muted-foreground!">
 							@{user.username}
-						</p>
+						</Typography.Paragraph>
 					</div>
 
 					{/* Desktop actions */}
@@ -458,53 +597,54 @@ export function UserProfileSidebar({
 									type="button"
 									className="flex-1"
 									size="xl"
-									variant="secondary"
 									onClick={handleOpenSettings}
 								>
 									{t("components.profile.actions.edit_profile", "Edit profile")}
 								</Button>
 
 								{user.roles.includes(TRoles.Artist) && user.isVerified && (
-									<Button type="button" variant="secondary" size="icon-xl">
-										<OutlineListBoxes />
+									<Button type="button" variant="secondary" size="xl" className="flex-1">
+										{t("components.profile.actions.queue", "Queue")}
+										{/* <OutlineListBoxes /> */}
 									</Button>
 								)}
 							</div>
 						) : (
-							<div className="flex gap-2">
+							<div className="flex flex-col gap-2">
 								<div className="flex w-full gap-2">
 									<FollowButton
 										isFollowing={false}
 										loading={false}
 										canFollow
-										onToggle={() => {}}
+										onToggle={handleFollow}
 										showText
 										className="flex-1"
 									/>
 
-									{user.roles.includes(TRoles.Artist) && user.isVerified && (
-										<Button type="button" variant="secondary" size="icon-xl">
-											<OutlineListBoxes />
-										</Button>
-									)}
-
-									{/* TODO: attach create dm function */}
 									<Button
 										type="button"
 										variant="secondary"
 										className="flex-1"
-										disabled
-										size="icon-xl"
+										disabled={createDirectConversation.isPending}
+										size="xl"
+										onClick={handleMessage}
 									>
 										{t("components.profile.actions.message", "Message")}
 										{/* <OutlineChat /> */}
 									</Button>
-
-									{/* TODO: add dropdown with report user, block user and share profile*/}
-									<Button type="button" variant="ghost" size="icon-xl">
-										<OutlineMore />
-									</Button>
 								</div>
+
+								{user.roles.includes(TRoles.Artist) && user.isVerified && (
+								<Button
+									type="button"
+									variant="secondary"
+									size="xl"
+									className="w-full"
+								>
+									{t("components.profile.actions.queue", "Queue")}
+									{/* <OutlineListBoxes /> */}
+								</Button>
+								)}
 							</div>
 						)}
 					</div>

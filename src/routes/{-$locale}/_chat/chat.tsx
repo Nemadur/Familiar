@@ -1,5 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import {
+	createFileRoute,
+	Outlet,
+	useParams,
+} from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
 import type { TChatConversation } from "@/api/chat/chat-types";
 import { ChatPanel } from "@/components/layout/chat/chat-panel";
 import { ChatSidebar } from "@/components/layout/chat/chat-sidebar";
@@ -17,12 +22,14 @@ export const Route = createFileRoute("/{-$locale}/_chat/chat")({
 });
 
 function ChatRoute() {
-	const [activeConversationId, setActiveConversationId] = useState<
-		string | null
-	>(null);
+	const navigate = Route.useNavigate();
+	const { locale, conversationId } = useParams({ strict: false }) as {
+		locale?: string;
+		conversationId?: string;
+	};
+	const activeConversationId = conversationId ?? null;
 	const [searchQuery, setSearchQuery] = useState("");
 	const { user } = useAuth();
-
 	const isAuthPending = user === undefined;
 
 	const { conversationsData, isConversationsPending, conversationsError } =
@@ -33,19 +40,36 @@ function ChatRoute() {
 		defaultPage,
 	);
 
-	const markAsRead = usePostConversationRead();
+	const { mutate: markConversationAsRead } = usePostConversationRead();
 
 	const conversations = conversationsData?.content ?? [];
 	const messages = messagesData?.content ?? [];
-
 	const activeConversation = conversations.find(
 		(conversation: TChatConversation) =>
 			conversation.id === activeConversationId,
 	);
 
-	function handleSelectConversation(conversationId: string) {
-		setActiveConversationId(conversationId);
-		markAsRead.mutate(conversationId);
+	useEffect(() => {
+		if (conversationId) {
+			markConversationAsRead(conversationId);
+		}
+	}, [conversationId, markConversationAsRead]);
+
+	function handleSelectConversation(nextConversationId: string) {
+		void navigate({
+			to: "/{-$locale}/chat/conversation/$conversationId",
+			params: {
+				locale,
+				conversationId: nextConversationId,
+			},
+		});
+	}
+
+	function handleBack() {
+		void navigate({
+			to: "/{-$locale}/chat",
+			params: { locale },
+		});
 	}
 
 	return (
@@ -67,8 +91,10 @@ function ChatRoute() {
 				messages={messages}
 				isPending={isMessagesPending}
 				error={messagesError}
-				onBack={() => setActiveConversationId(null)}
+				onBack={handleBack}
 			/>
+
+			<Outlet />
 		</Elevated>
 	);
 }
