@@ -88,7 +88,6 @@ import {
 	SidebarProvider,
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
-import { useIsTablet } from "@/hooks/ui/use-mobile";
 import { deriveShadeFromHex, getSwatchStyles } from "@/lib/colors";
 import {
 	languages,
@@ -294,7 +293,6 @@ export function UserSettingsPanel({
 	onSave,
 }: UserSettingsPanelProps) {
 	const { user } = useAuth();
-	const actionButtonSize = useSettingsButtonSize();
 	const [activeSection, setActiveSection] =
 		useState<SettingsSection>("profile");
 	const profileInitialValues = useMemo(
@@ -429,7 +427,7 @@ export function UserSettingsPanel({
 				<footer className="flex shrink-0 items-center justify-end gap-2 border-t p-4">
 					{onCancel && (
 						<Button
-							size={actionButtonSize}
+							size="responsive-xl"
 							type="button"
 							variant="outline"
 							onClick={onCancel}
@@ -439,7 +437,7 @@ export function UserSettingsPanel({
 					)}
 
 					<Button
-						size={actionButtonSize}
+						size="responsive-xl"
 						type="submit"
 						form={`${activeSection}-settings-form`}
 					>
@@ -522,7 +520,6 @@ function AccountSettings({
 	email: string;
 	onSubmit?: () => void | Promise<void>;
 }) {
-	const actionButtonSize = useSettingsButtonSize();
 	const form = useForm({
 		defaultValues: { email },
 		onSubmit: async () => {
@@ -588,7 +585,7 @@ function AccountSettings({
 							<Button
 								type="button"
 								variant="secondary"
-								size={actionButtonSize}
+								size="responsive-xl"
 							>
 								<KeyRound data-icon="inline-start" />
 								Change password
@@ -606,7 +603,7 @@ function AccountSettings({
 							<Button
 								type="button"
 								variant="secondary"
-								size={actionButtonSize}
+								size="responsive-xl"
 							>
 								<LogOut data-icon="inline-start" />
 								Sign out other sessions
@@ -631,7 +628,7 @@ function AccountSettings({
 							<Button
 								type="button"
 								variant="destructive"
-								size={actionButtonSize}
+								size="responsive-xl"
 								style={DANGER_ACTION_SWATCH}
 								className="hover:opacity-90"
 							>
@@ -1026,7 +1023,6 @@ function LanguageSettings({
 function SettingsLanguageSelect() {
 	const { t, i18n } = useTranslation();
 	const router = useRouter();
-	const actionButtonSize = useSettingsButtonSize();
 	const [open, setOpen] = useState(false);
 	const selectedLanguage = languages.find((language) =>
 		i18n.language.startsWith(language.value),
@@ -1039,7 +1035,7 @@ function SettingsLanguageSelect() {
 					type="button"
 					role="combobox"
 					variant="secondary"
-					size={actionButtonSize}
+					size="responsive-xl"
 					aria-expanded={open}
 				>
 					{selectedLanguage ? (
@@ -1109,7 +1105,6 @@ function SettingsLanguageSelect() {
 function SettingsThemeSelect() {
 	const { t } = useTranslation();
 	const { userTheme, setTheme } = useTheme();
-	const actionButtonSize = useSettingsButtonSize();
 	const [open, setOpen] = useState(false);
 	const themes = [
 		{
@@ -1142,7 +1137,7 @@ function SettingsThemeSelect() {
 					type="button"
 					role="combobox"
 					variant="secondary"
-					size={actionButtonSize}
+					size="responsive-xl"
 					aria-expanded={open}
 					aria-controls="settings-theme-options"
 				>
@@ -1404,8 +1399,6 @@ function ConnectionRow({
 	connected,
 	onConnectedChange,
 }: ConnectionRowProps) {
-	const actionButtonSize = useSettingsButtonSize();
-
 	return (
 		<Field orientation="horizontal">
 			<FieldContent>
@@ -1416,17 +1409,11 @@ function ConnectionRow({
 			<Button
 				type="button"
 				variant={connected ? "secondary" : "default"}
-				size={actionButtonSize}
+				size="responsive-xl"
 				onClick={() => onConnectedChange(!connected)}
 			>
 				{connected ? "Disconnect" : "Connect"}
 			</Button>
 		</Field>
 	);
-}
-
-function useSettingsButtonSize(): "xl" | "2xl" {
-	const isTablet = useIsTablet();
-
-	return isTablet ? "2xl" : "xl";
 }

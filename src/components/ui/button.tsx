@@ -30,7 +30,8 @@ const buttonVariants = cva(
 					"bg-success/12 text-success-foreground [a&]:hover:bg-success/90",
 				destructive_ghost:
 					"bg-destructive/12 text-destructive [a&]:hover:bg-destructive/90",
-				info_ghost: "bg-info/12 text-info-foreground [a&]:hover:bg-info/90",
+				info_ghost:
+					"bg-info/12 text-info-foreground [a&]:hover:bg-info/90",
 				warning_ghost:
 					"bg-warning/12 text-warning-foreground [a&]:hover:bg-warning/90",
 				link: "text-accent underline-offset-4 hover:underline mx-0! px-0!",
@@ -39,15 +40,17 @@ const buttonVariants = cva(
 			size: {
 				default:
 					"h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-				xs: "h-6 gap-1  px-2 text-xs in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+				xs: "h-6 gap-1 px-2 text-xs in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
 				sm: "h-7 gap-1 px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-full has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
 				lg: "h-9 gap-1.5 px-3 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
 				xl: "h-10 gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
 				"2xl":
 					"h-11 gap-1.5 px-4.5 has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 text-base",
+				"responsive-xl":
+					"h-11 gap-1.5 px-4.5 text-base has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 xl:h-10 xl:px-3.5 xl:text-sm xl:has-data-[icon=inline-end]:pr-4 xl:has-data-[icon=inline-start]:pl-4",
 				icon: "size-8",
 				"icon-xs":
-					"size-6  in-data-[slot=button-group]:rounded-full [&_svg:not([class*='size-'])]:size-3",
+					"size-6 in-data-[slot=button-group]:rounded-full [&_svg:not([class*='size-'])]:size-3",
 				"icon-sm": "size-7 in-data-[slot=button-group]:rounded-full",
 				"icon-lg": "size-9",
 				"icon-xl": "size-10 [&_svg:not([class*='size-'])]:size-5",
@@ -86,10 +89,8 @@ function Button({
 	...props
 }: ButtonProps) {
 	const Comp = asChild ? Slot.Root : "button";
-
 	const [isHolding, setIsHolding] = useState(false);
 	const [holdCompleted, setHoldCompleted] = useState(false);
-
 	const holdCompletedRef = useRef(false);
 	const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const visualTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -123,19 +124,13 @@ function Button({
 	}, [clearHoldTimers]);
 
 	const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-		if (props.disabled || !onHold) {
-			onPointerDown?.(e);
-			return;
-		}
-
-		if (e.button !== 0) {
+		if (props.disabled || !onHold || e.button !== 0) {
 			onPointerDown?.(e);
 			return;
 		}
 
 		isTap.current = true;
 		pointerDownTime.current = Date.now();
-
 		setHoldCompletedState(false);
 		clearHoldTimers();
 
@@ -165,10 +160,8 @@ function Button({
 		}
 
 		cancelHold();
-
 		const duration = Date.now() - pointerDownTime.current;
 		isTap.current = duration <= 200;
-
 		onPointerUp?.(e);
 	};
 
@@ -180,7 +173,6 @@ function Button({
 
 		cancelHold();
 		isTap.current = false;
-
 		onPointerLeave?.(e);
 	};
 
@@ -214,7 +206,6 @@ function Button({
 		typeof children === "function" ? children(holdCompleted) : children;
 
 	const substrate = useSurface();
-	// For "secondary" (which we treat as an elevated surface button), we step up by 1 level
 	const level = Math.min(substrate + 1, 8);
 	const isSurfaceVariant = variant === "secondary";
 
@@ -224,14 +215,7 @@ function Button({
 				data-slot="button"
 				data-variant={variant}
 				data-size={size}
-				className={cn(
-					buttonVariants({ variant, size, className }),
-					// isSurfaceVariant && [
-					// 	surfaceClasses(level, level),
-					// 	"text-elevated-foreground hover:after:bg-primary/6 data-[state=open]:after:bg-primary/10",
-					// 	"relative after:absolute after:inset-0 after:pointer-events-none after:rounded-[inherit]",
-					// ],
-				)}
+				className={cn(buttonVariants({ variant, size, className }))}
 				onClick={onClick}
 				onPointerDown={onPointerDown}
 				onPointerUp={onPointerUp}
@@ -251,11 +235,6 @@ function Button({
 			className={cn(
 				buttonVariants({ variant, size, className }),
 				onHold && "relative overflow-hidden",
-				// isSurfaceVariant && [
-				// 	surfaceClasses(level, level),
-				// 	"text-elevated-foreground  hover:after:bg-primary/6 data-[state=open]:after:bg-primary/10",
-				// 	"relative after:absolute after:inset-0 after:pointer-events-none after:rounded-[inherit]",
-				// ],
 			)}
 			onPointerDown={onHold ? handlePointerDown : onPointerDown}
 			onPointerUp={onHold ? handlePointerUp : onPointerUp}
@@ -272,7 +251,9 @@ function Button({
 					)}
 					style={{
 						clipPath: isHolding ? "inset(0 0 0 0)" : "inset(0 100% 0 0)",
-						transitionDuration: isHolding ? `${holdDuration - 150}ms` : "0ms",
+						transitionDuration: isHolding
+							? `${holdDuration - 150}ms`
+							: "0ms",
 						transitionProperty: "clip-path",
 						transitionTimingFunction: "linear",
 					}}
