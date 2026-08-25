@@ -212,18 +212,18 @@ export function ProfilePortfolio({
 		() =>
 			availableTags.length > 0
 				? [
-						{
-							id: "tags",
-							label: t("components.portfolio.filters.tags", "Tags"),
-							type: "multiselect",
-							icon: Tag,
-							getItemValue: (post) => post.tags ?? [],
-							options: availableTags.map((tag) => ({
-								id: tag,
-								label: tag,
-							})),
-						},
-					]
+					{
+						id: "tags",
+						label: t("components.portfolio.filters.tags", "Tags"),
+						type: "multiselect",
+						icon: Tag,
+						getItemValue: (post) => post.tags ?? [],
+						options: availableTags.map((tag) => ({
+							id: tag,
+							label: tag,
+						})),
+					},
+				]
 				: [],
 		[availableTags, t],
 	);
@@ -456,13 +456,13 @@ export function ProfilePortfolio({
 										>
 											{deleteCatalogMutation.isPending
 												? t(
-														"components.portfolio.folder.delete.deleting",
-														"Deleting...",
-													)
+													"components.portfolio.folder.delete.deleting",
+													"Deleting...",
+												)
 												: t(
-														"components.portfolio.folder.delete.confirm",
-														"Delete",
-													)}
+													"components.portfolio.folder.delete.confirm",
+													"Delete",
+												)}
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>
@@ -475,6 +475,7 @@ export function ProfilePortfolio({
 					posts={currentFolderPosts}
 					onPostClick={handlePostClick}
 					variant="portfolio"
+					className="lg:mx-0 xl:mx-4"
 					onRemoveFromCatalog={
 						canManageCatalogs ? handleRemovePostFromCatalog : undefined
 					}
@@ -497,7 +498,7 @@ export function ProfilePortfolio({
 		<>
 			<div className="flex h-full flex-1 flex-col gap-6">
 				<FilterBar
-					className="px-4"
+					className="px-4 lg:px-0 xl:px-4"
 					data={posts}
 					groups={filterGroups}
 					values={filters}
@@ -548,9 +549,9 @@ export function ProfilePortfolio({
 							"components.portfolio.folder.catalogs",
 							"Portfolio folders",
 						)}
-						className="lg:px-4"
+						className="lg:px-0 xl:px-4"
 					>
-						<div className="relative scroll-fade-x scroll-fade-4 flex w-full min-w-0 gap-4 overflow-x-auto overscroll-x-contain px-3 pb-3">
+						<div className="relative flex w-full min-w-0 snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-px-3 scroll-fade-x scroll-fade-4 px-3 pb-3 lg:scroll-px-0 lg:px-0 xl:scroll-px-3 xl:px-3">
 							{filteredFolders.map((folder) => {
 								const catalogPosts = postsByCatalogId.get(folder.id) ?? [];
 								const preview = getFolderPreview(folder, catalogPosts);
@@ -565,7 +566,7 @@ export function ProfilePortfolio({
 											tab: "portfolio",
 											folderSlug: folder.id,
 										}}
-										className="w-40 shrink-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+										className="w-40 shrink-0 snap-start rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 									>
 										<FolderCard
 											folder={folder}
@@ -584,7 +585,7 @@ export function ProfilePortfolio({
 					posts={filteredPosts}
 					onPostClick={handlePostClick}
 					variant="portfolio"
-					className="lg:mx-4"
+					className="lg:mx-0 xl:mx-4"
 				/>
 			</div>
 

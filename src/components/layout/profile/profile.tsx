@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePostConversationDirect } from "@/hooks/chat/use-chat";
 import { useAvailableFeeds } from "@/hooks/feed/use-available-feeds";
 import { useBento } from "@/hooks/ui/use-bento";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
 import { type Tile, toPixels } from "@/lib/bento";
 import { cn, createStaticList } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
@@ -51,6 +52,7 @@ const FollowButton = ({
 	canFollow,
 	onToggle,
 	className,
+	size = "xl",
 }: any) => {
 	const { t } = useTranslation();
 	return (
@@ -58,7 +60,7 @@ const FollowButton = ({
 			className={className}
 			disabled={!canFollow || loading}
 			onClick={onToggle}
-			size="xl"
+			size={size}
 		>
 			{isFollowing
 				? t("components.profile.actions.unfollow")
@@ -69,9 +71,9 @@ const FollowButton = ({
 
 export function UserInfoSkeleton() {
 	return (
-		<aside className="-mt-12 h-fit space-y-3 md:sticky md:top-20 md:-mt-16 md:pb-10">
+		<aside className="-mt-12 h-fit space-y-3 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10">
 			<div className="relative z-10 flex">
-				<Skeleton className="size-24 rounded-full ring-6 ring-background md:size-32" />
+				<Skeleton className="size-24 rounded-full ring-6 ring-background lg:size-32" />
 			</div>
 
 			<div className="space-y-4">
@@ -258,7 +260,7 @@ export function UserProfileSkeleton() {
 		<div className="flex h-full flex-1 flex-col">
 			<ProfileCoverSkeleton />
 			<div className="container mx-auto flex h-full flex-1 flex-col">
-				<div className="relative grid h-full flex-1 grid-cols-1 gap-4 md:grid-cols-[240px_1fr] md:gap-8 lg:grid-cols-[280px_1fr]">
+				<div className="relative grid h-full flex-1 grid-cols-1 gap-4 lg:grid-cols-[280px_1fr] lg:gap-8">
 					<UserInfoSkeleton />
 					<div className="flex h-full min-w-0 flex-1 flex-col pt-0">
 						<UserFeedsSkeleton />
@@ -360,8 +362,8 @@ export default function UserProfile({
 				)}
 			</div>
 			<div className="flex min-h-0 flex-1 flex-col">
-				<div className="flex flex-1 flex-col gap-4 sm:flex-row md:gap-8">
-					<div className="shrink-0 md:w-72">
+				<div className="flex flex-1 flex-col gap-4 lg:flex-row lg:gap-8">
+					<div className="shrink-0 lg:w-72">
 						<UserProfileSidebar user={user} isMe={isMe} isSuspended={false} />
 					</div>
 
@@ -395,7 +397,9 @@ export function UserProfileSidebar({
 	const navigate = useNavigate();
 	const router = useRouter();
 	const { user: currentUser } = useAuth();
+	const isTablet = useIsTablet();
 	const createDirectConversation = usePostConversationDirect();
+	const actionButtonSize = isTablet ? "2xl" : "xl";
 
 	const { locale } = useParams({ strict: false }) as { locale?: string };
 
@@ -440,13 +444,13 @@ export function UserProfileSidebar({
 		toast.info(
 			action === "follow"
 				? t(
-						"components.profile.actions.sign_in_to_follow",
-						"Please sign in to follow this user.",
-					)
+					"components.profile.actions.sign_in_to_follow",
+					"Please sign in to follow this user.",
+				)
 				: t(
-						"components.profile.actions.sign_in_to_message",
-						"Please sign in to message this user.",
-					),
+					"components.profile.actions.sign_in_to_message",
+					"Please sign in to message this user.",
+				),
 		);
 
 		return false;
@@ -495,7 +499,7 @@ export function UserProfileSidebar({
 
 	return (
 		<>
-			<aside className="-mt-12 h-fit space-y-3 lg:pl-4 md:sticky md:top-20 md:-mt-16 md:pb-10 max-lg:px-4">
+			<aside className="-mt-12 h-fit space-y-3 max-lg:px-4 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10 lg:pl-4">
 				<div className="relative z-10 flex flex-row items-start justify-between gap-4 lg:flex-col lg:justify-start">
 					<UserAvatar user={user} isHuge hasOutline />
 
@@ -546,7 +550,7 @@ export function UserProfileSidebar({
 								<Button
 									type="button"
 									className="flex-1"
-									size="xl"
+									size={actionButtonSize}
 									variant="secondary"
 									onClick={
 										handleOpenSettings
@@ -596,14 +600,15 @@ export function UserProfileSidebar({
 								<Button
 									type="button"
 									className="flex-1"
-									size="xl"
+									variant={"outline"}
+									size={actionButtonSize}
 									onClick={handleOpenSettings}
 								>
 									{t("components.profile.actions.edit_profile", "Edit profile")}
 								</Button>
 
 								{user.roles.includes(TRoles.Artist) && user.isVerified && (
-									<Button type="button" variant="secondary" size="xl" className="flex-1">
+									<Button type="button" variant="secondary" size={actionButtonSize} className="flex-1">
 										{t("components.profile.actions.queue", "Queue")}
 										{/* <OutlineListBoxes /> */}
 									</Button>
@@ -618,6 +623,7 @@ export function UserProfileSidebar({
 										canFollow
 										onToggle={handleFollow}
 										showText
+										size={actionButtonSize}
 										className="flex-1"
 									/>
 
@@ -626,7 +632,7 @@ export function UserProfileSidebar({
 										variant="secondary"
 										className="flex-1"
 										disabled={createDirectConversation.isPending}
-										size="xl"
+										size={actionButtonSize}
 										onClick={handleMessage}
 									>
 										{t("components.profile.actions.message", "Message")}
@@ -635,15 +641,15 @@ export function UserProfileSidebar({
 								</div>
 
 								{user.roles.includes(TRoles.Artist) && user.isVerified && (
-								<Button
-									type="button"
-									variant="secondary"
-									size="xl"
-									className="w-full"
-								>
-									{t("components.profile.actions.queue", "Queue")}
-									{/* <OutlineListBoxes /> */}
-								</Button>
+									<Button
+										type="button"
+										variant="secondary"
+										size={actionButtonSize}
+										className="w-full"
+									>
+										{t("components.profile.actions.queue", "Queue")}
+										{/* <OutlineListBoxes /> */}
+									</Button>
 								)}
 							</div>
 						)}

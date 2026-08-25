@@ -1,6 +1,7 @@
 "use client";
 
-import { Typography } from "@heroui/react";
+import { useForm } from "@tanstack/react-form";
+import { useRouter } from "@tanstack/react-router";
 import {
 	Accessibility,
 	Bell,
@@ -8,17 +9,30 @@ import {
 	KeyRound,
 	Link2,
 	LogOut,
+	Mail,
 	Palette,
 	Shield,
 	Trash2,
 	UserRound,
 } from "lucide-react";
-import { type ComponentType, type CSSProperties, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
 import {
-	ProfileEditor,
-	type ProfileEditorValues,
-} from "@/components/layout/profile/profile-editor";
+	type ComponentType,
+	type CSSProperties,
+	type ReactNode,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
+import { useTranslation } from "react-i18next";
+import {
+	OutlineCheck,
+	OutlineChevronDown,
+	OutlineClearNight,
+	OutlineMonitor,
+	OutlineSunny,
+} from "@/components/icons/icons";
+import type { ProfileEditorValues } from "@/components/layout/profile/profile-editor";
+import { SettingsProfileEditor } from "@/components/layout/profile/settings-profile-editor";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -29,12 +43,38 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
+import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import {
+	Field,
+	FieldContent,
+	FieldDescription,
+	FieldGroup,
+	FieldLabel,
+	FieldTitle,
+} from "@/components/ui/field";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupButton,
+	InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import {
 	Sidebar,
@@ -48,9 +88,18 @@ import {
 	SidebarProvider,
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Elevated } from "@/lib/elevated";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
+import { deriveShadeFromHex, getSwatchStyles } from "@/lib/colors";
+import {
+	languages,
+	localizePath,
+	stripLocaleFromPathname,
+	syncLanguage,
+} from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth";
+import { useTheme } from "@/providers/theme";
+import type { TUserResponse } from "@/types/user";
 
 type SettingsSection =
 	| "profile"
@@ -126,6 +175,84 @@ const navigation: SettingsNavigationItem[] = [
 	},
 ];
 
+// Danger 500: oklch(63.7% 0.237 25.331)
+const DANGER_500_HEX = "#fb2c36";
+const DANGER_PALETTE_OPTIONS = { baseShade: 500 } as const;
+const DANGER_ZONE_SWATCH = getSwatchStyles(
+	DANGER_500_HEX,
+	100,
+	DANGER_PALETTE_OPTIONS,
+);
+const DANGER_ACTION_SWATCH = getSwatchStyles(
+	DANGER_500_HEX,
+	500,
+	DANGER_PALETTE_OPTIONS,
+);
+const DANGER_MUTED_FOREGROUND = deriveShadeFromHex(
+	DANGER_500_HEX,
+	"700",
+	DANGER_PALETTE_OPTIONS,
+);
+const DANGER_ZONE_STYLE = {
+	...DANGER_ZONE_SWATCH,
+	"--foreground": DANGER_ZONE_SWATCH.color,
+	"--muted-foreground": DANGER_MUTED_FOREGROUND,
+	"--destructive": DANGER_ACTION_SWATCH.backgroundColor,
+	"--destructive-foreground": DANGER_ACTION_SWATCH.color,
+} as CSSProperties;
+
+const EMPTY_PROFILE_VALUES: ProfileEditorValues = {
+	avatar_url: "",
+	cover_url: "",
+	display_name: "",
+	username: "",
+	bio: "",
+	accent_color: "",
+};
+
+interface SettingsMediaSource {
+	fullSize?: { path?: string | null } | null;
+	thumbnail?: { path?: string | null } | null;
+}
+
+type SettingsUser = TUserResponse & {
+	avatarPath?: string | null;
+	avatarUrl?: string | null;
+	avatar?: SettingsMediaSource | null;
+	coverPath?: string | null;
+	coverUrl?: string | null;
+	cover?: SettingsMediaSource | null;
+	bio?: string | null;
+	accentColor?: string | null;
+};
+
+function getMediaPath(media?: SettingsMediaSource | null) {
+	return media?.fullSize?.path ?? media?.thumbnail?.path ?? "";
+}
+
+function getProfileEditorValues(user?: TUserResponse | null): ProfileEditorValues {
+	if (!user) {
+		return EMPTY_PROFILE_VALUES;
+	}
+
+	const settingsUser = user as SettingsUser;
+
+	return {
+		avatar_url:
+			settingsUser.avatarPath ??
+			settingsUser.avatarUrl ??
+			getMediaPath(settingsUser.avatar),
+		cover_url:
+			settingsUser.coverPath ??
+			settingsUser.coverUrl ??
+			getMediaPath(settingsUser.cover),
+		display_name: settingsUser.displayName ?? "",
+		username: settingsUser.username ?? "",
+		bio: settingsUser.bio ?? "",
+		accent_color: settingsUser.accentColor ?? "",
+	};
+}
+
 export function UserSettingsModal({
 	open,
 	onOpenChange,
@@ -161,14 +288,20 @@ interface UserSettingsPanelProps {
 	onSave?: () => void;
 }
 
-// TODO: get user data and put into fields (if user is logged in)
 export function UserSettingsPanel({
 	className,
 	onCancel,
 	onSave,
 }: UserSettingsPanelProps) {
+	const { user } = useAuth();
+	const actionButtonSize = useSettingsButtonSize();
 	const [activeSection, setActiveSection] =
 		useState<SettingsSection>("profile");
+	const profileInitialValues = useMemo(
+		() => getProfileEditorValues(user),
+		[user],
+	);
+	const accountEmail = (user as { email?: string } | null | undefined)?.email ?? "";
 
 	const activeItem =
 		navigation.find((item) => item.id === activeSection) ?? navigation[0];
@@ -284,14 +417,19 @@ export function UserSettingsPanel({
 
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
 					<div className="mx-auto w-full max-w-3xl p-4 md:p-8">
-						<SettingsSectionContent section={activeSection} onSave={onSave} />
+						<SettingsSectionContent
+							section={activeSection}
+							profileInitialValues={profileInitialValues}
+							accountEmail={accountEmail}
+							onSave={onSave}
+						/>
 					</div>
 				</div>
 
 				<footer className="flex shrink-0 items-center justify-end gap-2 border-t p-4">
 					{onCancel && (
 						<Button
-							size="xl"
+							size={actionButtonSize}
 							type="button"
 							variant="outline"
 							onClick={onCancel}
@@ -301,12 +439,9 @@ export function UserSettingsPanel({
 					)}
 
 					<Button
-						size="xl"
+						size={actionButtonSize}
 						type="submit"
-						form={
-							activeSection === "profile" ? "profile-settings-form" : undefined
-						}
-						onClick={activeSection === "profile" ? undefined : onSave}
+						form={`${activeSection}-settings-form`}
 					>
 						Save changes
 					</Button>
@@ -318,35 +453,44 @@ export function UserSettingsPanel({
 
 function SettingsSectionContent({
 	section,
+	profileInitialValues,
+	accountEmail,
 	onSave,
 }: {
 	section: SettingsSection;
+	profileInitialValues: ProfileEditorValues;
+	accountEmail: string;
 	onSave?: () => void;
 }) {
 	switch (section) {
 		case "profile":
-			return <ProfileSettings onSubmit={() => onSave?.()} />;
+			return (
+				<ProfileSettings
+					initialValues={profileInitialValues}
+					onSubmit={() => onSave?.()}
+				/>
+			);
 
 		case "account":
-			return <AccountSettings />;
+			return <AccountSettings email={accountEmail} onSubmit={onSave} />;
 
 		case "appearance":
-			return <AppearanceSettings />;
+			return <AppearanceSettings onSubmit={onSave} />;
 
 		case "notifications":
-			return <NotificationSettings />;
+			return <NotificationSettings onSubmit={onSave} />;
 
 		case "privacy":
-			return <PrivacySettings />;
+			return <PrivacySettings onSubmit={onSave} />;
 
 		case "language":
-			return <LanguageSettings />;
+			return <LanguageSettings onSubmit={onSave} />;
 
 		case "accessibility":
-			return <AccessibilitySettings />;
+			return <AccessibilitySettings onSubmit={onSave} />;
 
 		case "connections":
-			return <ConnectedAccountsSettings />;
+			return <ConnectedAccountsSettings onSubmit={onSave} />;
 
 		default:
 			return null;
@@ -362,345 +506,833 @@ export function ProfileSettings({
 	initialValues,
 	onSubmit,
 }: ProfileSettingsProps) {
-	const form = useForm<ProfileEditorValues>({
-		defaultValues: initialValues,
+	return (
+		<SettingsProfileEditor
+			initialValues={initialValues}
+			bioClassName="min-h-32"
+			onSubmit={onSubmit}
+		/>
+	);
+}
+
+function AccountSettings({
+	email,
+	onSubmit,
+}: {
+	email: string;
+	onSubmit?: () => void | Promise<void>;
+}) {
+	const actionButtonSize = useSettingsButtonSize();
+	const form = useForm({
+		defaultValues: { email },
+		onSubmit: async () => {
+			await onSubmit?.();
+		},
+	});
+
+	useEffect(() => {
+		form.reset({ email });
+	}, [email, form]);
+
+	return (
+		<form
+			id="account-settings-form"
+			onSubmit={(event) => {
+				event.preventDefault();
+				void form.handleSubmit();
+			}}
+		>
+			<div className="flex flex-col gap-6">
+				<SettingsCard
+					title="Email address"
+					description="Used for signing in and account notifications."
+				>
+					<FieldGroup>
+						<form.Field
+							name="email"
+							children={(field) => (
+								<Field>
+									<FieldLabel htmlFor={field.name} className="sr-only">
+										Email address
+									</FieldLabel>
+									<InputGroup>
+										<InputGroupAddon>
+											<Mail />
+										</InputGroupAddon>
+										<InputGroupInput
+											id={field.name}
+											name={field.name}
+											type="email"
+											value={field.state.value}
+											placeholder="Email address"
+											readOnly
+										/>
+										<InputGroupAddon align="inline-end">
+											<InputGroupButton type="button" variant="secondary">
+												Change
+											</InputGroupButton>
+										</InputGroupAddon>
+									</InputGroup>
+								</Field>
+							)}
+						/>
+					</FieldGroup>
+				</SettingsCard>
+
+				<SettingsCard
+					title="Password"
+					description="Choose a strong and unique password."
+				>
+					<FieldGroup>
+						<Field>
+							<Button
+								type="button"
+								variant="secondary"
+								size={actionButtonSize}
+							>
+								<KeyRound data-icon="inline-start" />
+								Change password
+							</Button>
+						</Field>
+					</FieldGroup>
+				</SettingsCard>
+
+				<SettingsCard
+					title="Account sessions"
+					description="Sign out from other browsers and devices."
+				>
+					<FieldGroup>
+						<Field>
+							<Button
+								type="button"
+								variant="secondary"
+								size={actionButtonSize}
+							>
+								<LogOut data-icon="inline-start" />
+								Sign out other sessions
+							</Button>
+						</Field>
+					</FieldGroup>
+				</SettingsCard>
+
+				<SettingsCard
+					title="Danger zone"
+					description="These actions cannot easily be undone."
+					style={DANGER_ZONE_STYLE}
+				>
+					<FieldGroup>
+						<Field orientation="horizontal">
+							<FieldContent>
+								<FieldLabel>Delete account</FieldLabel>
+								<FieldDescription>
+									Permanently delete your account and content.
+								</FieldDescription>
+							</FieldContent>
+							<Button
+								type="button"
+								variant="destructive"
+								size={actionButtonSize}
+								style={DANGER_ACTION_SWATCH}
+								className="hover:opacity-90"
+							>
+								<Trash2 data-icon="inline-start" />
+								Delete account
+							</Button>
+						</Field>
+					</FieldGroup>
+				</SettingsCard>
+			</div>
+		</form>
+	);
+}
+
+function AppearanceSettings({
+	onSubmit,
+}: {
+	onSubmit?: () => void | Promise<void>;
+}) {
+	const form = useForm({
+		defaultValues: {
+			compactLayout: false,
+			showMediaAnimations: true,
+		},
+		onSubmit: async () => {
+			await onSubmit?.();
+		},
 	});
 
 	return (
-		<FormProvider {...form}>
-			<form
-				id="profile-settings-form"
-				onSubmit={form.handleSubmit((values) => onSubmit?.(values))}
-			>
-				<ProfileEditor bioClassName="min-h-32" />
-			</form>
-		</FormProvider>
-	);
-}
+		<form
+			id="appearance-settings-form"
+			onSubmit={(event) => {
+				event.preventDefault();
+				void form.handleSubmit();
+			}}
+		>
+			<div className="flex flex-col gap-6">
+				<SettingsCard
+					title="Theme"
+					description="Select your preferred interface appearance."
+				>
+					<FieldGroup>
+						<Field orientation="horizontal">
+							<FieldContent>
+								<FieldLabel>Interface theme</FieldLabel>
+								<FieldDescription>
+									Applied immediately across the application.
+								</FieldDescription>
+							</FieldContent>
+							<SettingsThemeSelect />
+						</Field>
+					</FieldGroup>
+				</SettingsCard>
 
-function AccountSettings() {
-	return (
-		<div className="space-y-8">
-			<SettingsCard
-				title="Email address"
-				description="Used for signing in and account notifications."
-			>
-				<div className="flex flex-col gap-3 sm:flex-row">
-					<Input type="email" defaultValue="draconek@example.com" />
-
-					<Button type="button" variant="outline" className="shrink-0">
-						Change email
-					</Button>
-				</div>
-			</SettingsCard>
-
-			<SettingsCard
-				title="Password"
-				description="Choose a strong and unique password."
-			>
-				<Button type="button" variant="outline">
-					<KeyRound />
-					Change password
-				</Button>
-			</SettingsCard>
-
-			<SettingsCard
-				title="Account sessions"
-				description="Sign out from other browsers and devices."
-			>
-				<Button type="button" variant="outline">
-					<LogOut />
-					Sign out other sessions
-				</Button>
-			</SettingsCard>
-
-			<SettingsCard
-				title="Danger zone"
-				description="These actions cannot easily be undone."
-				className="border-destructive/30"
-			>
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div>
-						<p className="text-sm font-medium">Delete account</p>
-
-						<p className="text-xs text-muted-foreground">
-							Permanently delete your account and content.
-						</p>
-					</div>
-
-					<Button type="button" variant="destructive">
-						<Trash2 />
-						Delete account
-					</Button>
-				</div>
-			</SettingsCard>
-		</div>
-	);
-}
-
-function AppearanceSettings() {
-	return (
-		<div className="space-y-8">
-			<SettingsCard
-				title="Theme"
-				description="Select your preferred interface appearance."
-			>
-				<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-					{["Light", "Dark", "System"].map((theme) => (
-						<button
-							key={theme}
-							type="button"
-							className={cn(
-								"rounded-xl border p-3 text-left transition-colors hover:bg-muted/50",
-								theme === "System" &&
-									"border-primary bg-primary/5 ring-1 ring-primary",
+				<SettingsCard title="Interface">
+					<FieldGroup>
+						<form.Field
+							name="compactLayout"
+							children={(field) => (
+								<SettingSwitch
+									id={field.name}
+									title="Compact layout"
+									description="Reduce spacing and display more information."
+									checked={field.state.value}
+									onCheckedChange={field.handleChange}
+								/>
 							)}
-						>
-							<div
-								className={cn(
-									"mb-3 aspect-video rounded-lg border",
-									theme === "Light" && "bg-white",
-									theme === "Dark" && "bg-neutral-950",
-									theme === "System" &&
-										"bg-linear-to-r from-white to-neutral-950",
+						/>
+
+						<form.Field
+							name="showMediaAnimations"
+							children={(field) => (
+								<SettingSwitch
+									id={field.name}
+									title="Show media animations"
+									description="Automatically play animated portfolio media."
+									checked={field.state.value}
+									onCheckedChange={field.handleChange}
+								/>
+							)}
+						/>
+					</FieldGroup>
+				</SettingsCard>
+			</div>
+		</form>
+	);
+}
+
+function NotificationSettings({
+	onSubmit,
+}: {
+	onSubmit?: () => void | Promise<void>;
+}) {
+	const form = useForm({
+		defaultValues: {
+			messages: true,
+			comments: true,
+			likes: false,
+			newFollowers: true,
+			emailNotifications: false,
+		},
+		onSubmit: async () => {
+			await onSubmit?.();
+		},
+	});
+	const preferences = [
+		{
+			name: "messages",
+			title: "Messages",
+			description: "Notify me when I receive a new message.",
+		},
+		{
+			name: "comments",
+			title: "Comments",
+			description: "Notify me about comments on my posts.",
+		},
+		{
+			name: "likes",
+			title: "Likes",
+			description: "Notify me when someone likes my work.",
+		},
+		{
+			name: "newFollowers",
+			title: "New followers",
+			description: "Notify me when somebody follows my profile.",
+		},
+		{
+			name: "emailNotifications",
+			title: "Email notifications",
+			description: "Send important notifications to my email.",
+		},
+	] as const;
+
+	return (
+		<form
+			id="notifications-settings-form"
+			onSubmit={(event) => {
+				event.preventDefault();
+				void form.handleSubmit();
+			}}
+		>
+			<SettingsCard
+				title="Notification preferences"
+				description="Choose which activity should notify you."
+			>
+				<FieldGroup>
+					{preferences.map((preference) => (
+						<form.Field
+							key={preference.name}
+							name={preference.name}
+							children={(field) => (
+								<SettingSwitch
+									id={field.name}
+									title={preference.title}
+									description={preference.description}
+									checked={field.state.value}
+									onCheckedChange={field.handleChange}
+								/>
+							)}
+						/>
+					))}
+				</FieldGroup>
+			</SettingsCard>
+		</form>
+	);
+}
+
+function PrivacySettings({
+	onSubmit,
+}: {
+	onSubmit?: () => void | Promise<void>;
+}) {
+	const form = useForm({
+		defaultValues: {
+			publicProfile: true,
+			showOnlineStatus: true,
+			showLikedPosts: false,
+			allowSearchEngines: false,
+			blurSensitiveContent: true,
+			rememberRevealedPosts: false,
+		},
+		onSubmit: async () => {
+			await onSubmit?.();
+		},
+	});
+	const visibilityPreferences = [
+		{
+			name: "publicProfile",
+			title: "Public profile",
+			description: "Allow anyone to view your profile.",
+		},
+		{
+			name: "showOnlineStatus",
+			title: "Show online status",
+			description: "Allow other users to see when you are active.",
+		},
+		{
+			name: "showLikedPosts",
+			title: "Show liked posts",
+			description: "Display your liked posts on your profile.",
+		},
+		{
+			name: "allowSearchEngines",
+			title: "Allow search engines",
+			description: "Allow external search engines to index your profile.",
+		},
+	] as const;
+	const contentPreferences = [
+		{
+			name: "blurSensitiveContent",
+			title: "Always blur sensitive content",
+			description: "Require confirmation before sensitive media is shown.",
+		},
+		{
+			name: "rememberRevealedPosts",
+			title: "Remember revealed posts",
+			description:
+				"Keep sensitive posts revealed during the current session.",
+		},
+	] as const;
+
+	return (
+		<form
+			id="privacy-settings-form"
+			onSubmit={(event) => {
+				event.preventDefault();
+				void form.handleSubmit();
+			}}
+		>
+			<div className="flex flex-col gap-6">
+				<SettingsCard
+					title="Profile visibility"
+					description="Control who can see your profile and activity."
+				>
+					<FieldGroup>
+						{visibilityPreferences.map((preference) => (
+							<form.Field
+								key={preference.name}
+								name={preference.name}
+								children={(field) => (
+									<SettingSwitch
+										id={field.name}
+										title={preference.title}
+										description={preference.description}
+										checked={field.state.value}
+										onCheckedChange={field.handleChange}
+									/>
 								)}
 							/>
+						))}
+					</FieldGroup>
+				</SettingsCard>
 
-							<p className="text-sm font-medium">{theme}</p>
-						</button>
+				<SettingsCard
+					title="Sensitive content"
+					description="Control how content warnings are handled."
+				>
+					<FieldGroup>
+						{contentPreferences.map((preference) => (
+							<form.Field
+								key={preference.name}
+								name={preference.name}
+								children={(field) => (
+									<SettingSwitch
+										id={field.name}
+										title={preference.title}
+										description={preference.description}
+										checked={field.state.value}
+										onCheckedChange={field.handleChange}
+									/>
+								)}
+							/>
+						))}
+					</FieldGroup>
+				</SettingsCard>
+			</div>
+		</form>
+	);
+}
+
+function LanguageSettings({
+	onSubmit,
+}: {
+	onSubmit?: () => void | Promise<void>;
+}) {
+	const form = useForm({
+		defaultValues: {
+			region: "Poland",
+			timeZone: "Europe/Warsaw",
+		},
+		onSubmit: async () => {
+			await onSubmit?.();
+		},
+	});
+
+	return (
+		<form
+			id="language-settings-form"
+			onSubmit={(event) => {
+				event.preventDefault();
+				void form.handleSubmit();
+			}}
+		>
+			<div className="flex flex-col gap-6">
+				<SettingsCard
+					title="Language"
+					description="Choose the language used throughout the application."
+				>
+					<FieldGroup>
+						<Field orientation="horizontal">
+							<FieldContent>
+								<FieldLabel>Application language</FieldLabel>
+								<FieldDescription>
+									Applied immediately without reloading the current page.
+								</FieldDescription>
+							</FieldContent>
+							<SettingsLanguageSelect />
+						</Field>
+					</FieldGroup>
+				</SettingsCard>
+
+				<SettingsCard
+					title="Region"
+					description="Used for dates, numbers and currency."
+				>
+					<FieldGroup className="grid sm:grid-cols-2">
+						<form.Field
+							name="region"
+							children={(field) => (
+								<Field>
+									<FieldLabel htmlFor={field.name}>Region</FieldLabel>
+									<InputGroup>
+										<InputGroupAddon>
+											<Globe />
+										</InputGroupAddon>
+										<InputGroupInput
+											id={field.name}
+											name={field.name}
+											list="settings-region-options"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(event) =>
+												field.handleChange(event.target.value)
+											}
+										/>
+									</InputGroup>
+								</Field>
+							)}
+						/>
+						<datalist id="settings-region-options">
+							<option value="Poland" />
+							<option value="United States" />
+							<option value="United Kingdom" />
+							<option value="Germany" />
+						</datalist>
+
+						<form.Field
+							name="timeZone"
+							children={(field) => (
+								<Field>
+									<FieldLabel htmlFor={field.name}>Time zone</FieldLabel>
+									<InputGroup>
+										<InputGroupAddon>
+											<Globe />
+										</InputGroupAddon>
+										<InputGroupInput
+											id={field.name}
+											name={field.name}
+											list="settings-time-zone-options"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(event) =>
+												field.handleChange(event.target.value)
+											}
+										/>
+									</InputGroup>
+								</Field>
+							)}
+						/>
+						<datalist id="settings-time-zone-options">
+							<option value="Europe/Warsaw" />
+							<option value="UTC" />
+						</datalist>
+					</FieldGroup>
+				</SettingsCard>
+			</div>
+		</form>
+	);
+}
+
+function SettingsLanguageSelect() {
+	const { t, i18n } = useTranslation();
+	const router = useRouter();
+	const actionButtonSize = useSettingsButtonSize();
+	const [open, setOpen] = useState(false);
+	const selectedLanguage = languages.find((language) =>
+		i18n.language.startsWith(language.value),
+	);
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger asChild>
+				<Button
+					type="button"
+					role="combobox"
+					variant="secondary"
+					size={actionButtonSize}
+					aria-expanded={open}
+				>
+					{selectedLanguage ? (
+						<>
+							<span className="text-lg" aria-hidden="true">
+								{selectedLanguage.flag}
+							</span>
+							<span>{selectedLanguage.label}</span>
+						</>
+					) : (
+						t("components.language_switcher.select", "Select language")
+					)}
+					<OutlineChevronDown data-icon="inline-end" />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent
+				align="end"
+				className="w-56 overflow-hidden rounded-(--command-content-radius) p-0"
+			>
+				<Command>
+					<CommandInput
+						placeholder={t("components.language_select.search", "Search language")}
+					/>
+					<CommandList>
+						<CommandEmpty>
+							{t("components.language_select.no_results", "No language found")}
+						</CommandEmpty>
+						<CommandGroup>
+							{languages.map((language) => (
+								<CommandItem
+									key={language.value}
+									value={language.label}
+									onSelect={async () => {
+										await syncLanguage(language.value);
+										const nextPathname = localizePath(
+											stripLocaleFromPathname(window.location.pathname),
+											language.value,
+										);
+										setOpen(false);
+										router.history.push(
+											`${nextPathname}${window.location.search}${window.location.hash}`,
+										);
+									}}
+								>
+									<span className="mr-2 text-lg leading-none" aria-hidden="true">
+										{language.flag}
+									</span>
+									{language.label}
+									<OutlineCheck
+										className={cn(
+											"ml-auto",
+											i18n.language.startsWith(language.value)
+												? "opacity-100"
+												: "opacity-0",
+										)}
+									/>
+								</CommandItem>
+							))}
+						</CommandGroup>
+					</CommandList>
+				</Command>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+function SettingsThemeSelect() {
+	const { t } = useTranslation();
+	const { userTheme, setTheme } = useTheme();
+	const actionButtonSize = useSettingsButtonSize();
+	const [open, setOpen] = useState(false);
+	const themes = [
+		{
+			value: "light",
+			label: t("components.theme_switcher.light", "Light"),
+			icon: OutlineSunny,
+		},
+		{
+			value: "dark",
+			label: t("components.theme_switcher.dark", "Dark"),
+			icon: OutlineClearNight,
+		},
+		{
+			value: "oled",
+			label: t("components.theme_switcher.oled", "OLED"),
+			icon: OutlineClearNight,
+		},
+		{
+			value: "system",
+			label: t("components.theme_switcher.system", "System"),
+			icon: OutlineMonitor,
+		},
+	] as const;
+	const selectedTheme = themes.find((theme) => theme.value === userTheme);
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger asChild>
+				<Button
+					type="button"
+					role="combobox"
+					variant="secondary"
+					size={actionButtonSize}
+					aria-expanded={open}
+					aria-controls="settings-theme-options"
+				>
+					{selectedTheme ? (
+						<>
+							<selectedTheme.icon data-icon="inline-start" />
+							<span>{selectedTheme.label}</span>
+						</>
+					) : (
+						t("components.theme_switcher.toggle", "Select theme")
+					)}
+					<OutlineChevronDown data-icon="inline-end" />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent align="end" className="w-44 overflow-hidden p-0">
+				<Command>
+					<CommandList id="settings-theme-options">
+						<CommandGroup>
+							{themes.map((theme) => (
+								<CommandItem
+									key={theme.value}
+									value={theme.value}
+									onSelect={() => {
+										setTheme(theme.value);
+										setOpen(false);
+									}}
+								>
+									<theme.icon />
+									{theme.label}
+									<OutlineCheck
+										className={cn(
+											"ml-auto",
+											userTheme === theme.value ? "opacity-100" : "opacity-0",
+										)}
+									/>
+								</CommandItem>
+							))}
+						</CommandGroup>
+					</CommandList>
+				</Command>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+function AccessibilitySettings({
+	onSubmit,
+}: {
+	onSubmit?: () => void | Promise<void>;
+}) {
+	const form = useForm({
+		defaultValues: {
+			reduceMotion: false,
+			highContrast: false,
+			underlineLinks: false,
+			largerInterfaceText: false,
+		},
+		onSubmit: async () => {
+			await onSubmit?.();
+		},
+	});
+	const preferences = [
+		{
+			name: "reduceMotion",
+			title: "Reduce motion",
+			description: "Reduce interface animations and transitions.",
+		},
+		{
+			name: "highContrast",
+			title: "High contrast",
+			description: "Increase contrast between interface elements.",
+		},
+		{
+			name: "underlineLinks",
+			title: "Underline links",
+			description: "Always show underlines beneath links.",
+		},
+		{
+			name: "largerInterfaceText",
+			title: "Larger interface text",
+			description: "Increase the base text size throughout the application.",
+		},
+	] as const;
+
+	return (
+		<form
+			id="accessibility-settings-form"
+			onSubmit={(event) => {
+				event.preventDefault();
+				void form.handleSubmit();
+			}}
+		>
+			<SettingsCard
+				title="Accessibility preferences"
+				description="Adjust the interface to make it more comfortable to use."
+			>
+				<FieldGroup>
+					{preferences.map((preference) => (
+						<form.Field
+							key={preference.name}
+							name={preference.name}
+							children={(field) => (
+								<SettingSwitch
+									id={field.name}
+									title={preference.title}
+									description={preference.description}
+									checked={field.state.value}
+									onCheckedChange={field.handleChange}
+								/>
+							)}
+						/>
 					))}
-				</div>
+				</FieldGroup>
 			</SettingsCard>
-
-			<SettingsCard title="Interface">
-				<div className="divide-y">
-					<SettingSwitch
-						title="Compact layout"
-						description="Reduce spacing and display more information."
-					/>
-
-					<SettingSwitch
-						title="Show media animations"
-						description="Automatically play animated portfolio media."
-						defaultChecked
-					/>
-				</div>
-			</SettingsCard>
-		</div>
+		</form>
 	);
 }
 
-function NotificationSettings() {
+function ConnectedAccountsSettings({
+	onSubmit,
+}: {
+	onSubmit?: () => void | Promise<void>;
+}) {
+	const form = useForm({
+		defaultValues: {
+			google: true,
+			discord: false,
+			twitch: false,
+		},
+		onSubmit: async () => {
+			await onSubmit?.();
+		},
+	});
+	const connections = [
+		{
+			name: "google",
+			label: "Google",
+			description: "Use Google to sign in.",
+		},
+		{
+			name: "discord",
+			label: "Discord",
+			description: "Connect your Discord profile.",
+		},
+		{
+			name: "twitch",
+			label: "Twitch",
+			description: "Display your Twitch channel.",
+		},
+	] as const;
+
 	return (
-		<SettingsCard
-			title="Notification preferences"
-			description="Choose which activity should notify you."
+		<form
+			id="connections-settings-form"
+			onSubmit={(event) => {
+				event.preventDefault();
+				void form.handleSubmit();
+			}}
 		>
-			<div className="divide-y">
-				<SettingSwitch
-					title="Messages"
-					description="Notify me when I receive a new message."
-					defaultChecked
-				/>
-
-				<SettingSwitch
-					title="Comments"
-					description="Notify me about comments on my posts."
-					defaultChecked
-				/>
-
-				<SettingSwitch
-					title="Likes"
-					description="Notify me when someone likes my work."
-				/>
-
-				<SettingSwitch
-					title="New followers"
-					description="Notify me when somebody follows my profile."
-					defaultChecked
-				/>
-
-				<SettingSwitch
-					title="Email notifications"
-					description="Send important notifications to my email."
-				/>
-			</div>
-		</SettingsCard>
-	);
-}
-
-function PrivacySettings() {
-	return (
-		<div className="space-y-8">
 			<SettingsCard
-				title="Profile visibility"
-				description="Control who can see your profile and activity."
+				title="Connected accounts"
+				description="Connect external services to your account."
 			>
-				<div className="divide-y">
-					<SettingSwitch
-						title="Public profile"
-						description="Allow anyone to view your profile."
-						defaultChecked
-					/>
-
-					<SettingSwitch
-						title="Show online status"
-						description="Allow other users to see when you are active."
-						defaultChecked
-					/>
-
-					<SettingSwitch
-						title="Show liked posts"
-						description="Display your liked posts on your profile."
-					/>
-
-					<SettingSwitch
-						title="Allow search engines"
-						description="Allow external search engines to index your profile."
-					/>
-				</div>
+				<FieldGroup>
+					{connections.map((connection) => (
+						<form.Field
+							key={connection.name}
+							name={connection.name}
+							children={(field) => (
+								<ConnectionRow
+									name={connection.label}
+									description={connection.description}
+									connected={field.state.value}
+									onConnectedChange={field.handleChange}
+								/>
+							)}
+						/>
+					))}
+				</FieldGroup>
 			</SettingsCard>
-
-			<SettingsCard
-				title="Sensitive content"
-				description="Control how content warnings are handled."
-			>
-				<div className="divide-y">
-					<SettingSwitch
-						title="Always blur sensitive content"
-						description="Require confirmation before sensitive media is shown."
-						defaultChecked
-					/>
-
-					<SettingSwitch
-						title="Remember revealed posts"
-						description="Keep sensitive posts revealed during the current session."
-					/>
-				</div>
-			</SettingsCard>
-		</div>
-	);
-}
-
-function LanguageSettings() {
-	return (
-		<div className="space-y-8">
-			<SettingsCard
-				title="Language"
-				description="Choose the language used throughout the application."
-			>
-				<SettingsField label="Application language" htmlFor="settings-language">
-					<select
-						id="settings-language"
-						defaultValue="en"
-						className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-					>
-						<option value="en">English</option>
-						<option value="pl">Polski</option>
-						<option value="de">Deutsch</option>
-						<option value="fr">Français</option>
-						<option value="es">Español</option>
-					</select>
-				</SettingsField>
-			</SettingsCard>
-
-			<SettingsCard
-				title="Region"
-				description="Used for dates, numbers and currency."
-			>
-				<div className="grid gap-5 sm:grid-cols-2">
-					<SettingsField label="Region" htmlFor="settings-region">
-						<select
-							id="settings-region"
-							defaultValue="pl"
-							className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						>
-							<option value="pl">Poland</option>
-							<option value="us">United States</option>
-							<option value="gb">United Kingdom</option>
-							<option value="de">Germany</option>
-						</select>
-					</SettingsField>
-
-					<SettingsField label="Time zone" htmlFor="settings-time-zone">
-						<select
-							id="settings-time-zone"
-							defaultValue="europe-warsaw"
-							className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						>
-							<option value="europe-warsaw">Europe/Warsaw</option>
-							<option value="utc">UTC</option>
-						</select>
-					</SettingsField>
-				</div>
-			</SettingsCard>
-		</div>
-	);
-}
-
-function AccessibilitySettings() {
-	return (
-		<SettingsCard
-			title="Accessibility preferences"
-			description="Adjust the interface to make it more comfortable to use."
-		>
-			<div className="divide-y">
-				<SettingSwitch
-					title="Reduce motion"
-					description="Reduce interface animations and transitions."
-				/>
-
-				<SettingSwitch
-					title="High contrast"
-					description="Increase contrast between interface elements."
-				/>
-
-				<SettingSwitch
-					title="Underline links"
-					description="Always show underlines beneath links."
-				/>
-
-				<SettingSwitch
-					title="Larger interface text"
-					description="Increase the base text size throughout the application."
-				/>
-			</div>
-		</SettingsCard>
-	);
-}
-
-function ConnectedAccountsSettings() {
-	return (
-		<SettingsCard
-			title="Connected accounts"
-			description="Connect external services to your account."
-		>
-			<div className="divide-y">
-				<ConnectionRow
-					name="Google"
-					description="Use Google to sign in."
-					connected
-				/>
-
-				<ConnectionRow
-					name="Discord"
-					description="Connect your Discord profile."
-				/>
-
-				<ConnectionRow
-					name="Twitch"
-					description="Display your Twitch channel."
-				/>
-			</div>
-		</SettingsCard>
+		</form>
 	);
 }
 
 interface SettingsCardProps {
 	title: string;
 	description?: string;
-	children: React.ReactNode;
+	children: ReactNode;
 	className?: string;
+	style?: CSSProperties;
 }
 
 function SettingsCard({
@@ -708,104 +1340,93 @@ function SettingsCard({
 	description,
 	children,
 	className,
+	style,
 }: SettingsCardProps) {
 	return (
-		<Elevated offset={0} className={cn("rounded-xl p-5", className)}>
-			<div className="mb-5">
-				<Typography.Heading level={4}>{title}</Typography.Heading>
-
-				{description && (
-					<Typography.Paragraph size={"sm"} className="text-muted-foreground!">
-						{description}
-					</Typography.Paragraph>
-				)}
-			</div>
-
+		<section
+			className={cn("flex flex-col gap-5 rounded-2xl bg-surface-1 p-5", className)}
+			style={style}
+		>
+			<FieldContent className="gap-1">
+				<FieldTitle>{title}</FieldTitle>
+				{description ? (
+					<FieldDescription>{description}</FieldDescription>
+				) : null}
+			</FieldContent>
 			{children}
-		</Elevated>
-	);
-}
-
-interface SettingsFieldProps {
-	label: string;
-	htmlFor: string;
-	description?: string;
-	children: React.ReactNode;
-}
-
-function SettingsField({
-	label,
-	htmlFor,
-	description,
-	children,
-}: SettingsFieldProps) {
-	return (
-		<div className="space-y-2">
-			<label htmlFor={htmlFor} className="text-sm font-medium">
-				{label}
-			</label>
-
-			{children}
-
-			{description && (
-				<p className="text-xs text-muted-foreground">{description}</p>
-			)}
-		</div>
+		</section>
 	);
 }
 
 interface SettingSwitchProps {
+	id: string;
 	title: string;
 	description: string;
-	defaultChecked?: boolean;
+	checked: boolean;
+	onCheckedChange: (checked: boolean) => void;
 }
 
 function SettingSwitch({
+	id,
 	title,
 	description,
-	defaultChecked,
+	checked,
+	onCheckedChange,
 }: SettingSwitchProps) {
 	return (
-		<div className="flex items-start justify-between gap-6 py-4 first:pt-0 last:pb-0">
-			<div className="min-w-0">
-				<p className="text-sm font-medium">{title}</p>
-
-				<p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-					{description}
-				</p>
-			</div>
+		<Field orientation="horizontal">
+			<FieldContent>
+				<FieldLabel htmlFor={id}>{title}</FieldLabel>
+				<FieldDescription>{description}</FieldDescription>
+			</FieldContent>
 
 			<Switch
-				defaultChecked={defaultChecked}
-				aria-label={title}
+				id={id}
+				name={id}
+				checked={checked}
+				onCheckedChange={onCheckedChange}
 				className="shrink-0"
 			/>
-		</div>
+		</Field>
 	);
 }
 
 interface ConnectionRowProps {
 	name: string;
 	description: string;
-	connected?: boolean;
+	connected: boolean;
+	onConnectedChange: (connected: boolean) => void;
 }
 
-function ConnectionRow({ name, description, connected }: ConnectionRowProps) {
-	return (
-		<div className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
-			<div className="min-w-0">
-				<p className="text-sm font-medium">{name}</p>
+function ConnectionRow({
+	name,
+	description,
+	connected,
+	onConnectedChange,
+}: ConnectionRowProps) {
+	const actionButtonSize = useSettingsButtonSize();
 
-				<p className="mt-1 text-xs text-muted-foreground">{description}</p>
-			</div>
+	return (
+		<Field orientation="horizontal">
+			<FieldContent>
+				<FieldLabel>{name}</FieldLabel>
+				<FieldDescription>{description}</FieldDescription>
+			</FieldContent>
 
 			<Button
 				type="button"
-				variant={connected ? "outline" : "default"}
-				size="sm"
+				variant={connected ? "secondary" : "default"}
+				size={actionButtonSize}
+				onClick={() => onConnectedChange(!connected)}
 			>
 				{connected ? "Disconnect" : "Connect"}
 			</Button>
-		</div>
+		</Field>
 	);
+}
+
+function useSettingsButtonSize(): "xl" | "2xl" {
+	const isTablet = useIsTablet();
+
+	return isTablet ? "2xl" : "xl";
 }

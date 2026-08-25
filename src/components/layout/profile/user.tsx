@@ -1,17 +1,14 @@
-import { Link } from "@tanstack/react-router";
-import { Calligraph } from "calligraph";
-import { SprayCanIcon } from "lucide-react";
-import { useState } from "react";
 import {
-	OutlineCheck,
-	OutlineClearNight,
-	OutlineFaceSmilling,
-	OutlineListBoxes,
+	Link,
+	useNavigate,
+	useRouter,
+	useSearch,
+} from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
 	OutlineLogout,
-	OutlineMonitor,
-	OutlineReceipt,
 	OutlineSettings,
-	OutlineSunny,
 	OutlineUser,
 } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
@@ -27,19 +24,15 @@ import {
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuPortal,
 	DropdownMenuSeparator,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsTablet } from "@/hooks/ui/use-mobile";
 import { getLocaleParam, localizePath } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
-import { useTheme } from "@/providers/theme";
 import type { TUserProfile, TUserResponse } from "@/types/user";
+import { UserSettingsModal } from "../modal/profile/settings/settings-modal";
 import UserAvatar from "./avatar";
 
 type UserButtonContentProps = {
@@ -167,20 +160,47 @@ export default function User({
 	avatarBadgeClassName,
 }: UserProps) {
 	const { logout } = useAuth();
+	const navigate = useNavigate();
+	const router = useRouter();
 	const isTablet = useIsTablet();
 	const [internalOpen, setInternalOpen] = useState(false);
-	const { userTheme, setTheme } = useTheme();
 	const locale = getLocaleParam(document.documentElement.lang);
+	const search = useSearch({ strict: false }) as { settings?: "profile" };
+	const settingsOpen = search.settings === "profile";
 
 	const open = openProp ?? internalOpen;
 	const setOpen = onOpenChange ?? setInternalOpen;
 
-	const themes = [
-		{ value: "light", label: "Light", icon: OutlineSunny },
-		{ value: "dark", label: "Dark", icon: OutlineClearNight },
-		{ value: "oled", label: "OLED", icon: OutlineClearNight },
-		{ value: "system", label: "System", icon: OutlineMonitor },
-	] as const;
+	const handleOpenSettings = () => {
+		setOpen(false);
+		void navigate({
+			to: ".",
+			search: (previous) => ({
+				...previous,
+				settings: "profile",
+			}),
+			mask: {
+				to: "/{-$locale}/settings/profile",
+			},
+		});
+	};
+
+	const handleCloseSettings = () => {
+		if (settingsOpen) {
+			router.history.back();
+		}
+	};
+
+	const handleSettingsOpenChange = (nextOpen: boolean) => {
+		if (!nextOpen) {
+			handleCloseSettings();
+		}
+	};
+
+	const handleSaveSettings = () => {
+		toast.info("Settings saved successfully");
+		handleCloseSettings();
+	};
 
 	const triggerClassName = cn(
 		"flex items-center gap-2 p-0 hover:text-foreground",
@@ -212,49 +232,35 @@ export default function User({
 			icon: <OutlineUser />,
 			to: localizePath(`/user/${user?.username || ""}`, locale),
 		},
-		{
-			label: "My Requests",
-			icon: <OutlineListBoxes />,
-			to: localizePath("/my-requests", locale),
-		},
-		{
-			label: "My Orders",
-			icon: <OutlineReceipt />,
-			to: localizePath("/orders", locale),
-		},
-		{
-			label: "Characters",
-			icon: <OutlineFaceSmilling />,
-			to: localizePath(`/user/${user?.username || ""}/characters`, locale),
-		},
+		// {
+		// 	label: "My Requests",
+		// 	icon: <OutlineListBoxes />,
+		// 	to: localizePath("/my-requests", locale),
+		// },
+		// {
+		// 	label: "My Orders",
+		// 	icon: <OutlineReceipt />,
+		// 	to: localizePath("/orders", locale),
+		// },
+		// {
+		// 	label: "Characters",
+		// 	icon: <OutlineFaceSmilling />,
+		// 	to: localizePath(`/user/${user?.username || ""}/characters`, locale),
+		// },
 		// TODO: only show if not connected to Mollie
 		// TODO: only show if user has permissions to connect to Mollie (e.g., is admin)
 		// TODO: move scopes and state to env variables or generate dynamically
 		// TODO: get client_id from env variable
-		{
-			label: "Connect To Mollie",
-			icon: <OutlineSettings />,
-			to: "https://my.mollie.com/oauth2/authorize",
-			params: {
-				client_id: import.meta.env.VITE_MOLLIE_CLIENT_ID,
-				redirect_uri: "https://www.familiar.art/auth/mollie/callback",
-				state: "random_state_string",
-				scope: "profiles.read payments.read payments.write",
-			},
-		},
-	];
-
-	const secondaryMenuItems = [
-		{
-			label: "Settings",
-			icon: <OutlineSettings />,
-			to: localizePath("/settings", locale),
-		},
 		// {
-		// 	label: "Help",
+		// 	label: "Connect To Mollie",
 		// 	icon: <OutlineSettings />,
-		// 	to: localizePath("/help", locale),
-		// 	target: "_blank",
+		// 	to: "https://my.mollie.com/oauth2/authorize",
+		// 	params: {
+		// 		client_id: import.meta.env.VITE_MOLLIE_CLIENT_ID,
+		// 		redirect_uri: "https://www.familiar.art/auth/mollie/callback",
+		// 		state: "random_state_string",
+		// 		scope: "profiles.read payments.read payments.write",
+		// 	},
 		// },
 	];
 
@@ -278,40 +284,10 @@ export default function User({
 			</div>
 			<DropdownMenuSeparator />
 			<div className="flex flex-col gap-1 p-1">
-				{secondaryMenuItems.map((item) => (
-					<Button key={item.label} variant="ghost" size="xl" asChild>
-						<Link
-							to={item.to}
-							target={(item as any).target}
-							preload={false}
-							onClick={() => setOpen(false)}
-						>
-							{item.icon}
-							<span>{item.label}</span>
-						</Link>
-					</Button>
-				))}
-			</div>
-			<DropdownMenuSeparator />
-			<div className="flex flex-col gap-2 p-2 px-3">
-				<span className="text-xs font-medium text-muted-foreground">Theme</span>
-				<div className="flex gap-2">
-					{themes.map((theme) => (
-						<Button
-							key={theme.value}
-							variant={userTheme === theme.value ? "secondary" : "ghost"}
-							size="icon"
-							className="flex-1"
-							onClick={() => {
-								setTheme(theme.value);
-								setOpen(false);
-							}}
-							title={theme.label}
-						>
-							<theme.icon className="size-4" />
-						</Button>
-					))}
-				</div>
+				<Button variant="ghost" size="xl" onClick={handleOpenSettings}>
+					<OutlineSettings />
+					<span>Settings</span>
+				</Button>
 			</div>
 			<DropdownMenuSeparator />
 			<div className="p-1">
@@ -344,17 +320,18 @@ export default function User({
 
 	if (!isTablet) {
 		return (
-			<DropdownMenu open={open} onOpenChange={setOpen}>
-				<DropdownMenuTrigger asChild>
-					<Button type="button" variant="ghost" className={triggerClassName}>
-						{triggerContent}
-					</Button>
-				</DropdownMenuTrigger>
+			<>
+				<DropdownMenu open={open} onOpenChange={setOpen}>
+					<DropdownMenuTrigger asChild>
+						<Button type="button" variant="ghost" className={triggerClassName}>
+							{triggerContent}
+						</Button>
+					</DropdownMenuTrigger>
 
-				<DropdownMenuContent
-					className={cn("w-56", dropdownContentClassName)}
-					align="end"
-				>
+					<DropdownMenuContent
+						className={cn("w-56", dropdownContentClassName)}
+						align="end"
+					>
 					<DropdownMenuGroup>
 						{menuItems.map((item) => (
 							<DropdownMenuItem key={item.label} asChild>
@@ -371,50 +348,10 @@ export default function User({
 						))}
 					</DropdownMenuGroup>
 					<DropdownMenuSeparator />
-					<DropdownMenuGroup>
-						{secondaryMenuItems.map((item) => (
-							<DropdownMenuItem key={item.label} asChild>
-								<Link
-									to={item.to}
-									target={(item as any).target}
-									preload={false}
-									className="w-full cursor-pointer"
-									onClick={() => setOpen(false)}
-								>
-									{item.icon}
-									{item.label}
-								</Link>
-							</DropdownMenuItem>
-						))}
-					</DropdownMenuGroup>
-					<DropdownMenuSeparator />
-					<DropdownMenuGroup>
-						<DropdownMenuSub>
-							<DropdownMenuSubTrigger>
-								<OutlineMonitor />
-								Theme
-							</DropdownMenuSubTrigger>
-							<DropdownMenuPortal>
-								<DropdownMenuSubContent>
-									{themes.map((theme) => (
-										<DropdownMenuItem
-											key={theme.value}
-											onClick={() => {
-												setTheme(theme.value);
-												setOpen(false);
-											}}
-										>
-											<theme.icon />
-											{theme.label}
-											{userTheme === theme.value && (
-												<OutlineCheck className="ml-auto size-4" />
-											)}
-										</DropdownMenuItem>
-									))}
-								</DropdownMenuSubContent>
-							</DropdownMenuPortal>
-						</DropdownMenuSub>
-					</DropdownMenuGroup>
+					<DropdownMenuItem onSelect={handleOpenSettings}>
+						<OutlineSettings />
+						Settings
+					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						variant="destructive"
@@ -426,24 +363,37 @@ export default function User({
 						<OutlineLogout />
 						Logout
 					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
+					</DropdownMenuContent>
+				</DropdownMenu>
+				<UserSettingsModal
+					open={settingsOpen}
+					onOpenChange={handleSettingsOpenChange}
+					onSave={handleSaveSettings}
+				/>
+			</>
 		);
 	}
 
 	return (
-		<Drawer open={open} onOpenChange={setOpen}>
-			<DrawerTrigger asChild>
-				<Button type="button" variant="ghost" className={triggerClassName}>
-					{triggerContent}
-				</Button>
-			</DrawerTrigger>
-			<DrawerContent>
-				<DrawerHeader className="text-left">
-					<DrawerTitle>{drawerTitle}</DrawerTitle>
-				</DrawerHeader>
-				<div className="pb-4">{menuItemsContent}</div>
-			</DrawerContent>
-		</Drawer>
+		<>
+			<Drawer open={open} onOpenChange={setOpen}>
+				<DrawerTrigger asChild>
+					<Button type="button" variant="ghost" className={triggerClassName}>
+						{triggerContent}
+					</Button>
+				</DrawerTrigger>
+				<DrawerContent>
+					<DrawerHeader className="text-left">
+						<DrawerTitle>{drawerTitle}</DrawerTitle>
+					</DrawerHeader>
+					<div className="pb-4">{menuItemsContent}</div>
+				</DrawerContent>
+			</Drawer>
+			<UserSettingsModal
+				open={settingsOpen}
+				onOpenChange={handleSettingsOpenChange}
+				onSave={handleSaveSettings}
+			/>
+		</>
 	);
 }

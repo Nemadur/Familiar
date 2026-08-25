@@ -56,8 +56,8 @@ function WarningLabels({
                 isFolder
                     ? "mt-1 gap-0.5"
                     : isCompact
-                      ? "mt-2 gap-1"
-                      : "mt-4 gap-2",
+                        ? "mt-2 gap-1"
+                        : "mt-4 gap-2",
             )}
         >
             {warnings.map((warning) => (
@@ -68,8 +68,8 @@ function WarningLabels({
                         isFolder
                             ? "max-w-28 px-1.5 py-px text-[9px] leading-3"
                             : isCompact
-                              ? "px-2 py-0.5 text-[11px]"
-                              : "px-3 py-1 text-xs",
+                                ? "px-2 py-0.5 text-[11px]"
+                                : "px-3 py-1 text-xs",
                     )}
                 >
                     {formatWarning(warning)}
@@ -135,18 +135,24 @@ export function ContentWarningOverlay({
         0,
         (warnings?.length ?? 0) - (displayedWarnings?.length ?? 0),
     );
-    const warningBackdropClassName = hasMedia
-        ? "bg-black/45 backdrop-blur-lg"
-        : "bg-neutral-900";
+    const warningBackdropClassName = !hasMedia
+        ? "bg-neutral-900"
+        : isFolder
+            ? "bg-black/45"
+            : "bg-black/45 backdrop-blur-lg";
 
     return (
         <div className={cn("relative isolate overflow-hidden", className)}>
             <div
                 aria-hidden={!isRevealed}
                 className={cn(
-                    "size-full",
+                    "size-full transition-[filter,transform] duration-200",
                     !isRevealed && "pointer-events-none select-none",
                     !isRevealed && !hasMedia && "opacity-0",
+                    !isRevealed &&
+                    isFolder &&
+                    hasMedia &&
+                    "scale-110 transform-gpu blur-lg brightness-50",
                 )}
             >
                 {children}
