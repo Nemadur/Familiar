@@ -5,7 +5,7 @@ import {
 	useRouter,
 	useSearch,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -22,14 +22,13 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePostConversationDirect } from "@/hooks/chat/use-chat";
 import { useAvailableFeeds } from "@/hooks/feed/use-available-feeds";
-import { useBento } from "@/hooks/ui/use-bento";
 import { useIsTablet } from "@/hooks/ui/use-mobile";
-import { type Tile, toPixels } from "@/lib/bento";
 import { cn, createStaticList } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import type { TUserProfile } from "@/types/user";
@@ -40,7 +39,9 @@ import { ProfileBadge } from "./badge";
 import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
 import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
+import { PortfolioContentSkeleton } from "./feed/portfolio-sekeleton";
 import { ProfileDetailsContent } from "./profile-details";
+import { Flag, Share, UserLock } from "lucide-react";
 
 const CHARACTER_SKELETON_ITEMS = createStaticList("character-skeleton", 10);
 const COMMISSION_SKELETON_ITEMS = createStaticList("commission-skeleton", 2);
@@ -71,36 +72,33 @@ const FollowButton = ({
 
 export function UserInfoSkeleton() {
 	return (
-		<aside className="-mt-12 h-fit space-y-3 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10">
+		<aside className="-mt-12 h-fit space-y-3 max-lg:px-4 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10 lg:pl-4">
 			<div className="relative z-10 flex">
-				<Skeleton className="size-24 rounded-full ring-6 ring-background lg:size-32" />
+				<Skeleton className="size-32 rounded-full ring-6 ring-background" />
 			</div>
 
 			<div className="space-y-4">
-				<div>
-					<Skeleton className="mb-2 h-8 w-48" />
-					<Skeleton className="h-5 w-32" />
+				<div className="space-y-1">
+					<Skeleton className="h-6 w-36" />
+					<Skeleton className="h-5 w-24" />
 				</div>
 
-				<div className="flex flex-col gap-3">
-					<div className="flex items-center gap-2">
-						<Skeleton className="h-9 flex-1 rounded-full" />
-						<Skeleton className="size-9 rounded-full" />
-						<Skeleton className="size-9 rounded-full" />
-					</div>
-					<Skeleton className="h-9 w-full rounded-full" />
+				<div className="flex items-center gap-2">
+					<Skeleton className="h-9 flex-1 rounded-full" />
+					<Skeleton className="h-9 flex-1 rounded-full" />
 				</div>
 
-				<div className="flex flex-col gap-2 pt-1">
-					<Skeleton className="h-4 w-40" />
-					<Skeleton className="h-4 w-32" />
+				<div className="flex items-center gap-3 pt-1">
+					<Skeleton className="h-3 w-20" />
+					<Skeleton className="h-3 w-20" />
 				</div>
 
-				<div className="space-y-2 pt-2">
+				<div className="space-y-2 pt-1">
 					<Skeleton className="h-4 w-full" />
-					<Skeleton className="h-4 w-[90%]" />
-					<Skeleton className="h-4 w-[80%]" />
+					<Skeleton className="h-4 w-4/5" />
 				</div>
+
+				<Skeleton className="h-4 w-20" />
 			</div>
 		</aside>
 	);
@@ -141,87 +139,6 @@ export function CommissionsContentSkeleton() {
 	);
 }
 
-export function PortfolioContentSkeleton() {
-	const containerRef = useRef<HTMLDivElement>(null);
-	const [width, setWidth] = useState(0);
-
-	const tiles = useMemo<Tile[]>(() => {
-		return Array.from({ length: 5 }).map((_, i) => {
-			let widthUnit: 1 | 2 = 1;
-			let heightUnit: 1 | 2 = 1;
-
-			if (i === 0) {
-				widthUnit = 2;
-				heightUnit = 2;
-			} else if (i === 4) {
-				widthUnit = 2;
-			}
-
-			return {
-				id: `skeleton-${i}`,
-				widthUnit,
-				heightUnit,
-				cover: {
-					path: "",
-					width: 100,
-					height: 100,
-					alt: "",
-				},
-			};
-		});
-	}, []);
-
-	const { cols, placed } = useBento(tiles, "balanced");
-
-	useEffect(() => {
-		if (!containerRef.current) return;
-
-		const observer = new ResizeObserver((entries) => {
-			if (entries[0].contentRect.width > 0) {
-				setWidth(entries[0].contentRect.width);
-			}
-		});
-
-		observer.observe(containerRef.current);
-		return () => observer.disconnect();
-	}, []);
-
-	const gap = 16;
-	const cell = width ? (width - (cols - 1) * gap) / cols : 0;
-	const { nodes, containerHeight } = toPixels(placed, cell, gap);
-
-	return (
-		<div className="space-y-6">
-			<div className="flex flex-col gap-2 pb-3 md:flex-row md:items-center">
-				<div className="flex gap-2 overflow-hidden">
-					<Skeleton className="h-9 w-20 rounded-full" />
-					<Skeleton className="h-9 w-24 rounded-full" />
-					<Skeleton className="h-9 w-16 rounded-full" />
-				</div>
-				<div className="flex w-full items-center gap-2 md:ml-auto md:w-auto">
-					<Skeleton className="h-9 w-40 rounded-full" />
-					<Skeleton className="size-9 rounded-full" />
-				</div>
-			</div>
-
-			<div
-				ref={containerRef}
-				className="relative w-full transition-all duration-300 ease-in-out"
-				style={{ height: containerHeight, opacity: width === 0 ? 0 : 1 }}
-			>
-				{nodes.map((node) => (
-					<Skeleton
-						key={node.key}
-						className="absolute rounded-3xl"
-						data-boneyard-content="true"
-						style={node.style}
-					/>
-				))}
-			</div>
-		</div>
-	);
-}
-
 export function CharactersContentSkeleton() {
 	return (
 		<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -238,7 +155,11 @@ export function CharactersContentSkeleton() {
 	);
 }
 
-export function TabContentSkeleton({ tab }: { tab?: string }) {
+export function TabContentSkeleton({
+	tab = "portfolio",
+}: {
+	tab?: string;
+}) {
 	if (tab === "portfolio") return <PortfolioContentSkeleton />;
 	if (tab === "characters") return <CharactersContentSkeleton />;
 	return <CommissionsContentSkeleton />;
@@ -246,22 +167,21 @@ export function TabContentSkeleton({ tab }: { tab?: string }) {
 
 export function UserFeedsSkeleton() {
 	return (
-		<div className="flex w-full flex-col">
-			<div className="mb-6 flex gap-2 py-2">
-				<ProfileFeedTabsSkeleton />
-			</div>
-			<CommissionsContentSkeleton />
+		<div className="mt-6 flex h-full min-h-0 w-full flex-1 flex-col pb-24">
+			<PortfolioContentSkeleton />
 		</div>
 	);
 }
 
 export function UserProfileSkeleton() {
 	return (
-		<div className="flex h-full flex-1 flex-col">
+		<div className="flex flex-1 flex-col">
 			<ProfileCoverSkeleton />
-			<div className="container mx-auto flex h-full flex-1 flex-col">
-				<div className="relative grid h-full flex-1 grid-cols-1 gap-4 lg:grid-cols-[280px_1fr] lg:gap-8">
-					<UserInfoSkeleton />
+			<div className="flex min-h-0 flex-1 flex-col">
+				<div className="flex flex-1 flex-col gap-4 lg:flex-row lg:gap-8">
+					<div className="shrink-0 lg:w-72">
+						<UserInfoSkeleton />
+					</div>
 					<div className="flex h-full min-w-0 flex-1 flex-col pt-0">
 						<UserFeedsSkeleton />
 					</div>
@@ -309,7 +229,18 @@ function UserProfileMoreMenu({ user }: { user: TUserProfile }) {
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent align="end" className="w-48">
+				<DropdownMenuItem
+					onClick={handleShareProfile}
+				>
+					<Share />
+					{t(
+						"components.profile.actions.share_profile",
+						"Share Profile",
+					)}
+				</DropdownMenuItem>
+				<DropdownMenuSeparator />
 				<DropdownMenuItem onClick={handleReportUser} variant="destructive">
+					<Flag />
 					{t(
 						"components.profile.actions.report_user",
 						"Report",
@@ -319,17 +250,10 @@ function UserProfileMoreMenu({ user }: { user: TUserProfile }) {
 					variant="destructive"
 					onClick={handleBlockUser}
 				>
+					<UserLock />
 					{t(
 						"components.profile.actions.block_user",
 						"Block user",
-					)}
-				</DropdownMenuItem>
-				<DropdownMenuItem
-					onClick={handleShareProfile}
-				>
-					{t(
-						"components.profile.actions.share_profile",
-						"Share Profile",
 					)}
 				</DropdownMenuItem>
 			</DropdownMenuContent>

@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "@tanstack/react-router";
+import type { TFunction } from "i18next";
 import {
 	Accessibility,
 	Bell,
@@ -14,6 +15,7 @@ import {
 	Shield,
 	Trash2,
 	UserRound,
+	X,
 } from "lucide-react";
 import {
 	type ComponentType,
@@ -33,14 +35,6 @@ import {
 } from "@/components/icons/icons";
 import type { ProfileEditorValues } from "@/components/layout/profile/profile-editor";
 import { SettingsProfileEditor } from "@/components/layout/profile/settings-profile-editor";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -52,6 +46,7 @@ import {
 } from "@/components/ui/command";
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogTitle,
@@ -70,11 +65,19 @@ import {
 	InputGroupButton,
 	InputGroupInput,
 } from "@/components/ui/input-group";
+import { Kbd } from "@/components/ui/kbd";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
 	Sidebar,
@@ -123,56 +126,84 @@ interface UserSettingsModalProps {
 	onSave?: () => void;
 }
 
-const navigation: SettingsNavigationItem[] = [
-	{
-		id: "profile",
-		name: "Profile",
-		description: "Public profile information",
-		icon: UserRound,
-	},
-	{
-		id: "account",
-		name: "Account",
-		description: "Email, password and account access",
-		icon: KeyRound,
-	},
-	{
-		id: "appearance",
-		name: "Appearance",
-		description: "Theme and interface preferences",
-		icon: Palette,
-	},
-	{
-		id: "notifications",
-		name: "Notifications",
-		description: "Control when we notify you",
-		icon: Bell,
-	},
-	{
-		id: "privacy",
-		name: "Privacy & visibility",
-		description: "Manage profile visibility",
-		icon: Shield,
-	},
-	{
-		id: "language",
-		name: "Language & region",
-		description: "Language, region and formatting",
-		icon: Globe,
-	},
-	{
-		id: "accessibility",
-		name: "Accessibility",
-		description: "Motion and visual preferences",
-		icon: Accessibility,
-	},
-	{
-		id: "connections",
-		name: "Connected accounts",
-		description: "Manage external services",
-		icon: Link2,
-	},
-];
+// TODO: do not open modal on isMobile, instead redirect to fullpage settings page
+
+function getSettingsNavigation(t: TFunction): SettingsNavigationItem[] {
+	return [
+		{
+			id: "profile",
+			name: t("settings.navigation.profile.title", "Profile"),
+			description: t(
+				"settings.navigation.profile.description",
+				"Public profile information",
+			),
+			icon: UserRound,
+		},
+		{
+			id: "account",
+			name: t("settings.navigation.account.title", "Account"),
+			description: t(
+				"settings.navigation.account.description",
+				"Email, password and account access",
+			),
+			icon: KeyRound,
+		},
+		{
+			id: "appearance",
+			name: t("settings.navigation.appearance.title", "Appearance"),
+			description: t(
+				"settings.navigation.appearance.description",
+				"Theme and interface preferences",
+			),
+			icon: Palette,
+		},
+		{
+			id: "notifications",
+			name: t("settings.navigation.notifications.title", "Notifications"),
+			description: t(
+				"settings.navigation.notifications.description",
+				"Control when we notify you",
+			),
+			icon: Bell,
+		},
+		{
+			id: "privacy",
+			name: t("settings.navigation.privacy.title", "Privacy & visibility"),
+			description: t(
+				"settings.navigation.privacy.description",
+				"Manage profile visibility",
+			),
+			icon: Shield,
+		},
+		{
+			id: "language",
+			name: t("settings.navigation.language.title", "Language & region"),
+			description: t(
+				"settings.navigation.language.description",
+				"Language, region and formatting",
+			),
+			icon: Globe,
+		},
+		{
+			id: "accessibility",
+			name: t("settings.navigation.accessibility.title", "Accessibility"),
+			description: t(
+				"settings.navigation.accessibility.description",
+				"Motion and visual preferences",
+			),
+			icon: Accessibility,
+		},
+		{
+			id: "connections",
+			name: t("settings.navigation.connections.title", "Connected accounts"),
+			description: t(
+				"settings.navigation.connections.description",
+				"Manage external services",
+			),
+			icon: Link2,
+		},
+	];
+}
 
 // Danger 500: oklch(63.7% 0.237 25.331)
 const DANGER_500_HEX = "#fb2c36";
@@ -257,25 +288,56 @@ export function UserSettingsModal({
 	onOpenChange,
 	onSave,
 }: UserSettingsModalProps) {
+	const { t } = useTranslation();
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
+				showCloseButton={false}
 				className={cn(
-					"flex h-[calc(100dvh-2rem)] max-h-190 w-[calc(100vw-2rem)] overflow-hidden p-0",
-					"sm:!max-w-5xl",
+					"inset-0! size-auto! max-h-none! max-w-none! translate-x-0! translate-y-0! overflow-visible rounded-none border-0 p-0 shadow-none!",
+					"sm:inset-auto! sm:left-1/2! sm:top-1/2! sm:h-[calc(100dvh-2rem)]! sm:w-[calc(100vw-2rem)]! sm:-translate-x-1/2! sm:-translate-y-1/2! sm:rounded-2xl sm:border sm:ring-1 sm:ring-border",
+					"xl:max-h-190! xl:max-w-5xl!",
 				)}
 			>
-				<DialogTitle className="sr-only">User settings</DialogTitle>
+				<div className="absolute right-4 top-2 z-20 flex flex-col items-center gap-1.5 xl:-right-14 xl:top-0">
+					<DialogClose asChild>
+						<Button
+							type="button"
+							variant="secondary"
+							size="icon-xl"
+							className="rounded-full bg-background ring-1 ring-border"
+							aria-label={t(
+								"settings.dialog.close",
+								"Close settings dialog",
+							)}
+						>
+							<X aria-hidden="true" />
+						</Button>
+					</DialogClose>
+					<Kbd className="hidden bg-background/90 xl:inline-flex">
+						{t("settings.dialog.escape_key", "ESC")}
+					</Kbd>
+				</div>
 
-				<DialogDescription className="sr-only">
-					Manage your profile, account and application preferences.
-				</DialogDescription>
+				<div className="flex size-full min-h-0 overflow-hidden rounded-[inherit]">
+					<DialogTitle className="sr-only">
+						{t("settings.title", "User settings")}
+					</DialogTitle>
 
-				<UserSettingsPanel
-					className="min-h-0"
-					onCancel={() => onOpenChange(false)}
-					onSave={onSave}
-				/>
+					<DialogDescription className="sr-only">
+						{t(
+							"settings.description",
+							"Manage your profile, account and application preferences.",
+						)}
+					</DialogDescription>
+
+					<UserSettingsPanel
+						className="min-h-0"
+						onCancel={() => onOpenChange(false)}
+						onSave={onSave}
+					/>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);
@@ -292,7 +354,9 @@ export function UserSettingsPanel({
 	onCancel,
 	onSave,
 }: UserSettingsPanelProps) {
+	const { t } = useTranslation();
 	const { user } = useAuth();
+	const navigation = useMemo(() => getSettingsNavigation(t), [t]);
 	const [activeSection, setActiveSection] =
 		useState<SettingsSection>("profile");
 	const profileInitialValues = useMemo(
@@ -313,14 +377,16 @@ export function UserSettingsPanel({
 				} as CSSProperties
 			}
 		>
-			<Sidebar collapsible="none" className="hidden h-full border-r md:flex">
+			<Sidebar collapsible="none" className="hidden h-full border-r xl:flex">
 				<SidebarContent>
 					<div className="flex h-16 shrink-0 items-center px-4">
 						<div>
-							<p className="font-semibold">Settings</p>
+							<p className="font-semibold">
+								{t("settings.sidebar.title", "Settings")}
+							</p>
 
 							<p className="text-xs text-muted-foreground">
-								Manage your account
+								{t("settings.sidebar.description", "Manage your account")}
 							</p>
 						</div>
 					</div>
@@ -328,7 +394,9 @@ export function UserSettingsPanel({
 					<Separator />
 
 					<SidebarGroup className="py-4">
-						<SidebarGroupLabel>User settings</SidebarGroupLabel>
+						<SidebarGroupLabel>
+							{t("settings.sidebar.group", "User settings")}
+						</SidebarGroupLabel>
 
 						<SidebarGroupContent>
 							{/* TODO: change URL to active section and make breadcrumb work */}
@@ -363,58 +431,57 @@ export function UserSettingsPanel({
 			</Sidebar>
 
 			<main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-				<header className="flex min-h-16 shrink-0 items-center border-b px-4 pr-12 md:px-6">
-					<Breadcrumb className="hidden md:block">
-						<BreadcrumbList>
-							<BreadcrumbItem>
-								<BreadcrumbLink
-									href="#"
-									onClick={(event) => event.preventDefault()}
-								>
-									Settings
-								</BreadcrumbLink>
-							</BreadcrumbItem>
+				<header className="flex h-16 shrink-0 items-center px-4 pr-20 sm:px-6 xl:h-20 xl:px-8 xl:pr-6">
+					<div className="min-w-0">
+						<p className="truncate font-semibold xl:hidden">
+							{t("settings.title", "User settings")}
+						</p>
 
-							<BreadcrumbSeparator />
-
-							<BreadcrumbItem>
-								<BreadcrumbPage>{activeItem.name}</BreadcrumbPage>
-							</BreadcrumbItem>
-						</BreadcrumbList>
-					</Breadcrumb>
-
-					<div className="min-w-0 md:hidden">
-						<p className="truncate font-semibold">User settings</p>
-
-						<p className="truncate text-xs text-muted-foreground">
+						<p className="hidden truncate font-semibold xl:block">
 							{activeItem.name}
+						</p>
+
+						<p className="hidden truncate text-sm text-muted-foreground xl:block">
+							{activeItem.description}
 						</p>
 					</div>
 				</header>
 
-				<div className="shrink-0 border-b p-3 md:hidden">
+				<div className="shrink-0 border-b px-4 pb-4 pt-2 sm:px-6 xl:hidden">
 					<label htmlFor="mobile-settings-section" className="sr-only">
-						Settings section
+						{t("settings.mobile.section_label", "Settings section")}
 					</label>
 
-					<select
-						id="mobile-settings-section"
+					<Select
 						value={activeSection}
-						className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						onChange={(event) =>
-							setActiveSection(event.target.value as SettingsSection)
+						onValueChange={(value) =>
+							setActiveSection(value as SettingsSection)
 						}
 					>
-						{navigation.map((item) => (
-							<option key={item.id} value={item.id}>
-								{item.name}
-							</option>
-						))}
-					</select>
+						<SelectTrigger
+							id="mobile-settings-section"
+							className="h-11! w-full rounded-xl bg-muted/40"
+						>
+							<SelectValue
+								placeholder={t(
+									"settings.mobile.select_section",
+									"Select a settings section",
+								)}
+							/>
+						</SelectTrigger>
+
+						<SelectContent>
+							{navigation.map((item) => (
+								<SelectItem key={item.id} value={item.id}>
+									{item.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 				</div>
 
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-					<div className="mx-auto w-full max-w-3xl p-4 md:p-8">
+					<div className="mx-auto w-full max-w-3xl p-4 sm:p-6 xl:p-8">
 						<SettingsSectionContent
 							section={activeSection}
 							profileInitialValues={profileInitialValues}
@@ -424,15 +491,16 @@ export function UserSettingsPanel({
 					</div>
 				</div>
 
-				<footer className="flex shrink-0 items-center justify-end gap-2 border-t p-4">
+				<footer className="flex shrink-0 items-center justify-end gap-2 border-t bg-background p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
 					{onCancel && (
 						<Button
 							size="responsive-xl"
 							type="button"
 							variant="outline"
+							className="min-w-0 flex-1 sm:flex-none"
 							onClick={onCancel}
 						>
-							Cancel
+							{t("common.cancel", "Cancel")}
 						</Button>
 					)}
 
@@ -440,8 +508,9 @@ export function UserSettingsPanel({
 						size="responsive-xl"
 						type="submit"
 						form={`${activeSection}-settings-form`}
+						className="min-w-0 flex-1 sm:flex-none"
 					>
-						Save changes
+						{t("common.save_changes", "Save changes")}
 					</Button>
 				</footer>
 			</main>
@@ -520,6 +589,7 @@ function AccountSettings({
 	email: string;
 	onSubmit?: () => void | Promise<void>;
 }) {
+	const { t } = useTranslation();
 	const form = useForm({
 		defaultValues: { email },
 		onSubmit: async () => {
@@ -541,8 +611,11 @@ function AccountSettings({
 		>
 			<div className="flex flex-col gap-6">
 				<SettingsCard
-					title="Email address"
-					description="Used for signing in and account notifications."
+					title={t("settings.account.email.title", "Email address")}
+					description={t(
+						"settings.account.email.description",
+						"Used for signing in and account notifications.",
+					)}
 				>
 					<FieldGroup>
 						<form.Field
@@ -550,7 +623,7 @@ function AccountSettings({
 							children={(field) => (
 								<Field>
 									<FieldLabel htmlFor={field.name} className="sr-only">
-										Email address
+										{t("settings.account.email.label", "Email address")}
 									</FieldLabel>
 									<InputGroup>
 										<InputGroupAddon>
@@ -561,12 +634,15 @@ function AccountSettings({
 											name={field.name}
 											type="email"
 											value={field.state.value}
-											placeholder="Email address"
+											placeholder={t(
+												"settings.account.email.placeholder",
+												"Email address",
+											)}
 											readOnly
 										/>
 										<InputGroupAddon align="inline-end">
 											<InputGroupButton type="button" variant="secondary">
-												Change
+												{t("settings.account.email.change", "Change")}
 											</InputGroupButton>
 										</InputGroupAddon>
 									</InputGroup>
@@ -577,8 +653,11 @@ function AccountSettings({
 				</SettingsCard>
 
 				<SettingsCard
-					title="Password"
-					description="Choose a strong and unique password."
+					title={t("settings.account.password.title", "Password")}
+					description={t(
+						"settings.account.password.description",
+						"Choose a strong and unique password.",
+					)}
 				>
 					<FieldGroup>
 						<Field>
@@ -588,15 +667,18 @@ function AccountSettings({
 								size="responsive-xl"
 							>
 								<KeyRound data-icon="inline-start" />
-								Change password
+								{t("settings.account.password.change", "Change password")}
 							</Button>
 						</Field>
 					</FieldGroup>
 				</SettingsCard>
 
 				<SettingsCard
-					title="Account sessions"
-					description="Sign out from other browsers and devices."
+					title={t("settings.account.sessions.title", "Account sessions")}
+					description={t(
+						"settings.account.sessions.description",
+						"Sign out from other browsers and devices.",
+					)}
 				>
 					<FieldGroup>
 						<Field>
@@ -606,23 +688,34 @@ function AccountSettings({
 								size="responsive-xl"
 							>
 								<LogOut data-icon="inline-start" />
-								Sign out other sessions
+								{t(
+									"settings.account.sessions.sign_out_others",
+									"Sign out other sessions",
+								)}
 							</Button>
 						</Field>
 					</FieldGroup>
 				</SettingsCard>
 
 				<SettingsCard
-					title="Danger zone"
-					description="These actions cannot easily be undone."
+					title={t("settings.account.danger.title", "Danger zone")}
+					description={t(
+						"settings.account.danger.description",
+						"These actions cannot easily be undone.",
+					)}
 					style={DANGER_ZONE_STYLE}
 				>
 					<FieldGroup>
 						<Field orientation="horizontal">
 							<FieldContent>
-								<FieldLabel>Delete account</FieldLabel>
+								<FieldLabel>
+									{t("settings.account.delete.title", "Delete account")}
+								</FieldLabel>
 								<FieldDescription>
-									Permanently delete your account and content.
+									{t(
+										"settings.account.delete.description",
+										"Permanently delete your account and content.",
+									)}
 								</FieldDescription>
 							</FieldContent>
 							<Button
@@ -633,7 +726,7 @@ function AccountSettings({
 								className="hover:opacity-90"
 							>
 								<Trash2 data-icon="inline-start" />
-								Delete account
+								{t("settings.account.delete.action", "Delete account")}
 							</Button>
 						</Field>
 					</FieldGroup>
@@ -648,6 +741,7 @@ function AppearanceSettings({
 }: {
 	onSubmit?: () => void | Promise<void>;
 }) {
+	const { t } = useTranslation();
 	const form = useForm({
 		defaultValues: {
 			compactLayout: false,
@@ -668,15 +762,26 @@ function AppearanceSettings({
 		>
 			<div className="flex flex-col gap-6">
 				<SettingsCard
-					title="Theme"
-					description="Select your preferred interface appearance."
+					title={t("settings.appearance.theme.title", "Theme")}
+					description={t(
+						"settings.appearance.theme.description",
+						"Select your preferred interface appearance.",
+					)}
 				>
 					<FieldGroup>
 						<Field orientation="horizontal">
 							<FieldContent>
-								<FieldLabel>Interface theme</FieldLabel>
+								<FieldLabel>
+									{t(
+										"settings.appearance.theme.interface_label",
+										"Interface theme",
+									)}
+								</FieldLabel>
 								<FieldDescription>
-									Applied immediately across the application.
+									{t(
+										"settings.appearance.theme.applied_description",
+										"Applied immediately across the application.",
+									)}
 								</FieldDescription>
 							</FieldContent>
 							<SettingsThemeSelect />
@@ -684,15 +789,23 @@ function AppearanceSettings({
 					</FieldGroup>
 				</SettingsCard>
 
-				<SettingsCard title="Interface">
+				<SettingsCard
+					title={t("settings.appearance.interface.title", "Interface")}
+				>
 					<FieldGroup>
 						<form.Field
 							name="compactLayout"
 							children={(field) => (
 								<SettingSwitch
 									id={field.name}
-									title="Compact layout"
-									description="Reduce spacing and display more information."
+									title={t(
+										"settings.appearance.compact_layout.title",
+										"Compact layout",
+									)}
+									description={t(
+										"settings.appearance.compact_layout.description",
+										"Reduce spacing and display more information.",
+									)}
 									checked={field.state.value}
 									onCheckedChange={field.handleChange}
 								/>
@@ -704,8 +817,14 @@ function AppearanceSettings({
 							children={(field) => (
 								<SettingSwitch
 									id={field.name}
-									title="Show media animations"
-									description="Automatically play animated portfolio media."
+									title={t(
+										"settings.appearance.media_animations.title",
+										"Show media animations",
+									)}
+									description={t(
+										"settings.appearance.media_animations.description",
+										"Automatically play animated portfolio media.",
+									)}
 									checked={field.state.value}
 									onCheckedChange={field.handleChange}
 								/>
@@ -723,6 +842,7 @@ function NotificationSettings({
 }: {
 	onSubmit?: () => void | Promise<void>;
 }) {
+	const { t } = useTranslation();
 	const form = useForm({
 		defaultValues: {
 			messages: true,
@@ -738,28 +858,49 @@ function NotificationSettings({
 	const preferences = [
 		{
 			name: "messages",
-			title: "Messages",
-			description: "Notify me when I receive a new message.",
+			title: t("settings.notifications.messages.title", "Messages"),
+			description: t(
+				"settings.notifications.messages.description",
+				"Notify me when I receive a new message.",
+			),
 		},
 		{
 			name: "comments",
-			title: "Comments",
-			description: "Notify me about comments on my posts.",
+			title: t("settings.notifications.comments.title", "Comments"),
+			description: t(
+				"settings.notifications.comments.description",
+				"Notify me about comments on my posts.",
+			),
 		},
 		{
 			name: "likes",
-			title: "Likes",
-			description: "Notify me when someone likes my work.",
+			title: t("settings.notifications.likes.title", "Likes"),
+			description: t(
+				"settings.notifications.likes.description",
+				"Notify me when someone likes my work.",
+			),
 		},
 		{
 			name: "newFollowers",
-			title: "New followers",
-			description: "Notify me when somebody follows my profile.",
+			title: t(
+				"settings.notifications.new_followers.title",
+				"New followers",
+			),
+			description: t(
+				"settings.notifications.new_followers.description",
+				"Notify me when somebody follows my profile.",
+			),
 		},
 		{
 			name: "emailNotifications",
-			title: "Email notifications",
-			description: "Send important notifications to my email.",
+			title: t(
+				"settings.notifications.email.title",
+				"Email notifications",
+			),
+			description: t(
+				"settings.notifications.email.description",
+				"Send important notifications to my email.",
+			),
 		},
 	] as const;
 
@@ -772,8 +913,14 @@ function NotificationSettings({
 			}}
 		>
 			<SettingsCard
-				title="Notification preferences"
-				description="Choose which activity should notify you."
+				title={t(
+					"settings.notifications.preferences.title",
+					"Notification preferences",
+				)}
+				description={t(
+					"settings.notifications.preferences.description",
+					"Choose which activity should notify you.",
+				)}
 			>
 				<FieldGroup>
 					{preferences.map((preference) => (
@@ -802,6 +949,7 @@ function PrivacySettings({
 }: {
 	onSubmit?: () => void | Promise<void>;
 }) {
+	const { t } = useTranslation();
 	const form = useForm({
 		defaultValues: {
 			publicProfile: true,
@@ -818,36 +966,68 @@ function PrivacySettings({
 	const visibilityPreferences = [
 		{
 			name: "publicProfile",
-			title: "Public profile",
-			description: "Allow anyone to view your profile.",
+			title: t("settings.privacy.public_profile.title", "Public profile"),
+			description: t(
+				"settings.privacy.public_profile.description",
+				"Allow anyone to view your profile.",
+			),
 		},
 		{
 			name: "showOnlineStatus",
-			title: "Show online status",
-			description: "Allow other users to see when you are active.",
+			title: t(
+				"settings.privacy.online_status.title",
+				"Show online status",
+			),
+			description: t(
+				"settings.privacy.online_status.description",
+				"Allow other users to see when you are active.",
+			),
 		},
 		{
 			name: "showLikedPosts",
-			title: "Show liked posts",
-			description: "Display your liked posts on your profile.",
+			title: t(
+				"settings.privacy.liked_posts.title",
+				"Show liked posts",
+			),
+			description: t(
+				"settings.privacy.liked_posts.description",
+				"Display your liked posts on your profile.",
+			),
 		},
 		{
 			name: "allowSearchEngines",
-			title: "Allow search engines",
-			description: "Allow external search engines to index your profile.",
+			title: t(
+				"settings.privacy.search_engines.title",
+				"Allow search engines",
+			),
+			description: t(
+				"settings.privacy.search_engines.description",
+				"Allow external search engines to index your profile.",
+			),
 		},
 	] as const;
 	const contentPreferences = [
 		{
 			name: "blurSensitiveContent",
-			title: "Always blur sensitive content",
-			description: "Require confirmation before sensitive media is shown.",
+			title: t(
+				"settings.privacy.sensitive_content.blur.title",
+				"Always blur sensitive content",
+			),
+			description: t(
+				"settings.privacy.sensitive_content.blur.description",
+				"Require confirmation before sensitive media is shown.",
+			),
 		},
 		{
 			name: "rememberRevealedPosts",
-			title: "Remember revealed posts",
-			description:
+			title: t(
+				"settings.privacy.sensitive_content.remember.title",
+				"Remember revealed posts",
+			),
+			description: t(
+				"settings.privacy.sensitive_content.remember.description",
 				"Keep sensitive posts revealed during the current session.",
+			),
 		},
 	] as const;
 
@@ -861,8 +1041,14 @@ function PrivacySettings({
 		>
 			<div className="flex flex-col gap-6">
 				<SettingsCard
-					title="Profile visibility"
-					description="Control who can see your profile and activity."
+					title={t(
+						"settings.privacy.visibility.title",
+						"Profile visibility",
+					)}
+					description={t(
+						"settings.privacy.visibility.description",
+						"Control who can see your profile and activity.",
+					)}
 				>
 					<FieldGroup>
 						{visibilityPreferences.map((preference) => (
@@ -884,8 +1070,14 @@ function PrivacySettings({
 				</SettingsCard>
 
 				<SettingsCard
-					title="Sensitive content"
-					description="Control how content warnings are handled."
+					title={t(
+						"settings.privacy.sensitive_content.title",
+						"Sensitive content",
+					)}
+					description={t(
+						"settings.privacy.sensitive_content.description",
+						"Control how content warnings are handled.",
+					)}
 				>
 					<FieldGroup>
 						{contentPreferences.map((preference) => (
@@ -915,6 +1107,7 @@ function LanguageSettings({
 }: {
 	onSubmit?: () => void | Promise<void>;
 }) {
+	const { t } = useTranslation();
 	const form = useForm({
 		defaultValues: {
 			region: "Poland",
@@ -935,15 +1128,26 @@ function LanguageSettings({
 		>
 			<div className="flex flex-col gap-6">
 				<SettingsCard
-					title="Language"
-					description="Choose the language used throughout the application."
+					title={t("settings.language.language.title", "Language")}
+					description={t(
+						"settings.language.language.description",
+						"Choose the language used throughout the application.",
+					)}
 				>
 					<FieldGroup>
 						<Field orientation="horizontal">
 							<FieldContent>
-								<FieldLabel>Application language</FieldLabel>
+								<FieldLabel>
+									{t(
+										"settings.language.application_language.label",
+										"Application language",
+									)}
+								</FieldLabel>
 								<FieldDescription>
-									Applied immediately without reloading the current page.
+									{t(
+										"settings.language.application_language.description",
+										"Applied immediately without reloading the current page.",
+									)}
 								</FieldDescription>
 							</FieldContent>
 							<SettingsLanguageSelect />
@@ -952,15 +1156,20 @@ function LanguageSettings({
 				</SettingsCard>
 
 				<SettingsCard
-					title="Region"
-					description="Used for dates, numbers and currency."
+					title={t("settings.language.region.title", "Region")}
+					description={t(
+						"settings.language.region.description",
+						"Used for dates, numbers and currency.",
+					)}
 				>
 					<FieldGroup className="grid sm:grid-cols-2">
 						<form.Field
 							name="region"
 							children={(field) => (
 								<Field>
-									<FieldLabel htmlFor={field.name}>Region</FieldLabel>
+									<FieldLabel htmlFor={field.name}>
+										{t("settings.language.region.label", "Region")}
+									</FieldLabel>
 									<InputGroup>
 										<InputGroupAddon>
 											<Globe />
@@ -990,7 +1199,9 @@ function LanguageSettings({
 							name="timeZone"
 							children={(field) => (
 								<Field>
-									<FieldLabel htmlFor={field.name}>Time zone</FieldLabel>
+									<FieldLabel htmlFor={field.name}>
+										{t("settings.language.time_zone.label", "Time zone")}
+									</FieldLabel>
 									<InputGroup>
 										<InputGroupAddon>
 											<Globe />
@@ -1188,6 +1399,7 @@ function AccessibilitySettings({
 }: {
 	onSubmit?: () => void | Promise<void>;
 }) {
+	const { t } = useTranslation();
 	const form = useForm({
 		defaultValues: {
 			reduceMotion: false,
@@ -1202,23 +1414,47 @@ function AccessibilitySettings({
 	const preferences = [
 		{
 			name: "reduceMotion",
-			title: "Reduce motion",
-			description: "Reduce interface animations and transitions.",
+			title: t(
+				"settings.accessibility.reduce_motion.title",
+				"Reduce motion",
+			),
+			description: t(
+				"settings.accessibility.reduce_motion.description",
+				"Reduce interface animations and transitions.",
+			),
 		},
 		{
 			name: "highContrast",
-			title: "High contrast",
-			description: "Increase contrast between interface elements.",
+			title: t(
+				"settings.accessibility.high_contrast.title",
+				"High contrast",
+			),
+			description: t(
+				"settings.accessibility.high_contrast.description",
+				"Increase contrast between interface elements.",
+			),
 		},
 		{
 			name: "underlineLinks",
-			title: "Underline links",
-			description: "Always show underlines beneath links.",
+			title: t(
+				"settings.accessibility.underline_links.title",
+				"Underline links",
+			),
+			description: t(
+				"settings.accessibility.underline_links.description",
+				"Always show underlines beneath links.",
+			),
 		},
 		{
 			name: "largerInterfaceText",
-			title: "Larger interface text",
-			description: "Increase the base text size throughout the application.",
+			title: t(
+				"settings.accessibility.larger_text.title",
+				"Larger interface text",
+			),
+			description: t(
+				"settings.accessibility.larger_text.description",
+				"Increase the base text size throughout the application.",
+			),
 		},
 	] as const;
 
@@ -1231,8 +1467,14 @@ function AccessibilitySettings({
 			}}
 		>
 			<SettingsCard
-				title="Accessibility preferences"
-				description="Adjust the interface to make it more comfortable to use."
+				title={t(
+					"settings.accessibility.preferences.title",
+					"Accessibility preferences",
+				)}
+				description={t(
+					"settings.accessibility.preferences.description",
+					"Adjust the interface to make it more comfortable to use.",
+				)}
 			>
 				<FieldGroup>
 					{preferences.map((preference) => (
@@ -1261,6 +1503,7 @@ function ConnectedAccountsSettings({
 }: {
 	onSubmit?: () => void | Promise<void>;
 }) {
+	const { t } = useTranslation();
 	const form = useForm({
 		defaultValues: {
 			google: true,
@@ -1274,18 +1517,27 @@ function ConnectedAccountsSettings({
 	const connections = [
 		{
 			name: "google",
-			label: "Google",
-			description: "Use Google to sign in.",
+			label: t("settings.connections.google.label", "Google"),
+			description: t(
+				"settings.connections.google.description",
+				"Use Google to sign in.",
+			),
 		},
 		{
 			name: "discord",
-			label: "Discord",
-			description: "Connect your Discord profile.",
+			label: t("settings.connections.discord.label", "Discord"),
+			description: t(
+				"settings.connections.discord.description",
+				"Connect your Discord profile.",
+			),
 		},
 		{
 			name: "twitch",
-			label: "Twitch",
-			description: "Display your Twitch channel.",
+			label: t("settings.connections.twitch.label", "Twitch"),
+			description: t(
+				"settings.connections.twitch.description",
+				"Display your Twitch channel.",
+			),
 		},
 	] as const;
 
@@ -1298,8 +1550,11 @@ function ConnectedAccountsSettings({
 			}}
 		>
 			<SettingsCard
-				title="Connected accounts"
-				description="Connect external services to your account."
+				title={t("settings.connections.title", "Connected accounts")}
+				description={t(
+					"settings.connections.description",
+					"Connect external services to your account.",
+				)}
 			>
 				<FieldGroup>
 					{connections.map((connection) => (
@@ -1339,7 +1594,10 @@ function SettingsCard({
 }: SettingsCardProps) {
 	return (
 		<section
-			className={cn("flex flex-col gap-5 rounded-2xl bg-surface-1 p-5", className)}
+			className={cn(
+				"flex flex-col gap-4 rounded-xl bg-surface-1 p-4 sm:gap-5 sm:rounded-2xl sm:p-5",
+				className,
+			)}
 			style={style}
 		>
 			<FieldContent className="gap-1">
@@ -1399,6 +1657,8 @@ function ConnectionRow({
 	connected,
 	onConnectedChange,
 }: ConnectionRowProps) {
+	const { t } = useTranslation();
+
 	return (
 		<Field orientation="horizontal">
 			<FieldContent>
@@ -1412,7 +1672,9 @@ function ConnectionRow({
 				size="responsive-xl"
 				onClick={() => onConnectedChange(!connected)}
 			>
-				{connected ? "Disconnect" : "Connect"}
+				{connected
+					? t("settings.connections.disconnect", "Disconnect")
+					: t("settings.connections.connect", "Connect")}
 			</Button>
 		</Field>
 	);

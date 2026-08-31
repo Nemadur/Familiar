@@ -1,6 +1,14 @@
+import { Typography } from "@heroui/react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Edit2, MoreHorizontal, Tag, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+	ArrowLeft,
+	Edit2,
+	Folder,
+	MoreHorizontal,
+	Tag,
+	Trash2,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
 	CatalogResponse,
@@ -45,7 +53,6 @@ import {
 	useRemovePortfolioPostFromCatalog,
 	useUpdateCatalog,
 } from "@/hooks/portfolio/use-portfolio";
-import { useIsMobile } from "@/hooks/ui/use-mobile";
 import { getLocaleParam } from "@/lib/i18n";
 import { FolderCard } from "./folder-card";
 import { ProfileFeed } from "./profile-feed";
@@ -71,6 +78,7 @@ type ManagedFiltersState = Record<string, ManagedFilterValue>;
 
 const INITIAL_FILTER_STATE: ManagedFiltersState = {
 	tags: { value: [] },
+	folders: { value: [] },
 };
 
 function getStringFilterValues(value: FilterValue | undefined): string[] {
@@ -83,6 +91,66 @@ function getStringFilterValues(value: FilterValue | undefined): string[] {
 	}
 
 	return value.filter((item): item is string => typeof item === "string");
+}
+
+function normalizeMultiOptionOperator(
+	operator: ManagedFilterValue["operator"] | undefined,
+): string {
+	return String(operator ?? "")
+		.trim()
+		.replace(/([a-z\d])([A-Z])/g, "$1 $2")
+		.replace(/[_-]+/g, " ")
+		.replace(/\s+/g, " ")
+		.toLowerCase();
+}
+
+/**
+ * Applies the operators emitted by the Bazza multi-option filter. It accepts
+ * both its internal camelCase keys and the translated labels rendered by the
+ * filter bar so changing locale or adapter shape does not invert the result.
+ */
+function matchesMultiOptionFilter(
+	itemValues: readonly string[],
+	selectedValues: readonly string[],
+	operator: ManagedFilterValue["operator"] | undefined,
+): boolean {
+	if (selectedValues.length === 0) return true;
+
+	const values = new Set(itemValues);
+	const includesAny = selectedValues.some((value) => values.has(value));
+	const includesAll = selectedValues.every((value) => values.has(value));
+
+	switch (normalizeMultiOptionOperator(operator)) {
+		case "exclude":
+		case "excludes":
+		case "exclude all of":
+		case "excludes all of":
+		case "exclude if any of":
+		case "excludes if any of":
+		case "does not contain":
+		case "is not":
+		case "is none of":
+			return !includesAny;
+
+		case "exclude if all":
+		case "excludes if all":
+			return !includesAll;
+
+		case "include all of":
+		case "includes all of":
+		case "contains":
+		case "is all of":
+			return includesAll;
+
+		case "include":
+		case "includes":
+		case "include any of":
+		case "includes any of":
+		case "is":
+		case "is any of":
+		default:
+			return includesAny;
+	}
 }
 
 interface FolderPreview {
@@ -150,7 +218,6 @@ export function ProfilePortfolio({
 	const locale = RouteLocale();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
-	const isMobile = useIsMobile();
 
 	const [filters, setFilters] =
 		useState<ManagedFiltersState>(INITIAL_FILTER_STATE);
@@ -167,6 +234,69 @@ export function ProfilePortfolio({
 	const canCreateCatalog = canManageCatalogs && Boolean(onCreateCatalog);
 	const canCreatePost = canCreatePosts && Boolean(onCreatePost);
 	const hasCreateActions = canCreateCatalog || canCreatePost;
+
+	const postsByCatalogId = useMemo(() => {
+		const result = new Map<string, PortfolioPostResponse[]>();
+
+		for (const post of posts) {
+			for (const catalogId of post.catalogIds ?? []) {
+				const catalogPosts = result.get(catalogId);
+
+				if (catalogPosts) {
+					catalogPosts.push(post);
+				} else {
+					result.set(catalogId, [post]);
+				}
+			}
+		}
+
+		return result;
+	}, [posts]);
+
+	const currentFolder =
+		propCurrentFolder ??
+		(folderId ? folders.find((folder) => folder.id === folderId) : undefined);
+
+	const currentFolderPosts = useMemo(
+		() =>
+			currentFolder ? (postsByCatalogId.get(currentFolder.id) ?? []) : [],
+		[currentFolder, postsByCatalogId],
+	);
+
+	const filterSourcePosts =
+		folderId && currentFolder ? currentFolderPosts : posts;
+	const folderFilterOptions = useMemo(() => {
+		const folderNames = folders.map((folder) =>
+			folder.name.trim().replace(/\s+/g, " "),
+		);
+		const totalByName = new Map<string, number>();
+
+		for (const name of folderNames) {
+			const key = name.toLocaleLowerCase();
+			totalByName.set(key, (totalByName.get(key) ?? 0) + 1);
+		}
+
+		const occurrenceByName = new Map<string, number>();
+
+		return folders.map((folder, index) => {
+			const name = folderNames[index] || folder.name;
+			const key = name.toLocaleLowerCase();
+			const occurrence = (occurrenceByName.get(key) ?? 0) + 1;
+			const total = totalByName.get(key) ?? 1;
+
+			occurrenceByName.set(key, occurrence);
+
+			return {
+				id: folder.id,
+				label: total > 1 ? `${name} (${occurrence})` : name,
+			};
+		});
+	}, [folders]);
+
+	useEffect(() => {
+		setFilters(INITIAL_FILTER_STATE);
+		setSearchQuery("");
+	}, []);
 
 	const handleRenameCatalog = async (catalogId: string, data: any) => {
 		return updateCatalogMutation.mutateAsync({
@@ -202,34 +332,51 @@ export function ProfilePortfolio({
 
 	const availableTags = useMemo(
 		() =>
-			Array.from(new Set(posts.flatMap((post) => post.tags ?? []))).sort(
-				(a, b) => a.localeCompare(b),
-			),
-		[posts],
+			Array.from(
+				new Set(filterSourcePosts.flatMap((post) => post.tags ?? [])),
+			).sort((a, b) => a.localeCompare(b)),
+		[filterSourcePosts],
 	);
 
 	const filterGroups = useMemo<FilterGroup<PortfolioPostResponse>[]>(
-		() =>
-			availableTags.length > 0
-				? [
-					{
-						id: "tags",
-						label: t("components.portfolio.filters.tags", "Tags"),
-						type: "multiselect",
-						icon: Tag,
-						getItemValue: (post) => post.tags ?? [],
-						options: availableTags.map((tag) => ({
-							id: tag,
-							label: tag,
-						})),
-					},
-				]
-				: [],
-		[availableTags, t],
+		() => {
+			const groups: FilterGroup<PortfolioPostResponse>[] = [];
+
+			if (availableTags.length > 0) {
+				groups.push({
+					id: "tags",
+					label: t("components.portfolio.filters.tags", "Tags"),
+					type: "multiselect",
+					icon: Tag,
+					getItemValue: (post) => post.tags ?? [],
+					options: availableTags.map((tag) => ({
+						id: tag,
+						label: tag,
+					})),
+				});
+			}
+
+			if (!folderId && folderFilterOptions.length > 0) {
+				groups.push({
+					id: "folders",
+					label: t(
+						"components.portfolio.filters.folders",
+						"Folders",
+					),
+					type: "multiselect",
+					icon: Folder,
+					getItemValue: (post) => post.catalogIds ?? [],
+					options: folderFilterOptions,
+				});
+			}
+
+			return groups;
+		},
+		[availableTags, folderFilterOptions, folderId, t],
 	);
 
 	const filteredPosts = useMemo(() => {
-		let result = [...posts];
+		let result = [...filterSourcePosts];
 		const query = searchQuery.trim().toLowerCase();
 
 		if (query) {
@@ -249,51 +396,29 @@ export function ProfilePortfolio({
 		const selectedTags = getStringFilterValues(filters.tags?.value);
 
 		if (selectedTags.length > 0) {
-			const operator = filters.tags?.operator;
+			result = result.filter((post) =>
+				matchesMultiOptionFilter(
+					post.tags ?? [],
+					selectedTags,
+					filters.tags?.operator,
+				),
+			);
+		}
 
-			result = result.filter((post) => {
-				const postTags = post.tags ?? [];
+		const selectedFolderIds = getStringFilterValues(filters.folders?.value);
 
-				if (operator === "contains") {
-					return selectedTags.every((tag) => postTags.includes(tag));
-				}
-
-				if (operator === "is not" || operator === "is none of") {
-					return selectedTags.every((tag) => !postTags.includes(tag));
-				}
-
-				return selectedTags.some((tag) => postTags.includes(tag));
-			});
+		if (selectedFolderIds.length > 0) {
+			result = result.filter((post) =>
+				matchesMultiOptionFilter(
+					post.catalogIds ?? [],
+					selectedFolderIds,
+					filters.folders?.operator,
+				),
+			);
 		}
 
 		return result;
-	}, [filters, posts, searchQuery]);
-
-	const postsByCatalogId = useMemo(() => {
-		const result = new Map<string, PortfolioPostResponse[]>();
-
-		for (const post of posts) {
-			for (const catalogId of post.catalogIds ?? []) {
-				const catalogPosts = result.get(catalogId);
-
-				if (catalogPosts) {
-					catalogPosts.push(post);
-				} else {
-					result.set(catalogId, [post]);
-				}
-			}
-		}
-
-		return result;
-	}, [posts]);
-
-	const currentFolder =
-		propCurrentFolder ??
-		(folderId ? folders.find((folder) => folder.id === folderId) : undefined);
-
-	const currentFolderPosts = currentFolder
-		? (postsByCatalogId.get(currentFolder.id) ?? [])
-		: [];
+	}, [filterSourcePosts, filters, searchQuery]);
 
 	const handleFilterChange = (
 		groupId: string,
@@ -350,129 +475,180 @@ export function ProfilePortfolio({
 	};
 
 	if (folderId && currentFolder) {
+		const folderDescription = currentFolder.description?.trim();
+
 		return (
 			<div className="flex h-full flex-1 flex-col gap-6">
-				<div className="flex items-center gap-4">
-					<Button variant="ghost" size="icon" asChild>
-						<Link
-							to="/{-$locale}/user/$username/$tab"
-							params={{
-								locale,
-								username: username ?? "",
-								tab: "portfolio",
-							}}
+				<section
+					aria-label={currentFolder.name}
+					className="px-4 lg:px-0 xl:px-4"
+				>
+					<div className="flex min-w-0 items-start gap-3">
+						<Button
+							variant="ghost"
+							size="icon-xl"
+							className="shrink-0"
+							asChild
 						>
-							<ArrowLeft aria-hidden="true" />
-							<span className="sr-only">
-								{t("components.portfolio.folder.back", "Back to portfolio")}
-							</span>
-						</Link>
-					</Button>
-
-					<div className="flex min-w-0 flex-col gap-0.5">
-						<h2 className="truncate text-xl font-bold">{currentFolder.name}</h2>
-
-						<p className="text-sm text-muted-foreground">
-							{t("components.portfolio.folder.items", {
-								count: currentFolderPosts.length,
-							})}
-						</p>
-					</div>
-
-					{canManageCatalogs && (
-						<div className="ml-auto">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon">
-										<MoreHorizontal className="size-5" />
-										<span className="sr-only">Manage folder</span>
-									</Button>
-								</DropdownMenuTrigger>
-
-								<DropdownMenuContent align="end">
-									<DropdownMenuItem onClick={() => setRenameCatalogOpen(true)}>
-										<Edit2 className="mr-2" />
-										{t(
-											"components.portfolio.folder.manage.rename",
-											"Rename folder",
-										)}
-									</DropdownMenuItem>
-
-									<DropdownMenuSeparator />
-
-									<DropdownMenuItem
-										variant="destructive"
-										onClick={() => setDeleteCatalogOpen(true)}
-									>
-										<Trash2 className="mr-2" />
-										{t(
-											"components.portfolio.folder.manage.delete",
-											"Delete folder",
-										)}
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-
-							<RenameCatalogModal
-								open={renameCatalogOpen}
-								onOpenChange={setRenameCatalogOpen}
-								catalog={currentFolder}
-								onRenameCatalog={handleRenameCatalog}
-								isRenaming={updateCatalogMutation.isPending}
-							/>
-
-							<AlertDialog
-								open={deleteCatalogOpen}
-								onOpenChange={setDeleteCatalogOpen}
+							<Link
+								to="/{-$locale}/user/$username/$tab"
+								params={{
+									locale,
+									username: username ?? "",
+									tab: "portfolio",
+								}}
 							>
-								<AlertDialogContent>
-									<AlertDialogHeader>
-										<AlertDialogTitle>
-											{t(
-												"components.portfolio.folder.delete.title",
-												"Delete folder?",
-											)}
-										</AlertDialogTitle>
+								<ArrowLeft aria-hidden="true" />
+								<span className="sr-only">
+									{t(
+										"components.portfolio.folder.back",
+										"Back to portfolio",
+									)}
+								</span>
+							</Link>
+						</Button>
 
-										<AlertDialogDescription>
-											{t(
-												"components.portfolio.folder.delete.description",
-												"Are you sure you want to delete this folder? Posts inside it will not be deleted.",
-											)}
-										</AlertDialogDescription>
-									</AlertDialogHeader>
+						<div className="min-w-0 flex-1 pt-1">
+							<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+								<Typography.Heading
+									level={4}
+									className="min-w-0 truncate text-xl font-bold sm:text-2xl"
+								>
+									{currentFolder.name}
+								</Typography.Heading>
 
-									<AlertDialogFooter>
-										<AlertDialogCancel>
-											{t("components.portfolio.folder.delete.cancel", "Cancel")}
-										</AlertDialogCancel>
+								<span className="text-xs text-muted-foreground tabular-nums">
+									{t("components.portfolio.folder.items", {
+										count: currentFolderPosts.length,
+									})}
+								</span>
+							</div>
 
-										<AlertDialogAction
-											onClick={(event) => {
-												event.preventDefault();
-												void handleDeleteCatalog();
-											}}
-											className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-										>
-											{deleteCatalogMutation.isPending
-												? t(
-													"components.portfolio.folder.delete.deleting",
-													"Deleting...",
-												)
-												: t(
-													"components.portfolio.folder.delete.confirm",
-													"Delete",
-												)}
-										</AlertDialogAction>
-									</AlertDialogFooter>
-								</AlertDialogContent>
-							</AlertDialog>
+							{folderDescription ? (
+								<Typography.Paragraph
+									size="sm"
+									className="mt-1 max-w-3xl whitespace-pre-line break-words leading-relaxed text-muted-foreground!"
+								>
+									{folderDescription}
+								</Typography.Paragraph>
+							) : null}
 						</div>
+
+						{canManageCatalogs && (
+							<div className="shrink-0">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant="ghost" size="icon">
+											<MoreHorizontal className="size-5" />
+											<span className="sr-only">Manage folder</span>
+										</Button>
+									</DropdownMenuTrigger>
+
+									<DropdownMenuContent align="end">
+										<DropdownMenuItem
+											onClick={() => setRenameCatalogOpen(true)}
+										>
+											<Edit2 className="mr-2" />
+											{t(
+												"components.portfolio.folder.manage.rename",
+												"Rename folder",
+											)}
+										</DropdownMenuItem>
+
+										<DropdownMenuSeparator />
+
+										<DropdownMenuItem
+											variant="destructive"
+											onClick={() => setDeleteCatalogOpen(true)}
+										>
+											<Trash2 className="mr-2" />
+											{t(
+												"components.portfolio.folder.manage.delete",
+												"Delete folder",
+											)}
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+
+								<RenameCatalogModal
+									open={renameCatalogOpen}
+									onOpenChange={setRenameCatalogOpen}
+									catalog={currentFolder}
+									onRenameCatalog={handleRenameCatalog}
+									isRenaming={updateCatalogMutation.isPending}
+								/>
+
+								<AlertDialog
+									open={deleteCatalogOpen}
+									onOpenChange={setDeleteCatalogOpen}
+								>
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>
+												{t(
+													"components.portfolio.folder.delete.title",
+													"Delete folder?",
+												)}
+											</AlertDialogTitle>
+
+											<AlertDialogDescription>
+												{t(
+													"components.portfolio.folder.delete.description",
+													"Are you sure you want to delete this folder? Posts inside it will not be deleted.",
+												)}
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+
+										<AlertDialogFooter>
+											<AlertDialogCancel>
+												{t(
+													"components.portfolio.folder.delete.cancel",
+													"Cancel",
+												)}
+											</AlertDialogCancel>
+
+											<AlertDialogAction
+												onClick={(event) => {
+													event.preventDefault();
+													void handleDeleteCatalog();
+												}}
+												className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+											>
+												{deleteCatalogMutation.isPending
+													? t(
+														"components.portfolio.folder.delete.deleting",
+														"Deleting...",
+													)
+													: t(
+														"components.portfolio.folder.delete.confirm",
+														"Delete",
+													)}
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							</div>
+						)}
+					</div>
+				</section>
+
+				<FilterBar
+					className="px-4 lg:px-0 xl:px-4"
+					data={currentFolderPosts}
+					groups={filterGroups}
+					values={filters}
+					onFilterChange={handleFilterChange}
+					searchQuery={searchQuery}
+					onSearchChange={setSearchQuery}
+					onClearAll={handleClearAll}
+					searchPlaceholder={t(
+						"components.portfolio.folder.filters.search_placeholder",
+						"Search this folder...",
 					)}
-				</div>
+				/>
 
 				<ProfileFeed
-					posts={currentFolderPosts}
+					posts={filteredPosts}
 					onPostClick={handlePostClick}
 					variant="portfolio"
 					className="lg:mx-0 xl:mx-4"
@@ -491,7 +667,9 @@ export function ProfilePortfolio({
 	);
 
 	const selectedTags = getStringFilterValues(filters.tags?.value);
-	const hasActiveFilters = selectedTags.length > 0;
+	const selectedFolderIds = getStringFilterValues(filters.folders?.value);
+	const hasActiveFilters =
+		selectedTags.length > 0 || selectedFolderIds.length > 0;
 	const showFolders = !hasActiveFilters && !folderId;
 
 	return (

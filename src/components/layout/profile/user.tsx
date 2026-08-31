@@ -4,7 +4,7 @@ import {
 	useRouter,
 	useSearch,
 } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import {
 	OutlineLogout,
@@ -27,7 +27,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useIsTablet } from "@/hooks/ui/use-mobile";
+import { useIsMobile, useIsTablet } from "@/hooks/ui/use-mobile";
 import { getLocaleParam, localizePath } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
@@ -40,7 +40,7 @@ type UserButtonContentProps = {
 	showInfo?: boolean;
 	showAvatar?: boolean;
 	showUsername?: boolean;
-	description?: React.ReactNode;
+	description?: ReactNode;
 	avatarSize?: "sm" | "default" | "lg" | "xl";
 	status?: string;
 	isOnline?: boolean;
@@ -60,30 +60,32 @@ function UserButtonContent({
 }: UserButtonContentProps) {
 	return (
 		<>
-			{showAvatar && (
+			{showAvatar ? (
 				<UserAvatar
 					user={user as TUserProfile}
 					size={avatarSize}
 					isOnline={isOnline}
 					badgeClassName={avatarBadgeClassName}
 				/>
-			)}
-			{showInfo && (
-				<div className="flex flex-col w-fit items-start text-left">
+			) : null}
+
+			{showInfo ? (
+				<div className="flex w-fit flex-col items-start text-left">
 					<span
 						className={cn(
-							"text-sm font-medium truncate w-full",
+							"w-full truncate text-sm font-medium",
 							status === "active"
 								? "text-accent-foreground"
 								: "text-foreground",
 						)}
 					>
-						{user?.displayName || "Unknown"}
+						{user.displayName || "Unknown"}
 					</span>
+
 					{description ? (
 						<span
 							className={cn(
-								"mt-0.5 text-xs truncate w-full",
+								"mt-0.5 w-full truncate text-xs",
 								status === "active"
 									? "text-accent-foreground/80"
 									: "text-muted-foreground",
@@ -94,30 +96,28 @@ function UserButtonContent({
 					) : status ? (
 						<span
 							className={cn(
-								"mt-0.5 text-xs truncate w-full",
+								"mt-0.5 w-full truncate text-xs",
 								isOnline && status === "Online"
-									? "text-green-500 font-medium"
+									? "font-medium text-green-500"
 									: "text-muted-foreground",
 							)}
 						>
 							{status}
 						</span>
-					) : (
-						showUsername && (
-							<span
-								className={cn(
-									"mt-0.5 text-xs truncate w-full",
-									status === "active"
-										? "text-accent-foreground/80"
-										: "text-muted-foreground",
-								)}
-							>
-								@{user?.username || "Unknown"}
-							</span>
-						)
-					)}
+					) : showUsername ? (
+						<span
+							className={cn(
+								"mt-0.5 w-full truncate text-xs",
+								status === "active"
+									? "text-accent-foreground/80"
+									: "text-muted-foreground",
+							)}
+						>
+							@{user.username || "Unknown"}
+						</span>
+					) : null}
 				</div>
-			)}
+			) : null}
 		</>
 	);
 }
@@ -127,7 +127,7 @@ type UserProps = {
 	showInfo?: boolean;
 	showAvatar?: boolean;
 	showUsername?: boolean;
-	description?: React.ReactNode;
+	description?: ReactNode;
 	avatarSize?: "sm" | "default" | "lg" | "xl";
 	isDropdown?: boolean;
 	open?: boolean;
@@ -162,17 +162,26 @@ export default function User({
 	const { logout } = useAuth();
 	const navigate = useNavigate();
 	const router = useRouter();
+	const isMobile = useIsMobile();
 	const isTablet = useIsTablet();
 	const [internalOpen, setInternalOpen] = useState(false);
 	const locale = getLocaleParam(document.documentElement.lang);
 	const search = useSearch({ strict: false }) as { settings?: "profile" };
 	const settingsOpen = search.settings === "profile";
-
 	const open = openProp ?? internalOpen;
 	const setOpen = onOpenChange ?? setInternalOpen;
 
 	const handleOpenSettings = () => {
 		setOpen(false);
+
+		if (isMobile) {
+			void navigate({
+				to: "/{-$locale}/settings/profile",
+				params: { locale },
+			});
+			return;
+		}
+
 		void navigate({
 			to: ".",
 			search: (previous) => ({
@@ -230,38 +239,8 @@ export default function User({
 		{
 			label: "Profile",
 			icon: <OutlineUser />,
-			to: localizePath(`/user/${user?.username || ""}`, locale),
+			to: localizePath(`/user/${user.username || ""}`, locale),
 		},
-		// {
-		// 	label: "My Requests",
-		// 	icon: <OutlineListBoxes />,
-		// 	to: localizePath("/my-requests", locale),
-		// },
-		// {
-		// 	label: "My Orders",
-		// 	icon: <OutlineReceipt />,
-		// 	to: localizePath("/orders", locale),
-		// },
-		// {
-		// 	label: "Characters",
-		// 	icon: <OutlineFaceSmilling />,
-		// 	to: localizePath(`/user/${user?.username || ""}/characters`, locale),
-		// },
-		// TODO: only show if not connected to Mollie
-		// TODO: only show if user has permissions to connect to Mollie (e.g., is admin)
-		// TODO: move scopes and state to env variables or generate dynamically
-		// TODO: get client_id from env variable
-		// {
-		// 	label: "Connect To Mollie",
-		// 	icon: <OutlineSettings />,
-		// 	to: "https://my.mollie.com/oauth2/authorize",
-		// 	params: {
-		// 		client_id: import.meta.env.VITE_MOLLIE_CLIENT_ID,
-		// 		redirect_uri: "https://www.familiar.art/auth/mollie/callback",
-		// 		state: "random_state_string",
-		// 		scope: "profiles.read payments.read payments.write",
-		// 	},
-		// },
 	];
 
 	const menuItemsContent = (
@@ -271,8 +250,6 @@ export default function User({
 					<Button key={item.label} variant="ghost" size="xl" asChild>
 						<Link
 							to={item.to}
-							// params={item.params}
-							target={(item as any).target}
 							preload={false}
 							onClick={() => setOpen(false)}
 						>
@@ -282,14 +259,18 @@ export default function User({
 					</Button>
 				))}
 			</div>
+
 			<DropdownMenuSeparator />
+
 			<div className="flex flex-col gap-1 p-1">
 				<Button variant="ghost" size="xl" onClick={handleOpenSettings}>
 					<OutlineSettings />
 					<span>Settings</span>
 				</Button>
 			</div>
+
 			<DropdownMenuSeparator />
+
 			<div className="p-1">
 				<Button
 					variant="destructive"
@@ -303,6 +284,14 @@ export default function User({
 				</Button>
 			</div>
 		</>
+	);
+
+	const settingsModal = isMobile ? null : (
+		<UserSettingsModal
+			open={settingsOpen}
+			onOpenChange={handleSettingsOpenChange}
+			onSave={handleSaveSettings}
+		/>
 	);
 
 	if (!isDropdown) {
@@ -332,44 +321,45 @@ export default function User({
 						className={cn("w-56", dropdownContentClassName)}
 						align="end"
 					>
-					<DropdownMenuGroup>
-						{menuItems.map((item) => (
-							<DropdownMenuItem key={item.label} asChild>
-								<Link
-									to={item.to}
-									preload={false}
-									className="w-full cursor-pointer"
-									onClick={() => setOpen(false)}
-								>
-									{item.icon}
-									{item.label}
-								</Link>
-							</DropdownMenuItem>
-						))}
-					</DropdownMenuGroup>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem onSelect={handleOpenSettings}>
-						<OutlineSettings />
-						Settings
-					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem
-						variant="destructive"
-						onClick={() => {
-							logout();
-							setOpen(false);
-						}}
-					>
-						<OutlineLogout />
-						Logout
-					</DropdownMenuItem>
+						<DropdownMenuGroup>
+							{menuItems.map((item) => (
+								<DropdownMenuItem key={item.label} asChild>
+									<Link
+										to={item.to}
+										preload={false}
+										className="w-full cursor-pointer"
+										onClick={() => setOpen(false)}
+									>
+										{item.icon}
+										{item.label}
+									</Link>
+								</DropdownMenuItem>
+							))}
+						</DropdownMenuGroup>
+
+						<DropdownMenuSeparator />
+
+						<DropdownMenuItem onSelect={handleOpenSettings}>
+							<OutlineSettings />
+							Settings
+						</DropdownMenuItem>
+
+						<DropdownMenuSeparator />
+
+						<DropdownMenuItem
+							variant="destructive"
+							onClick={() => {
+								logout();
+								setOpen(false);
+							}}
+						>
+							<OutlineLogout />
+							Logout
+						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
-				<UserSettingsModal
-					open={settingsOpen}
-					onOpenChange={handleSettingsOpenChange}
-					onSave={handleSaveSettings}
-				/>
+
+				{settingsModal}
 			</>
 		);
 	}
@@ -382,6 +372,7 @@ export default function User({
 						{triggerContent}
 					</Button>
 				</DrawerTrigger>
+
 				<DrawerContent>
 					<DrawerHeader className="text-left">
 						<DrawerTitle>{drawerTitle}</DrawerTitle>
@@ -389,11 +380,8 @@ export default function User({
 					<div className="pb-4">{menuItemsContent}</div>
 				</DrawerContent>
 			</Drawer>
-			<UserSettingsModal
-				open={settingsOpen}
-				onOpenChange={handleSettingsOpenChange}
-				onSave={handleSaveSettings}
-			/>
+
+			{settingsModal}
 		</>
 	);
 }

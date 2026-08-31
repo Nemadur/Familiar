@@ -33,7 +33,7 @@ const inputGroupVariants = cva(
 
 export interface InputGroupProps
 	extends React.ComponentProps<"fieldset">,
-		VariantProps<typeof inputGroupVariants> {}
+	VariantProps<typeof inputGroupVariants> { }
 
 function assignRef<T>(targetRef: React.Ref<T> | undefined, value: T | null) {
 	if (!targetRef) return;
@@ -83,7 +83,7 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 }
 
 const inputGroupAddonVariants = cva(
-	"text-muted-foreground flex h-auto [&>svg]:mt-0.5 cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
+	"flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium text-muted-foreground select-none transition-colors [&>svg]:mt-0.5 [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 group-has-[[data-slot=input-group-control][aria-invalid=true]]/input-group:text-destructive",
 	{
 		variants: {
 			align: {
@@ -205,9 +205,11 @@ function InputGroupInput({
 		<Input
 			data-slot="input-group-control"
 			className={cn(
-				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive",
-				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1 group-data-[variant=floating]/input-group:h-10",
+				"peer flex-1 rounded-none border-0 bg-transparent text-primary shadow-none transition-colors placeholder:text-muted-foreground focus-visible:ring-0 dark:bg-transparent",
+				"aria-invalid:text-destructive aria-invalid:caret-destructive aria-invalid:placeholder:text-destructive/60",
+				"group-data-[variant=floating]/input-group:h-10 group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1",
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
+				"group-data-[variant=floating]/input-group:aria-invalid:focus:placeholder:text-destructive/60",
 				className,
 			)}
 			{...props}
@@ -228,6 +230,7 @@ function InputGroupTextarea({
 				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive resize-none py-2",
 				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1",
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
+				"aria-invalid:text-destructive aria-invalid:caret-destructive aria-invalid:placeholder:text-destructive/60",
 				className,
 			)}
 			{...props}
@@ -795,7 +798,7 @@ function useDateInputController({
 						event.currentTarget.selectionEnd === 0);
 				const isWholeSegmentSelected =
 					event.currentTarget.selectionStart !==
-						event.currentTarget.selectionEnd &&
+					event.currentTarget.selectionEnd &&
 					event.currentTarget.selectionStart === 0 &&
 					event.currentTarget.selectionEnd === event.currentTarget.value.length;
 
@@ -948,7 +951,7 @@ function DateSegment({
 	return (
 		<span
 			className={cn(
-				"relative inline-flex items-center justify-center rounded-sm px-[3px] py-px transition-colors select-none",
+				"relative inline-flex items-center justify-center rounded-sm px-0.75 py-px transition-colors select-none",
 				focused ? "bg-primary/15" : "bg-transparent",
 			)}
 		>

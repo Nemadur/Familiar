@@ -1,224 +1,280 @@
-import { useQuery } from "@tanstack/react-query";
 import {
-	createFileRoute,
-	Link,
-	Navigate,
-	notFound,
-	Outlet,
-	redirect,
-	useNavigate,
-	useParams,
-	useLocation,
+    createFileRoute,
+    Link,
+    Navigate,
+    notFound,
+    Outlet,
+    useLocation,
+    useNavigate,
+    useParams,
 } from "@tanstack/react-router";
 import { t } from "i18next";
+
 import { OutlineUser } from "@/components/icons/icons";
 import { EmptyPage } from "@/components/layout/empty-page";
+import { FacehashFavicon } from "@/components/layout/profile/facehash-favicon";
 import { ProfileCommissions } from "@/components/layout/profile/feed/commissions";
 import { ProfilePortfolio } from "@/components/layout/profile/feed/portfolio";
-import { TabContentSkeleton } from "@/components/layout/profile/profile";
-import UserProfileWrapper from "@/components/layout/profile/wrapper";
+import UserProfile, {
+    TabContentSkeleton,
+    UserProfileSkeleton,
+} from "@/components/layout/profile/profile";
 import { Button } from "@/components/ui/button";
 import { useProfileCommissions } from "@/hooks/commissions/use-commissions";
+import { useIsMobile } from "@/hooks/ui/use-mobile";
 import { useProfileContent } from "@/hooks/user/use-profile-content";
 import { userByUsernameQueryOptions } from "@/hooks/user/use-user";
-import { useIsMobile } from "@/hooks/ui/use-mobile";
 import i18n from "@/lib/i18n";
 import { getSeoLinks, seo } from "@/lib/seo";
 
-// TODO: get user avatar png and set it as favicon
-export const Route = createFileRoute("/{-$locale}/_main/user/$username")({
-	loader: async ({ params, context }) => {
-		const user = await context.queryClient.ensureQueryData(
-			userByUsernameQueryOptions(params.username),
-		);
+type ProfileFaviconUser = {
+    avatarPath?: string | null;
+    displayName?: string | null;
+    username?: string | null;
+    userId?: string | null;
+    accentColor?: string | null;
+};
 
-		return {
-			username: params.username,
-			avatarUrl: user?.avatarPath ?? undefined,
-			seo: {
-				title: i18n.t("seo.profile.title", { username: params.username }),
-				description: i18n.t("seo.profile.description", {
-					username: params.username,
-				}),
-			},
-		};
-	},
-	head: ({ loaderData, params }) => {
-		return {
-			meta: seo({
-				title: loaderData?.seo?.title ?? "",
-				description: loaderData?.seo?.description ?? "",
-				pathname: `/${params.username}`,
-				locale: params.locale,
-			}),
-			links: [
-				...getSeoLinks(`/${params.username}`, params.locale),
-				...(loaderData?.avatarUrl
-					? [
-							{
-								rel: "icon" as const,
-								href: loaderData.avatarUrl,
-							},
-						]
-					: []),
-			],
-		};
-	},
-	notFoundComponent: () => <UserNotFoundComponent />,
-	component: RouteComponent,
+function getProfileFaviconUrl(
+    user: ProfileFaviconUser,
+    fallbackUsername: string,
+) {
+    if (user.avatarPath) {
+        return user.avatarPath;
+    }
+
+    const search = new URLSearchParams({
+        name:
+            user.displayName?.trim() ||
+            user.username?.trim() ||
+            user.userId ||
+            fallbackUsername,
+        size: "64",
+        // Change this whenever the generated SVG implementation changes.
+        v: "facehash-4",
+    });
+
+    if (user.accentColor) {
+        search.set("color", user.accentColor);
+    }
+
+    return `/api/avatar?${search.toString()}`;
+}
+
+export const Route = createFileRoute("/{-$locale}/_main/user/$username")({
+    loader: async ({ params, context }) => {
+        const user = await context.queryClient.ensureQueryData(
+            userByUsernameQueryOptions(params.username),
+        );
+
+        if (!user) {
+            throw notFound();
+        }
+
+        const isFacehashFavicon = !user.avatarPath;
+        const faviconUrl = getProfileFaviconUrl(user, params.username);
+
+        return {
+            user,
+            username: params.username,
+            faviconUrl,
+            isFacehashFavicon,
+            seo: {
+                title: i18n.t("seo.profile.title", {
+                    username: params.username,
+                }),
+                description: i18n.t("seo.profile.description", {
+                    username: params.username,
+                }),
+            },
+        };
+    },
+    head: ({ loaderData, params }) => ({
+        meta: seo({
+            title: loaderData?.seo.title ?? "",
+            description: loaderData?.seo.description ?? "",
+            pathname: `/${params.username}`,
+            locale: params.locale,
+        }),
+        links: [
+            ...getSeoLinks(`/${params.username}`, params.locale),
+            ...(loaderData?.faviconUrl
+                ? [
+                    {
+                        rel: "icon" as const,
+                        href: loaderData.faviconUrl,
+                        ...(loaderData.isFacehashFavicon
+                            ? {
+                                type: "image/svg+xml",
+                                sizes: "any",
+                            }
+                            : {}),
+                    },
+                ]
+                : []),
+        ],
+    }),
+    pendingComponent: UserProfileSkeleton,
+    notFoundComponent: UserNotFoundComponent,
+    component: RouteComponent,
 });
 
 function UserNotFoundComponent() {
-	const { username } = Route.useLoaderData();
+    const { username } = Route.useParams();
 
-	// TODO Empty Page component
-	return (
-		<div className="flex min-h-screen flex-1 flex-col items-center justify-center p-8 text-center">
-			<EmptyPage
-				icon={OutlineUser}
-				title={t(
-					"states.empty.user_not_found",
-					`User "${username}" do not found`,
-				)}
-				description={t("states.empty.user_not_found_description")}
-			>
-				<Button asChild size={"2xl"}>
-					<Link to="/{-$locale}">{t("states.empty.back_to_home")}</Link>
-				</Button>
-			</EmptyPage>
-		</div>
-	);
+    return (
+        <div className="flex min-h-screen flex-1 flex-col items-center justify-center p-8 text-center">
+            <EmptyPage
+                icon={OutlineUser}
+                title={t(
+                    "states.empty.user_not_found",
+                    `User "${username}" was not found`,
+                )}
+                description={t("states.empty.user_not_found_description")}
+            >
+                <Button asChild size="2xl">
+                    <Link to="/{-$locale}">
+                        {t("states.empty.back_to_home")}
+                    </Link>
+                </Button>
+            </EmptyPage>
+        </div>
+    );
 }
 
-export function DefaultProfileTabContent({ username }: { username: string }) {
-	const {
-		data: artist,
-		isPending: isArtistPending,
-		isError: isArtistError,
-		error: artistError,
-	} = useQuery(userByUsernameQueryOptions(username));
+export function DefaultProfileTabContent({
+    username: _username,
+}: {
+    username: string;
+}) {
+    const { user: artist } = Route.useLoaderData();
+    const artistId = artist.userId ?? "";
+    const { commissions, isPending: isCommissionsPending } =
+        useProfileCommissions(artistId, 0, 24);
 
-	const artistId = artist?.userId ?? "";
+    if (isCommissionsPending) {
+        return <TabContentSkeleton tab="commissions" />;
+    }
 
-	const {
-		commissions,
-		isPending: isCommissionsPending,
-		isError: isCommissionsError,
-		error: commissionsError,
-	} = useProfileCommissions(artistId, 0, 24);
-
-	if (isArtistPending || (artistId && isCommissionsPending)) {
-		return <TabContentSkeleton tab="commissions" />;
-	}
-
-	if (isArtistError || !artist) {
-		throw notFound();
-	}
-
-	return <ProfileCommissions artist={artist} commissions={commissions} />;
+    return <ProfileCommissions artist={artist} commissions={commissions} />;
 }
 
-export function DefaultPortfolioTabContent({ username }: { username: string }) {
-	const {
-		data: artist,
-		isPending: isArtistPending,
-		isError: isArtistError,
-	} = useQuery(userByUsernameQueryOptions(username));
+export function DefaultPortfolioTabContent({
+    username,
+}: {
+    username: string;
+}) {
+    const { user: artist } = Route.useLoaderData();
+    const artistId = artist.userId ?? "";
+    const { data: content, isPending: isContentPending } = useProfileContent(
+        username,
+        artistId,
+        "portfolio",
+    );
 
-	const artistId = artist?.userId ?? "";
+    if (isContentPending) {
+        return <TabContentSkeleton tab="portfolio" />;
+    }
 
-	const { data: content, isPending: isContentPending } = useProfileContent(
-		username,
-		artistId,
-		"portfolio",
-	);
-
-	if (isArtistPending || (artistId && isContentPending)) {
-		return <TabContentSkeleton tab="portfolio" />;
-	}
-
-	if (isArtistError || !artist) {
-		throw notFound();
-	}
-
-	return (
-		<ProfilePortfolio
-			posts={content?.posts || []}
-			folders={content?.folders || []}
-			username={username}
-		/>
-	);
+    return (
+        <ProfilePortfolio
+            posts={content?.posts ?? []}
+            folders={content?.folders ?? []}
+            username={username}
+        />
+    );
 }
 
-// TODO: middleware redirect user to portfolio tab if no tab is provided
-// FIXME: when user is not logged in and open portfolio detailed page, there's no creator info
-
+// FIXME: when user is not logged in and opens a portfolio detail page,
+// there is no creator information.
 function RouteComponent() {
-	const { username } = Route.useLoaderData();
-	const navigate = useNavigate();
-	const location = useLocation();
-	const isMobile = useIsMobile();
+    const { user, username } = Route.useLoaderData();
 
-	const params = useParams({ strict: false }) as {
-		locale?: string;
-		tab?: string;
-		commissionId?: string;
-		commisionId?: string;
-	};
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isMobile = useIsMobile();
+    const params = useParams({ strict: false }) as {
+        locale?: string;
+        tab?: string;
+        commissionId?: string;
+        commisionId?: string;
+    };
 
-	const routeTab = typeof params.tab === "string" ? params.tab : undefined;
+    const routeTab = typeof params.tab === "string" ? params.tab : undefined;
+    const fallbackFavicon = !user.avatarPath ? (
+        <FacehashFavicon
+            name={
+                user.displayName?.trim() ||
+                user.username?.trim() ||
+                user.userId ||
+                username
+            }
+            backgroundColor={user.accentColor}
+        />
+    ) : null;
 
-	// /user/username -> /user/username/portfolio
-	if (!routeTab) {
-		return (
-			<Navigate
-				to="/{-$locale}/user/$username/$tab"
-				params={{
-					locale: params.locale,
-					username,
-					tab: "portfolio",
-				}}
-				replace
-			/>
-		);
-	}
+    if (!routeTab) {
+        return (
+            <>
+                {fallbackFavicon}
+                <Navigate
+                    to="/{-$locale}/user/$username/$tab"
+                    params={{
+                        locale: params.locale,
+                        username,
+                        tab: "portfolio",
+                    }}
+                    replace
+                />
+            </>
+        );
+    }
 
-	const activeTab = routeTab;
+    const activeTab = routeTab;
+    const isModalOpen = Boolean(params.commissionId || params.commisionId);
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const isPostRoute =
+        activeTab === "portfolio" &&
+        pathParts[pathParts.length - 2] === "portfolio";
+    const isFolderPostRoute =
+        activeTab === "portfolio" &&
+        pathParts[pathParts.length - 3] === "folder";
+    const isAnyPostRoute = isPostRoute || isFolderPostRoute;
+    const isModal =
+        (location.state as { isModal?: boolean } | undefined)?.isModal === true;
 
-	const isModalOpen = Boolean(params.commissionId || params.commisionId);
+    // Direct visits and mobile post pages use the dedicated route layout.
+    if (isAnyPostRoute && (!isModal || isMobile)) {
+        return (
+            <>
+                {fallbackFavicon}
+                <Outlet />
+            </>
+        );
+    }
 
-	// Check if this is a direct visit to a post page
-	const pathParts = location.pathname.split("/").filter(Boolean);
-	const isPostRoute = activeTab === "portfolio" && pathParts[pathParts.length - 2] === "portfolio";
-	const isFolderPostRoute = activeTab === "portfolio" && pathParts[pathParts.length - 3] === "folder";
-	const isAnyPostRoute = isPostRoute || isFolderPostRoute;
+    return (
+        <>
+            {fallbackFavicon}
+            <UserProfile
+                user={user}
+                activeTab={activeTab}
+                onTabChange={(tab) => {
+                    if (tab === activeTab) return;
 
-	const isModal = (location.state as any)?.isModal === true;
-
-	// If it's a direct visit to a post (not a modal click) or we're on mobile, render only the outlet
-	if (isAnyPostRoute && (!isModal || isMobile)) {
-		return <Outlet />;
-	}
-
-	return (
-		<UserProfileWrapper
-			username={username}
-			activeTab={activeTab}
-			onTabChange={(tab) => {
-				if (tab === activeTab) return;
-
-				navigate({
-					to: "/{-$locale}/user/$username/$tab",
-					params: {
-						locale: params.locale,
-						username,
-						tab,
-					},
-					replace: isModalOpen,
-				});
-			}}
-		>
-			<Outlet />
-		</UserProfileWrapper>
-	);
+                    void navigate({
+                        to: "/{-$locale}/user/$username/$tab",
+                        params: {
+                            locale: params.locale,
+                            username,
+                            tab,
+                        },
+                        replace: isModalOpen,
+                    });
+                }}
+            >
+                <Outlet />
+            </UserProfile>
+        </>
+    );
 }

@@ -38,7 +38,7 @@ export function FolderCard({
                     className="absolute inset-x-0 bottom-0 h-[92%] rounded-2xl rounded-tl-md bg-input"
                 >
                     <div className="absolute -top-2 left-0 h-5 w-[40%] rounded-t-xl bg-input" />
-                    <div className="absolute -top-px left-px h-3 w-[calc(40%_-_2px)] bg-input" />
+                    <div className="absolute -top-px left-px h-3 w-[calc(40%-2px)] bg-input" />
                 </div>
 
                 <div className="absolute inset-x-0 bottom-0 h-[86%] overflow-hidden rounded-2xl bg-muted">

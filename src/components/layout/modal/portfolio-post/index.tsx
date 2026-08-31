@@ -1,6 +1,6 @@
 import { Typography } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Edit2, Flag, MoreHorizontal, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Edit2, Flag, MoreHorizontal, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -227,23 +227,13 @@ function PostHeader({ controller }: { controller: Controller }) {
 
 	return (
 		<div className="flex min-w-0 items-center gap-3">
-			<UserAvatar size="default" user={profileUser} />
-
-			<div className="min-w-0">
-				<p className="truncate text-sm font-semibold">
-					{profileUser?.username ?? ""}
-				</p>
-
-				<p className="truncate text-xs text-muted-foreground">
-					{t("components.portfolio.post.portfolio", "Portfolio post")}
-				</p>
-			</div>
+			<User size="default" user={profileUser} showUsername={false} />
 		</div>
 	);
 }
 
 function PostMoreMenuItems({ controller }: { controller: Controller }) {
-	const { t, canManagePost, setDeleteDialogOpen } = controller;
+	const { t, canManagePost, setDeleteDialogOpen, post, profileUser } = controller;
 
 	if (canManagePost) {
 		return (
@@ -278,7 +268,29 @@ function PostMoreMenuItems({ controller }: { controller: Controller }) {
 	}
 
 	return (
+		<>
 		<DropdownMenuItem
+			onSelect={() => {
+				navigator.clipboard.writeText(
+					`${window.location.origin}/${profileUser?.username}/portfolio/${post?.id}`,
+				);
+				toast.success(
+					t(
+						"components.portfolio.post.manage.copy_link_success",
+						"Link copied to clipboard",
+					),
+				);
+				// 		"Report feature coming soon!",
+				// 	),
+				// );
+			}}
+		>
+			<Copy className="size-4" />
+			{t("components.portfolio.post.manage.copy_link", "Copy link")}
+		</DropdownMenuItem>
+		<DropdownMenuSeparator />
+		<DropdownMenuItem
+			variant={"destructive"}
 			onSelect={() => {
 				toast.info(
 					t(
@@ -291,6 +303,7 @@ function PostMoreMenuItems({ controller }: { controller: Controller }) {
 			<Flag className="size-4" />
 			{t("components.portfolio.post.manage.report", "Report post")}
 		</DropdownMenuItem>
+		</>
 	);
 }
 

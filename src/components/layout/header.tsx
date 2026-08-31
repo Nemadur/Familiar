@@ -1,5 +1,4 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Skeleton } from "boneyard-js/react";
 import { ShoppingCart } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,11 +30,21 @@ import { BasketDropdown } from "./basket-dropdown";
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import CurrencySelect from "./select/currency";
+import { Skeleton } from "../ui/skeleton";
 
-function ClientOnly({ children }: { children: React.ReactNode }) {
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
-	return mounted ? children : null;
+function HeaderUserSkeleton() {
+	return (
+		<div
+			aria-hidden="true"
+			className="flex items-center gap-2"
+		>
+			{/* Possible dashboard button */}
+			<Skeleton className="hidden h-10 w-24 rounded-full lg:block" />
+
+			{/* User avatar */}
+			<Skeleton className="size-10 shrink-0 rounded-full" />
+		</div>
+	);
 }
 
 export default function Header() {
@@ -73,36 +82,36 @@ export default function Header() {
 								<OutlineChat />
 							</Link>
 						</Button>
+						{isPending ? (
+							<HeaderUserSkeleton />
+						) : user ? (
+							<>
+								{user.roles?.includes(TRoles.Artist) && (
+									<Button size="xl" asChild>
+										<Link to={localizePath("/dashboard", i18n.language)}>
+											{t("header.artist-dashboard", "Dashboard")}
+										</Link>
+									</Button>
+								)}
 
-						<ClientOnly>
-							{!isPending && user?.roles?.includes(TRoles.Artist) && (
-								<Button size={"xl"} asChild>
-									<Link to={localizePath("/dashboard", i18n.language)}>
-										{t("header.artist-dashboard", "Dashboard")}
+								<User user={user} showInfo={false} isDropdown />
+							</>
+						) : (
+							<div className="hidden items-center gap-2 lg:flex">
+								<Button asChild variant="secondary" size="xl">
+									<Link to={localizePath("/auth/login", i18n.language) as any}>
+										{t("auth.login.cta")}
 									</Link>
 								</Button>
-							)}
-						</ClientOnly>
 
-						{/* TODO: add language and theme to mobile sidebar */}
-						<ClientOnly>
-							{!isPending && user ? (
-								<User user={user} showInfo={false} isDropdown />
-							) : (
-								<div className="hidden lg:flex items-center gap-2">
-									<Button asChild variant={"secondary"} size={"xl"}>
-										<Link to={localizePath("/auth/login", i18n.language)}>
-											{t("auth.login.cta")}
-										</Link>
-									</Button>
-									<Button asChild size={"xl"}>
-										<Link to={localizePath("/auth/register", i18n.language)}>
-											{t("auth.register.cta")}
-										</Link>
-									</Button>
-								</div>
-							)}
-						</ClientOnly>
+								<Button asChild size="xl">
+									<Link to={localizePath("/auth/register", i18n.language) as any}>
+										{t("auth.register.cta")}
+									</Link>
+								</Button>
+							</div>
+						)}
+
 					</NavWrapper>
 				</div>
 			</div>
