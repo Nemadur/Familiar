@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import useFormValidation from "@/hooks/form/use-form-validation";
+import { normalizeInviteKey } from "@/lib/invite-key";
 import { useAuth } from "@/providers/auth";
 import { register } from "@/schemas/auth/register";
 import type { RegisterFormProps } from "@/types/auth/form/register";
@@ -40,21 +41,20 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 	const { register: authRegister } = useAuth();
 
 	const emailRef = useRef<HTMLInputElement | null>(null);
-	const displayNameRef = useRef<HTMLInputElement | null>(null);
 
 	const form = useFormValidation({
 		schema: register,
 		initialData: {
 			email: "",
 			password: "",
-			display_name: "",
-			username: "",
 			account_type: "client" as AccountType,
 			invite_key: "",
-			avatar_url: "",
-			cover_url: "",
+			display_name: "",
+			username: "",
 			bio: "",
-			socials: [],
+			socials: {},
+			avatar: null,
+			cover: null,
 		},
 	});
 
@@ -65,13 +65,13 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 	const watchedPassword = watch("password");
 	const watchedInviteKey = watch("invite_key");
 
-	const showInviteKey = watchedAccountType === "artist";
+	const showInviteKey = true;
 
 	const isStep0Valid =
 		Boolean(watchedAccountType) &&
 		Boolean(watchedEmail?.trim()) &&
 		Boolean(watchedPassword?.trim()) &&
-		(!showInviteKey || Boolean(watchedInviteKey?.trim()));
+		Boolean(watchedInviteKey?.trim());
 
 	const handleAccountTypeChange = useCallback(
 		(accountType: AccountType) => {
@@ -79,13 +79,6 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 				shouldDirty: true,
 				shouldValidate: true,
 			});
-
-			if (accountType === "client") {
-				setValue("invite_key", "", {
-					shouldDirty: true,
-					shouldValidate: true,
-				});
-			}
 		},
 		[setValue],
 	);
@@ -94,16 +87,13 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 		async (currentStep: Step) => {
 			switch (currentStep) {
 				case 0:
-					return trigger(
-						showInviteKey
-							? ["account_type", "email", "password", "invite_key"]
-							: ["account_type", "email", "password"],
-						{ shouldFocus: true },
-					);
+					return trigger(["account_type", "email", "password", "invite_key"], {
+						shouldFocus: true,
+					});
 
 				case 1:
 					return trigger(
-						["display_name", "username", "avatar_url", "cover_url", "bio"],
+						["display_name", "username", "bio", "avatar", "cover"],
 						{ shouldFocus: true },
 					);
 
@@ -116,7 +106,7 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 					return true;
 			}
 		},
-		[showInviteKey, trigger],
+		[trigger],
 	);
 
 	const goNext = useCallback(async () => {
@@ -154,19 +144,16 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 			return;
 		}
 
-		setStep((currentStep): Step => {
-			if (currentStep === 2) {
-				return 1;
-			}
-
-			return 0;
-		});
+		setStep((currentStep) => Math.max(currentStep - 1, 0) as Step);
 	}, [isChangingStep, isPending]);
 
 	const onFinalSubmit = useCallback(
 		async (data: RegisterData) => {
 			try {
-				await authRegister(data);
+				await authRegister({
+					...data,
+					invite_key: normalizeInviteKey(data.invite_key) ?? "",
+				});
 				onSuccess?.();
 			} catch {
 				// Error is handled by the auth provider.
@@ -280,9 +267,7 @@ function RegisterForm({ onSuccess }: RegisterFormProps) {
 									/>
 								)}
 
-								{step === 1 && (
-									<RegisterStepProfile displayNameRef={displayNameRef} />
-								)}
+								{step === 1 && <RegisterStepProfile />}
 
 								{step === 2 && <RegisterStepSocials control={control} />}
 							</div>

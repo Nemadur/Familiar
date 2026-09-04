@@ -71,7 +71,31 @@ const pl = {
 			description: "Wprowadź swoje dane poniżej, aby utworzyć konto",
 			already_have_account: "Posiadasz już konto?",
 			success: "Konto utworzone pomyślnie",
+			confirm_email:
+				"Konto zostało utworzone. Sprawdź skrzynkę i potwierdź adres e-mail.",
+			submit: "Zarejestruj",
 			pending: "Tworzenie konta...",
+			steps: {
+				account: "Konto",
+				profile: "Profil",
+				socials: "Linki",
+			},
+			profile: {
+				title: "Dane profilu",
+				description: "Wybierz, jak będzie wyglądał Twój publiczny profil.",
+			},
+			images: {
+				title: "Zdjęcia profilowe",
+				description:
+					"Dodaj awatar i zdjęcie w tle teraz albo pomiń ten krok i dodaj je później.",
+				cover_preview: "Podgląd zdjęcia w tle",
+				avatar_preview: "Podgląd awatara",
+				no_cover: "Brak zdjęcia w tle",
+				change_cover: "Wybierz zdjęcie w tle",
+				remove_cover: "Usuń zdjęcie w tle",
+				choose_avatar: "Wybierz awatar",
+				remove_avatar: "Usuń awatar",
+			},
 		},
 		forgot: {
 			cta: "Zapomniałeś hasła?",
@@ -101,6 +125,19 @@ const pl = {
 			label: "Nazwa Użytkownika",
 			placeholder: "nazwa_uzytkownika",
 		},
+		bio: {
+			label: "Biografia",
+			placeholder: "Napisz kilka słów o sobie...",
+		},
+		socials: {
+			add_label: "Dodaj link do profilu",
+			select_placeholder: "Wybierz platformę",
+			add: "Dodaj",
+			description:
+				"Dodaj maksymalnie pięć linków obsługiwanych podczas rejestracji.",
+			empty: "Nie dodano jeszcze żadnych linków.",
+			remove: "Usuń link do profilu",
+		},
 		password: {
 			label: "Hasło",
 			placeholder: "Haslo",
@@ -111,6 +148,15 @@ const pl = {
 		errors: {
 			rate_limit: "Zbyt wiele prób. Spróbuj ponownie później.",
 			invalid_credentials: "Nieprawidłowy email lub hasło",
+			invalid_registration: "Sprawdź dane rejestracyjne i kod zaproszenia.",
+			email_registered:
+				"Konto z tym adresem e-mail lub nazwą użytkownika już istnieje.",
+			unsupported_registration_image:
+				"Format awatara lub zdjęcia w tle nie jest obsługiwany.",
+			registration_provider_failed:
+				"Dostawca uwierzytelniania nie mógł utworzyć konta.",
+			registration_service_unavailable:
+				"Rejestracja jest chwilowo niedostępna. Spróbuj ponownie za moment.",
 			registration_failed: "Rejestracja nie powiodła się: {{error}}",
 			login_failed: "Logowanie nie powiodło się: {{error}}",
 			logout_failed: "Wylogowanie nie powiodło się: {{error}}",

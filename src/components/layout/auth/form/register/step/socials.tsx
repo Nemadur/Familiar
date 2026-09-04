@@ -6,7 +6,7 @@ import {
 	useWatch,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-
+import type { RegistrationSocialPlatform } from "@/api/auth/auth-types";
 import { OutlineTrash } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +35,11 @@ interface RegisterStepSocialsProps {
 	control: Control<RegisterData>;
 }
 
-const MAX_SOCIALS = 5;
+type SocialPlatformOption =
+	| Exclude<RegistrationSocialPlatform, "website_1" | "website_2">
+	| "website";
+
+const WEBSITE_PLATFORMS = ["website_1", "website_2"] as const;
 
 const SOCIAL_PLATFORMS = {
 	twitter: {
@@ -48,126 +52,110 @@ const SOCIAL_PLATFORMS = {
 		prefix: "instagram.com/",
 		placeholder: "username",
 	},
-	discord: {
-		label: "Discord",
-		placeholder: "username",
-	},
-	tiktok: {
-		label: "TikTok",
-		prefix: "tiktok.com/@",
-		placeholder: "username",
-	},
-	youtube: {
-		label: "YouTube",
-		prefix: "youtube.com/@",
-		placeholder: "channel",
-	},
-	twitch: {
-		label: "Twitch",
-		prefix: "twitch.tv/",
-		placeholder: "username",
-	},
 	facebook: {
 		label: "Facebook",
 		prefix: "facebook.com/",
 		placeholder: "username",
 	},
-	linkedin: {
-		label: "LinkedIn",
-		prefix: "linkedin.com/in/",
-		placeholder: "username",
-	},
-	github: {
-		label: "GitHub",
-		prefix: "github.com/",
-		placeholder: "username",
-	},
-	behance: {
-		label: "Behance",
-		prefix: "behance.net/",
-		placeholder: "username",
-	},
-	dribbble: {
-		label: "Dribbble",
-		prefix: "dribbble.com/",
-		placeholder: "username",
-	},
-	pinterest: {
-		label: "Pinterest",
-		prefix: "pinterest.com/",
-		placeholder: "username",
-	},
-	website: {
+	website_1: {
 		label: "Website",
 		prefix: "https://",
 		placeholder: "example.com",
 	},
-} as const;
-
-type SocialPlatform = keyof typeof SOCIAL_PLATFORMS;
-type SocialsValue = Partial<Record<SocialPlatform, string>>;
-
-const SOCIAL_PLATFORM_ENTRIES = Object.entries(SOCIAL_PLATFORMS) as Array<
-	[SocialPlatform, (typeof SOCIAL_PLATFORMS)[SocialPlatform]]
+	website_2: {
+		label: "Website",
+		prefix: "https://",
+		placeholder: "example.com",
+	},
+} satisfies Record<
+	RegistrationSocialPlatform,
+	{ label: string; prefix: string; placeholder: string }
 >;
+
+const SOCIAL_PLATFORM_OPTIONS = [
+	["twitter", SOCIAL_PLATFORMS.twitter],
+	["instagram", SOCIAL_PLATFORMS.instagram],
+	["facebook", SOCIAL_PLATFORMS.facebook],
+	["website", SOCIAL_PLATFORMS.website_1],
+] as const satisfies ReadonlyArray<
+	readonly [
+		SocialPlatformOption,
+		(typeof SOCIAL_PLATFORMS)[RegistrationSocialPlatform],
+	]
+>;
+
+function normalizeSocialValue(
+	value: string,
+	platform: RegistrationSocialPlatform,
+) {
+	let normalizedValue = value.trimStart().replace(/^https?:\/\/(www\.)?/i, "");
+
+	if (platform === "website_1" || platform === "website_2") {
+		return normalizedValue;
+	}
+
+	const prefix = SOCIAL_PLATFORMS[platform].prefix;
+	if (normalizedValue.toLowerCase().startsWith(prefix.toLowerCase())) {
+		normalizedValue = normalizedValue.slice(prefix.length);
+	}
+
+	return normalizedValue.replace(/^@/, "");
+}
 
 export function RegisterStepSocials({ control }: RegisterStepSocialsProps) {
 	const { t } = useTranslation();
 	const { setValue } = useFormContext<RegisterData>();
-
-	const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform | "">(
-		"",
-	);
-
-	const watchedSocials = useWatch({
-		control,
-		name: "socials",
-	});
-
-	const socials = (watchedSocials ?? {}) as SocialsValue;
+	const [selectedPlatform, setSelectedPlatform] = useState<
+		SocialPlatformOption | ""
+	>("");
+	const watchedSocials = useWatch({ control, name: "socials" });
+	const socials = watchedSocials ?? {};
 	const selectedSocials = Object.entries(socials) as Array<
-		[SocialPlatform, string]
+		[RegistrationSocialPlatform, string]
 	>;
-
 	const availablePlatforms = useMemo(
 		() =>
-			SOCIAL_PLATFORM_ENTRIES.filter(
-				([platform]) =>
-					!Object.prototype.hasOwnProperty.call(socials, platform),
-			),
+			SOCIAL_PLATFORM_OPTIONS.filter(([platform]) => {
+				if (platform === "website") {
+					return WEBSITE_PLATFORMS.some(
+						(websitePlatform) => !Object.hasOwn(socials, websitePlatform),
+					);
+				}
+
+				return !Object.hasOwn(socials, platform);
+			}),
 		[socials],
 	);
 
-	const hasReachedLimit = selectedSocials.length >= MAX_SOCIALS;
-
 	const addSocial = () => {
-		if (
-			!selectedPlatform ||
-			hasReachedLimit ||
-			Object.hasOwn(socials, selectedPlatform)
-		) {
+		if (!selectedPlatform) {
+			return;
+		}
+
+		const platform =
+			selectedPlatform === "website"
+				? WEBSITE_PLATFORMS.find(
+					(websitePlatform) => !Object.hasOwn(socials, websitePlatform),
+				)
+				: selectedPlatform;
+
+		if (!platform || Object.hasOwn(socials, platform)) {
 			return;
 		}
 
 		setValue(
 			"socials",
-			{
-				...socials,
-				[selectedPlatform]: "",
-			},
+			{ ...socials, [platform]: "" },
 			{
 				shouldDirty: true,
 				shouldTouch: true,
-				shouldValidate: false,
 			},
 		);
-
 		setSelectedPlatform("");
 	};
 
-	const removeSocial = (platform: SocialPlatform) => {
+	const removeSocial = (platform: RegistrationSocialPlatform) => {
 		const nextSocials = { ...socials };
-
 		delete nextSocials[platform];
 
 		setValue("socials", nextSocials, {
@@ -180,25 +168,23 @@ export function RegisterStepSocials({ control }: RegisterStepSocialsProps) {
 	return (
 		<div className="space-y-5">
 			<div className="space-y-2">
-				<FormLabel>{t("auth.socials.add_label", "Add social media")}</FormLabel>
-
+				<FormLabel>{t("auth.socials.add_label", "Add profile link")}</FormLabel>
 				<div className="flex items-center gap-2">
 					<Select
 						value={selectedPlatform}
 						onValueChange={(value) =>
-							setSelectedPlatform(value as SocialPlatform)
+							setSelectedPlatform(value as SocialPlatformOption)
 						}
-						disabled={hasReachedLimit || availablePlatforms.length === 0}
+						disabled={availablePlatforms.length === 0}
 					>
 						<SelectTrigger className="min-w-0 flex-1">
 							<SelectValue
 								placeholder={t(
 									"auth.socials.select_placeholder",
-									"Select social media",
+									"Select a platform",
 								)}
 							/>
 						</SelectTrigger>
-
 						<SelectContent>
 							{availablePlatforms.map(([platform, config]) => (
 								<SelectItem key={platform} value={platform}>
@@ -210,39 +196,32 @@ export function RegisterStepSocials({ control }: RegisterStepSocialsProps) {
 
 					<Button
 						type="button"
-						size={"xl"}
+						size="xl"
 						variant="secondary"
 						onClick={addSocial}
-						disabled={!selectedPlatform || hasReachedLimit}
+						disabled={!selectedPlatform}
 					>
 						{t("auth.socials.add", "Add")}
 					</Button>
 				</div>
 
-				<div className="flex items-center justify-between text-xs text-muted-foreground">
-					<span>
-						{t(
-							"auth.socials.description",
-							"Add usernames without the complete URL.",
-						)}
-					</span>
-
-					<span>
-						{selectedSocials.length}/{MAX_SOCIALS}
-					</span>
-				</div>
+				<p className="text-xs text-muted-foreground">
+					{t(
+						"auth.socials.description",
+						"Add up to five links supported by the registration API.",
+					)}
+				</p>
 			</div>
 
-			{selectedSocials.length === 0 && (
+			{selectedSocials.length === 0 ? (
 				<div className="rounded-2xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-					{t("auth.socials.empty", "No social media added yet.")}
+					{t("auth.socials.empty", "No profile links added yet.")}
 				</div>
-			)}
+			) : null}
 
 			<div className="space-y-4">
 				{selectedSocials.map(([platform]) => {
 					const config = SOCIAL_PLATFORMS[platform];
-
 					const fieldName = `socials.${platform}` as FieldPath<RegisterData>;
 
 					return (
@@ -254,14 +233,13 @@ export function RegisterStepSocials({ control }: RegisterStepSocialsProps) {
 								<FormItem>
 									<div className="flex items-center justify-between gap-3">
 										<FormLabel>{config.label}</FormLabel>
-
 										<Button
 											type="button"
-											variant={"destructive_ghost"}
+											variant="destructive_ghost"
 											size="icon"
 											aria-label={t(
 												"auth.socials.remove",
-												"Remove social media",
+												"Remove profile link",
 											)}
 											onClick={() => removeSocial(platform)}
 										>
@@ -271,12 +249,9 @@ export function RegisterStepSocials({ control }: RegisterStepSocialsProps) {
 
 									<FormControl>
 										<InputGroup>
-											{"prefix" in config && config.prefix && (
-												<InputGroupAddon>
-													<InputGroupText>{config.prefix}</InputGroupText>
-												</InputGroupAddon>
-											)}
-
+											<InputGroupAddon>
+												<InputGroupText>{config.prefix}</InputGroupText>
+											</InputGroupAddon>
 											<InputGroupInput
 												placeholder={config.placeholder}
 												autoComplete="off"
@@ -284,19 +259,14 @@ export function RegisterStepSocials({ control }: RegisterStepSocialsProps) {
 												value={
 													typeof field.value === "string" ? field.value : ""
 												}
-												onChange={(event) => {
-													let value = event.target.value;
-
-													if (platform !== "website") {
-														value = value.replace(/^@/, "");
-													}
-
-													field.onChange(value);
-												}}
+												onChange={(event) =>
+													field.onChange(
+														normalizeSocialValue(event.target.value, platform),
+													)
+												}
 											/>
 										</InputGroup>
 									</FormControl>
-
 									<FormMessage />
 								</FormItem>
 							)}

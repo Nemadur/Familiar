@@ -8,7 +8,25 @@ type ApiParams =
 
 type ApiFetchInit = RequestInit & {
 	params?: ApiParams;
+	withAuth?: boolean;
 };
+
+export class ApiFetchError extends Error {
+	readonly status: number;
+	readonly statusText: string;
+	readonly body: string;
+
+	constructor(response: Response, body: string) {
+		super(
+			`Request failed: ${response.status} ${response.statusText}${body ? ` - ${body}` : ""
+			}`,
+		);
+		this.name = "ApiFetchError";
+		this.status = response.status;
+		this.statusText = response.statusText;
+		this.body = body;
+	}
+}
 
 export function getApiBaseUrl() {
 	const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
@@ -44,7 +62,6 @@ function appendParams(url: string, params?: ApiParams) {
 						searchParams.append(key, String(item));
 					}
 				});
-
 				return;
 			}
 
@@ -61,12 +78,18 @@ function appendParams(url: string, params?: ApiParams) {
 	return `${url}${separator}${queryString}`;
 }
 
+function isFormDataBody(
+	body: BodyInit | null | undefined,
+): body is FormData {
+	return typeof FormData !== "undefined" && body instanceof FormData;
+}
+
 function shouldSetJsonContentType(body: BodyInit | null | undefined) {
-	if (!body) {
+	if (body === undefined || body === null) {
 		return false;
 	}
 
-	if (typeof FormData !== "undefined" && body instanceof FormData) {
+	if (isFormDataBody(body)) {
 		return false;
 	}
 
@@ -85,11 +108,18 @@ function shouldSetJsonContentType(body: BodyInit | null | undefined) {
 		return false;
 	}
 
-	if (typeof ReadableStream !== "undefined" && body instanceof ReadableStream) {
+	if (
+		typeof ReadableStream !== "undefined" &&
+		body instanceof ReadableStream
+	) {
 		return false;
 	}
 
 	return true;
+}
+
+function isJsonContentType(contentType: string) {
+	return contentType.includes("application/json") || contentType.includes("+json");
 }
 
 async function readErrorBody(response: Response, isJson: boolean) {
@@ -108,22 +138,26 @@ export async function apiFetch<T = unknown>(
 	path: string,
 	init: ApiFetchInit = {},
 ): Promise<T> {
-	const { params, ...fetchInit } = init;
-
-	const accessToken = await getAccessToken();
-
+	const { params, withAuth = true, ...fetchInit } = init;
+	const accessToken = withAuth ? await getAccessToken() : null;
 	const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 	const baseUrl = getApiBaseUrl();
 	const rawUrl = baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
 	const url = appendParams(rawUrl, params);
-
 	const headers = new Headers(fetchInit.headers);
+	const isFormData = isFormDataBody(fetchInit.body);
+
+	if (isFormData) {
+		// The browser must generate the multipart boundary itself.
+		headers.delete("Content-Type");
+	}
 
 	if (!headers.has("Accept")) {
 		headers.set("Accept", "application/json");
 	}
 
 	if (
+		!isFormData &&
 		shouldSetJsonContentType(fetchInit.body) &&
 		!headers.has("Content-Type")
 	) {
@@ -134,13 +168,27 @@ export async function apiFetch<T = unknown>(
 		headers.set("Authorization", `Bearer ${accessToken}`);
 	}
 
-	const response = await fetch(url, {
-		...fetchInit,
-		headers,
-	});
+	let response: Response;
+
+	try {
+		response = await fetch(url, {
+			...fetchInit,
+			headers,
+		});
+	} catch (error) {
+		console.error("apiFetch network request failed", {
+			url,
+			origin:
+				typeof window === "undefined" ? undefined : window.location.origin,
+			hasToken: Boolean(accessToken),
+			isFormData,
+			error,
+		});
+		throw error;
+	}
 
 	const contentType = response.headers.get("content-type") ?? "";
-	const isJson = contentType.includes("application/json");
+	const isJson = isJsonContentType(contentType);
 
 	if (!response.ok) {
 		const bodyText = await readErrorBody(response, isJson);
@@ -154,11 +202,7 @@ export async function apiFetch<T = unknown>(
 			body: bodyText,
 		});
 
-		throw new Error(
-			`Request failed: ${response.status} ${response.statusText}${
-				bodyText ? ` - ${bodyText}` : ""
-			}`,
-		);
+		throw new ApiFetchError(response, bodyText);
 	}
 
 	if (response.status === 204 || response.status === 205) {

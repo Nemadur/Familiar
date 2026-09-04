@@ -32,8 +32,8 @@ const inputGroupVariants = cva(
 );
 
 export interface InputGroupProps
-	extends React.ComponentProps<"fieldset">,
-	VariantProps<typeof inputGroupVariants> { }
+	extends React.ComponentProps<"div">,
+		VariantProps<typeof inputGroupVariants> {}
 
 function assignRef<T>(targetRef: React.Ref<T> | undefined, value: T | null) {
 	if (!targetRef) return;
@@ -61,7 +61,7 @@ function useMergedRef<T>(
 
 function InputGroup({ className, variant, ...props }: InputGroupProps) {
 	return (
-		<fieldset
+		<div
 			data-slot="input-group"
 			data-variant={variant || "default"}
 			className={cn(
@@ -206,6 +206,7 @@ function InputGroupInput({
 			data-slot="input-group-control"
 			className={cn(
 				"peer flex-1 rounded-none border-0 bg-transparent text-primary shadow-none transition-colors placeholder:text-muted-foreground focus-visible:ring-0 dark:bg-transparent",
+				"group-has-[[data-slot=input-group-addon][data-align=inline-start]_[data-slot=input-group-text]]/input-group:pl-1",
 				"aria-invalid:text-destructive aria-invalid:caret-destructive aria-invalid:placeholder:text-destructive/60",
 				"group-data-[variant=floating]/input-group:h-10 group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1",
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
@@ -228,6 +229,7 @@ function InputGroupTextarea({
 			data-slot="input-group-control"
 			className={cn(
 				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive resize-none py-2",
+				"group-has-[[data-slot=input-group-addon][data-align=inline-start]_[data-slot=input-group-text]]/input-group:pl-0",
 				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1",
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
 				"aria-invalid:text-destructive aria-invalid:caret-destructive aria-invalid:placeholder:text-destructive/60",
@@ -798,7 +800,7 @@ function useDateInputController({
 						event.currentTarget.selectionEnd === 0);
 				const isWholeSegmentSelected =
 					event.currentTarget.selectionStart !==
-					event.currentTarget.selectionEnd &&
+						event.currentTarget.selectionEnd &&
 					event.currentTarget.selectionStart === 0 &&
 					event.currentTarget.selectionEnd === event.currentTarget.value.length;
 
