@@ -1,5 +1,4 @@
-import { useRef } from "react";
-import type { Control } from "react-hook-form";
+import { useEffect, useId, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,7 +7,6 @@ import {
 	OutlineTrash,
 	OutlineUser,
 } from "@/components/icons/icons";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	FormControl,
@@ -21,146 +19,228 @@ import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
+	InputGroupTextArea,
 } from "@/components/ui/input-group";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { RegisterData } from "@/types/auth/schema/register";
 
-interface RegisterStepIdentityProps {
-	control: Control<RegisterData>;
-	displayNameRef: React.RefObject<HTMLInputElement | null>;
+const ACCEPTED_IMAGE_TYPES =
+	"image/jpeg,image/png,image/webp,image/bmp,image/tiff";
+
+function useFilePreview(file: File | null | undefined) {
+	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!file) {
+			setPreviewUrl(null);
+			return;
+		}
+
+		const objectUrl = URL.createObjectURL(file);
+		setPreviewUrl(objectUrl);
+
+		return () => URL.revokeObjectURL(objectUrl);
+	}, [file]);
+
+	return previewUrl;
 }
 
-export function RegisterStepProfile({
-	control,
-	displayNameRef,
-}: RegisterStepIdentityProps) {
+export function RegisterStepProfile() {
 	const { t } = useTranslation();
-	const { watch, setValue } = useFormContext<RegisterData>();
-
-	const watchedAvatar = watch("avatar_url");
-	const watchedCover = watch("cover_url");
-	const watchedDisplayName = watch("display_name");
+	const uploadId = useId();
+	const { control, setValue, watch } = useFormContext<RegisterData>();
+	const avatar = watch("avatar");
+	const cover = watch("cover");
+	const displayName = watch("display_name");
+	const username = watch("username");
+	const bio = watch("bio");
+	const avatarPreview = useFilePreview(avatar);
+	const coverPreview = useFilePreview(cover);
 
 	const handleFileChange = (
 		event: React.ChangeEvent<HTMLInputElement>,
-		field: "avatar_url" | "cover_url",
+		field: "avatar" | "cover",
 	) => {
-		const file = event.target.files?.[0];
-		if (file) {
-			const reader = new FileReader();
-			reader.onloadend = () => {
-				setValue(field, reader.result as string);
-			};
-			reader.readAsDataURL(file);
-		}
+		const file = event.target.files?.[0] ?? null;
+
+		setValue(field, file, {
+			shouldDirty: true,
+			shouldTouch: true,
+			shouldValidate: true,
+		});
+		event.target.value = "";
 	};
 
 	return (
-		<div className="space-y-6">
-			{/* Visual Profile Preview */}
-			<div className="relative w-full overflow-hidden">
-				{/* Cover */}
-				<div className="relative h-32 w-full bg-muted/50 rounded-3xl overflow-hidden">
-					{watchedCover ? (
+		<div className="space-y-4">
+			<div>
+				<h3 className="font-medium">
+					{t("auth.register.profile.title", "Profile details")}
+				</h3>
+				<p className="mt-1 text-sm text-muted-foreground">
+					{t(
+						"auth.register.profile.description",
+						"Choose how your public profile will appear.",
+					)}
+				</p>
+			</div>
+
+			<div className="relative">
+				<div className="relative h-36 w-full overflow-hidden rounded-3xl border bg-surface-3">
+					{coverPreview ? (
 						<img
-							src={watchedCover}
-							alt="Cover"
-							className="h-full w-full object-cover "
+							src={coverPreview}
+							alt={t("auth.register.images.cover_preview", "Cover preview")}
+							className="size-full object-cover"
 						/>
 					) : (
-						<div className="h-full w-full flex items-center justify-center text-muted-foreground/30 text-xs">
-							No Cover
+						<div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+							{t("auth.register.images.no_cover", "No cover image")}
 						</div>
 					)}
-					<div className="absolute flex gap-2 top-2 right-2">
+
+					<div className="absolute right-3 top-3 flex gap-2">
 						<label
-							htmlFor="cover-upload"
+							htmlFor={`${uploadId}-cover`}
+							aria-label={t(
+								"auth.register.images.change_cover",
+								"Choose cover image",
+							)}
 							className={cn(
-								buttonVariants({ variant: "secondary", size: "icon-sm" }),
+								buttonVariants({ variant: "secondary", size: "icon" }),
+								"bg-surface-2 hover:bg-surface-2/90",
 							)}
 						>
 							<OutlineEdit />
 							<input
-								id="cover-upload"
+								id={`${uploadId}-cover`}
 								type="file"
-								accept="image/*"
-								className="hidden"
-								onChange={(e) => handleFileChange(e, "cover_url")}
+								accept={ACCEPTED_IMAGE_TYPES}
+								className="sr-only"
+								onChange={(event) => handleFileChange(event, "cover")}
 							/>
 						</label>
-						<Button
-							type="button"
-							variant={"destructive"}
-							size={"icon-sm"}
-							className={"bg-danger-soft-hover text-danger hover:bg-danger/30"}
-							onClick={() => setValue("cover_url", "")}
-						>
-							<OutlineTrash />
-						</Button>
+
+						{cover ? (
+							<Button
+								type="button"
+								variant="destructive"
+								size="icon"
+								aria-label={t(
+									"auth.register.images.remove_cover",
+									"Remove cover image",
+								)}
+								onClick={() =>
+									setValue("cover", null, {
+										shouldDirty: true,
+										shouldTouch: true,
+									})
+								}
+							>
+								<OutlineTrash />
+							</Button>
+						) : null}
 					</div>
 				</div>
 
-				{/* Avatar */}
-				<div className="absolute top-20 left-4">
-					<div className="relative">
-						<Avatar className="size-20 ring-4 ring-background">
-							<AvatarImage src={watchedAvatar} alt={watchedDisplayName} />
-							<AvatarFallback className="text-xl">
-								{watchedDisplayName?.slice(0, 2).toUpperCase() || "??"}
-							</AvatarFallback>
-						</Avatar>
-						<label
-							htmlFor="avatar-upload"
-							className={cn(
-								buttonVariants({ size: "icon-sm", variant: "secondary" }),
-								"absolute -bottom-1.5 -right-1.5 border-3 border-background bg-secondary hover:bg-secondary/90",
-							)}
-						>
-							<OutlineEdit className="size-3.5" />
-							<input
-								id="avatar-upload"
-								type="file"
-								accept="image/*"
-								className="hidden"
-								onChange={(e) => handleFileChange(e, "avatar_url")}
-							/>
-						</label>
+				<div className="relative min-h-20 px-4 pb-4 pt-3">
+					<div className="absolute -top-10 left-4">
+						<div className="relative size-20">
+							<div className="flex size-full items-center justify-center overflow-hidden rounded-full bg-surface-3 ring-3 ring-surface-2">
+								{avatarPreview ? (
+									<img
+										src={avatarPreview}
+										alt={t(
+											"auth.register.images.avatar_preview",
+											"Avatar preview",
+										)}
+										className="size-full object-cover"
+									/>
+								) : (
+									<OutlineUser className="size-8 text-muted-foreground" />
+								)}
+							</div>
+
+							<label
+								htmlFor={`${uploadId}-avatar`}
+								aria-label={t(
+									"auth.register.images.choose_avatar",
+									"Choose avatar",
+								)}
+								className={cn(
+									buttonVariants({ variant: "secondary", size: "icon" }),
+									"absolute -bottom-1 -right-1 bg-surface-3 hover:bg-surface-3",
+								)}
+							>
+								<OutlineEdit />
+								<input
+									id={`${uploadId}-avatar`}
+									type="file"
+									accept={ACCEPTED_IMAGE_TYPES}
+									className="sr-only"
+									onChange={(event) => handleFileChange(event, "avatar")}
+								/>
+							</label>
+
+							{avatar ? (
+								<Button
+									type="button"
+									variant="destructive"
+									size="icon"
+									className="absolute -bottom-1 -left-1"
+									aria-label={t(
+										"auth.register.images.remove_avatar",
+										"Remove avatar",
+									)}
+									onClick={() =>
+										setValue("avatar", null, {
+											shouldDirty: true,
+											shouldTouch: true,
+										})
+									}
+								>
+									<OutlineTrash />
+								</Button>
+							) : null}
+						</div>
+					</div>
+
+					<div className="ml-24 min-w-0">
+						<p className="truncate text-sm font-semibold">
+							{displayName || t("auth.display_name.placeholder", "Your name")}
+						</p>
+						<p className="truncate text-xs text-muted-foreground">
+							@{username || t("auth.username.placeholder", "username")}
+						</p>
 					</div>
 				</div>
 
-				<div className="pt-10 pb-4 px-4">
-					<div className="text-sm font-medium">
-						{watchedDisplayName || "Display Name"}
-					</div>
-					<div className="text-xs text-muted-foreground">
-						@{watch("username") || "username"}
-					</div>
-				</div>
+				{bio ? (
+					<p className="px-4 pb-4 text-sm text-muted-foreground">{bio}</p>
+				) : null}
 			</div>
 
 			<div className="space-y-4">
 				<FormField
 					control={control}
-					name={"display_name"}
+					name="display_name"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("auth.display_name.label")}</FormLabel>
+							<FormLabel>
+								{t("auth.display_name.label", "Display name")}
+							</FormLabel>
 							<FormControl>
 								<InputGroup>
 									<InputGroupAddon>
 										<OutlineUser />
 									</InputGroupAddon>
 									<InputGroupInput
-										placeholder={t("auth.display_name.placeholder")}
+										placeholder={t(
+											"auth.display_name.placeholder",
+											"Your name",
+										)}
+										maxLength={100}
 										{...field}
-										ref={(e) => {
-											field.ref(e);
-											if (displayNameRef)
-												(
-													displayNameRef as { current: HTMLInputElement | null }
-												).current = e;
-										}}
 									/>
 								</InputGroup>
 							</FormControl>
@@ -171,17 +251,18 @@ export function RegisterStepProfile({
 
 				<FormField
 					control={control}
-					name={"username"}
+					name="username"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("auth.username.label")}</FormLabel>
+							<FormLabel>{t("auth.username.label", "Username")}</FormLabel>
 							<FormControl>
 								<InputGroup>
 									<InputGroupAddon>
 										<OutlineAt />
 									</InputGroupAddon>
 									<InputGroupInput
-										placeholder={t("auth.username.placeholder")}
+										placeholder={t("auth.username.placeholder", "username")}
+										maxLength={32}
 										{...field}
 									/>
 								</InputGroup>
@@ -193,25 +274,26 @@ export function RegisterStepProfile({
 
 				<FormField
 					control={control}
-					name={"bio"}
+					name="bio"
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>{t("auth.bio.label", "Bio")}</FormLabel>
 							<FormControl>
-								{/* TODO: use same BioEditor component like in user profile settings */}
-								<Textarea
-									placeholder={t(
-										"auth.bio.placeholder",
-										"Tell us about yourself...",
-									)}
-									className="min-h-[100px] resize-none rounded-2xl"
-									maxLength={160}
-									{...field}
-								/>
+								<InputGroup className="rounded-2xl">
+									<InputGroupTextArea
+										className="min-h-22"
+										placeholder={t(
+											"auth.bio.placeholder",
+											"Tell us about yourself...",
+										)}
+										maxLength={150}
+										{...field}
+									/>
+								</InputGroup>
 							</FormControl>
-							<div className="flex justify-end text-[10px] text-muted-foreground uppercase tracking-wider">
-								{field.value?.length || 0} / 160
-							</div>
+							<p className="text-right text-xs text-muted-foreground">
+								{field.value.length} / 150
+							</p>
 							<FormMessage />
 						</FormItem>
 					)}

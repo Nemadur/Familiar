@@ -1,5 +1,4 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Skeleton } from "boneyard-js/react";
 import { ShoppingCart } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,11 +8,13 @@ import {
 	OutlineHome,
 	OutlineMenu,
 	OutlineReceipt,
+	SolidChat,
 	SolidFileText,
 	SolidHome,
 	SolidReceipt,
 } from "@/components/icons/icons";
 import { Elevated } from "@/lib/elevated";
+import { localizePath, stripLocaleFromPathname } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import { TRoles } from "@/types/user/roles";
@@ -29,24 +30,37 @@ import { BasketDropdown } from "./basket-dropdown";
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import CurrencySelect from "./select/currency";
+import { Skeleton } from "../ui/skeleton";
 
-function ClientOnly({ children }: { children: React.ReactNode }) {
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
-	return mounted ? children : null;
+function HeaderUserSkeleton() {
+	return (
+		<div
+			aria-hidden="true"
+			className="flex items-center gap-2"
+		>
+			{/* Possible dashboard button */}
+			<Skeleton className="hidden h-10 w-24 rounded-full lg:block" />
+
+			{/* User avatar */}
+			<Skeleton className="size-10 shrink-0 rounded-full" />
+		</div>
+	);
 }
 
 export default function Header() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const { user, isPending } = useAuth();
 
 	return (
-		<header className="sticky top-0 z-50 px-4">
+		<header className="sticky top-0 z-50 px-4 lg:px-8">
 			<div className="flex h-16 items-center justify-between gap-4">
 				<div className="flex items-center gap-2">
 					<MobileNav />
 					<NavWrapper className="hidden lg:flex">
-						<Link to="/" className="mr-2 ml-3 flex items-center gap-x-2">
+						<Link
+							to={localizePath("/", i18n.language) as any}
+							className="mr-2 ml-3 flex items-center gap-x-2"
+						>
 							<span className="font-bold text-sm uppercase tracking-wider text-primary">
 								{t("header.title")}
 							</span>
@@ -58,56 +72,46 @@ export default function Header() {
 				<div className="flex shrink-0 items-center gap-2">
 					<NavWrapper>
 						{/* <ThemeToggle /> */}
-						<CurrencySelect display={"compact"} variant={"secondary"} />
+						{/* <CurrencySelect display={"compact"} variant={"secondary"} /> */}
 						{/* <LanguageSelect /> */}
 
-						<BasketDropdown />
+						{/* <BasketDropdown /> */}
 
 						<Button variant={"secondary"} size={"icon-xl"} asChild>
-							<Link to="/chat">
+							<Link to={localizePath("/chat", i18n.language) as any}>
 								<OutlineChat />
 							</Link>
 						</Button>
-
-						<ClientOnly>
-							<Skeleton
-								name="header-artist_dashboard"
-								loading={isPending}
-								className="hidden lg:flex"
-							>
-								{isPending
-									? null
-									: user?.roles?.includes(TRoles.Artist) && (
-											<Button size={"xl"} asChild>
-												<Link to="/dashboard">
-													{t("header.artist-dashboard", "Dashboard")}
-												</Link>
-											</Button>
-										)}
-							</Skeleton>
-						</ClientOnly>
-
-						{/* TODO: add language and theme to mobile sidebar */}
-						<ClientOnly>
-							<Skeleton
-								name="header-user_menu"
-								loading={isPending}
-								className="hidden lg:flex"
-							>
-								{isPending ? null : user ? (
-									<User user={user} showInfo={false} isDropdown />
-								) : (
-									<div className="hidden lg:flex items-center gap-2">
-										<Button asChild variant={"secondary"} size={"xl"}>
-											<Link to="/auth/login">{t("auth.login.cta")}</Link>
-										</Button>
-										<Button asChild size={"xl"}>
-											<Link to="/auth/register">{t("auth.register.cta")}</Link>
-										</Button>
-									</div>
+						{isPending ? (
+							<HeaderUserSkeleton />
+						) : user ? (
+							<>
+								{user.roles?.includes(TRoles.Artist) && (
+									<Button size="xl" asChild>
+										<Link to={localizePath("/dashboard", i18n.language)}>
+											{t("header.artist-dashboard", "Dashboard")}
+										</Link>
+									</Button>
 								)}
-							</Skeleton>
-						</ClientOnly>
+
+								<User user={user} showInfo={false} isDropdown />
+							</>
+						) : (
+							<div className="hidden items-center gap-2 lg:flex">
+								<Button asChild variant="secondary" size="xl">
+									<Link to={localizePath("/auth/login", i18n.language) as any}>
+										{t("auth.login.cta")}
+									</Link>
+								</Button>
+
+								<Button asChild size="xl">
+									<Link to={localizePath("/auth/register", i18n.language) as any}>
+										{t("auth.register.cta")}
+									</Link>
+								</Button>
+							</div>
+						)}
+
 					</NavWrapper>
 				</div>
 			</div>
@@ -116,7 +120,7 @@ export default function Header() {
 }
 
 const MobileNav = () => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const { user } = useAuth();
 
 	return (
@@ -128,7 +132,7 @@ const MobileNav = () => {
 					</Button>
 				</SheetTrigger>
 			</NavWrapper>
-			<SheetContent side="left" className="w-[300px] sm:w-[400px]">
+			<SheetContent side="left" className="w-75 sm:w-100">
 				<SheetHeader className="text-left px-4">
 					<SheetTitle className="text-xl font-bold uppercase tracking-wider">
 						{t("header.title")}
@@ -156,10 +160,16 @@ const MobileNav = () => {
 									size={"xl"}
 									className="w-full"
 								>
-									<Link to="/auth/login">{t("auth.login.cta")}</Link>
+									<Link to={localizePath("/auth/login", i18n.language) as any}>
+										{t("auth.login.cta")}
+									</Link>
 								</Button>
 								<Button asChild className="w-full" size={"xl"}>
-									<Link to="/auth/register">{t("auth.register.cta")}</Link>
+									<Link
+										to={localizePath("/auth/register", i18n.language) as any}
+									>
+										{t("auth.register.cta")}
+									</Link>
 								</Button>
 							</div>
 						)}
@@ -171,9 +181,9 @@ const MobileNav = () => {
 };
 
 const NavLinks = memo(() => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const location = useLocation();
-	const pathname = location.pathname;
+	const pathname = stripLocaleFromPathname(location.pathname);
 
 	/**
 	 * Bierzemy odpowiedni state ikon w zależności na jakim url path jest użytkownik
@@ -191,6 +201,8 @@ const NavLinks = memo(() => {
 				return isActive ? <SolidReceipt /> : <OutlineReceipt />;
 			case "/blog":
 				return isActive ? <SolidFileText /> : <OutlineFileText />;
+			// case "/chat":
+			// 	return isActive ? <SolidChat /> : <OutlineChat />;
 			default:
 				return null;
 		}
@@ -200,6 +212,7 @@ const NavLinks = memo(() => {
 		{ path: "/", label: t("header.navigation.home", "Home") },
 		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
 		{ path: "/shop", label: t("header.navigation.shop", "Shop") },
+		// { path: "/chat", label: t("header.navigation.messages", "Messages") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },
 	];
@@ -219,7 +232,7 @@ const NavLinks = memo(() => {
 						size={"xl"}
 						className={cn(!isIconOnly && "justify-start")}
 					>
-						<Link to={link.path}>
+						<Link to={localizePath(link.path, i18n.language) as any}>
 							{icon}
 							{link.label}
 						</Link>

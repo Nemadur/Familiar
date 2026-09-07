@@ -6,9 +6,9 @@ import type {
 	TCommissionRequest,
 	TCommissionResponse,
 	TCreateCommissionRequest,
-	TUpdateCommissionRequest,
 	TMediaJobResponse,
 	TTagResponse,
+	TUpdateCommissionRequest,
 } from "@/types/commissions";
 
 export type PaginationParams = {
@@ -43,27 +43,27 @@ export function getCommissionByArtistId(
 	const encodedArtistId = encodeURIComponent(artistId);
 
 	const url = query
-		? `/api/commissions/by-artist/${encodedArtistId}?${query}`
-		: `/api/commissions/by-artist/${encodedArtistId}`;
+		? `commissions/by-artist/${encodedArtistId}?${query}`
+		: `commissions/by-artist/${encodedArtistId}`;
 
 	return apiFetch<TCommissionPageResponse>(url);
 }
 
 export function getCommissionById(commissionId: string) {
 	return apiFetch<TCommissionDetailResponse>(
-		`/api/commissions/${encodeURIComponent(commissionId)}`,
+		`commissions/${encodeURIComponent(commissionId)}`,
 	);
 }
 
 export function getMyCommissions(params: PaginationParams = {}) {
 	const query = paginationQuery(params);
-	const url = query ? `/api/commissions/me?${query}` : `/api/commissions/me`;
+	const url = query ? `commissions/me?${query}` : `commissions/me`;
 
 	return apiFetch<TCommissionPageResponse>(url);
 }
 
 export function createCommission(data: TCreateCommissionRequest) {
-	return apiFetch<TCommissionResponse>(`/api/commissions`, {
+	return apiFetch<TCommissionResponse>(`commissions`, {
 		method: "POST",
 		body: JSON.stringify(data),
 	});
@@ -74,7 +74,7 @@ export function updateCommission(
 	data: TUpdateCommissionRequest,
 ) {
 	return apiFetch<TCommissionResponse>(
-		`/api/commissions/${encodeURIComponent(commissionId)}`,
+		`commissions/${encodeURIComponent(commissionId)}`,
 		{
 			method: "PATCH",
 			body: JSON.stringify(data),
@@ -84,7 +84,7 @@ export function updateCommission(
 
 export function publishCommission(commissionId: string) {
 	return apiFetch<TCommissionResponse>(
-		`/api/commissions/${encodeURIComponent(commissionId)}/publish`,
+		`commissions/${encodeURIComponent(commissionId)}/publish`,
 		{
 			method: "POST",
 		},
@@ -92,12 +92,9 @@ export function publishCommission(commissionId: string) {
 }
 
 export function deleteCommission(commissionId: string) {
-	return apiFetch<void>(
-		`/api/commissions/${encodeURIComponent(commissionId)}`,
-		{
-			method: "DELETE",
-		},
-	);
+	return apiFetch<void>(`commissions/${encodeURIComponent(commissionId)}`, {
+		method: "DELETE",
+	});
 }
 
 export function uploadCommissionMedia({
@@ -111,7 +108,7 @@ export function uploadCommissionMedia({
 	}
 
 	return apiFetch<TMediaJobResponse[]>(
-		`/api/commissions/${encodeURIComponent(commissionId)}/media`,
+		`commissions/${encodeURIComponent(commissionId)}/media`,
 		{
 			method: "POST",
 			body: formData,
@@ -129,7 +126,7 @@ export function submitCommissionRequest(
 	},
 ) {
 	return apiFetch<TCommissionRequest>(
-		`/api/commissions/${encodeURIComponent(commissionId)}/requests`,
+		`commissions/${encodeURIComponent(commissionId)}/requests`,
 		{
 			method: "POST",
 			body: JSON.stringify(data),
@@ -139,13 +136,13 @@ export function submitCommissionRequest(
 
 export function getCommissionCategories(parentId?: string) {
 	const url = parentId
-		? `/api/commission-categories?parentId=${encodeURIComponent(parentId)}`
-		: `/api/commission-categories`;
+		? `commission-categories?parentId=${encodeURIComponent(parentId)}`
+		: `commission-categories`;
 
 	return apiFetch<TCommissionCategoryResponse[]>(url);
 }
 
 export function getTags(includeAdult = false) {
-	const url = includeAdult ? `/api/tags?includeAdult=true` : `/api/tags`;
+	const url = includeAdult ? `tags?includeAdult=true` : `tags`;
 	return apiFetch<TTagResponse[]>(url);
 }

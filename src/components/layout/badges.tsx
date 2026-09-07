@@ -1,9 +1,17 @@
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { TCommissionStatus, type TCommissionRequestStatus } from "@/types/commissions";
+import {
+	TCommissionStatus,
+	type TCommissionRequestStatus,
+} from "@/types/commissions";
 import type { TPaymentStatus } from "@/types/payment";
-import { paymentLabel, paymentTone, stageLabel, statusTone } from "./requests/my/helpers";
+import {
+	paymentLabel,
+	paymentTone,
+	stageLabel,
+	statusTone,
+} from "./requests/my/helpers";
 
 export function StatusBadge({
 	status,
@@ -70,7 +78,11 @@ export function PaymentText({
 	status: TPaymentStatus;
 	className?: string;
 }) {
-	return <Badge variant={paymentTone(status)} className={className}>{paymentLabel(status)}</Badge>;
+	return (
+		<Badge variant={paymentTone(status)} className={className}>
+			{paymentLabel(status)}
+		</Badge>
+	);
 }
 
 export function SoftMetaBadge({

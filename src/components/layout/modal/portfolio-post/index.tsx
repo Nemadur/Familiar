@@ -1,480 +1,783 @@
-// import { ScrollShadow, Surface } from "@heroui/react";
-// import { useQuery } from "@tanstack/react-query";
-// import { ShieldAlert } from "lucide-react";
-// import { useState } from "react";
-// import { useTranslation } from "react-i18next";
-// import { MarkdownDisplay } from "@/components/common/markdown-display";
-// import {
-// 	OutlineArrowRight,
-// 	OutlineCheckmarkSeal,
-// 	OutlineChevronDown,
-// 	OutlineStar,
-// 	SolidStar,
-// } from "@/components/icons/icons";
-// import { CTAs } from "@/components/layout/feed/ctas";
-// import UserAvatar from "@/components/layout/profile/avatar";
-// import { ProfileBadge } from "@/components/layout/profile/badge";
-// import { AnimateChangeInHeight } from "@/components/ui/animate-change-in-height";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { Badge } from "@/components/ui/badge";
-// import { Button, buttonVariants } from "@/components/ui/button";
-// import { getAllOrders } from "@/data/orders";
-// import { getPostDetails } from "@/data/posts";
-// import { cn } from "@/lib/utils";
-// import type { PostWithAuthor } from "@/types/post";
-// import type { User } from "@/types/user";
-// import { EmptyPage } from "../../empty-page";
-// import { UniversalModalLayout } from "./universal-modal-layout";
+import { Typography } from "@heroui/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Copy, Edit2, Flag, MoreHorizontal, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import {
+	OutlineBookmark,
+	OutlineChat,
+	OutlineChevronLeft,
+	OutlineChevronRight,
+	OutlineHeart,
+	OutlineSend,
+} from "@/components/icons/icons";
+import { EmptyPage } from "@/components/layout/empty-page";
+import { UniversalModalLayout } from "@/components/layout/modal/universal-modal-layout";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Spinner } from "@/components/ui/spinner";
+import {
+	useDeletePortfolioPost,
+	useArtistPortfolioPost,
+} from "@/hooks/portfolio/use-portfolio";
+import { useUserByUsername } from "@/hooks/user/use-user";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth";
+import { ContentWarningOverlay } from "../../content-warning-overlay";
+import UserAvatar from "../../profile/avatar";
+import User from "../../profile/user";
 
-// interface PortfolioPostModalProps {
-// 	post: PostWithAuthor;
-// 	open: boolean;
-// 	onOpenChange: (open: boolean) => void;
-// }
+interface PortfolioPostModalProps {
+	postId: string;
+	username?: string;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+}
 
-// export function PortfolioPostModal({
-// 	post,
-// 	open,
-// 	onOpenChange,
-// }: PortfolioPostModalProps) {
-// 	const { t } = useTranslation();
-// 	const { data: orders } = useQuery({
-// 		queryKey: ["orders"],
-// 		queryFn: () => getAllOrders(),
-// 	});
+interface PortfolioPostPageProps {
+	postId: string;
+	username?: string;
+	onBack?: () => void;
+	onDeleted?: () => void;
+}
 
-// 	const { data: postDetails } = useQuery({
-// 		queryKey: ["post-details", post.id],
-// 		queryFn: () => getPostDetails({ data: { postId: post.id } }),
-// 		enabled: open,
-// 	});
+function usePortfolioPostController({
+	postId,
+	username,
+	onDeleted,
+}: {
+	postId: string;
+	username?: string;
+	onDeleted?: () => void;
+}) {
+	const { t, i18n } = useTranslation();
+	const { user: currentUser } = useAuth();
+	const { user: profileUser, isPending: isUserPending } = useUserByUsername(
+		username ?? "",
+	);
+	const queryClient = useQueryClient();
 
-// 	const order = orders?.find((o) => o.postId === post.id);
-// 	const review =
-// 		postDetails?.featuredReview || post.featuredReview || order?.review;
-// 	const isCommissioned = !!order || !!review;
-// 	const rating = review?.rating || 0;
-// 	const comment = review?.comment;
-// 	const highlights = review?.highlights || [
-// 		t("components.profile.commissions.post_modal.default_highlights.delivery"),
-// 		t(
-// 			"components.profile.commissions.post_modal.default_highlights.responsive",
-// 		),
-// 		t("components.profile.commissions.post_modal.default_highlights.updates"),
-// 	];
+	const {
+		data: post,
+		isPending: isPostPending,
+		isError,
+	} = useArtistPortfolioPost(username ?? "", postId);
 
-// 	const linkedCharacters =
-// 		postDetails?.linkedCharacters || post.linkedCharacters || [];
+	const isPending = isPostPending || isUserPending;
 
-// 	const [isReviewOpen, setIsReviewOpen] = useState(true);
-// 	const [isWarningOpen, setIsWarningOpen] = useState(true);
+	const deletePostMutation = useDeletePortfolioPost();
 
-// 	return (
-// 		<UniversalModalLayout
-// 			open={open}
-// 			onOpenChange={onOpenChange}
-// 			title={t("components.profile.commissions.post_modal.title")}
-// 			showBookmark={true}
-// 			isBookmarked={post.isBookmarked || false}
-// 			onBookmark={(e) => {
-// 				e.stopPropagation();
-// 			}}
-// 			mediaContent={
-// 				<>
-// 					{/* Mobile & Tablet View (< lg) */}
-// 					<ScrollShadow
-// 						orientation="horizontal"
-// 						className="flex w-full gap-4 p-4 lg:hidden"
-// 						hideScrollBar
-// 					>
-// 						{post.images && post.images.length > 0 ? (
-// 							post.images.map((img, index) => (
-// 								<div
-// 									key={img.path}
-// 									className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg"
-// 								>
-// 									<img
-// 										src={img.path}
-// 										alt={img.alt || `${post.title} - ${index + 1}`}
-// 										className="h-full w-full rounded-lg object-cover shadow-sm"
-// 									/>
-// 								</div>
-// 							))
-// 						) : (
-// 							<div className="flex h-[250px] w-full items-center justify-center p-8 text-muted-foreground">
-// 								<EmptyPage title="no media" />
-// 							</div>
-// 						)}
-// 					</ScrollShadow>
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+	const [liked, setLiked] = useState(false);
+	const [bookmarked, setBookmarked] = useState(false);
 
-// 					{/* Desktop View (>= lg) */}
-// 					<div className="hidden flex-col gap-4 p-4 lg:flex">
-// 						{post.images && post.images.length > 0 ? (
-// 							post.images.map((img, index) => (
-// 								<div
-// 									key={img.path}
-// 									className="relative flex min-h-[40vh] w-full items-center justify-center rounded-lg"
-// 								>
-// 									<img
-// 										src={img.path}
-// 										alt={img.alt || `${post.title} - ${index + 1}`}
-// 										className="max-h-[85vh] w-auto max-w-full rounded-lg object-contain shadow-sm"
-// 									/>
-// 								</div>
-// 							))
-// 						) : (
-// 							<div className="flex min-h-[40vh] items-center justify-center p-8 text-muted-foreground">
-// 								{t("components.profile.commissions.post_modal.no_media")}
-// 							</div>
-// 						)}
-// 					</div>
-// 				</>
-// 			}
-// 			detailsContent={
-// 				<div className="flex flex-col min-h-full">
-// 					<div className="flex-1 space-y-6 p-6">
-// 						{/* Author Info */}
-// 						<div className="flex items-center gap-3">
-// 							<Avatar>
-// 								<AvatarImage src={post.author.media.avatar || undefined} />
-// 								<AvatarFallback>{post.author.display_name}</AvatarFallback>
-// 							</Avatar>
-// 							<div className="flex flex-col">
-// 								<div className="flex items-center gap-1.5">
-// 									<span className="font-semibold text-sm">
-// 										{post.author.display_name}
-// 									</span>
-// 									<ProfileBadge user={post.author} />
-// 								</div>
-// 								<span className="text-muted-foreground text-xs">
-// 									{`@${post.author.username}`}
-// 								</span>
-// 							</div>
-// 						</div>
+	useEffect(() => {
+		setActiveMediaIndex(0);
+	}, [postId]);
 
-// 						{/* Title & Stats */}
-// 						<div className="space-y-3">
-// 							<h1 className="font-bold text-2xl leading-tight">{post.title}</h1>
+	useEffect(() => {
+		setLiked(Boolean(post?.likedByCurrentUser));
+		setBookmarked(Boolean(post?.bookmarkedByCurrentUser));
+	}, [post?.likedByCurrentUser, post?.bookmarkedByCurrentUser]);
 
-// 							<div className="flex flex-col gap-2">
-// 								{/* Description */}
-// 								{post.description && (
-// 									<div className="text-muted-foreground leading-relaxed text-sm">
-// 										<MarkdownDisplay content={post.description} />
-// 									</div>
-// 								)}
-// 							</div>
-// 						</div>
+	const images = useMemo(
+		() =>
+			[...(post?.images ?? [])]
+				.filter(
+					(image) =>
+						Boolean(image.fullSize?.path) || Boolean(image.thumbnail?.path),
+				)
+				.sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
+		[post?.images],
+	);
 
-// 						{/* Content Warnings */}
-// 						{/* {post.contentWarnings && post.contentWarnings.length > 0 && (
-// 							<div className="rounded-2xl text-yellow-950 dark:text-yellow-500 border border-yellow-600/40 bg-yellow-50/12 dark:bg-yellow-950/12 p-2">
-// 								<button
-// 									type="button"
-// 									className="flex w-full items-center justify-between cursor-pointer select-none"
-// 									onClick={() => setIsWarningOpen(!isWarningOpen)}
-// 								>
-// 									<div className="flex items-center gap-2">
-// 										<ShieldAlert className="size-5" />
-// 										<span className="text-sm">
-// 											{t(
-// 												"components.profile.commissions.post_modal.content_warning",
-// 											)}
-// 										</span>
-// 									</div>
-// 									<div
-// 										className={cn(
-// 											buttonVariants({ variant: "ghost", size: "icon-sm" }),
-// 											"text-yellow-950 dark:text-yellow-500 hover:bg-yellow-200/50 dark:hover:bg-yellow-900/50 pointer-events-none rounded-lg",
-// 										)}
-// 									>
-// 										<OutlineChevronDown
-// 											className={cn(
-// 												"transition-transform duration-200",
-// 												isWarningOpen && "rotate-180",
-// 											)}
-// 										/>
-// 									</div>
-// 								</button>
-// 								<AnimateChangeInHeight>
-// 									{isWarningOpen && (
-// 										<div className="pt-4 space-y-2">
-// 											<div className="flex flex-wrap gap-2">
-// 												{post.contentWarnings.map((cw) => (
-// 													<Badge
-// 														key={cw}
-// 														className="bg-yellow-200 text-yellow-800 dark:bg-yellow-500/12 dark:text-yellow-500"
-// 													>
-// 														{cw}
-// 													</Badge>
-// 												))}
-// 											</div>
-// 											<p className="text-xs text-yellow-800/50 dark:text-yellow-400/50">
-// 												{t(
-// 													"components.profile.commissions.post_modal.sensitive_content_desc",
-// 												)}
-// 											</p>
-// 										</div>
-// 									)}
-// 								</AnimateChangeInHeight>
-// 							</div>
-// 						)} */}
+	useEffect(() => {
+		if (images.length > 0 && activeMediaIndex >= images.length) {
+			setActiveMediaIndex(0);
+		}
+	}, [activeMediaIndex, images.length]);
 
-// 						{/* Commissioned Badge / Review */}
-// 						{isCommissioned && (
-// 							<Surface
-// 								variant={"default"}
-// 								className="rounded-2xl border border-border p-2"
-// 							>
-// 								{review ? (
-// 									<button
-// 										type="button"
-// 										className="flex w-full items-center justify-between cursor-pointer select-none"
-// 										onClick={() => setIsReviewOpen(!isReviewOpen)}
-// 									>
-// 										<div className="flex items-center gap-2">
-// 											<OutlineCheckmarkSeal size={20} />
-// 											<span className="text-sm">
-// 												{t(
-// 													"components.profile.commissions.post_modal.commissioned_by",
-// 												)}
-// 											</span>
-// 										</div>
-// 										<div
-// 											className={cn(
-// 												buttonVariants({ variant: "ghost", size: "icon-sm" }),
-// 												"pointer-events-none rounded-lg",
-// 											)}
-// 										>
-// 											<OutlineChevronDown
-// 												className={cn(
-// 													"transition-transform duration-200",
-// 													isReviewOpen && "rotate-180",
-// 												)}
-// 											/>
-// 										</div>
-// 									</button>
-// 								) : (
-// 									<div className="flex items-center justify-between">
-// 										<div className="flex items-center gap-2">
-// 											<OutlineCheckmarkSeal size={20} />
-// 											<span className="text-sm">
-// 												{t(
-// 													"components.profile.commissions.post_modal.commissioned_by",
-// 												)}
-// 											</span>
-// 										</div>
-// 									</div>
-// 								)}
+	const currentMedia = images[activeMediaIndex] ?? images[0];
 
-// 								{review && (
-// 									<AnimateChangeInHeight>
-// 										{isReviewOpen && (
-// 											<div className="pt-1">
-// 												<div className="flex items-center gap-3 mb-1">
-// 													<div className="flex gap-0.5">
-// 														{[1, 2, 3, 4, 5].map((i) =>
-// 															i <= rating ? (
-// 																<SolidStar
-// 																	// eslint-disable-next-line react-doctor/no-array-index-as-key
-// 																	key={i}
-// 																	size={16}
-// 																	className="text-amber-600 dark:text-amber-200"
-// 																/>
-// 															) : (
-// 																<OutlineStar
-// 																	// eslint-disable-next-line react-doctor/no-array-index-as-key
-// 																	key={i}
-// 																	size={16}
-// 																	className="text-muted-foreground/30"
-// 																/>
-// 															),
-// 														)}
-// 													</div>
-// 													<span className="text-xs text-muted-foreground">
-// 														{new Date(review.createdAt).toLocaleDateString(
-// 															undefined,
-// 															{
-// 																month: "short",
-// 																year: "numeric",
-// 															},
-// 														)}
-// 													</span>
-// 												</div>
+	const currentMediaPath =
+		currentMedia?.fullSize?.path || currentMedia?.thumbnail?.path;
 
-// 												{comment && (
-// 													<p className="text-sm text-emerald-950 dark:text-emerald-50 leading-relaxed">
-// 														{comment}
-// 													</p>
-// 												)}
+	const displayTitle =
+		post?.title || t("components.portfolio.post.untitled", "Untitled");
 
-// 												{highlights && highlights.length > 0 && (
-// 													<div className="space-y-2">
-// 														<span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-// 															{t(
-// 																"components.profile.commissions.post_modal.highlights",
-// 															)}
-// 														</span>
-// 														<div className="flex flex-wrap gap-2">
-// 															{highlights.map((tag) => (
-// 																<Badge
-// 																	key={tag}
-// 																	variant="secondary"
-// 																	className="bg-secondary/50 hover:bg-secondary/70 text-secondary-foreground font-normal rounded-lg px-3 py-1.5"
-// 																>
-// 																	{tag}
-// 																</Badge>
-// 															))}
-// 														</div>
-// 													</div>
-// 												)}
-// 											</div>
-// 										)}
-// 									</AnimateChangeInHeight>
-// 								)}
-// 							</Surface>
-// 						)}
+	const originallyLiked = Boolean(post?.likedByCurrentUser);
 
-// 						{/* Featured Character */}
-// 						{linkedCharacters && linkedCharacters.length > 0 && (
-// 							<div className="space-y-3">
-// 								<h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-// 									{t("components.profile.commissions.post_modal.featured")}
-// 								</h4>
-// 								<div className="grid gap-2">
-// 									{linkedCharacters.map((character) => (
-// 										<Surface
-// 											variant={"default"}
-// 											key={character.id}
-// 											className="flex items-center justify-between rounded-full border p-1 cursor-pointer group"
-// 										>
-// 											<div className="flex items-center gap-3">
-// 												<UserAvatar
-// 													user={
-// 														{
-// 															display_name: character.name,
-// 															media: { avatar: character.avatarUrl },
-// 															accent_color: character.accent_color,
-// 														} as User
-// 													}
-// 												/>
-// 												<div className="flex flex-col">
-// 													<span className="font-bold text-sm group-hover:text-primary transition-colors">
-// 														{character.name}
-// 													</span>
-// 													<span className="text-xs text-muted-foreground">
-// 														{t(
-// 															"components.profile.commissions.post_modal.character",
-// 														)}
-// 													</span>
-// 												</div>
-// 											</div>
-// 											<Button variant="secondary">
-// 												{t(
-// 													"components.profile.commissions.post_modal.view_in_gallery",
-// 												)}
-// 											</Button>
-// 										</Surface>
-// 									))}
-// 								</div>
-// 							</div>
-// 						)}
+	const displayedLikeCount = Math.max(
+		0,
+		(post?.likeCount ?? 0) + (liked === originallyLiked ? 0 : liked ? 1 : -1),
+	);
 
-// 						{/* Commission CTA */}
-// 						<Button
-// 							size={"xl"}
-// 							className="w-full border border-accent/30 justify-between bg-accent/12 dark:bg-accent/12 text-accent hover:bg-accent-soft-hover hover:text-accent-soft-foreground group"
-// 						>
-// 							{t(
-// 								"components.profile.commissions.post_modal.commission_similar",
-// 							)}
-// 							<OutlineArrowRight className="transition-transform group-hover:translate-x-1" />
-// 						</Button>
+	const createdAt =
+		post?.createdAt && !Number.isNaN(Date.parse(post.createdAt))
+			? new Intl.DateTimeFormat(i18n.language, {
+					day: "numeric",
+					month: "long",
+					year: "numeric",
+				}).format(new Date(post.createdAt))
+			: null;
 
-// 						{/* Tags */}
-// 						<div className="flex flex-col gap-2 pt-2">
-// 							<div className="space-y-1">
-// 								<p className="uppercase text-xs text-muted-foreground">
-// 									{t("components.profile.commissions.post_modal.tags_label")}
-// 								</p>
-// 								<div className="flex flex-wrap gap-2">
-// 									{post.tags && post.tags.length > 0 ? (
-// 										post.tags.map((tag) => (
-// 											<Badge
-// 												key={tag}
-// 												variant="secondary"
-// 												className="px-3 py-1.5"
-// 											>
-// 												{tag}
-// 											</Badge>
-// 										))
-// 									) : (
-// 										<p>
-// 											{t("components.profile.commissions.post_modal.no_tags")}
-// 										</p>
-// 									)}
-// 								</div>
-// 							</div>
-// 							{/* CW tags */}
-// 							<div className="space-y-1">
-// 								<p className="uppercase text-xs text-muted-foreground">
-// 									{t(
-// 										"components.profile.commissions.post_modal.content_warnings_label",
-// 									)}
-// 								</p>
-// 								<div className="flex flex-wrap gap-2">
-// 									{post.contentWarnings && post.contentWarnings.length > 0 ? (
-// 										post.contentWarnings.map((tag) => (
-// 											<Badge
-// 												key={tag}
-// 												variant="destructive"
-// 												className="px-3 py-1.5"
-// 											>
-// 												{tag}
-// 											</Badge>
-// 										))
-// 									) : (
-// 										<p>
-// 											{t(
-// 												"components.profile.commissions.post_modal.no_cw_tags",
-// 											)}
-// 										</p>
-// 									)}
-// 								</div>
-// 							</div>
-// 						</div>
-// 					</div>
+	const canManagePost = Boolean(
+		currentUser?.userId &&
+			profileUser?.userId &&
+			currentUser.userId === profileUser.userId,
+	);
 
-// 					<div className="sticky bottom-0 z-20 bg-background border-t p-4">
-// 						<CTAs
-// 							postId={post.id}
-// 							likes={post.likeCount || 0}
-// 							isLiked={post.isLiked || false}
-// 							isBookmarked={post.isBookmarked || false}
-// 							onLike={(e) => {
-// 								e.stopPropagation();
-// 							}}
-// 							onBookmark={(e) => {
-// 								e.stopPropagation();
-// 							}}
-// 							views={post.viewCount || 0}
-// 							showBookmarksCount={false}
-// 							animateGate
-// 							showBookmarkButton={false}
-// 							variant="default"
-// 							rightElement={
-// 								<span className="text-xs text-muted-foreground">
-// 									{new Date(post.createdAt).toLocaleDateString(undefined, {
-// 										month: "short",
-// 										day: "numeric",
-// 										year: "numeric",
-// 									})}
-// 								</span>
-// 							}
-// 						/>
-// 					</div>
-// 				</div>
-// 			}
-// 		/>
-// 	);
-// }
+	const goToPreviousMedia = () => {
+		if (images.length <= 1) return;
+
+		setActiveMediaIndex((currentIndex) =>
+			currentIndex === 0 ? images.length - 1 : currentIndex - 1,
+		);
+	};
+
+	const goToNextMedia = () => {
+		if (images.length <= 1) return;
+
+		setActiveMediaIndex((currentIndex) =>
+			currentIndex === images.length - 1 ? 0 : currentIndex + 1,
+		);
+	};
+
+	const handleDelete = async () => {
+		try {
+			await deletePostMutation.mutateAsync(postId);
+
+			toast.success(
+				t(
+					"components.portfolio.post.delete.success",
+					"Post deleted successfully",
+				),
+			);
+
+			setDeleteDialogOpen(false);
+
+			await Promise.all([
+				queryClient.invalidateQueries({
+					queryKey: ["portfolio"],
+				}),
+				queryClient.invalidateQueries({
+					queryKey: ["profile-content"],
+				}),
+			]);
+
+			onDeleted?.();
+		} catch {
+			toast.error(
+				t("components.portfolio.post.delete.error", "Failed to delete post"),
+			);
+		}
+	};
+
+	return {
+		t,
+		i18n,
+		post,
+		isPending,
+		isError,
+		profileUser,
+		deletePostMutation,
+		deleteDialogOpen,
+		setDeleteDialogOpen,
+		activeMediaIndex,
+		setActiveMediaIndex,
+		liked,
+		setLiked,
+		bookmarked,
+		setBookmarked,
+		images,
+		currentMedia,
+		currentMediaPath,
+		displayTitle,
+		displayedLikeCount,
+		createdAt,
+		canManagePost,
+		goToPreviousMedia,
+		goToNextMedia,
+		handleDelete,
+	};
+}
+
+type Controller = ReturnType<typeof usePortfolioPostController>;
+
+function PostHeader({ controller }: { controller: Controller }) {
+	const { t, profileUser } = controller;
+
+	return (
+		<div className="flex min-w-0 items-center gap-3">
+			<User size="default" user={profileUser} showUsername={false} />
+		</div>
+	);
+}
+
+function PostMoreMenuItems({ controller }: { controller: Controller }) {
+	const { t, canManagePost, setDeleteDialogOpen, post, profileUser } = controller;
+
+	if (canManagePost) {
+		return (
+			<>
+				<DropdownMenuItem
+					onSelect={() => {
+						toast.info(
+							t(
+								"components.portfolio.post.edit_coming_soon",
+								"Edit feature coming soon!",
+							),
+						);
+					}}
+				>
+					<Edit2 className="size-4" />
+					{t("components.portfolio.post.manage.edit", "Edit post")}
+				</DropdownMenuItem>
+
+				<DropdownMenuSeparator />
+
+				<DropdownMenuItem
+					variant="destructive"
+					onSelect={() => {
+						setDeleteDialogOpen(true);
+					}}
+				>
+					<Trash2 className="size-4" />
+					{t("components.portfolio.post.manage.delete", "Delete post")}
+				</DropdownMenuItem>
+			</>
+		);
+	}
+
+	return (
+		<>
+		<DropdownMenuItem
+			onSelect={() => {
+				navigator.clipboard.writeText(
+					`${window.location.origin}/${profileUser?.username}/portfolio/${post?.id}`,
+				);
+				toast.success(
+					t(
+						"components.portfolio.post.manage.copy_link_success",
+						"Link copied to clipboard",
+					),
+				);
+				// 		"Report feature coming soon!",
+				// 	),
+				// );
+			}}
+		>
+			<Copy className="size-4" />
+			{t("components.portfolio.post.manage.copy_link", "Copy link")}
+		</DropdownMenuItem>
+		<DropdownMenuSeparator />
+		<DropdownMenuItem
+			variant={"destructive"}
+			onSelect={() => {
+				toast.info(
+					t(
+						"components.portfolio.post.report_coming_soon",
+						"Report feature coming soon!",
+					),
+				);
+			}}
+		>
+			<Flag className="size-4" />
+			{t("components.portfolio.post.manage.report", "Report post")}
+		</DropdownMenuItem>
+		</>
+	);
+}
+
+function PostMedia({ controller }: { controller: Controller }) {
+	const {
+		t,
+		post,
+		images,
+		currentMedia,
+		currentMediaPath,
+		displayTitle,
+		activeMediaIndex,
+		setActiveMediaIndex,
+		goToPreviousMedia,
+		goToNextMedia,
+	} = controller;
+
+	if (!post) return null;
+
+	return (
+		<ContentWarningOverlay
+			key={post.id}
+			warnings={post.contentWarnings}
+			className="size-full"
+		>
+			<div className="relative flex size-full min-h-0 items-center justify-center overflow-hidden bg-black">
+				{currentMedia && currentMediaPath ? (
+					currentMedia.mediaType === "VIDEO" ? (
+						<video
+							key={currentMedia.id}
+							src={currentMediaPath}
+							controls
+							playsInline
+							className="size-full object-contain"
+						/>
+					) : (
+						<img
+							key={currentMedia.id}
+							src={currentMediaPath}
+							alt={`${displayTitle} — ${activeMediaIndex + 1}`}
+							className="size-full object-contain"
+						/>
+					)
+				) : (
+					<div className="flex size-full min-h-75 items-center justify-center px-6 text-center text-white/70">
+						<EmptyPage
+							title={t(
+								"components.portfolio.post.no_media",
+								"No media available",
+							)}
+						/>
+					</div>
+				)}
+
+				{images.length > 1 && (
+					<>
+						<Button
+							type="button"
+							variant="secondary"
+							size="icon-xl"
+							aria-label={t(
+								"components.portfolio.post.previous_media",
+								"Previous image",
+							)}
+							className="absolute left-4 top-1/2 z-10 -translate-y-1/2"
+							onClick={goToPreviousMedia}
+						>
+							<OutlineChevronLeft className="size-5" />
+						</Button>
+
+						<Button
+							type="button"
+							variant="secondary"
+							size="icon-xl"
+							aria-label={t(
+								"components.portfolio.post.next_media",
+								"Next image",
+							)}
+							className="absolute right-4 top-1/2 z-10 -translate-y-1/2"
+							onClick={goToNextMedia}
+						>
+							<OutlineChevronRight className="size-5" />
+						</Button>
+
+						<div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/35 px-2.5 py-2 backdrop-blur-sm">
+							{images.map((image, index) => (
+								<button
+									key={image.id || index}
+									type="button"
+									aria-label={`Show image ${index + 1}`}
+									className={cn(
+										"size-1.5 rounded-full bg-white/50 transition-all",
+										index === activeMediaIndex && "w-4 bg-white",
+									)}
+									onClick={() => setActiveMediaIndex(index)}
+								/>
+							))}
+						</div>
+					</>
+				)}
+			</div>
+		</ContentWarningOverlay>
+	);
+}
+
+function PostDetails({ controller }: { controller: Controller }) {
+	const { post, profileUser, displayTitle, createdAt } = controller;
+
+	if (!post) return null;
+
+	return (
+		<article className="p-4">
+			<div className="flex flex-col items-start gap-3">
+				<User size="sm" user={profileUser} />
+
+				<div className="ml-11.5 min-w-0 flex-1 text-sm leading-relaxed">
+					<Typography.Paragraph size="sm" className="wrap-break-word">
+						{displayTitle}
+					</Typography.Paragraph>
+
+					{post.description && (
+						<Typography.Paragraph
+							size="sm"
+							className="mt-2 whitespace-pre-wrap wrap-break-word text-foreground"
+						>
+							{post.description}
+						</Typography.Paragraph>
+					)}
+
+					{post.tags && post.tags.length > 0 && (
+						<div className="mt-3 flex flex-wrap gap-x-1.5 gap-y-1">
+							{post.tags.map((tag) => (
+								<span
+									key={tag}
+									className="cursor-pointer text-primary hover:underline"
+								>
+									#{tag.replace(/^#/, "")}
+								</span>
+							))}
+						</div>
+					)}
+
+					{createdAt && (
+						<p className="mt-3 text-xs text-muted-foreground">{createdAt}</p>
+					)}
+				</div>
+			</div>
+		</article>
+	);
+}
+
+function PostActions({ controller }: { controller: Controller }) {
+	const {
+		t,
+		i18n,
+		liked,
+		setLiked,
+		bookmarked,
+		setBookmarked,
+		displayedLikeCount,
+		createdAt,
+	} = controller;
+
+	return (
+		<div className="bg-background">
+			<div className="flex items-center px-2 pt-2">
+				<div className="flex items-center">
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						aria-label={
+							liked
+								? t("components.portfolio.post.unlike", "Unlike")
+								: t("components.portfolio.post.like", "Like")
+						}
+						className={cn(
+							"rounded-full",
+							liked && "text-red-500 hover:text-red-500",
+						)}
+						onClick={() => setLiked((current) => !current)}
+					>
+						<OutlineHeart className={cn("size-6", liked && "fill-current")} />
+					</Button>
+
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						aria-label={t("components.portfolio.post.comment", "Comment")}
+						className="rounded-full"
+					>
+						<OutlineChat className="size-6" />
+					</Button>
+
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						aria-label={t("components.portfolio.post.share", "Share")}
+						className="rounded-full"
+					>
+						<OutlineSend className="size-6" />
+					</Button>
+				</div>
+
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon"
+					aria-label={
+						bookmarked
+							? t(
+									"components.portfolio.post.remove_bookmark",
+									"Remove bookmark",
+								)
+							: t("components.portfolio.post.bookmark", "Bookmark")
+					}
+					className="ml-auto rounded-full"
+					onClick={() => setBookmarked((current) => !current)}
+				>
+					<OutlineBookmark
+						className={cn("size-6", bookmarked && "fill-current")}
+					/>
+				</Button>
+			</div>
+
+			<div className="px-4 pb-3">
+				<Typography.Paragraph size="base">
+					{displayedLikeCount.toLocaleString(i18n.language)}{" "}
+					{displayedLikeCount === 1
+						? t("components.portfolio.post.like_count_single", "like")
+						: t("components.portfolio.post.like_count_plural", "likes")}
+				</Typography.Paragraph>
+
+				{createdAt && (
+					<Typography.Paragraph
+						size="xs"
+						className="mt-1 uppercase text-muted-foreground"
+					>
+						{createdAt}
+					</Typography.Paragraph>
+				)}
+			</div>
+		</div>
+	);
+}
+
+function DeletePostDialog({ controller }: { controller: Controller }) {
+	const {
+		t,
+		deleteDialogOpen,
+		setDeleteDialogOpen,
+		deletePostMutation,
+		handleDelete,
+	} = controller;
+
+	return (
+		<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>
+						{t("components.portfolio.post.delete.title", "Delete post?")}
+					</AlertDialogTitle>
+
+					<AlertDialogDescription>
+						{t(
+							"components.portfolio.post.delete.description",
+							"Are you sure you want to delete this post? This action cannot be undone.",
+						)}
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+
+				<AlertDialogFooter>
+					<AlertDialogCancel>
+						{t("components.portfolio.post.delete.cancel", "Cancel")}
+					</AlertDialogCancel>
+
+					<AlertDialogAction
+						disabled={deletePostMutation.isPending}
+						onClick={(event) => {
+							event.preventDefault();
+							void handleDelete();
+						}}
+						className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+					>
+						{deletePostMutation.isPending
+							? t("components.portfolio.post.delete.deleting", "Deleting...")
+							: t("components.portfolio.post.delete.confirm", "Delete")}
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+}
+
+export function PortfolioPostModal({
+	postId,
+	username,
+	open,
+	onOpenChange,
+}: PortfolioPostModalProps) {
+	const controller = usePortfolioPostController({
+		postId,
+		username,
+		onDeleted: () => onOpenChange(false),
+	});
+
+	const { t, isPending, isError, post, displayTitle } = controller;
+
+	if (!open) return null;
+
+	if (isPending) {
+		return (
+			<UniversalModalLayout
+				open={open}
+				onOpenChange={onOpenChange}
+				title={t("components.portfolio.post.loading", "Loading post...")}
+				mediaClassName="bg-black"
+				mediaContent={
+					<div className="flex size-full min-h-75 items-center justify-center text-white">
+						<Spinner />
+					</div>
+				}
+				detailsHeaderContent={
+					<div className="flex items-center gap-3">
+						<div className="size-10 animate-pulse rounded-full bg-muted" />
+						<div className="space-y-2">
+							<div className="h-3 w-28 animate-pulse rounded bg-muted" />
+							<div className="h-2.5 w-20 animate-pulse rounded bg-muted" />
+						</div>
+					</div>
+				}
+				detailsContent={
+					<div className="flex h-full min-h-75 items-center justify-center">
+						<Spinner />
+					</div>
+				}
+			/>
+		);
+	}
+
+	if (isError || !post) {
+		return (
+			<UniversalModalLayout
+				open={open}
+				onOpenChange={onOpenChange}
+				title={t("components.portfolio.post.error", "Error")}
+				mediaClassName="bg-black"
+				mediaContent={
+					<div className="flex size-full min-h-75 items-center justify-center px-6 text-center text-sm text-white/70">
+						{t(
+							"components.portfolio.post.not_found",
+							"Post not found or could not be loaded.",
+						)}
+					</div>
+				}
+				detailsContent={<div />}
+			/>
+		);
+	}
+
+	return (
+		<>
+			<UniversalModalLayout
+				open={open}
+				onOpenChange={onOpenChange}
+				title={displayTitle}
+				mediaClassName="bg-black"
+				detailsHeaderContent={<PostHeader controller={controller} />}
+				moreMenuContent={<PostMoreMenuItems controller={controller} />}
+				mediaContent={<PostMedia controller={controller} />}
+				detailsContent={<PostDetails controller={controller} />}
+				detailsFooterContent={<PostActions controller={controller} />}
+			/>
+
+			<DeletePostDialog controller={controller} />
+		</>
+	);
+}
+
+export function PortfolioPostPage({
+	postId,
+	username,
+	onBack,
+	onDeleted,
+}: PortfolioPostPageProps) {
+	const controller = usePortfolioPostController({
+		postId,
+		username,
+		onDeleted,
+	});
+
+	const { t, isPending, isError, post, displayTitle } = controller;
+
+	if (isPending) {
+		return (
+			<div className="flex min-h-[60dvh] w-full items-center justify-center">
+				<Spinner />
+			</div>
+		);
+	}
+
+	if (isError || !post) {
+		return (
+			<div className="flex min-h-[60dvh] w-full items-center justify-center p-6">
+				<EmptyPage
+					title={t(
+						"components.portfolio.post.not_found",
+						"Post not found or could not be loaded.",
+					)}
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<>
+			<main className="mx-auto w-full max-w-[1440px] md:px-4 lg:px-6">
+				<div className="grid min-h-[calc(100dvh-5rem)] w-full overflow-hidden bg-background md:my-4 md:rounded-2xl md:border lg:grid-cols-[minmax(0,1fr)_420px]">
+					<section className="relative min-h-[55dvh] bg-black lg:min-h-[calc(100dvh-7rem)]">
+						{onBack && (
+							<Button
+								type="button"
+								variant="secondary"
+								size="icon-xl"
+								aria-label="Back"
+								className="absolute left-4 top-4 z-30"
+								onClick={onBack}
+							>
+								<ArrowLeft className="size-5" />
+							</Button>
+						)}
+
+						<PostMedia controller={controller} />
+					</section>
+
+					<aside className="flex min-h-0 flex-col border-t bg-background lg:max-h-[calc(100dvh-7rem)] lg:border-l lg:border-t-0">
+						<header className="flex items-center gap-3 border-b p-4">
+							<PostHeader controller={controller} />
+
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="ml-auto rounded-full"
+										aria-label="More"
+									>
+										<MoreHorizontal className="size-5" />
+									</Button>
+								</DropdownMenuTrigger>
+
+								<DropdownMenuContent align="end">
+									<PostMoreMenuItems controller={controller} />
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</header>
+
+						<div className="min-h-0 flex-1 overflow-y-auto">
+							<PostDetails controller={controller} />
+						</div>
+
+						<div className="border-t">
+							<PostActions controller={controller} />
+						</div>
+					</aside>
+				</div>
+
+				<h1 className="sr-only">{displayTitle}</h1>
+			</main>
+
+			<DeletePostDialog controller={controller} />
+		</>
+	);
+}

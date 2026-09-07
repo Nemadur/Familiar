@@ -6,19 +6,21 @@ import { cn } from "@/lib/utils";
 import type { TUserProfile } from "@/types/user";
 
 export default function UserAvatar({
-	user,
+	user = undefined,
 	isHuge = false,
 	hasOutline = false,
 	size = "default",
 	isOnline = false,
-	badgeClassName,
+	badgeClassName = "",
+	className,
 }: {
-	user: TUserProfile;
+	user?: TUserProfile | undefined;
 	isHuge?: boolean;
 	hasOutline?: boolean;
-	size?: "sm" | "default" | "lg" | "xl";
+	size?: "sm" | "default" | "lg" | "xl" | "2xl";
 	isOnline?: boolean;
 	badgeClassName?: string;
+	className?: string;
 }) {
 	const { avatarBgStyle, avatarForegroundStyle } = useMemo(
 		() => getUserAccentStylesFromHex(user?.accentColor),
@@ -41,12 +43,19 @@ export default function UserAvatar({
 	} else if (size === "xl") {
 		sizeClasses = "size-16";
 		hashSize = 64;
+	} else if (size === "2xl") {
+		sizeClasses = "size-24";
+		hashSize = 96;
 	}
 
 	return (
 		<div className="relative inline-flex shrink-0">
 			<Avatar
-				className={cn(sizeClasses, hasOutline && "ring-6 ring-background")}
+				className={cn(
+					sizeClasses,
+					hasOutline && "ring-6 ring-background",
+					className,
+				)}
 			>
 				<AvatarImage src={user?.avatarPath || undefined} alt={altText} />
 				<AvatarFallback>

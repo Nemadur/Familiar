@@ -22,7 +22,8 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useIsTablet } from "@/hooks/use-mobile";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
+import { getLocaleParam, localizePath } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import type { TUserProfile, TUserResponse } from "@/types/user";
@@ -40,6 +41,7 @@ export default function UserDropDown({
 	const isTablet = useIsTablet();
 	// TODO: replace isDesktop to useIsTablet
 	const [open, setOpen] = useState(false);
+	const locale = getLocaleParam(document.documentElement.lang);
 
 	const TriggerButton = (
 		<Button
@@ -69,24 +71,25 @@ export default function UserDropDown({
 		{
 			label: "Profile",
 			icon: <OutlineUser />,
-			to: "/$username",
-			params: { username: user.username },
+			to: localizePath(`/user/${user?.username || ""}`, locale),
 		},
 		{
 			label: "Requests",
 			icon: <OutlineReceipt />,
-			to: "/my-requests",
+			to: localizePath("/my-requests", locale),
 		},
 		{
 			label: "Orders",
 			icon: <OutlineSettings />,
-			to: "/orders" as any,
+			to: localizePath("/orders", locale),
 		},
 		{
 			label: "Characters",
 			icon: <OutlineSettings />,
-			to: "/$username/$tab",
-			params: { username: user.username, tab: "characters" },
+			to: localizePath(
+				`/user/${user?.username || ""}/characters`,
+				locale,
+			) as any,
 		},
 	];
 
@@ -109,12 +112,7 @@ export default function UserDropDown({
 			<div className="flex flex-col gap-1 p-1">
 				{MenuItems.map((item) => (
 					<Button key={item.label} variant="ghost" size={"xl"} asChild>
-						<Link
-							to={item.to}
-							params={item.params}
-							preload={false}
-							onClick={() => setOpen(false)}
-						>
+						<Link to={item.to} preload={false} onClick={() => setOpen(false)}>
 							{item.icon}
 							<span>{item.label}</span>
 						</Link>
@@ -164,7 +162,6 @@ export default function UserDropDown({
 							<DropdownMenuItem key={item.label} asChild>
 								<Link
 									to={item.to}
-									params={item.params}
 									preload={false}
 									className="cursor-pointer w-full"
 								>

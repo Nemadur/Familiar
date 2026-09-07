@@ -21,7 +21,8 @@ import {
 } from "@/components/kibo-ui/reel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useIsTablet } from "@/hooks/use-mobile";
+import { useIsTablet } from "@/hooks/ui/use-mobile";
+import { getLocaleParam } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { MockShopItem } from "@/types/shop";
 import { BookmarkButton } from "../bookmark";
@@ -32,6 +33,7 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 	const [hoverPlaying, setHoverPlaying] = useState(false);
 	const [isAutoPlayPaused, setIsAutoPlayPaused] = useState(false);
 	const isTablet = useIsTablet();
+	const locale = getLocaleParam(document.documentElement.lang);
 
 	const displayImages =
 		item.images && item.images.length > 0 ? item.images : [item.coverImage];
@@ -48,7 +50,8 @@ export function ShopItemCard({ item }: { item: MockShopItem }) {
 
 	return (
 		<Link
-			to={`/shop/${item.id}` as any}
+			to="/{-$locale}/shop/$id"
+			params={{ locale, id: String(item.id) }}
 			className="group relative flex w-full h-full flex-col gap-2"
 			onMouseEnter={() => {
 				if (!isTablet) setHoverPlaying(true);

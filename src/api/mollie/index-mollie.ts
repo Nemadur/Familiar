@@ -1,5 +1,8 @@
 import { apiFetch } from "@/lib/fetch";
-import type { TMolliePaymentRequest, TMolliePaymentResponse } from "./types-mollie";
+import type {
+	TMolliePaymentRequest,
+	TMolliePaymentResponse,
+} from "./types-mollie";
 
 /**
  * Creates a payment in Mollie.
@@ -22,12 +25,10 @@ export async function getMolliePayment(paymentId: string) {
 /**
  * Helper to format amount for Mollie (e.g., 10 -> "10.00")
  */
-// TODO: move to or create helpers functions 
+// TODO: move to or create helpers functions
 
 export function formatMollieAmount(amount: number): string {
 	return amount.toFixed(2);
 }
 
-export function clientRegistrationMollie() {
-	
-}
+export function clientRegistrationMollie() {}

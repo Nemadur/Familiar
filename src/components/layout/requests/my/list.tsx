@@ -19,8 +19,8 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useCommission } from "@/hooks/use-commisions";
-import { useUserById } from "@/hooks/use-user";
+import { useCommission } from "@/hooks/commissions/use-commissions";
+import { useUserById } from "@/hooks/user/use-user";
 import { cn } from "@/lib/utils";
 import { TCommissionRequestStatus } from "@/types/commissions";
 import { TPaymentStatus } from "@/types/payment";

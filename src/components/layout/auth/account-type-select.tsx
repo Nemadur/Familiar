@@ -49,7 +49,7 @@ export function AccountTypeSelector({
 
 								selected
 									? [
-											"border-blue-500 bg-blue-50 dark:bg-blue-950",
+											"border-blue-500! bg-blue-50 dark:bg-blue-950",
 
 											// Focus when selected
 											"has-focus-visible:border-blue-600",
@@ -58,8 +58,8 @@ export function AccountTypeSelector({
 											"dark:has-focus-visible:ring-blue-300/30",
 										]
 									: [
-											"border-border hover:border-blue-300 hover:bg-blue-50",
-											"dark:hover:border-blue-900 dark:hover:bg-blue-950/50",
+											"border-border hover:border-blue-300! hover:bg-blue-50",
+											"dark:hover:border-blue-900! dark:hover:bg-blue-950/50",
 
 											// Focus when not selected
 											"has-focus-visible:border-input",
@@ -89,8 +89,8 @@ export function AccountTypeSelector({
 									className={cn(
 										"mt-0.5 flex relative size-5 items-center justify-center rounded-full border transition-all duraton-75",
 										selected
-											? "border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-400"
-											: "border-border group-hover:border-blue-700 group-hover:dark:border-blue-300",
+											? "border-blue-600! bg-blue-600 dark:border-blue-400 dark:bg-blue-400"
+											: "border-border group-hover:border-blue-700! group-hover:dark:border-blue-300!",
 									)}
 									aria-hidden
 								>

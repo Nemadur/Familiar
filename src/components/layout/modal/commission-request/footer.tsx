@@ -77,7 +77,11 @@ export function CommissionRequestFooter({
 							<OutlineArrowLeft />
 							Back
 						</Button>
-						<Button size="xl" className="flex-1" type={isPreview ? "button" : "submit"}>
+						<Button
+							size="xl"
+							className="flex-1"
+							type={isPreview ? "button" : "submit"}
+						>
 							{isPreview ? "Preview Mode" : "Request commission"}
 						</Button>
 					</>

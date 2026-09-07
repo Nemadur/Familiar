@@ -25,6 +25,10 @@ import {
 	CommandSeparator,
 } from "src/components/ui/command";
 import {
+	InputGroup,
+	InputGroupNumberInput,
+} from "src/components/ui/input-group";
+import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
@@ -628,16 +632,30 @@ function useFilterOptionsState<TData, TType extends "option" | "multiOption">(
 	);
 	const [options, setOptions] = useState(initialOptions);
 
+	const filterValuesStr = JSON.stringify(filter?.values);
+
 	useEffect(() => {
 		const selectedValues = filter?.values ?? [];
 
-		setOptions((previous) =>
-			previous.map((option) => ({
-				...option,
-				initialSelected: selectedValues.includes(option.value),
-				selected: selectedValues.includes(option.value),
-			})),
-		);
+		setOptions((previous) => {
+			let hasChanges = false;
+			const next = previous.map((option) => {
+				const isSelected = selectedValues.includes(option.value);
+				if (
+					option.selected !== isSelected ||
+					option.initialSelected !== isSelected
+				) {
+					hasChanges = true;
+					return {
+						...option,
+						initialSelected: isSelected,
+						selected: isSelected,
+					};
+				}
+				return option;
+			});
+			return hasChanges ? next : previous;
+		});
 	}, [filter?.values]);
 
 	return options;
@@ -959,12 +977,23 @@ export function FilterValueDateController<TData>({
 		to: filter?.values[1] ?? undefined,
 	});
 
+	const filterValuesStr = JSON.stringify(filter?.values);
+
 	useEffect(() => {
-		setDate({
-			from: filter?.values[0] ?? undefined,
-			to: filter?.values[1] ?? undefined,
+		setDate((prev) => {
+			const newFrom = filter?.values[0] ?? undefined;
+			const newTo = filter?.values[1] ?? undefined;
+
+			if (prev?.from === newFrom && prev?.to === newTo) {
+				return prev;
+			}
+
+			return {
+				from: newFrom,
+				to: newTo,
+			};
 		});
-	}, [filter?.values]);
+	}, [filterValuesStr]);
 
 	function changeDateRange(value: DateRange | undefined) {
 		const start = value?.from;
@@ -1065,26 +1094,67 @@ export function FilterValueNumberController<TData>({
 	onBack,
 }: FilterValueControllerProps<TData, "number"> & { onBack?: () => void }) {
 	const minMax = useMemo(() => column.getFacetedMinMaxValues(), [column]);
-	const [sliderMin, sliderMax] = [
-		minMax ? minMax[0] : 0,
-		minMax ? minMax[1] : 0,
-	];
 
-	const [values, setValues] = useState(filter?.values ?? [0, 0]);
+	const [values, setValues] = useState<number[]>(() => {
+		const init = filter?.values ?? [0, 0];
+		return [Number(init[0] ?? 0), Number(init[1] ?? init[0] ?? 0)];
+	});
+
+	const isInitialized = useRef(false);
+	const boundsRef = useRef<[number, number]>([0, 0]);
+
+	const [sliderMin, sliderMax] = useMemo(() => {
+		let min = minMax && minMax[0] !== undefined ? Number(minMax[0]) : 0;
+		let max = minMax && minMax[1] !== undefined ? Number(minMax[1]) : 0;
+
+		if (isNaN(min)) min = 0;
+		if (isNaN(max)) max = 0;
+
+		min = Math.min(min, values[0]);
+		max = Math.max(max, values[1] ?? values[0]);
+
+		if (min === max) {
+			max = min + 100;
+		}
+
+		if (!isInitialized.current) {
+			boundsRef.current = [min, max];
+			isInitialized.current = true;
+		} else {
+			boundsRef.current = [
+				Math.min(boundsRef.current[0], min),
+				Math.max(boundsRef.current[1], max),
+			];
+		}
+
+		return boundsRef.current;
+	}, [minMax, values]);
+
+	// TODO: Add accessibility hold to add remove numbers / InputGroupNumberInput
+
+	// const filterValuesStr = JSON.stringify(filter?.values);
 
 	useEffect(() => {
 		const filterValues = filter?.values;
 
 		if (!filterValues) return;
 
-		const sameValues =
-			filterValues.length === values.length &&
-			filterValues.every((value, index) => value === values[index]);
+		const numValues = [
+			Number(filterValues[0] ?? 0),
+			Number(filterValues[1] ?? filterValues[0] ?? 0),
+		];
 
-		if (!sameValues) {
-			setValues(filterValues);
-		}
-	}, [filter?.values, values]);
+		setValues((prevValues) => {
+			const sameValues =
+				numValues.length === prevValues.length &&
+				numValues.every((value, index) => value === prevValues[index]);
+
+			if (!sameValues) {
+				return numValues;
+			}
+			return prevValues;
+		});
+	}, [filter?.values]);
 
 	const isNumberRange =
 		filter && numberFilterOperators[filter.operator].target === "multiple";
@@ -1125,10 +1195,12 @@ export function FilterValueNumberController<TData>({
 				newValues = createNumberRange([values[0], values[1] ?? 0]);
 			} else {
 				const value = values[0];
+				const min = Number(minMax[0] ?? 0);
+				const max = Number(minMax[1] ?? 0);
 				newValues =
-					value - minMax[0] < minMax[1] - value
-						? createNumberRange([value, minMax[1]])
-						: createNumberRange([minMax[0], value]);
+					value - min < max - value
+						? createNumberRange([value, max])
+						: createNumberRange([min, value]);
 			}
 
 			const newOperator = type === "single" ? "is" : "is between";
@@ -1185,9 +1257,9 @@ export function FilterValueNumberController<TData>({
 								</TabsList>
 								<TabsContent
 									value="single"
-									className="flex flex-col gap-4 mt-4"
+									className="flex flex-col gap-4 mt-4 px-2 pb-1"
 								>
-									{minMax && (
+									<div className="px-1">
 										<Slider
 											value={[values[0]]}
 											onValueChange={(value) => changeNumber(value)}
@@ -1196,21 +1268,25 @@ export function FilterValueNumberController<TData>({
 											step={1}
 											aria-orientation="horizontal"
 										/>
-									)}
+									</div>
 									<div className="flex items-center gap-2">
 										<span className="text-xs font-medium">
 											{t("value", locale)}
 										</span>
-										<DebouncedInput
-											id="single"
-											type="number"
-											value={values[0].toString()}
-											onChange={(value) => changeNumber([Number(value)])}
-										/>
+										<InputGroup>
+											<InputGroupNumberInput
+												id="single"
+												value={values[0]}
+												onValueChange={(value) => changeNumber([value ?? 0])}
+											/>
+										</InputGroup>
 									</div>
 								</TabsContent>
-								<TabsContent value="range" className="flex flex-col gap-4 mt-4">
-									{minMax && (
+								<TabsContent
+									value="range"
+									className="flex flex-col gap-4 mt-4 px-2 pb-1"
+								>
+									<div className="px-1">
 										<Slider
 											value={values}
 											onValueChange={changeNumber}
@@ -1219,27 +1295,31 @@ export function FilterValueNumberController<TData>({
 											step={1}
 											aria-orientation="horizontal"
 										/>
-									)}
+									</div>
 									<div className="grid grid-cols-2 gap-4">
 										<div className="flex items-center gap-2">
 											<span className="text-xs font-medium">
 												{t("min", locale)}
 											</span>
-											<DebouncedInput
-												type="number"
-												value={values[0]}
-												onChange={(value) => changeMinNumber(Number(value))}
-											/>
+											<InputGroup>
+												<InputGroupNumberInput
+													value={values[0]}
+													max={values[1]}
+													onValueChange={(value) => changeMinNumber(value ?? 0)}
+												/>
+											</InputGroup>
 										</div>
 										<div className="flex items-center gap-2">
 											<span className="text-xs font-medium">
 												{t("max", locale)}
 											</span>
-											<DebouncedInput
-												type="number"
-												value={values[1]}
-												onChange={(value) => changeMaxNumber(Number(value))}
-											/>
+											<InputGroup>
+												<InputGroupNumberInput
+													value={values[1]}
+													min={values[0]}
+													onValueChange={(value) => changeMaxNumber(value ?? 0)}
+												/>
+											</InputGroup>
 										</div>
 									</div>
 								</TabsContent>

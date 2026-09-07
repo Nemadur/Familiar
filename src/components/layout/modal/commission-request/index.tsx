@@ -34,23 +34,55 @@ export function CommissionRequestFormRenderer({
 			{visibleBlocks.map((block) => {
 				switch (block.kind) {
 					case "requester_name":
-						return <RequesterNameBlock key={block.id} control={control} block={block} />;
+						return (
+							<RequesterNameBlock
+								key={block.id}
+								control={control}
+								block={block}
+							/>
+						);
 					case "contact_email":
-						return <ContactEmailBlock key={block.id} control={control} block={block} />;
+						return (
+							<ContactEmailBlock
+								key={block.id}
+								control={control}
+								block={block}
+							/>
+						);
 					case "social_handles":
-						return <SocialHandlesBlock key={block.id} control={control} block={block} />;
+						return (
+							<SocialHandlesBlock
+								key={block.id}
+								control={control}
+								block={block}
+							/>
+						);
 					case "licenses":
-						return <LicenseBlock key={block.id} control={control} block={block} />;
+						return (
+							<LicenseBlock key={block.id} control={control} block={block} />
+						);
 					case "custom_option":
-						return <CustomOptionBlock key={block.id} control={control} block={block} />;
+						return (
+							<CustomOptionBlock
+								key={block.id}
+								control={control}
+								block={block}
+							/>
+						);
 					case "references":
 						return <ReferencesBlock key={block.id} block={block} />;
 					case "sharing":
-						return <SharingBlock key={block.id} control={control} block={block} />;
+						return (
+							<SharingBlock key={block.id} control={control} block={block} />
+						);
 					case "deadline":
-						return <DeadlineBlock key={block.id} control={control} block={block} />;
+						return (
+							<DeadlineBlock key={block.id} control={control} block={block} />
+						);
 					case "extra_info":
-						return <ExtraInfoBlock key={block.id} control={control} block={block} />;
+						return (
+							<ExtraInfoBlock key={block.id} control={control} block={block} />
+						);
 					case "requester_terms":
 						return (
 							<RequesterTermsBlock

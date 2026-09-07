@@ -32,7 +32,7 @@ const inputGroupVariants = cva(
 );
 
 export interface InputGroupProps
-	extends React.ComponentProps<"fieldset">,
+	extends React.ComponentProps<"div">,
 		VariantProps<typeof inputGroupVariants> {}
 
 function assignRef<T>(targetRef: React.Ref<T> | undefined, value: T | null) {
@@ -61,7 +61,7 @@ function useMergedRef<T>(
 
 function InputGroup({ className, variant, ...props }: InputGroupProps) {
 	return (
-		<fieldset
+		<div
 			data-slot="input-group"
 			data-variant={variant || "default"}
 			className={cn(
@@ -69,8 +69,8 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 				"h-10 min-w-0 has-[>textarea]:h-auto peer",
 
 				// Focus state.
-				"has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
-				"has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-ring/50",
+				"has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-primary/40",
+				"has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-primary/40",
 
 				// Error state.
 				"has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
@@ -83,7 +83,7 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 }
 
 const inputGroupAddonVariants = cva(
-	"text-muted-foreground flex h-auto [&>svg]:mt-0.5 cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
+	"flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium text-muted-foreground select-none transition-colors [&>svg]:mt-0.5 [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 group-has-[[data-slot=input-group-control][aria-invalid=true]]/input-group:text-destructive",
 	{
 		variants: {
 			align: {
@@ -205,9 +205,12 @@ function InputGroupInput({
 		<Input
 			data-slot="input-group-control"
 			className={cn(
-				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive",
-				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1 group-data-[variant=floating]/input-group:h-10",
+				"peer flex-1 rounded-none border-0 bg-transparent text-primary shadow-none transition-colors placeholder:text-muted-foreground focus-visible:ring-0 dark:bg-transparent",
+				"group-has-[[data-slot=input-group-addon][data-align=inline-start]_[data-slot=input-group-text]]/input-group:pl-1",
+				"aria-invalid:text-destructive aria-invalid:caret-destructive aria-invalid:placeholder:text-destructive/60",
+				"group-data-[variant=floating]/input-group:h-10 group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1",
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
+				"group-data-[variant=floating]/input-group:aria-invalid:focus:placeholder:text-destructive/60",
 				className,
 			)}
 			{...props}
@@ -226,8 +229,10 @@ function InputGroupTextarea({
 			data-slot="input-group-control"
 			className={cn(
 				"flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent peer text-primary aria-invalid:text-destructive resize-none py-2",
+				"group-has-[[data-slot=input-group-addon][data-align=inline-start]_[data-slot=input-group-text]]/input-group:pl-0",
 				"group-data-[variant=floating]/input-group:pt-4 group-data-[variant=floating]/input-group:pb-1",
 				"group-data-[variant=floating]/input-group:placeholder:text-transparent group-data-[variant=floating]/input-group:focus:placeholder:text-muted-foreground",
+				"aria-invalid:text-destructive aria-invalid:caret-destructive aria-invalid:placeholder:text-destructive/60",
 				className,
 			)}
 			{...props}
@@ -278,29 +283,31 @@ function InputGroupNumberInput({
 		controlledValue ?? defaultValue,
 	);
 
-	const handleIncrement = useCallback(() => {
-		setValue((previousValue) => {
-			const nextValue =
-				previousValue === undefined
-					? (stepper ?? 1)
-					: Math.min(previousValue + (stepper ?? 1), max);
+	// TODO: Add accessibility hold to add remove numbers / InputGroupNumberInput
 
-			onValueChange?.(nextValue);
-			return nextValue;
-		});
-	}, [stepper, max, onValueChange]);
+	const handleIncrement = useCallback(() => {
+		const currentValue =
+			value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
+		const nextValue =
+			value === undefined
+				? (stepper ?? 1)
+				: Math.min(currentValue + (stepper ?? 1), max);
+
+		setValue(nextValue);
+		onValueChange?.(nextValue);
+	}, [value, stepper, max, onValueChange]);
 
 	const handleDecrement = useCallback(() => {
-		setValue((previousValue) => {
-			const nextValue =
-				previousValue === undefined
-					? -(stepper ?? 1)
-					: Math.max(previousValue - (stepper ?? 1), min);
+		const currentValue =
+			value === undefined || Number.isNaN(Number(value)) ? 0 : Number(value);
+		const nextValue =
+			value === undefined
+				? -(stepper ?? 1)
+				: Math.max(currentValue - (stepper ?? 1), min);
 
-			onValueChange?.(nextValue);
-			return nextValue;
-		});
-	}, [stepper, min, onValueChange]);
+		setValue(nextValue);
+		onValueChange?.(nextValue);
+	}, [value, stepper, min, onValueChange]);
 
 	const handleIncrementEvent = useEffectEvent(() => {
 		handleIncrement();
@@ -338,8 +345,10 @@ function InputGroupNumberInput({
 	useEffect(() => {
 		if (controlledValue !== undefined) {
 			setValue(controlledValue);
+		} else {
+			setValue(defaultValue);
 		}
-	}, [controlledValue]);
+	}, [controlledValue, defaultValue]);
 
 	const updateNumberInputValue = (values: {
 		value: string;
@@ -386,7 +395,7 @@ function InputGroupNumberInput({
 					className="h-5 rounded-none rounded-tr-xl border-0 border-b border-primary/10 pr-1 focus-visible:z-10"
 					variant="ghost"
 					onClick={handleIncrement}
-					disabled={value === max}
+					disabled={value !== undefined && value >= max}
 				>
 					<OutlineChevronUp />
 				</Button>
@@ -398,7 +407,7 @@ function InputGroupNumberInput({
 					className="h-5 rounded-none rounded-br-xl border-0 pr-1 focus-visible:z-10"
 					variant="ghost"
 					onClick={handleDecrement}
-					disabled={value === min}
+					disabled={value !== undefined && value <= min}
 				>
 					<OutlineChevronDown />
 				</Button>
@@ -944,7 +953,7 @@ function DateSegment({
 	return (
 		<span
 			className={cn(
-				"relative inline-flex items-center justify-center rounded-sm px-[3px] py-px transition-colors select-none",
+				"relative inline-flex items-center justify-center rounded-sm px-0.75 py-px transition-colors select-none",
 				focused ? "bg-primary/15" : "bg-transparent",
 			)}
 		>

@@ -38,8 +38,8 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useCommission } from "@/hooks/use-commisions";
-import { useUserById } from "@/hooks/use-user";
+import { useCommission } from "@/hooks/commissions/use-commissions";
+import { useUserById } from "@/hooks/user/use-user";
 import { cn } from "@/lib/utils";
 import {
 	type TCommission,

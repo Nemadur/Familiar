@@ -1,9 +1,9 @@
-import React from "react";
+import { useRouter } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	OutlineCheck,
 	OutlineChevronDown,
-	OutlineChevronRight,
 } from "@/components/icons/icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,51 +19,84 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { Elevated } from "@/lib/elevated";
-import { languages } from "@/lib/i18n";
+import {
+	languages,
+	localizePath,
+	stripLocaleFromPathname,
+	syncLanguage,
+} from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-function LanguageSelect() {
+export default function LanguageSelect() {
 	const { t, i18n } = useTranslation();
-	const [open, setOpen] = React.useState(false);
+	const router = useRouter();
+	const [open, setOpen] = useState(false);
+
+	const selectedLanguage = languages.find((language) =>
+		i18n.language.startsWith(language.value),
+	);
+
+	async function handleLanguageChange(languageValue: string) {
+		if (i18n.language.startsWith(languageValue)) {
+			setOpen(false);
+			return;
+		}
+
+		await syncLanguage(languageValue);
+
+		const nextPathname = localizePath(
+			stripLocaleFromPathname(window.location.pathname),
+			languageValue,
+		);
+		const nextHref = `${nextPathname}${window.location.search}${window.location.hash}`;
+
+		setOpen(false);
+		router.history.push(nextHref);
+	}
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button role={"combobox"} variant={"secondary"} size={"xl"}>
-					{i18n.language
-						? (() => {
-								const selectedLanguage = languages.find((language) =>
-									i18n.language.startsWith(language.value),
-								);
-								return selectedLanguage ? (
-									<>
-										{/* TODO: replace with svg icons (twittermoji?) */}
-										<span className={"text-lg"}>{selectedLanguage.flag}</span>
-										<span className={"hidden sm:inline-block"}>
-											{selectedLanguage.label}
-										</span>
-									</>
-								) : (
-									t("components.language_switcher.select")
-								);
-							})()
-						: t("components.language_switcher.select")}
-					<OutlineChevronDown />
+				<Button
+					type="button"
+					role="combobox"
+					variant="secondary"
+					size="xl"
+					aria-expanded={open}
+				>
+					{selectedLanguage ? (
+						<>
+							<span className="text-lg" aria-hidden="true">
+								{selectedLanguage.flag}
+							</span>
+							<span className="hidden sm:inline-block">
+								{selectedLanguage.label}
+							</span>
+						</>
+					) : (
+						t("components.language_switcher.select", "Select language")
+					)}
+					<OutlineChevronDown data-icon="inline-end" />
 				</Button>
 			</PopoverTrigger>
-			{/* CONTENT */}
+
 			<PopoverContent
 				align="end"
-				className={
-					"w-[200px] p-0 rounded-(--command-content-radius) overflow-hidden"
-				}
+				className="w-50 overflow-hidden rounded-(--command-content-radius) p-0"
 			>
 				<Command>
-					<CommandInput placeholder={t("components.language_select.search")} />
+					<CommandInput
+						placeholder={t(
+							"components.language_select.search",
+							"Search language",
+						)}
+					/>
 					<CommandList>
 						<CommandEmpty>
-							{t("components.language_select.no_results")}
+							{t(
+								"components.language_select.no_results",
+								"No language found",
+							)}
 						</CommandEmpty>
 						<CommandGroup>
 							{languages.map((language) => (
@@ -71,11 +104,13 @@ function LanguageSelect() {
 									key={language.value}
 									value={language.label}
 									onSelect={() => {
-										i18n.changeLanguage(language.value);
-										setOpen(false);
+										void handleLanguageChange(language.value);
 									}}
 								>
-									<span className={"mr-2 text-lg leading-none"}>
+									<span
+										className="mr-2 text-lg leading-none"
+										aria-hidden="true"
+									>
 										{language.flag}
 									</span>
 									{language.label}
@@ -96,5 +131,3 @@ function LanguageSelect() {
 		</Popover>
 	);
 }
-
-export default LanguageSelect;

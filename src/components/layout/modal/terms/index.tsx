@@ -8,7 +8,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { useProfileTermsOfService } from "@/hooks/use-tos";
+import { useProfileTermsOfService } from "@/hooks/user/use-tos";
 
 interface TermsModalProps {
 	open: boolean;

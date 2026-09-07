@@ -2,16 +2,23 @@ const en = {
 	seo: {
 		defaults: {
 			title: "Familiar",
-			description: "Your art station",
+			description: "Your art looks $t(meta.app_name)",
 			keywords: "art, familiar, commission",
 		},
 		home: {
-			title: "Welcome to Familiar",
-			description: "Your art station",
+			title: "Home",
+			description: "Your art looks $t(meta.app_name)",
 		},
 		profile: {
 			title: "Profile (@{{username}})",
 			description: "User profile for @{{username}}",
+		},
+		shop: {
+			title: "Shop - Discover Custom Art Commissions",
+			description:
+				"Browse custom art commissions from independent artists on $t(meta.app_name). Discover unique styles, compare offers, view galleries, and request artwork made just for you.",
+			keywords:
+				"custom art commissions, art commission marketplace, commission artists, digital art commissions, character art commission, illustration commission, artist shop, custom artwork, freelance artists, Familiar shop",
 		},
 	},
 	meta: {
@@ -64,8 +71,30 @@ const en = {
 			description: "Enter your details below to create your account",
 			already_have_account: "Already have an account?",
 			success: "Account created successfully",
+			confirm_email: "Account created. Check your inbox to confirm your email.",
 			submit: "Submit",
 			pending: "Creating account...",
+			steps: {
+				account: "Account",
+				profile: "Profile",
+				socials: "Links",
+			},
+			profile: {
+				title: "Profile details",
+				description: "Choose how your public profile will appear.",
+			},
+			images: {
+				title: "Profile images",
+				description:
+					"Add an avatar and cover now, or skip this step and add them later.",
+				cover_preview: "Cover preview",
+				avatar_preview: "Avatar preview",
+				no_cover: "No cover image",
+				change_cover: "Choose cover image",
+				remove_cover: "Remove cover image",
+				choose_avatar: "Choose avatar",
+				remove_avatar: "Remove avatar",
+			},
 		},
 		forgot: {
 			cta: "Forgot your password?",
@@ -95,6 +124,18 @@ const en = {
 			label: "Username",
 			placeholder: "username",
 		},
+		bio: {
+			label: "Bio",
+			placeholder: "Tell us about yourself...",
+		},
+		socials: {
+			add_label: "Add profile link",
+			select_placeholder: "Select a platform",
+			add: "Add",
+			description: "Add up to five links supported by the registration API.",
+			empty: "No profile links added yet.",
+			remove: "Remove profile link",
+		},
 		password: {
 			label: "Password",
 			placeholder: "Password",
@@ -105,6 +146,16 @@ const en = {
 		errors: {
 			rate_limit: "Too many attempts. Please try again later.",
 			invalid_credentials: "Invalid email or password",
+			invalid_registration:
+				"Please review your registration details and invite code.",
+			email_registered:
+				"An account with this email or username already exists.",
+			unsupported_registration_image:
+				"The avatar or cover image format is not supported.",
+			registration_provider_failed:
+				"The authentication provider could not create the account.",
+			registration_service_unavailable:
+				"Registration is temporarily unavailable. Please try again shortly.",
 			registration_failed: "Registration failed: {{error}}",
 			login_failed: "Login failed: {{error}}",
 			logout_failed: "Logout failed: {{error}}",
@@ -130,7 +181,8 @@ const en = {
 	},
 	pages: {
 		home: {
-			title: "Welcome to Familiar - Your art station",
+			title: "Home",
+			description: "Page is under construction.",
 		},
 	},
 	states: {

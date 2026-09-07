@@ -1,32 +1,20 @@
-import { m } from "motion/react";
-import type * as React from "react";
-import { cn } from "src/lib/utils";
+import type React from "react";
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+import { cn } from "@/lib/utils";
+
+function Skeleton({
+	className,
+	...props
+}: React.ComponentProps<"div">) {
 	return (
 		<div
 			data-slot="skeleton"
-			aria-hidden="true"
 			className={cn(
-				"relative isolate overflow-hidden rounded-md bg-neutral-200 dark:bg-neutral-800",
+				"animate-none! rounded-md bg-input shadow-none! transition-none! bg-none! before:hidden after:hidden",
 				className,
 			)}
 			{...props}
-		>
-			<m.div
-				className="pointer-events-none absolute inset-y-0 left-0 w-[35%]"
-				initial={{ x: "-100%" }}
-				animate={{ x: "385%" }}
-				transition={{
-					duration: 1.2,
-					repeat: Infinity,
-					ease: "linear",
-					repeatDelay: 0.4,
-				}}
-			>
-				<div className="h-full w-full transform-[skewX(-20deg)] bg-linear-to-r from-transparent via-black/10 to-transparent dark:via-white/10" />
-			</m.div>
-		</div>
+		/>
 	);
 }
 

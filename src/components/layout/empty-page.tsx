@@ -1,3 +1,4 @@
+import type { ComponentType, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { OutlineCircle } from "../icons/icons";
 import type { IconProps } from "../icons/icons-props";
@@ -11,11 +12,17 @@ import {
 } from "../ui/empty";
 
 interface EmptyPageProps {
-	icon?: React.ComponentType<IconProps>;
+	icon?: ComponentType<IconProps>;
 	title: string;
 	error?: Error;
 	description?: string;
-	children?: React.ReactNode;
+	children?: ReactNode;
+
+	className?: string;
+	iconClassName?: string;
+	titleClassName?: string;
+	descriptionClassName?: string;
+	contentClassName?: string;
 }
 
 export function EmptyPage({
@@ -24,21 +31,40 @@ export function EmptyPage({
 	error,
 	description,
 	children,
+	className,
+	iconClassName,
+	titleClassName,
+	descriptionClassName,
+	contentClassName,
 }: EmptyPageProps) {
 	const { t } = useTranslation();
-	const desc = description || t("states.empty.under_construction");
+
+	const resolvedDescription =
+		description || t("states.empty.under_construction");
 
 	return (
-		<Empty>
+		<Empty className={className}>
 			<EmptyHeader>
 				<EmptyMedia variant="icon">
-					<Icon />
+					<Icon className={iconClassName} />
 				</EmptyMedia>
-				<EmptyTitle>{title}</EmptyTitle>
-				<EmptyDescription>{desc}</EmptyDescription>
-				{error && <EmptyDescription>{error.message}</EmptyDescription>}
+
+				<EmptyTitle className={titleClassName}>{title}</EmptyTitle>
+
+				<EmptyDescription className={descriptionClassName}>
+					{resolvedDescription}
+				</EmptyDescription>
+
+				{error && (
+					<EmptyDescription className={descriptionClassName}>
+						{error.message}
+					</EmptyDescription>
+				)}
 			</EmptyHeader>
-			{children && <EmptyContent>{children}</EmptyContent>}
+
+			{children && (
+				<EmptyContent className={contentClassName}>{children}</EmptyContent>
+			)}
 		</Empty>
 	);
 }

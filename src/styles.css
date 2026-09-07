@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
 @import 'tw-animate-css';
 
@@ -498,4 +499,46 @@ code {
 	backdrop-filter: blur(var(--blur));
 	-webkit-mask-image: var(--mask);
 	mask-image: var(--mask);
+}
+
+
+
+@layer components {
+	.portfolio-title-overlay {
+		opacity: 1;
+		filter: blur(0);
+		transform: translateY(0);
+
+		transition:
+			opacity 180ms cubic-bezier(0.23, 1, 0.32, 1),
+			filter 180ms cubic-bezier(0.23, 1, 0.32, 1),
+			transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+	}
+
+	/*
+	 * Hide only on desktop devices that have a real mouse-like pointer.
+	 * Mobile and tablet layouts remain permanently visible.
+	 */
+	@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+		.portfolio-title-overlay {
+			opacity: 0;
+			filter: blur(24px);
+			transform: translateY(4px);
+		}
+
+		.portfolio-feed-item:hover .portfolio-title-overlay,
+		.portfolio-feed-item:focus-within .portfolio-title-overlay {
+			opacity: 1;
+			filter: blur(0);
+			transform: translateY(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.portfolio-title-overlay {
+			filter: none;
+			transform: none;
+			transition: opacity 120ms linear;
+		}
+	}
 }

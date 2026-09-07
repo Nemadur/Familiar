@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,7 +35,7 @@ export const Header = memo(function Header({
 				<div className="min-w-0 max-w-[calc(100%-120px)] shrink">
 					<div className="truncate">
 						<Link
-							to="/$username"
+							to="/{-$locale}/user/$username"
 							params={{ username: user.username }}
 							className="flex items-center gap-2 rounded-full bg-black/50 px-2 py-1 transition-colors hover:bg-black/70"
 							onClick={(e) => e.stopPropagation()}

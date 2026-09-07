@@ -2,11 +2,11 @@ import { apiFetch } from "@/lib/fetch";
 import type { FormTemplateResponse } from "@/types/commissions/templates";
 
 export function getFormTemplates() {
-	return apiFetch<FormTemplateResponse[]>("/api/form-templates");
+	return apiFetch<FormTemplateResponse[]>("form-templates");
 }
 
 export function getFormTemplateById(templateId: string) {
-	return apiFetch<FormTemplateResponse>(`/api/form-templates/${templateId}`);
+	return apiFetch<FormTemplateResponse>(`form-templates/${templateId}`);
 }
 
 export function createFormTemplate(data: {
@@ -14,7 +14,7 @@ export function createFormTemplate(data: {
 	description?: string;
 	fields?: any[];
 }) {
-	return apiFetch<FormTemplateResponse>("/api/form-templates", {
+	return apiFetch<FormTemplateResponse>("form-templates", {
 		method: "POST",
 		body: JSON.stringify(data),
 		headers: {
@@ -23,8 +23,11 @@ export function createFormTemplate(data: {
 	});
 }
 
-export function assignFormTemplate(commissionId: string, templateId: string | null) {
-	return apiFetch<void>(`/api/form-templates/commissions/${commissionId}/assign`, {
+export function assignFormTemplate(
+	commissionId: string,
+	templateId: string | null,
+) {
+	return apiFetch<void>(`form-templates/commissions/${commissionId}/assign`, {
 		method: "POST",
 		body: JSON.stringify({ templateId }),
 		headers: {
@@ -34,7 +37,7 @@ export function assignFormTemplate(commissionId: string, templateId: string | nu
 }
 
 export function deleteFormTemplate(templateId: string) {
-	return apiFetch<void>(`/api/form-templates/${templateId}`, {
+	return apiFetch<void>(`form-templates/${templateId}`, {
 		method: "DELETE",
 	});
 }
@@ -48,7 +51,7 @@ export function updateFormTemplate(
 		fields?: any[];
 	},
 ) {
-	return apiFetch<FormTemplateResponse>(`/api/form-templates/${templateId}`, {
+	return apiFetch<FormTemplateResponse>(`form-templates/${templateId}`, {
 		method: "PATCH",
 		body: JSON.stringify(data),
 		headers: {

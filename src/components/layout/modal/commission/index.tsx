@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
-import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import { OutlineChat, SolidStar } from "@/components/icons/icons";
 import {
 	type TabItem,
@@ -18,6 +17,7 @@ import {
 } from "@/components/layout/profile/feed/selector";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { MarkdownDisplay } from "@/components/ui/markdown-display";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -25,8 +25,8 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCommission } from "@/hooks/use-commisions";
-import { useUserById } from "@/hooks/use-user";
+import { useCommission } from "@/hooks/commissions/use-commissions";
+import { useUserById } from "@/hooks/user/use-user";
 import {
 	calculateCommissionPricing,
 	calculateReviewStats,
@@ -206,7 +206,7 @@ function MobileCommissionMedia({
 					return (
 						<div
 							key={media.id}
-							className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg"
+							className="relative flex h-62.5 w-3/4 shrink-0 items-center justify-center rounded-lg"
 						>
 							<img
 								src={url}
@@ -217,11 +217,11 @@ function MobileCommissionMedia({
 					);
 				})
 			) : isLoading ? (
-				<div className="relative flex h-[250px] w-3/4 shrink-0 items-center justify-center rounded-lg bg-secondary/5">
+				<div className="relative flex h-62.5 w-3/4 shrink-0 items-center justify-center rounded-lg bg-secondary/5">
 					<Skeleton className="h-full w-full rounded-lg" />
 				</div>
 			) : (
-				<div className="flex h-[250px] w-full items-center justify-center p-8 text-muted-foreground">
+				<div className="flex h-62.5 w-full items-center justify-center p-8 text-muted-foreground">
 					{t("components.profile.commissions.modal.no_media")}
 				</div>
 			)}

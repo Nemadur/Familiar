@@ -1,21 +1,29 @@
 import type { Session, User } from "@supabase/supabase-js";
-import { toast } from "sonner";
-import { useUserById } from "@/hooks/use-user";
-import i18n from "@/lib/i18n";
-import { getStoredSupabaseUser, supabase } from "@/lib/supabase";
-import type { LoginData } from "@/types/auth/schema/login";
-import type { RegisterData } from "@/types/auth/schema/register";
-import type { TUserResponse } from "@/types/user";
 import {
 	createContext,
-	useCallback,
+	type ReactNode,
 	use,
+	useCallback,
 	useEffect,
 	useMemo,
 	useReducer,
 	useRef,
-	type ReactNode,
 } from "react";
+import { toast } from "sonner";
+import type {
+	AuthResponse,
+	AuthRole,
+	RegistrationSocials,
+} from "@/api/auth/auth-types";
+import { useRegisterAccount } from "@/hooks/auth/use-register";
+import { useUserById } from "@/hooks/user/use-user";
+import { ApiFetchError } from "@/lib/fetch";
+import i18n from "@/lib/i18n";
+import { getStoredSupabaseUser, supabase } from "@/lib/supabase";
+import type { AccountType } from "@/types/auth/schema/accounts";
+import type { LoginData } from "@/types/auth/schema/login";
+import type { RegisterData } from "@/types/auth/schema/register";
+import type { TUserResponse } from "@/types/user";
 
 interface AuthContextValue {
 	user: TUserResponse | null;
@@ -24,7 +32,7 @@ interface AuthContextValue {
 	error: Error | null;
 	refreshSession: () => Promise<void>;
 	login: (data: LoginData) => Promise<void>;
-	register: (data: RegisterData) => Promise<void>;
+	register: (data: RegisterData) => Promise<AuthResponse>;
 	logout: () => Promise<void>;
 	onAuthStateChange: (
 		callback: (user: TUserResponse | null) => void,
@@ -73,6 +81,57 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const REGISTRATION_ROLE_BY_ACCOUNT_TYPE = {
+	client: "CLIENT",
+	artist: "ARTIST",
+} satisfies Record<AccountType, AuthRole>;
+
+function optionalTrimmedValue(value: string) {
+	const trimmedValue = value.trim();
+	return trimmedValue.length > 0 ? trimmedValue : undefined;
+}
+
+function getRegistrationSocials(
+	socials: RegisterData["socials"],
+): RegistrationSocials | undefined {
+	const entries = Object.entries(socials)
+		.map(([platform, value]) => [platform, value.trim()] as const)
+		.filter(([, value]) => value.length > 0);
+
+	return entries.length > 0
+		? (Object.fromEntries(entries) as RegistrationSocials)
+		: undefined;
+}
+
+function getRegistrationError(error: unknown) {
+	if (error instanceof ApiFetchError) {
+		switch (error.status) {
+			case 400:
+				return new Error(i18n.t("auth.errors.invalid_registration"));
+			case 409:
+				return new Error(i18n.t("auth.errors.email_registered"));
+			case 415:
+				return new Error(i18n.t("auth.errors.unsupported_registration_image"));
+			case 429:
+				return new Error(i18n.t("auth.errors.rate_limit"));
+			case 502:
+				return new Error(i18n.t("auth.errors.registration_provider_failed"));
+			case 503:
+				return new Error(
+					i18n.t("auth.errors.registration_service_unavailable"),
+				);
+		}
+	}
+
+	const message = error instanceof Error ? error.message : String(error);
+
+	return new Error(
+		i18n.t("auth.errors.registration_failed", {
+			error: message,
+		}),
+	);
+}
+
 function toOptimisticUser(restoredUser: User): TUserResponse {
 	return {
 		userId: restoredUser.id,
@@ -106,6 +165,7 @@ function getOptimisticUserFromStorage(): TUserResponse | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+	const { mutateAsync: registerAccount } = useRegisterAccount();
 	const [{ session, authBusy }, dispatchAuth] = useReducer(
 		authReducer,
 		initialAuthState,
@@ -220,54 +280,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}
 	}, []);
 
-	const register = useCallback(async (data: RegisterData) => {
-		dispatchAuth({ type: "start" });
+	const register = useCallback(
+		async (data: RegisterData) => {
+			dispatchAuth({ type: "start" });
 
-		const promise = (async () => {
-			const { data: signUpData, error } = await supabase.auth.signUp({
-				email: data.email.trim().toLowerCase(),
-				password: data.password,
-				options: {
-					data: {
-						display_name: data.display_name,
-						username: data.username,
-						account_type: data.account_type,
-						invite_key: data.invite_key,
-					},
-				},
-			});
+			const promise = (async () => {
+				try {
+					const username = optionalTrimmedValue(data.username);
+					const displayName = optionalTrimmedValue(data.display_name);
+					const bio = optionalTrimmedValue(data.bio);
+					const socials = getRegistrationSocials(data.socials);
 
-			if (error) {
-				if (error.message?.toLowerCase().includes("rate limit")) {
-					throw new Error(i18n.t("auth.errors.rate_limit"));
+					const response = await registerAccount({
+						request: {
+							email: data.email.trim().toLowerCase(),
+							password: data.password,
+							roleKey: REGISTRATION_ROLE_BY_ACCOUNT_TYPE[data.account_type],
+							inviteKey: data.invite_key,
+							...(username ? { username } : null),
+							...(displayName ? { displayName } : null),
+							...(bio ? { bio } : null),
+							...(socials ? { socials } : null),
+						},
+						avatar: data.avatar,
+						cover: data.cover,
+					});
+
+					if (!response.access_token || !response.refresh_token) {
+						dispatchAuth({ type: "set-session", session: null });
+						return response;
+					}
+
+					const { data: sessionData, error: sessionError } =
+						await supabase.auth.setSession({
+							access_token: response.access_token,
+							refresh_token: response.refresh_token,
+						});
+
+					if (sessionError) {
+						throw sessionError;
+					}
+
+					dispatchAuth({
+						type: "set-session",
+						session: sessionData.session ?? null,
+					});
+
+					return response;
+				} catch (error) {
+					throw getRegistrationError(error);
 				}
+			})();
 
-				throw new Error(
-					i18n.t("auth.errors.registration_failed", {
-						error: error.message,
-					}),
-				);
-			}
-
-			dispatchAuth({
-				type: "set-session",
-				session: signUpData.session ?? null,
+			toast.promise(promise, {
+				loading: i18n.t("auth.register.pending"),
+				success: (response) =>
+					response.access_token
+						? i18n.t("auth.register.success")
+						: i18n.t("auth.register.confirm_email"),
+				error: (error) => error.message,
 			});
-		})();
 
-		toast.promise(promise, {
-			loading: i18n.t("auth.register.pending"),
-			success: i18n.t("auth.register.success"),
-			error: (err) => err.message,
-		});
-
-		try {
-			await promise;
-		} catch (error) {
-			dispatchAuth({ type: "stop" });
-			throw error;
-		}
-	}, []);
+			try {
+				return await promise;
+			} catch (error) {
+				dispatchAuth({ type: "stop" });
+				throw error;
+			}
+		},
+		[registerAccount],
+	);
 
 	const logout = useCallback(async () => {
 		dispatchAuth({ type: "start" });

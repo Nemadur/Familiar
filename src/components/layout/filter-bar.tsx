@@ -82,6 +82,7 @@ interface FilterBarProps<TData> {
 	onSearchChange?: (value: string) => void;
 	searchPlaceholder?: string;
 	onClearAll?: () => void;
+	endAction?: React.ReactNode;
 	className?: string;
 }
 
@@ -449,6 +450,7 @@ export function FilterBar<TData>({
 	onSearchChange,
 	searchPlaceholder = "Search…",
 	onClearAll,
+	endAction,
 	className,
 }: FilterBarProps<TData>) {
 	const dtf = useMemo(() => createColumnConfigHelper<TData>(), []);
@@ -581,7 +583,7 @@ export function FilterBar<TData>({
 					</InputGroup>
 				</div>
 
-				<div className="shrink-0">
+				<div className="flex shrink-0 items-center gap-2">
 					<FilterSelector
 						columns={columns}
 						filters={filters}
@@ -589,6 +591,7 @@ export function FilterBar<TData>({
 						strategy={strategy}
 						backButtonMode="floating"
 					/>
+					{endAction}
 				</div>
 			</div>
 

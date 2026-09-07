@@ -136,8 +136,9 @@ export const LikeButton = memo(function LikeButton({
 				className={cn(
 					liked
 						? "text-danger drop-shadow-[0_1px_10px_danger] hover:bg-danger/12!"
-						: isOverlay &&
-								"text-white hover:bg-white/12 drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] supports-backdrop:backdrop-blur-md hover:text-primary",
+						: isOverlay
+							? "text-white hover:bg-white/12 drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] supports-backdrop:backdrop-blur-md"
+							: "text-muted-foreground hover:bg-foreground/10",
 				)}
 				onClick={handleLikeClick}
 				style={{ transition: "none" }}

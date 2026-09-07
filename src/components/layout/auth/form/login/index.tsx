@@ -21,7 +21,7 @@ import {
 	InputGroupButton,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import useFormValidation from "@/hooks/use-form-validation";
+import useFormValidation from "@/hooks/form/use-form-validation";
 import { useAuth } from "@/providers/auth";
 import { login } from "@/schemas/auth/login";
 import type { LoginFormProps } from "@/types/auth/form/login";
@@ -57,7 +57,7 @@ function LoginForm({ onSuccess, onForgot }: LoginFormProps) {
 		<Form {...form}>
 			<form
 				onSubmit={handleSubmit(onSubmit)}
-				className="flex min-h-[300px] h-full w-full flex-col"
+				className="flex min-h-75 h-full w-full flex-col"
 				aria-label={t("auth.login.cta")}
 			>
 				<fieldset
@@ -69,73 +69,82 @@ function LoginForm({ onSuccess, onForgot }: LoginFormProps) {
 					<FormField
 						control={control}
 						name="email"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>{t("auth.email.label")}</FormLabel>
+						render={({ field, fieldState }) => {
+							const invalid = fieldState.invalid;
 
-								<FormControl>
-									<InputGroup>
-										<InputGroupAddon aria-hidden="true">
-											<OutlineMail />
-										</InputGroupAddon>
+							return (
+								<FormItem data-invalid={invalid}>
+									<FormLabel>{t("auth.email.label")}</FormLabel>
 
-										<InputGroupInput
-											placeholder={t("auth.email.placeholder")}
-											type="email"
-											autoComplete="email"
-											inputMode="email"
-											{...field}
-										/>
-									</InputGroup>
-								</FormControl>
+									<FormControl>
+										<InputGroup>
+											<InputGroupAddon aria-hidden="true">
+												<OutlineMail />
+											</InputGroupAddon>
 
-								<FormMessage />
-							</FormItem>
-						)}
+											<InputGroupInput
+												placeholder={t("auth.email.placeholder")}
+												type="text"
+												autoComplete="email"
+												{...field}
+												aria-invalid={fieldState.invalid}
+											/>
+										</InputGroup>
+									</FormControl>
+
+									<FormMessage />
+								</FormItem>
+							);
+						}}
 					/>
 
 					<FormField
 						control={control}
 						name="password"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>{t("auth.password.label")}</FormLabel>
+						render={({ field, fieldState }) => {
+							const invalid = fieldState.invalid;
 
-								<FormControl>
-									<InputGroup>
-										<InputGroupAddon aria-hidden="true">
-											<OutlineLock />
-										</InputGroupAddon>
+							return (
+								<FormItem data-invalid={invalid}>
+									<FormLabel>{t("auth.password.label")}</FormLabel>
 
-										<InputGroupInput
-											placeholder={t("auth.password.placeholder")}
-											type={showPassword ? "text" : "password"}
-											autoComplete="current-password"
-											{...field}
-										/>
+									<FormControl>
+										<InputGroup>
+											<InputGroupAddon aria-hidden="true">
+												<OutlineLock />
+											</InputGroupAddon>
 
-										<InputGroupAddon align="inline-end">
-											<InputGroupButton
-												type="button"
-												variant="ghost"
-												size="icon-xs"
-												aria-label={passwordToggleLabel}
-												aria-pressed={showPassword}
-												onClick={() => setShowPassword((prev) => !prev)}
-											>
-												{showPassword ? (
-													<OutlineEyeOff aria-hidden="true" />
-												) : (
-													<OutlineEye aria-hidden="true" />
-												)}
-											</InputGroupButton>
-										</InputGroupAddon>
-									</InputGroup>
-								</FormControl>
+											<InputGroupInput
+												placeholder={t("auth.password.placeholder")}
+												type={showPassword ? "text" : "password"}
+												autoComplete="current-password"
+												{...field}
+												aria-invalid={fieldState.invalid}
+											/>
 
-								<FormMessage />
-							</FormItem>
-						)}
+											<InputGroupAddon align="inline-end">
+												<InputGroupButton
+													type="button"
+													variant="ghost"
+													size="icon-xs"
+													aria-label={passwordToggleLabel}
+													aria-pressed={showPassword}
+													onClick={() => setShowPassword((previous) => !previous)}
+												>
+													{showPassword ? (
+														<OutlineEyeOff aria-hidden="true" />
+													) : (
+														<OutlineEye aria-hidden="true" />
+													)}
+												</InputGroupButton>
+											</InputGroupAddon>
+										</InputGroup>
+									</FormControl>
+
+									<FormMessage />
+								</FormItem>
+							);
+						}}
 					/>
 				</fieldset>
 

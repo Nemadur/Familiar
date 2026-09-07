@@ -25,9 +25,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
-      "correctness": {
-        "useUniqueElementIds": "off"
-      }
+			"correctness": {
+				"useUniqueElementIds": "off"
+			}
 		}
 	},
 	"javascript": {

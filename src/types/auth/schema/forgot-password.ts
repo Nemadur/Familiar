@@ -1,6 +1,6 @@
 import type { forgotPassword } from "@/schemas/auth/forgot-password";
 import type z from "zod";
 
-type ForgotPasswordData = z.infer<typeof forgotPassword>
+type ForgotPasswordData = z.infer<typeof forgotPassword>;
 
-export type { ForgotPasswordData }
+export type { ForgotPasswordData };

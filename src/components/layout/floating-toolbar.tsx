@@ -5,7 +5,7 @@ import ThemeToggle from "./select/theme-toggle";
 
 export default function FloatingToolbar() {
 	return (
-		<nav className="fixed hidden lg:flex flex-col gap-2 bottom-6 right-6 items-end">
+		<nav className="fixed hidden xl:flex flex-col gap-2 bottom-6 right-6 items-end">
 			<LanguageSelect />
 			<ThemeToggle />
 		</nav>
