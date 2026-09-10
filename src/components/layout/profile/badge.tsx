@@ -1,4 +1,6 @@
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
+import { SolidCheckmarkSeal, SolidCrown } from "@/components/icons/icons";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
 	Tooltip,
@@ -7,40 +9,51 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { TUserProfile } from "@/types/user";
-import {
-	BadgeIcon,
-	BadgeTooltipContent,
-	getUserBadges,
-	ProfileDetailsContent,
-} from "./profile-details";
+import { ProfileDetailsContent } from "./profile-details";
 
 const ProfileBadge = memo(function ProfileBadge({
 	user,
 }: {
 	user: TUserProfile;
 }) {
-	const badges = getUserBadges(user);
+	const { t } = useTranslation();
+	const badges = [
+		user.isVerified
+			? {
+					label: t("components.profile.badges.verified", "Verified"),
+					icon: SolidCheckmarkSeal,
+					className: "text-primary",
+				}
+			: null,
+		user.isPremium
+			? {
+					label: t("components.profile.badges.supporter", "Supporter"),
+					icon: SolidCrown,
+					className: "text-amber-500",
+				}
+			: null,
+	].filter((badge) => badge !== null);
 
 	if (badges.length === 0) return null;
-
-	const displayBadges = badges.slice(0, 3);
 
 	return (
 		<Dialog>
 			<div className="flex items-center gap-1">
 				<TooltipProvider>
-					{displayBadges.map((badge) => (
-						<Tooltip key={badge.uuid}>
-							<TooltipTrigger asChild>
-								<DialogTrigger className="outline-none">
-									<BadgeIcon badge={badge} className="size-[1.25em]" />
-								</DialogTrigger>
-							</TooltipTrigger>
-							<TooltipContent side="bottom" className="max-w-[240px] p-3">
-								<BadgeTooltipContent badge={badge} />
-							</TooltipContent>
-						</Tooltip>
-					))}
+					{badges.map((badge) => {
+						const Icon = badge.icon;
+
+						return (
+							<Tooltip key={badge.label}>
+								<TooltipTrigger asChild>
+									<DialogTrigger className="outline-none">
+										<Icon className={`size-[1.25em] ${badge.className}`} />
+									</DialogTrigger>
+								</TooltipTrigger>
+								<TooltipContent side="bottom">{badge.label}</TooltipContent>
+							</Tooltip>
+						);
+					})}
 				</TooltipProvider>
 			</div>
 			<ProfileDetailsContent user={user} />

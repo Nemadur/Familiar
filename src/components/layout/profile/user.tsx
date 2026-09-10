@@ -31,12 +31,12 @@ import { useIsMobile, useIsTablet } from "@/hooks/ui/use-mobile";
 import { getLocaleParam, localizePath } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
-import type { TUserProfile, TUserResponse } from "@/types/user";
+import type { UserIdentity } from "@/types/user";
 import { UserSettingsModal } from "../modal/profile/settings/settings-modal";
 import UserAvatar from "./avatar";
 
 type UserButtonContentProps = {
-	user: TUserResponse;
+	user: UserIdentity;
 	showInfo?: boolean;
 	showAvatar?: boolean;
 	showUsername?: boolean;
@@ -62,7 +62,7 @@ function UserButtonContent({
 		<>
 			{showAvatar ? (
 				<UserAvatar
-					user={user as TUserProfile}
+					user={user}
 					size={avatarSize}
 					isOnline={isOnline}
 					badgeClassName={avatarBadgeClassName}
@@ -123,7 +123,7 @@ function UserButtonContent({
 }
 
 type UserProps = {
-	user: TUserResponse;
+	user?: UserIdentity | null;
 	showInfo?: boolean;
 	showAvatar?: boolean;
 	showUsername?: boolean;
@@ -159,6 +159,10 @@ export default function User({
 	isOnline,
 	avatarBadgeClassName,
 }: UserProps) {
+	const resolvedUser = user ?? {
+		displayName: "Unknown",
+		username: "unknown",
+	};
 	const { logout } = useAuth();
 	const navigate = useNavigate();
 	const router = useRouter();
@@ -223,7 +227,7 @@ export default function User({
 
 	const triggerContent = (
 		<UserButtonContent
-			user={user}
+			user={resolvedUser}
 			showInfo={showInfo}
 			showAvatar={showAvatar}
 			showUsername={showUsername}
@@ -239,7 +243,7 @@ export default function User({
 		{
 			label: "Profile",
 			icon: <OutlineUser />,
-			to: localizePath(`/user/${user.username || ""}`, locale),
+			to: localizePath(`/user/${resolvedUser.username || ""}`, locale),
 		},
 	];
 

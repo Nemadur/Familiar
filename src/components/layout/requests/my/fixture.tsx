@@ -22,10 +22,12 @@ function createFixtureArtist(index: number): TUserResponse {
 		pronouns: null,
 		bio: null,
 		avatarPath: null,
+		coverPath: null,
 		accentColor: null,
 		isVerified: index % 2 === 0,
 		isPremium: false,
 		roles: [TRoles.Artist],
+		socials: [],
 		createdAt: "2026-04-08T10:00:00Z",
 	};
 }

@@ -1,14 +1,22 @@
-import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	useLocation,
+	useNavigate,
+} from "@tanstack/react-router";
 import { CommissionForm } from "@/components/layout/commision/commission-form";
 import { CommissionModal } from "@/components/layout/modal/commission";
 import {
-	PortfolioPostPage,
 	PortfolioPostModal,
+	PortfolioPostPage,
 } from "@/components/layout/modal/portfolio-post";
-import { useUserByUsername } from "@/hooks/user/use-user";
+import {
+	hasArtistPortfolio,
+	PortfolioUnavailable,
+} from "@/components/layout/profile/feed/portfolio-unavailable";
 import { useIsMobile } from "@/hooks/ui/use-mobile";
-import { UserFeedContent } from "../$tab";
+import { useUserByUsername } from "@/hooks/user/use-user";
 import type { TUserProfile } from "@/types/user";
+import { UserFeedContent } from "../$tab";
 
 export const Route = createFileRoute(
 	"/{-$locale}/_main/user/$username/$tab/$postId",
@@ -24,9 +32,14 @@ function RouteComponent() {
 	const navigate = useNavigate();
 	const isMobile = useIsMobile();
 
-	const isModal = (location.state as any)?.isModal === true;
+	const isModal =
+		(location.state as { isModal?: boolean } | undefined)?.isModal === true;
 
 	if (tab === "portfolio") {
+		if (user && !hasArtistPortfolio(user)) {
+			return <PortfolioUnavailable />;
+		}
+
 		const handleBack = () => {
 			if (window.history.length > 1) {
 				window.history.back();

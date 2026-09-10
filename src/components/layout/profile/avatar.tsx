@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getUserAccentStylesFromHex } from "@/lib/colors";
 import { cn } from "@/lib/utils";
-import type { TUserProfile } from "@/types/user";
+import type { UserIdentity } from "@/types/user";
 
 export default function UserAvatar({
 	user = undefined,
@@ -14,7 +14,7 @@ export default function UserAvatar({
 	badgeClassName = "",
 	className,
 }: {
-	user?: TUserProfile | undefined;
+	user?: UserIdentity;
 	isHuge?: boolean;
 	hasOutline?: boolean;
 	size?: "sm" | "default" | "lg" | "xl" | "2xl";

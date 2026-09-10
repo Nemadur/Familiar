@@ -1,23 +1,42 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/fetch";
-import type { TUserProfile, TUserResponse, UserStats } from "@/types/user";
+import type {
+	TUserProfile,
+	TUserResponse,
+	UserSocial,
+	UserSocials,
+} from "@/types/user";
 
-const EMPTY_USER_STATS: UserStats = {
-	followersCount: 0,
-	followingCount: 0,
-	worksCount: 0,
-	commissionsCount: 0,
-	charactersCount: 0,
-};
+function normalizeUserSocials(
+	socials: TUserResponse["socials"] | null | undefined,
+): UserSocials {
+	if (!Array.isArray(socials)) {
+		return [];
+	}
+
+	return socials.filter(
+		(social): social is UserSocial =>
+			typeof social?.platform === "string" &&
+			typeof social?.value === "string" &&
+			social.value.trim().length > 0,
+	);
+}
 
 function toUserProfile(user: TUserResponse): TUserProfile {
 	return {
-		...user,
-		stats: user.stats ?? EMPTY_USER_STATS,
-		badges: user.badges ?? [],
-		timezone: user.timezone ?? null,
-		spokenLanguages: user.spokenLanguages ?? [],
-		socialLinks: user.socialLinks ?? [],
+		userId: user.userId,
+		username: user.username,
+		displayName: user.displayName,
+		pronouns: user.pronouns ?? null,
+		bio: user.bio ?? null,
+		avatarPath: user.avatarPath ?? null,
+		coverPath: user.coverPath ?? null,
+		accentColor: user.accentColor ?? null,
+		isVerified: Boolean(user.isVerified),
+		isPremium: Boolean(user.isPremium),
+		roles: Array.isArray(user.roles) ? user.roles : [],
+		socials: normalizeUserSocials(user.socials),
+		createdAt: user.createdAt,
 	};
 }
 

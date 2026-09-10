@@ -70,7 +70,9 @@ interface ProfilePortfolioProps {
 	onCreateCatalog?: (data: CreateCatalogRequest) => Promise<CatalogResponse>;
 	isCreatingCatalog?: boolean;
 
-	onCreatePost?: (data: CreatePortfolioPostRequest) => Promise<void>;
+	onCreatePost?: (
+		data: CreatePortfolioPostRequest,
+	) => Promise<PortfolioPostResponse | void>;
 	isCreatingPost?: boolean;
 }
 

@@ -14,7 +14,7 @@ function useImagePreload(src?: string | null) {
 
 	if (status instanceof Promise) throw status;
 
-	const promise = new Promise<void>((resolve, reject) => {
+	const promise = new Promise<void>((resolve) => {
 		const img = new Image();
 		img.src = src;
 		img.onload = () => {
@@ -31,9 +31,8 @@ function useImagePreload(src?: string | null) {
 	throw promise;
 }
 
-// TODO: replace avatarPath with cover
 function ProfileCover({ user }: { user: TUserResponse }) {
-	useImagePreload(user.avatarPath);
+	useImagePreload(user.coverPath);
 
 	const { coverBgStyle } = useMemo(
 		() => getUserAccentStylesFromHex(user.accentColor),
@@ -42,17 +41,15 @@ function ProfileCover({ user }: { user: TUserResponse }) {
 
 	return (
 		<div
-			className={
-				"relative w-full lg:rounded-3xl ring-1 ring-ring/30 h-48 md:h-72"
-			}
+			className="relative h-48 w-full overflow-hidden ring-1 ring-ring/30 md:h-72 lg:rounded-3xl"
 			style={coverBgStyle}
 		>
 			{/* TODO: add webm (animated) support */}
-			{user.avatarPath && (
+			{user.coverPath && (
 				<img
-					src={user.avatarPath}
-					alt={`${user.username} Cover`}
-					className={"h-full w-full object-cover"}
+					src={user.coverPath}
+					alt={`${user.username} cover`}
+					className="h-full w-full object-cover"
 				/>
 			)}
 		</div>

@@ -226,11 +226,13 @@ function toOptimisticUser(restoredUser: User): TUserResponse {
 		pronouns: null,
 		bio: null,
 		avatarPath: null,
+		coverPath: null,
 		accentColor: null,
 		isVerified: false,
 		isPremium: false,
 		createdAt: restoredUser.created_at ?? new Date().toISOString(),
 		roles: [],
+		socials: [],
 	};
 }
 

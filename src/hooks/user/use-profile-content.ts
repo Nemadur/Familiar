@@ -17,11 +17,13 @@ import {
 	useCreateCatalog,
 	useCreatePortfolioPost,
 } from "@/hooks/portfolio/use-portfolio";
+import { ApiFetchError } from "@/lib/fetch";
 import { useAuth } from "@/providers/auth";
 import type { Character } from "@/types/character";
 import type { PostWithAuthor } from "@/types/post";
 
 export type ProfileContent = {
+	hasPortfolio: boolean | null;
 	portfolioPosts: PortfolioPostResponse[];
 	feedPosts: PostWithAuthor[];
 	folders: CatalogResponse[];
@@ -39,6 +41,7 @@ export function useProfileContent(
 	username: string,
 	userId: string,
 	tab: string,
+	enabled = true,
 ) {
 	const queryClient = useQueryClient();
 	const { user: authenticatedUser } = useAuth();
@@ -71,37 +74,53 @@ export function useProfileContent(
 
 	const query = useQuery<ProfileContent>({
 		queryKey,
-		enabled: Boolean(username && userId) && !isAuthPending,
+		enabled: enabled && Boolean(username && userId) && !isAuthPending,
 
 		queryFn: async () => {
 			if (tab === "portfolio") {
-				const [postsResponse, catalogsResponse] = await Promise.all([
-					isCurrentUser
-						? getMyPortfolioPosts({
-								page: 0,
-								size: 100,
-							})
-						: getArtistPortfolioPosts(username, {
-								page: 0,
-								size: 100,
-							}),
-					isCurrentUser ? getMyCatalogs() : getArtistCatalogs(username),
-				]);
+				try {
+					const [postsResponse, catalogsResponse] = await Promise.all([
+						isCurrentUser
+							? getMyPortfolioPosts({
+									page: 0,
+									size: 100,
+								})
+							: getArtistPortfolioPosts(username, {
+									page: 0,
+									size: 100,
+								}),
+						isCurrentUser ? getMyCatalogs() : getArtistCatalogs(username),
+					]);
 
-				return {
-					portfolioPosts: Array.isArray(postsResponse.content)
-						? postsResponse.content
-						: [],
-					feedPosts: [],
-					folders: Array.isArray(catalogsResponse) ? catalogsResponse : [],
-					characters: [],
-				};
+					return {
+						hasPortfolio: true,
+						portfolioPosts: Array.isArray(postsResponse.content)
+							? postsResponse.content
+							: [],
+						feedPosts: [],
+						folders: Array.isArray(catalogsResponse) ? catalogsResponse : [],
+						characters: [],
+					};
+				} catch (error) {
+					if (error instanceof ApiFetchError && error.status === 404) {
+						return {
+							hasPortfolio: false,
+							portfolioPosts: [],
+							feedPosts: [],
+							folders: [],
+							characters: [],
+						};
+					}
+
+					throw error;
+				}
 			}
 
 			if (tab === "liked" || tab === "saved") {
 				const feedPosts = await getPortfolioPostsByUserId(userId);
 
 				return {
+					hasPortfolio: null,
 					portfolioPosts: [],
 					feedPosts,
 					folders: [],
@@ -110,6 +129,7 @@ export function useProfileContent(
 			}
 
 			return {
+				hasPortfolio: null,
 				portfolioPosts: [],
 				feedPosts: [],
 				folders: [],
@@ -121,7 +141,7 @@ export function useProfileContent(
 	async function createProfileCatalog(
 		data: CreateCatalogRequest,
 	): Promise<CatalogResponse> {
-		if (!isCurrentUser || tab !== "portfolio") {
+		if (!enabled || !isCurrentUser || tab !== "portfolio") {
 			throw new Error("You cannot create catalogs for this profile.");
 		}
 
@@ -152,7 +172,7 @@ export function useProfileContent(
 	async function createProfilePost(
 		data: import("@/api/portfolio/posts/post-types").CreatePortfolioPostRequest,
 	): Promise<PortfolioPostResponse> {
-		if (!isCurrentUser || tab !== "portfolio") {
+		if (!enabled || !isCurrentUser || tab !== "portfolio") {
 			throw new Error("You cannot create posts for this profile.");
 		}
 

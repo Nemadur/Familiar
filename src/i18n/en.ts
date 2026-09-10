@@ -242,6 +242,12 @@ const en = {
 				saved: "Saved",
 				liked: "Liked",
 			},
+			portfolio: {
+				unavailable: {
+					title: "No portfolio",
+					description: "This account doesn't have an artist portfolio.",
+				},
+			},
 			private_content: {
 				title: "This content is private",
 				description: "You do not have permission to view this content.",

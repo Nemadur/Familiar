@@ -1,12 +1,16 @@
 import {
 	createFileRoute,
-	useNavigate,
 	useLocation,
+	useNavigate,
 } from "@tanstack/react-router";
 import {
-	PortfolioPostPage,
 	PortfolioPostModal,
+	PortfolioPostPage,
 } from "@/components/layout/modal/portfolio-post";
+import {
+	hasArtistPortfolio,
+	PortfolioUnavailable,
+} from "@/components/layout/profile/feed/portfolio-unavailable";
 import { useIsMobile } from "@/hooks/ui/use-mobile";
 import { useUserByUsername } from "@/hooks/user/use-user";
 import type { TUserProfile } from "@/types/user";
@@ -25,10 +29,15 @@ function RouteComponent() {
 	const isMobile = useIsMobile();
 	const location = useLocation();
 
-	const isModal = (location.state as any)?.isModal === true;
+	const isModal =
+		(location.state as { isModal?: boolean } | undefined)?.isModal === true;
 
 	if (!user) {
 		return null;
+	}
+
+	if (tab === "portfolio" && !hasArtistPortfolio(user)) {
+		return <PortfolioUnavailable />;
 	}
 
 	return (

@@ -1,22 +1,20 @@
-import { ScrollShadow, Typography } from "@heroui/react";
+import { Typography } from "@heroui/react";
 import {
 	useNavigate,
 	useParams,
 	useRouter,
 	useSearch,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { Flag, Share, UserLock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-	OutlineChat,
 	OutlineChevronRight,
-	OutlineListBoxes,
 	OutlineMore,
 	OutlineUser,
 } from "@/components/icons/icons";
 import { EmptyPage } from "@/components/layout/empty-page";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
 	DropdownMenu,
@@ -29,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePostConversationDirect } from "@/hooks/chat/use-chat";
 import { useAvailableFeeds } from "@/hooks/feed/use-available-feeds";
 import { useIsTablet } from "@/hooks/ui/use-mobile";
-import { cn, createStaticList } from "@/lib/utils";
+import { createStaticList } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
 import type { TUserProfile } from "@/types/user";
 import { TRoles } from "@/types/user/roles";
@@ -38,10 +36,9 @@ import UserAvatar from "./avatar";
 import { ProfileBadge } from "./badge";
 import { ProfileBio } from "./bio";
 import { ProfileCover, ProfileCoverSkeleton } from "./cover";
-import { ProfileFeedTabs, ProfileFeedTabsSkeleton } from "./feed/tabs";
 import { PortfolioContentSkeleton } from "./feed/portfolio-sekeleton";
 import { ProfileDetailsContent } from "./profile-details";
-import { Flag, Share, UserLock } from "lucide-react";
+import { ProfileSocials } from "./socials";
 
 const CHARACTER_SKELETON_ITEMS = createStaticList("character-skeleton", 10);
 const COMMISSION_SKELETON_ITEMS = createStaticList("commission-skeleton", 2);
@@ -155,11 +152,7 @@ export function CharactersContentSkeleton() {
 	);
 }
 
-export function TabContentSkeleton({
-	tab = "portfolio",
-}: {
-	tab?: string;
-}) {
+export function TabContentSkeleton({ tab = "portfolio" }: { tab?: string }) {
 	if (tab === "portfolio") return <PortfolioContentSkeleton />;
 	if (tab === "characters") return <CharactersContentSkeleton />;
 	return <CommissionsContentSkeleton />;
@@ -219,42 +212,25 @@ function UserProfileMoreMenu({ user }: { user: TUserProfile }) {
 					variant="secondary"
 					size="icon-xl"
 					className="bg-background/80 backdrop-blur-sm hover:bg-background"
-					aria-label={t(
-						"components.profile.actions.more",
-						"More actions",
-					)}
+					aria-label={t("components.profile.actions.more", "More actions")}
 				>
 					<OutlineMore />
 				</Button>
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent align="end" className="w-48">
-				<DropdownMenuItem
-					onClick={handleShareProfile}
-				>
+				<DropdownMenuItem onClick={handleShareProfile}>
 					<Share />
-					{t(
-						"components.profile.actions.share_profile",
-						"Share Profile",
-					)}
+					{t("components.profile.actions.share_profile", "Share Profile")}
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem onClick={handleReportUser} variant="destructive">
 					<Flag />
-					{t(
-						"components.profile.actions.report_user",
-						"Report",
-					)}
+					{t("components.profile.actions.report_user", "Report")}
 				</DropdownMenuItem>
-				<DropdownMenuItem
-					variant="destructive"
-					onClick={handleBlockUser}
-				>
+				<DropdownMenuItem variant="destructive" onClick={handleBlockUser}>
 					<UserLock />
-					{t(
-						"components.profile.actions.block_user",
-						"Block user",
-					)}
+					{t("components.profile.actions.block_user", "Block user")}
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
@@ -281,9 +257,7 @@ export default function UserProfile({
 		<div className="flex flex-1 flex-col">
 			<div className="relative">
 				<ProfileCover user={user} />
-				{!isMe && (
-					<UserProfileMoreMenu user={user} />
-				)}
+				{!isMe && <UserProfileMoreMenu user={user} />}
 			</div>
 			<div className="flex min-h-0 flex-1 flex-col">
 				<div className="flex flex-1 flex-col gap-4 lg:flex-row lg:gap-8">
@@ -368,13 +342,13 @@ export function UserProfileSidebar({
 		toast.info(
 			action === "follow"
 				? t(
-					"components.profile.actions.sign_in_to_follow",
-					"Please sign in to follow this user.",
-				)
+						"components.profile.actions.sign_in_to_follow",
+						"Please sign in to follow this user.",
+					)
 				: t(
-					"components.profile.actions.sign_in_to_message",
-					"Please sign in to message this user.",
-				),
+						"components.profile.actions.sign_in_to_message",
+						"Please sign in to message this user.",
+					),
 		);
 
 		return false;
@@ -506,13 +480,19 @@ export function UserProfileSidebar({
 				<div className="space-y-4">
 					{/* User identity */}
 					<div>
-						<Typography.Heading level={3} className="inline-flex w-full items-center gap-2 font-semibold">
+						<Typography.Heading
+							level={3}
+							className="inline-flex w-full items-center gap-2 font-semibold"
+						>
 							<span className="truncate">{user.displayName}</span>
 
 							<ProfileBadge user={user} />
 						</Typography.Heading>
 
-						<Typography.Paragraph size={"base"} className="text-muted-foreground!">
+						<Typography.Paragraph
+							size={"base"}
+							className="text-muted-foreground!"
+						>
 							@{user.username}
 						</Typography.Paragraph>
 					</div>
@@ -532,7 +512,12 @@ export function UserProfileSidebar({
 								</Button>
 
 								{user.roles.includes(TRoles.Artist) && user.isVerified && (
-									<Button type="button" variant="secondary" size={actionButtonSize} className="flex-1">
+									<Button
+										type="button"
+										variant="secondary"
+										size={actionButtonSize}
+										className="flex-1"
+									>
 										{t("components.profile.actions.queue", "Queue")}
 										{/* <OutlineListBoxes /> */}
 									</Button>
@@ -633,6 +618,9 @@ export function UserProfileSidebar({
 
 						<ProfileDetailsContent user={user} />
 					</Dialog>
+
+					{/* Public profile links */}
+					<ProfileSocials socials={user.socials} />
 				</div>
 			</aside>
 
@@ -652,8 +640,6 @@ function UserFeeds({
 	user,
 	isMe,
 	children,
-	activeTab,
-	onTabChange,
 }: {
 	user: TUserProfile;
 	isMe: boolean;
@@ -663,25 +649,6 @@ function UserFeeds({
 }) {
 	const { t } = useTranslation();
 	const availableFeeds = useAvailableFeeds(user, isMe);
-
-	const defaultTab = useMemo(() => {
-		return (
-			availableFeeds.find((feed) => feed.id === "commissions")?.id ??
-			availableFeeds[0]?.id ??
-			""
-		);
-	}, [availableFeeds]);
-
-	const [internalTab, setInternalTab] = useState(defaultTab);
-
-	useEffect(() => {
-		if (!activeTab && defaultTab && internalTab !== defaultTab) {
-			setInternalTab(defaultTab);
-		}
-	}, [activeTab, defaultTab, internalTab]);
-
-	const currentFeed = activeTab ?? internalTab ?? defaultTab;
-	const handleTabChange = onTabChange ?? setInternalTab;
 
 	if (availableFeeds.length === 0) {
 		return (
