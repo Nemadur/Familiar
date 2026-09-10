@@ -74,10 +74,26 @@ const en = {
 			confirm_email: "Account created. Check your inbox to confirm your email.",
 			submit: "Submit",
 			pending: "Creating account...",
+			error_title: "We couldn't create your account",
+			validation_error_title: "Check the highlighted fields",
+			validation_error_description:
+				"Some details need your attention before the account can be created.",
 			steps: {
 				account: "Account",
 				profile: "Profile",
 				socials: "Links",
+			},
+			verify: {
+				title: "Please verify your email",
+				description: "We sent a confirmation link to the email address below.",
+				waiting:
+					"Open the link in the email. This page will update automatically, and you may also check again manually.",
+				verified_title: "Email confirmed",
+				verified_description:
+					"Your account is ready. You can safely close this page.",
+				check_again: "Check again",
+				close_for_now: "Close for now",
+				continue: "Continue",
 			},
 			profile: {
 				title: "Profile details",
@@ -95,6 +111,12 @@ const en = {
 				choose_avatar: "Choose avatar",
 				remove_avatar: "Remove avatar",
 			},
+		},
+		email_confirmed: {
+			title: "Your email has been confirmed",
+			description:
+				"You can close this tab and return to the registration page. It will update automatically.",
+			continue: "Continue to Familiar",
 		},
 		forgot: {
 			cta: "Forgot your password?",
@@ -140,6 +162,10 @@ const en = {
 			label: "Password",
 			placeholder: "Password",
 		},
+		confirm_password: {
+			label: "Confirm password",
+			placeholder: "Repeat your password",
+		},
 		create_account: {
 			cta: "Create Account",
 		},
@@ -148,8 +174,11 @@ const en = {
 			invalid_credentials: "Invalid email or password",
 			invalid_registration:
 				"Please review your registration details and invite code.",
+			invalid_invite_key:
+				"This invite key is invalid or has already been used.",
 			email_registered:
 				"An account with this email or username already exists.",
+			username_taken: "This username is already taken.",
 			unsupported_registration_image:
 				"The avatar or cover image format is not supported.",
 			registration_provider_failed:

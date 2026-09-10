@@ -70,6 +70,7 @@ const registerBase = z.object({
 	account_type: accountTypes,
 	email,
 	password,
+	confirm_password: password,
 	invite_key: inviteKey,
 	username,
 	display_name: displayName,
@@ -80,6 +81,14 @@ const registerBase = z.object({
 });
 
 const register = registerBase.superRefine((data, ctx) => {
+	if (data.password !== data.confirm_password) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			message: "Passwords do not match.",
+			path: ["confirm_password"],
+		});
+	}
+
 	if (!data.invite_key) {
 		ctx.addIssue({
 			code: z.ZodIssueCode.custom,

@@ -2,6 +2,11 @@ import { Link } from "@tanstack/react-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { OutlineClose, SolidUser } from "@/components/icons/icons";
+import {
+	AuthArtworkImage,
+	DEFAULT_AUTH_ARTWORK,
+	REGISTER_ARTWORK_BY_STAGE,
+} from "@/components/layout/auth/artwork";
 import { AnimateChangeInHeight } from "@/components/ui/animate-change-in-height";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -22,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/ui/use-mobile";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth";
+import type { RegisterStage } from "@/types/auth/form/register";
 import type {
 	AuthContentProps,
 	AuthModalProps,
@@ -36,6 +42,8 @@ function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 	const [open, setOpen] = React.useState(false);
 	const [selectedTab, setSelectedTab] = React.useState<AuthTab | null>(null);
 	const [forgotOpen, setForgotOpen] = React.useState(false);
+	const [registerStage, setRegisterStage] =
+		React.useState<RegisterStage>("account");
 	const isMobile = useIsMobile();
 	const { user } = useAuth();
 
@@ -46,8 +54,13 @@ function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 	}, []);
 
 	React.useEffect(() => {
-		if (user && open) setOpen(false);
-	}, [user, open]);
+		// Keep the registration confirmation screen visible after Supabase signs in.
+		if (user && open && tab !== "register") setOpen(false);
+	}, [user, open, tab]);
+
+	React.useEffect(() => {
+		if (!open) setRegisterStage("account");
+	}, [open]);
 
 	if (isMobile) {
 		return (
@@ -70,6 +83,8 @@ function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 								setTab={setTab}
 								setOpen={setOpen}
 								setForgotOpen={setForgotOpen}
+								registerStage={registerStage}
+								setRegisterStage={setRegisterStage}
 							/>
 						</div>
 					</DrawerContent>
@@ -114,6 +129,8 @@ function AuthModal({ defaultTab = "login" }: AuthModalProps) {
 					setTab={setTab}
 					setOpen={setOpen}
 					setForgotOpen={setForgotOpen}
+					registerStage={registerStage}
+					setRegisterStage={setRegisterStage}
 				/>
 			</DialogContent>
 		</Dialog>
@@ -125,13 +142,19 @@ function AuthContent({
 	setTab,
 	setOpen,
 	setForgotOpen,
+	registerStage,
+	setRegisterStage,
 }: AuthContentProps) {
+	const artwork =
+		tab === "register"
+			? REGISTER_ARTWORK_BY_STAGE[registerStage]
+			: DEFAULT_AUTH_ARTWORK;
+
 	return (
-		<div className="grid min-h-[420px] md:grid-cols-[320px_minmax(0,1fr)]">
+		<div className="grid min-h-[420px] min-w-0 md:grid-cols-[320px_minmax(0,1fr)]">
 			<aside className="relative hidden h-full flex-col gap-4 bg-muted/40 p-6 md:flex">
-				<img
-					src="https://images.pexels.com/photos/1570264/pexels-photo-1570264.jpeg"
-					alt="Familiar"
+				<AuthArtworkImage
+					artwork={artwork}
 					className="absolute inset-0 h-full w-full rounded-r-lg object-cover"
 				/>
 				<div className="absolute inset-0 rounded-r-lg bg-black/50" />
@@ -145,7 +168,7 @@ function AuthContent({
 				</div>
 			</aside>
 
-			<section className="max-h-[80vh] overflow-y-auto p-4">
+			<section className="max-h-[80vh] min-w-0 overflow-x-hidden overflow-y-auto p-4">
 				<div className="mb-3 flex justify-end">
 					<DialogClose asChild>
 						<Button variant="ghost" size="icon" aria-label="Close">
@@ -159,6 +182,7 @@ function AuthContent({
 					setTab={setTab}
 					setOpen={setOpen}
 					setForgotOpen={setForgotOpen}
+					setRegisterStage={setRegisterStage}
 				/>
 
 				<AuthFooter />
@@ -172,11 +196,13 @@ function TabContent({
 	setTab,
 	setOpen,
 	setForgotOpen,
+	setRegisterStage,
 }: {
 	tab: AuthTab;
 	setTab: (tab: AuthTab) => void;
 	setOpen: (open: boolean) => void;
 	setForgotOpen: (forgotOpen: boolean) => void;
+	setRegisterStage: (stage: RegisterStage) => void;
 }) {
 	return (
 		<AnimateChangeInHeight>
@@ -207,6 +233,7 @@ function TabContent({
 					<RegisterForm
 						onModeChange={() => setTab("login")}
 						onSuccess={() => setOpen(false)}
+						onStageChange={setRegisterStage}
 					/>
 				</TabsContent>
 			</Tabs>

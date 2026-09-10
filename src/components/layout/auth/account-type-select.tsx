@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { SolidCheck } from "@/components/icons/icons";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { AccountTypeSelectorProps } from "@/types/auth/form/account-type-selector";
 import type { AccountType } from "@/types/auth/schema/accounts";
@@ -9,8 +8,11 @@ import type { AccountType } from "@/types/auth/schema/accounts";
 export function AccountTypeSelector({
 	value,
 	onChange,
+	className,
+	...props
 }: AccountTypeSelectorProps) {
 	const { t } = useTranslation();
+	const isInvalid = props["aria-invalid"] === true;
 
 	const OPTIONS: Array<{
 		key: AccountType;
@@ -29,7 +31,7 @@ export function AccountTypeSelector({
 		},
 	];
 	return (
-		<div className={"space-y-3"}>
+		<div className={cn("space-y-3", className)} {...props}>
 			{/* radiogroup container */}
 			<div
 				role="radiogroup"
@@ -65,6 +67,8 @@ export function AccountTypeSelector({
 											"has-focus-visible:border-input",
 											"has-focus-visible:ring-input/50",
 										],
+								isInvalid &&
+									"border-destructive! bg-destructive/5 has-focus-visible:ring-destructive/30",
 							)}
 						>
 							<input
