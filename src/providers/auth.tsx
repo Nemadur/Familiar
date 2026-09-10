@@ -27,6 +27,8 @@ import type { TUserResponse } from "@/types/user";
 
 interface AuthContextValue {
 	user: TUserResponse | null;
+	authEmail: string | null;
+	isEmailVerified: boolean;
 	pending: boolean;
 	isPending: boolean;
 	error: Error | null;
@@ -86,6 +88,23 @@ const REGISTRATION_ROLE_BY_ACCOUNT_TYPE = {
 	artist: "ARTIST",
 } satisfies Record<AccountType, AuthRole>;
 
+export type RegistrationErrorField = Extract<keyof RegisterData, string>;
+
+export class RegistrationError extends Error {
+	readonly field?: RegistrationErrorField;
+	readonly status?: number;
+
+	constructor(
+		message: string,
+		options: { field?: RegistrationErrorField; status?: number } = {},
+	) {
+		super(message);
+		this.name = "RegistrationError";
+		this.field = options.field;
+		this.status = options.status;
+	}
+}
+
 function optionalTrimmedValue(value: string) {
 	const trimmedValue = value.trim();
 	return trimmedValue.length > 0 ? trimmedValue : undefined;
@@ -103,29 +122,92 @@ function getRegistrationSocials(
 		: undefined;
 }
 
-function getRegistrationError(error: unknown) {
+function getApiErrorMessage(error: ApiFetchError) {
+	if (!error.body) {
+		return undefined;
+	}
+
+	try {
+		const body = JSON.parse(error.body) as {
+			message?: unknown;
+			error?: unknown;
+		};
+		const message =
+			typeof body.message === "string"
+				? body.message
+				: typeof body.error === "string"
+					? body.error
+					: undefined;
+
+		return message?.trim() || undefined;
+	} catch {
+		return error.body.trim() || undefined;
+	}
+}
+
+function getRegistrationErrorField(
+	message: string | undefined,
+): RegistrationErrorField | undefined {
+	const normalizedMessage = message?.toLowerCase() ?? "";
+
+	if (normalizedMessage.includes("invite")) return "invite_key";
+	if (normalizedMessage.includes("username")) return "username";
+	if (normalizedMessage.includes("email")) return "email";
+	if (normalizedMessage.includes("password")) return "password";
+	if (normalizedMessage.includes("bio")) return "bio";
+	if (normalizedMessage.includes("social")) return "socials";
+	if (normalizedMessage.includes("cover")) return "cover";
+	if (normalizedMessage.includes("avatar")) return "avatar";
+
+	return undefined;
+}
+
+function getRegistrationError(error: unknown): RegistrationError {
 	if (error instanceof ApiFetchError) {
+		const apiMessage = getApiErrorMessage(error);
+		const field = getRegistrationErrorField(apiMessage);
+
 		switch (error.status) {
 			case 400:
-				return new Error(i18n.t("auth.errors.invalid_registration"));
+				return new RegistrationError(
+					field === "invite_key"
+						? i18n.t("auth.errors.invalid_invite_key")
+						: apiMessage || i18n.t("auth.errors.invalid_registration"),
+					{ field, status: error.status },
+				);
 			case 409:
-				return new Error(i18n.t("auth.errors.email_registered"));
+				return new RegistrationError(
+					field === "username"
+						? i18n.t("auth.errors.username_taken")
+						: i18n.t("auth.errors.email_registered"),
+					{ field, status: error.status },
+				);
 			case 415:
-				return new Error(i18n.t("auth.errors.unsupported_registration_image"));
+				return new RegistrationError(
+					i18n.t("auth.errors.unsupported_registration_image"),
+					{ field: field ?? "avatar", status: error.status },
+				);
 			case 429:
-				return new Error(i18n.t("auth.errors.rate_limit"));
+				return new RegistrationError(
+					apiMessage || i18n.t("auth.errors.rate_limit"),
+					{ field, status: error.status },
+				);
 			case 502:
-				return new Error(i18n.t("auth.errors.registration_provider_failed"));
+				return new RegistrationError(
+					i18n.t("auth.errors.registration_provider_failed"),
+					{ status: error.status },
+				);
 			case 503:
-				return new Error(
+				return new RegistrationError(
 					i18n.t("auth.errors.registration_service_unavailable"),
+					{ status: error.status },
 				);
 		}
 	}
 
 	const message = error instanceof Error ? error.message : String(error);
 
-	return new Error(
+	return new RegistrationError(
 		i18n.t("auth.errors.registration_failed", {
 			error: message,
 		}),
@@ -197,6 +279,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	);
 
 	const user = fetchedUser ?? optimisticUser ?? null;
+	const authEmail = session?.user?.email?.trim().toLowerCase() ?? null;
+	const isEmailVerified = Boolean(
+		session?.user?.email_confirmed_at ?? session?.user?.confirmed_at,
+	);
 	const error = userQueryError instanceof Error ? userQueryError : null;
 
 	const isPending =
@@ -338,7 +424,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 					response.access_token
 						? i18n.t("auth.register.success")
 						: i18n.t("auth.register.confirm_email"),
-				error: (error) => error.message,
+				error: (error) => ({
+					message: i18n.t("auth.register.error_title"),
+					description:
+						error instanceof Error
+							? error.message
+							: i18n.t("auth.errors.invalid_registration"),
+					duration: 7_000,
+					closeButton: true,
+				}),
 			});
 
 			try {
@@ -430,6 +524,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const value = useMemo<AuthContextValue>(
 		() => ({
 			user,
+			authEmail,
+			isEmailVerified,
 			pending,
 			isPending,
 			error,
@@ -441,6 +537,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}),
 		[
 			user,
+			authEmail,
+			isEmailVerified,
 			pending,
 			isPending,
 			error,

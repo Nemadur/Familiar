@@ -48,7 +48,12 @@ function useFilePreview(file: File | null | undefined) {
 export function RegisterStepProfile() {
 	const { t } = useTranslation();
 	const uploadId = useId();
-	const { control, setValue, watch } = useFormContext<RegisterData>();
+	const {
+		control,
+		setValue,
+		watch,
+		formState: { errors },
+	} = useFormContext<RegisterData>();
 	const avatar = watch("avatar");
 	const cover = watch("cover");
 	const displayName = watch("display_name");
@@ -56,6 +61,7 @@ export function RegisterStepProfile() {
 	const bio = watch("bio");
 	const avatarPreview = useFilePreview(avatar);
 	const coverPreview = useFilePreview(cover);
+	const mediaError = errors.cover?.message ?? errors.avatar?.message;
 
 	const handleFileChange = (
 		event: React.ChangeEvent<HTMLInputElement>,
@@ -86,7 +92,13 @@ export function RegisterStepProfile() {
 			</div>
 
 			<div className="relative">
-				<div className="relative h-36 w-full overflow-hidden rounded-3xl border bg-surface-3">
+				<div
+					className={cn(
+						"relative h-36 w-full overflow-hidden rounded-3xl border bg-surface-3",
+						errors.cover &&
+							"border-destructive ring-3 ring-destructive/20 dark:ring-destructive/40",
+					)}
+				>
 					{coverPreview ? (
 						<img
 							src={coverPreview}
@@ -146,7 +158,12 @@ export function RegisterStepProfile() {
 				<div className="relative min-h-20 px-4 pb-4 pt-3">
 					<div className="absolute -top-10 left-4">
 						<div className="relative size-20">
-							<div className="flex size-full items-center justify-center overflow-hidden rounded-full bg-surface-3 ring-3 ring-surface-2">
+							<div
+								className={cn(
+									"flex size-full items-center justify-center overflow-hidden rounded-full bg-surface-3 ring-3 ring-surface-2",
+									errors.avatar && "ring-destructive",
+								)}
+							>
 								{avatarPreview ? (
 									<img
 										src={avatarPreview}
@@ -215,8 +232,14 @@ export function RegisterStepProfile() {
 					</div>
 				</div>
 
-				{bio ? (
-					<p className="px-4 pb-4 text-sm text-muted-foreground">{bio}</p>
+				<p className="line-clamp-2 min-h-14 break-words px-4 pb-4 text-sm text-muted-foreground">
+					{bio || "\u00a0"}
+				</p>
+
+				{mediaError ? (
+					<p className="px-4 pb-4 text-sm text-destructive" role="alert">
+						{String(mediaError)}
+					</p>
 				) : null}
 			</div>
 
@@ -281,7 +304,7 @@ export function RegisterStepProfile() {
 							<FormControl>
 								<InputGroup className="rounded-2xl">
 									<InputGroupTextArea
-										className="min-h-22"
+										className="h-22 min-h-22 max-h-22 resize-none overflow-y-auto"
 										placeholder={t(
 											"auth.bio.placeholder",
 											"Tell us about yourself...",

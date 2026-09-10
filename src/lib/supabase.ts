@@ -15,7 +15,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 	auth: {
 		autoRefreshToken: true,
 		persistSession: true,
-		// detectSessionInUrl: true,
+		// Consume the session returned in the URL after email confirmation.
+		detectSessionInUrl: true,
 	},
 });
 

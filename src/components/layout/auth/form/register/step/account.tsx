@@ -45,6 +45,7 @@ export function RegisterStepAccount({
 }: RegisterStepAccountProps) {
 	const { t } = useTranslation();
 	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	return (
 		<div className="space-y-4">
@@ -81,10 +82,7 @@ export function RegisterStepAccount({
 								<InputGroupInput
 									type="email"
 									autoComplete="email"
-									placeholder={t(
-										"auth.email.placeholder",
-										"Email address",
-									)}
+									placeholder={t("auth.email.placeholder", "Email address")}
 									{...field}
 									ref={(element) => {
 										field.ref(element);
@@ -103,9 +101,7 @@ export function RegisterStepAccount({
 				name="password"
 				render={({ field }) => (
 					<FormItem>
-						<FormLabel>
-							{t("auth.password.label", "Password")}
-						</FormLabel>
+						<FormLabel>{t("auth.password.label", "Password")}</FormLabel>
 						<FormControl>
 							<InputGroup>
 								<InputGroupAddon>
@@ -114,36 +110,72 @@ export function RegisterStepAccount({
 								<InputGroupInput
 									type={showPassword ? "text" : "password"}
 									autoComplete="new-password"
-									placeholder={t(
-										"auth.password.placeholder",
-										"Password",
-									)}
+									placeholder={t("auth.password.placeholder", "Password")}
 									{...field}
 								/>
-								<InputGroupAddon
-									align="inline-end"
-									className="pr-3"
-								>
+								<InputGroupAddon align="inline-end" className="pr-3">
 									<InputGroupButton
 										type="button"
 										variant="ghost"
 										size="icon-xs"
 										aria-label={
 											showPassword
-												? t(
-													"auth.password.hide",
-													"Hide password",
-												)
-												: t(
-													"auth.password.show",
-													"Show password",
-												)
+												? t("auth.password.hide", "Hide password")
+												: t("auth.password.show", "Show password")
 										}
-										onClick={() =>
-											setShowPassword((current) => !current)
-										}
+										onClick={() => setShowPassword((current) => !current)}
 									>
 										{showPassword ? (
+											<OutlineEyeOff className="text-muted-foreground" />
+										) : (
+											<OutlineEye className="text-muted-foreground" />
+										)}
+									</InputGroupButton>
+								</InputGroupAddon>
+							</InputGroup>
+						</FormControl>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+
+			<FormField
+				control={control}
+				name="confirm_password"
+				render={({ field }) => (
+					<FormItem>
+						<FormLabel>
+							{t("auth.confirm_password.label", "Confirm password")}
+						</FormLabel>
+						<FormControl>
+							<InputGroup>
+								<InputGroupAddon>
+									<OutlineLock />
+								</InputGroupAddon>
+								<InputGroupInput
+									type={showConfirmPassword ? "text" : "password"}
+									autoComplete="new-password"
+									placeholder={t(
+										"auth.confirm_password.placeholder",
+										"Repeat your password",
+									)}
+									{...field}
+								/>
+								<InputGroupAddon align="inline-end" className="pr-3">
+									<InputGroupButton
+										type="button"
+										variant="ghost"
+										size="icon-xs"
+										aria-label={
+											showConfirmPassword
+												? t("auth.password.hide", "Hide password")
+												: t("auth.password.show", "Show password")
+										}
+										onClick={() =>
+											setShowConfirmPassword((current) => !current)
+										}
+									>
+										{showConfirmPassword ? (
 											<OutlineEyeOff className="text-muted-foreground" />
 										) : (
 											<OutlineEye className="text-muted-foreground" />
@@ -163,14 +195,10 @@ export function RegisterStepAccount({
 					name="invite_key"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>
-								{t("auth.invite_key.label", "Invite key")}
-							</FormLabel>
+							<FormLabel>{t("auth.invite_key.label", "Invite key")}</FormLabel>
 							<FormControl>
 								<InputGroup>
-									<InputGroupAddon>
-										{INVITE_KEY_PREFIX}
-									</InputGroupAddon>
+									<InputGroupAddon>{INVITE_KEY_PREFIX}</InputGroupAddon>
 									<InputGroupInput
 										className="-ml-2"
 										autoComplete="off"
@@ -182,9 +210,7 @@ export function RegisterStepAccount({
 										value={getInviteKeyInputValue(field.value)}
 										onChange={(event) => {
 											field.onChange(
-												normalizeInviteKey(
-													event.target.value,
-												) ?? "",
+												normalizeInviteKey(event.target.value) ?? "",
 											);
 										}}
 									/>

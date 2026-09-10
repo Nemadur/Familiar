@@ -73,6 +73,7 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 				"has-[button:focus-visible]:ring-3 has-[button:focus-visible]:ring-primary/40",
 
 				// Error state.
+				"aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
 				"has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
 
 				className,

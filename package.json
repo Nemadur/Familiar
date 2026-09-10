@@ -6,7 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "bun --bun vite",
+    "dev": "vite",
     "build": "bun --bun vite build",
     "preview": "bun --bun vite preview",
     "test": "bun --bun vitest -- run",

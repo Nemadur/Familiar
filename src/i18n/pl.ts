@@ -75,10 +75,26 @@ const pl = {
 				"Konto zostało utworzone. Sprawdź skrzynkę i potwierdź adres e-mail.",
 			submit: "Zarejestruj",
 			pending: "Tworzenie konta...",
+			error_title: "Nie udało się utworzyć konta",
+			validation_error_title: "Sprawdź zaznaczone pola",
+			validation_error_description:
+				"Niektóre dane wymagają poprawienia przed utworzeniem konta.",
 			steps: {
 				account: "Konto",
 				profile: "Profil",
 				socials: "Linki",
+			},
+			verify: {
+				title: "Potwierdź swój adres e-mail",
+				description: "Wysłaliśmy link potwierdzający na poniższy adres e-mail.",
+				waiting:
+					"Otwórz link z wiadomości. Ta strona zaktualizuje się automatycznie, możesz też sprawdzić ponownie ręcznie.",
+				verified_title: "Adres e-mail potwierdzony",
+				verified_description:
+					"Twoje konto jest gotowe. Możesz bezpiecznie zamknąć tę stronę.",
+				check_again: "Sprawdź ponownie",
+				close_for_now: "Zamknij na razie",
+				continue: "Kontynuuj",
 			},
 			profile: {
 				title: "Dane profilu",
@@ -96,6 +112,12 @@ const pl = {
 				choose_avatar: "Wybierz awatar",
 				remove_avatar: "Usuń awatar",
 			},
+		},
+		email_confirmed: {
+			title: "Twój adres e-mail został potwierdzony",
+			description:
+				"Możesz zamknąć tę kartę i wrócić do strony rejestracji. Zaktualizuje się ona automatycznie.",
+			continue: "Przejdź do Familiar",
 		},
 		forgot: {
 			cta: "Zapomniałeś hasła?",
@@ -142,6 +164,10 @@ const pl = {
 			label: "Hasło",
 			placeholder: "Haslo",
 		},
+		confirm_password: {
+			label: "Potwierdź hasło",
+			placeholder: "Powtórz hasło",
+		},
 		create_account: {
 			cta: "Utwórz Konto",
 		},
@@ -149,8 +175,11 @@ const pl = {
 			rate_limit: "Zbyt wiele prób. Spróbuj ponownie później.",
 			invalid_credentials: "Nieprawidłowy email lub hasło",
 			invalid_registration: "Sprawdź dane rejestracyjne i kod zaproszenia.",
+			invalid_invite_key:
+				"Ten kod zaproszenia jest nieprawidłowy lub został już użyty.",
 			email_registered:
 				"Konto z tym adresem e-mail lub nazwą użytkownika już istnieje.",
+			username_taken: "Ta nazwa użytkownika jest już zajęta.",
 			unsupported_registration_image:
 				"Format awatara lub zdjęcia w tle nie jest obsługiwany.",
 			registration_provider_failed:
