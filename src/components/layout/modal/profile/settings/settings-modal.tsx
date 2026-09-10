@@ -240,46 +240,18 @@ const EMPTY_PROFILE_VALUES: ProfileEditorValues = {
 	accent_color: "",
 };
 
-interface SettingsMediaSource {
-	fullSize?: { path?: string | null } | null;
-	thumbnail?: { path?: string | null } | null;
-}
-
-type SettingsUser = TUserResponse & {
-	avatarPath?: string | null;
-	avatarUrl?: string | null;
-	avatar?: SettingsMediaSource | null;
-	coverPath?: string | null;
-	coverUrl?: string | null;
-	cover?: SettingsMediaSource | null;
-	bio?: string | null;
-	accentColor?: string | null;
-};
-
-function getMediaPath(media?: SettingsMediaSource | null) {
-	return media?.fullSize?.path ?? media?.thumbnail?.path ?? "";
-}
-
 function getProfileEditorValues(user?: TUserResponse | null): ProfileEditorValues {
 	if (!user) {
 		return EMPTY_PROFILE_VALUES;
 	}
 
-	const settingsUser = user as SettingsUser;
-
 	return {
-		avatar_url:
-			settingsUser.avatarPath ??
-			settingsUser.avatarUrl ??
-			getMediaPath(settingsUser.avatar),
-		cover_url:
-			settingsUser.coverPath ??
-			settingsUser.coverUrl ??
-			getMediaPath(settingsUser.cover),
-		display_name: settingsUser.displayName ?? "",
-		username: settingsUser.username ?? "",
-		bio: settingsUser.bio ?? "",
-		accent_color: settingsUser.accentColor ?? "",
+		avatar_url: user.avatarPath ?? "",
+		cover_url: user.coverPath ?? "",
+		display_name: user.displayName,
+		username: user.username,
+		bio: user.bio ?? "",
+		accent_color: user.accentColor ?? "",
 	};
 }
 

@@ -1,4 +1,4 @@
-import { Typography } from "@heroui/react";
+import { ScrollShadow, Typography } from "@heroui/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Upload, X } from "lucide-react";
 import { type FormEvent, useEffect, useId, useState } from "react";
@@ -11,12 +11,7 @@ import type {
 	CreatePortfolioPostRequest,
 	PortfolioPostResponse,
 } from "@/api/portfolio/posts/post-types";
-import {
-	OutlineClose,
-	OutlineEdit,
-	OutlinePlus,
-	SolidPlus,
-} from "@/components/icons/icons";
+import { OutlineClose, OutlinePlus } from "@/components/icons/icons";
 import { UniversalModalLayout } from "@/components/layout/modal/universal-modal-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -37,7 +32,6 @@ import {
 } from "@/components/ui/field";
 import {
 	InputGroup,
-	InputGroupAddon,
 	InputGroupInput,
 	InputGroupTextArea,
 } from "@/components/ui/input-group";
@@ -91,9 +85,9 @@ function MultiSelectPopover({
 					type="button"
 					role="combobox"
 					aria-expanded={open}
-					className="border-input data-placeholder:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 dark:hover:bg-input/50 flex w-full h-auto items-center justify-between gap-2 rounded-2xl border bg-transparent px-3 py-2 text-sm transition-[color] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 text-primary hover:bg-transparent"
+					className="border-input data-placeholder:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 dark:hover:bg-input/50 flex min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-transparent px-3 py-2 text-sm text-primary transition-[color] outline-none hover:bg-transparent focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
 				>
-					<div className="flex flex-wrap gap-1.5 items-center">
+					<div className="flex min-w-0 flex-wrap items-center gap-1.5">
 						{selected.length > 0 ? (
 							selected.map((val) => {
 								const label =
@@ -163,7 +157,7 @@ interface CreatePostModalProps {
 	onOpenChange: (open: boolean) => void;
 	onCreatePost: (
 		data: CreatePortfolioPostRequest,
-	) => Promise<PortfolioPostResponse | void>;
+	) => Promise<PortfolioPostResponse | undefined>;
 	isCreating: boolean;
 	catalogs: CatalogResponse[];
 }
@@ -211,8 +205,6 @@ export function CreatePostModal({
 		queryFn: () => getCommissionCategories(),
 	});
 
-	// Split tags and CWs
-	const availableTags = allTags.filter((tag) => !tag.hasContentWarning);
 	const availableCWs = allTags.filter((tag) => tag.hasContentWarning);
 
 	useEffect(() => {
@@ -232,7 +224,9 @@ export function CreatePostModal({
 
 	useEffect(() => {
 		return () => {
-			imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+			imagePreviewUrls.forEach((url) => {
+				URL.revokeObjectURL(url);
+			});
 		};
 	}, [imagePreviewUrls]);
 
@@ -282,11 +276,13 @@ export function CreatePostModal({
 				catalogIds: selectedCatalogs,
 			});
 
-			if (createdPost?.id && imageFiles.length > 0) {
+			const postId = createdPost?.id;
+
+			if (postId && imageFiles.length > 0) {
 				// Upload all selected images
 				await Promise.all(
 					imageFiles.map((file) =>
-						uploadMediaMutation.mutateAsync({ postId: createdPost.id!, file }),
+						uploadMediaMutation.mutateAsync({ postId, file }),
 					),
 				);
 
@@ -321,14 +317,19 @@ export function CreatePostModal({
 			open={open}
 			onOpenChange={onOpenChange}
 			title={t("components.portfolio.post.create.title", "New Post")}
-			mediaClassName="bg-muted/10 flex flex-col min-h-0 lg:overflow-hidden"
+			mediaClassName="min-h-0 bg-surface-1 lg:overflow-hidden"
 			mediaContent={
-				<div className="flex flex-col h-full min-h-0">
-					<div className="flex items-center justify-between p-6 pb-4 shrink-0">
+				<div className="flex size-full min-h-0 flex-col gap-4 p-6">
+					<div className="flex shrink-0 items-center justify-between gap-3">
 						<Typography.Heading level={4}>
 							{t("components.portfolio.post.create.media.title", "IMAGES")}
 						</Typography.Heading>
-						<label className={cn(buttonVariants({ variant: "secondary" }))}>
+						<label
+							className={cn(
+								buttonVariants({ variant: "secondary", size: "xl" }),
+								"cursor-pointer",
+							)}
+						>
 							<OutlinePlus />
 							{t("components.portfolio.post.create.media.upload", "Add images")}
 							<input
@@ -341,12 +342,12 @@ export function CreatePostModal({
 						</label>
 					</div>
 
-					<div className="flex-1 min-h-0">
-						<div className="scroll-fade overflow-y-auto py-5 h-full px-6 pb-6 flex flex-col gap-4">
+					<div className="min-h-0 flex-1">
+						<ScrollShadow className="flex size-full flex-col" size={32}>
 							{imagePreviewUrls.length === 0 ? (
-								<label className="flex flex-col items-center justify-center h-full min-h-64 border-2 border-dashed rounded-xl border-muted-foreground/20 text-muted-foreground cursor-pointer hover:bg-muted/50 transition-colors">
-									<Upload className="size-8 mb-2 opacity-50" />
-									<p className="text-sm">
+								<label className="flex size-full min-h-64 cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-muted-foreground/25 bg-background px-6 text-center text-muted-foreground transition-colors hover:bg-surface-2">
+									<Upload className="size-8 opacity-50" />
+									<p className="text-sm font-medium">
 										{t(
 											"components.portfolio.post.create.media.upload",
 											"Click to upload image",
@@ -361,34 +362,40 @@ export function CreatePostModal({
 									/>
 								</label>
 							) : (
-								imagePreviewUrls.map((url, idx) => (
-									<div
-										key={url}
-										className="relative w-full rounded-xl overflow-hidden border bg-muted/50 group shrink-0"
-									>
-										<img
-											src={url}
-											alt={`Preview ${idx}`}
-											className="w-full h-auto object-cover"
-										/>
-										<button
-											type="button"
-											onClick={() => removeImage(idx)}
-											className="absolute top-3 right-3 bg-background/80 backdrop-blur-md text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors rounded-full p-2 opacity-0 group-hover:opacity-100 shadow-sm"
+								<div className="grid w-full grid-cols-2 gap-4 xl:grid-cols-3">
+									{imagePreviewUrls.map((url, idx) => (
+										<div
+											key={url}
+											className="group relative aspect-square overflow-hidden rounded-2xl bg-surface-2"
 										>
-											<X className="size-4" />
-										</button>
-									</div>
-								))
+											<img
+												src={url}
+												alt={`Preview ${idx + 1}`}
+												className="size-full object-cover"
+											/>
+											<button
+												type="button"
+												onClick={() => removeImage(idx)}
+												aria-label={t(
+													"components.portfolio.post.create.media.remove",
+													"Remove image",
+												)}
+												className="absolute top-3 right-3 rounded-full bg-background/85 p-2 text-foreground opacity-100 backdrop-blur-sm transition-colors hover:bg-destructive hover:text-destructive-foreground lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100"
+											>
+												<X className="size-4" />
+											</button>
+										</div>
+									))}
+								</div>
 							)}
-						</div>
+						</ScrollShadow>
 					</div>
 				</div>
 			}
 			detailsContent={
 				<form className="flex h-full min-h-0 flex-col" onSubmit={handleSubmit}>
 					<div className="min-h-0 flex-1">
-						<div className="scroll-fade overflow-y-auto h-full p-6">
+						<ScrollShadow className="h-full p-6" size={32}>
 							<div className="flex flex-col gap-6">
 								<FieldGroup>
 									<Field data-invalid={titleInvalid || undefined}>
@@ -403,9 +410,6 @@ export function CreatePostModal({
 											className="h-12"
 											data-invalid={titleInvalid || undefined}
 										>
-											{/* <InputGroupAddon>
-												<OutlineEdit />
-											</InputGroupAddon> */}
 											<InputGroupInput
 												id="post-title"
 												value={title}
@@ -470,7 +474,11 @@ export function CreatePostModal({
 												setVisibility(value)
 											}
 										>
-											<SelectTrigger id="post-visibility">
+											<SelectTrigger
+												id="post-visibility"
+												size="xl"
+												className="w-full"
+											>
 												<SelectValue />
 											</SelectTrigger>
 											<SelectContent>
@@ -574,7 +582,7 @@ export function CreatePostModal({
 									</p>
 								)}
 							</div>
-						</div>
+						</ScrollShadow>
 					</div>
 
 					<Separator />

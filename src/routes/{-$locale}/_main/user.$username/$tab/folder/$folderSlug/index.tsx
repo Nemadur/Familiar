@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProfilePortfolio } from "@/components/layout/profile/feed/portfolio";
+import {
+	hasArtistPortfolio,
+	PortfolioUnavailable,
+} from "@/components/layout/profile/feed/portfolio-unavailable";
 import { TabContentSkeleton } from "@/components/layout/profile/profile";
 import { useProfileContent } from "@/hooks/user/use-profile-content";
 import { useUserByUsername } from "@/hooks/user/use-user";
@@ -37,14 +41,23 @@ export function FolderContent({
 	tab: string;
 	folderSlug: string;
 }) {
+	const portfolioUnavailable = tab === "portfolio" && !hasArtistPortfolio(user);
 	const {
 		data: content,
 		isPending,
 		isCurrentUser,
-	} = useProfileContent(user.username, user.userId, tab);
+	} = useProfileContent(user.username, user.userId, tab, !portfolioUnavailable);
+
+	if (portfolioUnavailable) {
+		return <PortfolioUnavailable />;
+	}
 
 	if (isPending) {
 		return <TabContentSkeleton tab={tab} />;
+	}
+
+	if (tab === "portfolio" && content?.hasPortfolio === false) {
+		return <PortfolioUnavailable />;
 	}
 
 	if (tab !== "portfolio") {

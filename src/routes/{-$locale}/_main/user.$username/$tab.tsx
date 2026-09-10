@@ -3,11 +3,15 @@ import { OutlineReceipt } from "@/components/icons/icons";
 import { EmptyPage } from "@/components/layout/empty-page";
 import { ProfileCharacters } from "@/components/layout/profile/feed/characters";
 import { ProfilePortfolio } from "@/components/layout/profile/feed/portfolio";
+import {
+	hasArtistPortfolio,
+	PortfolioUnavailable,
+} from "@/components/layout/profile/feed/portfolio-unavailable";
 import { ProfileFeed } from "@/components/layout/profile/feed/profile-feed";
 import { TabContentSkeleton } from "@/components/layout/profile/profile";
+import { useIsMobile } from "@/hooks/ui/use-mobile";
 import { useProfileContent } from "@/hooks/user/use-profile-content";
 import { useUserByUsername } from "@/hooks/user/use-user";
-import { useIsMobile } from "@/hooks/ui/use-mobile";
 import type { TUserProfile } from "@/types/user";
 import { DefaultProfileTabContent } from "../user.$username";
 
@@ -18,7 +22,6 @@ export const Route = createFileRoute("/{-$locale}/_main/user/$username/$tab")({
 function RouteComponent() {
 	const { username, tab } = Route.useParams();
 	const location = useLocation();
-	const params = Route.useParams({ strict: false });
 	const { user } = useUserByUsername(username);
 	const isMobile = useIsMobile();
 
@@ -26,9 +29,11 @@ function RouteComponent() {
 
 	// Determine if we are currently viewing a post directly under the portfolio tab
 	const pathParts = location.pathname.split("/").filter(Boolean);
-	const isPostRoute = tab === "portfolio" && pathParts[pathParts.length - 2] === "portfolio";
+	const isPostRoute =
+		tab === "portfolio" && pathParts[pathParts.length - 2] === "portfolio";
 
-	const isModal = (location.state as any)?.isModal === true;
+	const isModal =
+		(location.state as { isModal?: boolean } | undefined)?.isModal === true;
 
 	/**
 	 * The nested folder route renders its own ProfilePortfolio.
@@ -58,6 +63,7 @@ export function UserFeedContent({
 	user: TUserProfile;
 	tab: string;
 }) {
+	const portfolioUnavailable = tab === "portfolio" && !hasArtistPortfolio(user);
 	const {
 		data: content,
 		isPending,
@@ -68,10 +74,18 @@ export function UserFeedContent({
 		isCreatingCatalog,
 		createPost,
 		isCreatingPost,
-	} = useProfileContent(user.username, user.userId, tab);
+	} = useProfileContent(user.username, user.userId, tab, !portfolioUnavailable);
+
+	if (portfolioUnavailable) {
+		return <PortfolioUnavailable />;
+	}
 
 	if (isPending) {
 		return <TabContentSkeleton tab={tab} />;
+	}
+
+	if (tab === "portfolio" && content?.hasPortfolio === false) {
+		return <PortfolioUnavailable />;
 	}
 
 	if (isError) {

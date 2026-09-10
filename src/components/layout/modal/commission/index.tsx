@@ -514,7 +514,7 @@ function CommissionDetailsContent({
 				{activeTab === "description" && (
 					<CommissionDescriptionTab
 						commission={commission}
-						fetchedArtist={fetchedArtist}
+						fetchedArtist={fetchedArtist ?? undefined}
 						isLoading={isLoading}
 						isDetailsLoading={isDetailsLoading}
 					/>
@@ -860,7 +860,7 @@ export function CommissionModal({
 				detailsContent={
 					<CommissionPreviewDetails
 						commission={commission}
-						fetchedArtist={fetchedArtist}
+						fetchedArtist={fetchedArtist ?? undefined}
 						isLoading={isLoading}
 						isDetailsLoading={isDetailsLoading}
 						tabs={tabs}

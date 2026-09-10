@@ -1,53 +1,109 @@
 import {
-	OutlineDiscord,
-	OutlineDribbble,
 	OutlineInstagram,
 	OutlineLink,
 	OutlineTwitter,
 } from "@/components/icons/icons";
-import type { SocialLink } from "@/types/user";
+import { Button } from "@/components/ui/button";
+import type { UserSocial, UserSocials } from "@/types/user";
 
-const SOCIAL_PLATFORMS = [
-	{ domains: ["twitter.com", "x.com"], icon: OutlineTwitter },
-	{ domains: ["instagram.com"], icon: OutlineInstagram },
-	{ domains: ["discord.gg", "discord.com"], icon: OutlineDiscord },
-	{ domains: ["dribbble.com"], icon: OutlineDribbble },
-] as const;
+type SocialPlatformDetails = {
+	label: string;
+	icon: typeof OutlineLink;
+	baseUrl?: string;
+};
 
-export function getSocialIcon(url: string) {
-	const lowerUrl = url.toLowerCase();
-	const platform = SOCIAL_PLATFORMS.find((p) =>
-		p.domains.some((d) => lowerUrl.includes(d)),
+const SOCIAL_PLATFORM_DETAILS: Record<string, SocialPlatformDetails> = {
+	TWITTER: {
+		label: "Twitter",
+		icon: OutlineTwitter,
+		baseUrl: "https://x.com/",
+	},
+	X: {
+		label: "X",
+		icon: OutlineTwitter,
+		baseUrl: "https://x.com/",
+	},
+	INSTAGRAM: {
+		label: "Instagram",
+		icon: OutlineInstagram,
+		baseUrl: "https://instagram.com/",
+	},
+	FACEBOOK: {
+		label: "Facebook",
+		icon: OutlineLink,
+		baseUrl: "https://facebook.com/",
+	},
+	WEBSITE: { label: "Website", icon: OutlineLink },
+	WEBSITE_1: { label: "Website", icon: OutlineLink },
+	WEBSITE_2: { label: "Website", icon: OutlineLink },
+};
+
+function isWebUrl(value: string) {
+	return /^https?:\/\//i.test(value);
+}
+
+function getPlatformDetails(platform: string): SocialPlatformDetails {
+	const normalizedPlatform = platform.trim().toUpperCase();
+
+	return (
+		SOCIAL_PLATFORM_DETAILS[normalizedPlatform] ?? {
+			label: normalizedPlatform
+				.toLowerCase()
+				.replace(/_/g, " ")
+				.replace(/^\w/, (character) => character.toUpperCase()),
+			icon: OutlineLink,
+		}
 	);
-	return platform?.icon ?? OutlineLink;
+}
+
+function getSocialHref({ platform, value }: UserSocial) {
+	const normalizedValue = value.trim();
+
+	if (isWebUrl(normalizedValue)) {
+		return normalizedValue;
+	}
+
+	const details = getPlatformDetails(platform);
+	if (details.baseUrl) {
+		return `${details.baseUrl}${normalizedValue.replace(/^@/, "")}`;
+	}
+
+	return `https://${normalizedValue.replace(/^\/+/, "")}`;
 }
 
 interface ProfileSocialsProps {
-	links: SocialLink[];
+	socials: UserSocials;
 }
 
-export function ProfileSocials({ links }: ProfileSocialsProps) {
-	if (!links || links.length === 0) return null;
+export function ProfileSocials({ socials }: ProfileSocialsProps) {
+	if (socials.length === 0) return null;
 
 	return (
-		<div className="w-full overflow-x-auto pb-1 md:pb-0 whitespace-nowrap md:whitespace-normal">
-			<div className="flex w-max flex-row items-center gap-5 pt-2 md:w-full md:flex-col md:items-start md:gap-2">
-				{links.map((link) => {
-					const Icon = getSocialIcon(link.url);
-					return (
+		<div className="flex flex-col items-start gap-2">
+			{socials.map((social) => {
+				const details = getPlatformDetails(social.platform);
+				const Icon = details.icon;
+
+				return (
+					<Button
+						asChild
+						key={`${social.platform}-${social.value}`}
+						variant="link"
+						className="h-auto w-fit justify-start gap-2 p-0 text-xs text-muted-foreground no-underline hover:text-foreground"
+						size="sm"
+					>
 						<a
-							key={link.url}
-							href={link.url}
+							href={getSocialHref(social)}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
+							aria-label={`${details.label}: ${social.value}`}
 						>
-							<Icon size={16} />
-							<span>{link.label}</span>
+							<Icon />
+							{details.label}
 						</a>
-					);
-				})}
-			</div>
+					</Button>
+				);
+			})}
 		</div>
 	);
 }

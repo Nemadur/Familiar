@@ -19,6 +19,7 @@ interface EmptyPageProps {
 	children?: ReactNode;
 
 	className?: string;
+	iconContainerClassName?: string;
 	iconClassName?: string;
 	titleClassName?: string;
 	descriptionClassName?: string;
@@ -32,6 +33,7 @@ export function EmptyPage({
 	description,
 	children,
 	className,
+	iconContainerClassName,
 	iconClassName,
 	titleClassName,
 	descriptionClassName,
@@ -45,7 +47,7 @@ export function EmptyPage({
 	return (
 		<Empty className={className}>
 			<EmptyHeader>
-				<EmptyMedia variant="icon">
+				<EmptyMedia variant="icon" className={iconContainerClassName}>
 					<Icon className={iconClassName} />
 				</EmptyMedia>
 

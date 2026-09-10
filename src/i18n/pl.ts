@@ -216,6 +216,12 @@ const pl = {
 				saved: "Zapisane",
 				liked: "Polubione",
 			},
+			portfolio: {
+				unavailable: {
+					title: "Brak portfolio",
+					description: "To konto nie ma portfolio artysty.",
+				},
+			},
 			private_content: {
 				title: "Ta zawartość jest prywatna",
 				description: "Nie masz uprawnień do wyświetlania tej zawartości.",

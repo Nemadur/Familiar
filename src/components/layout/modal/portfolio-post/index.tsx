@@ -227,7 +227,7 @@ function PostHeader({ controller }: { controller: Controller }) {
 
 	return (
 		<div className="flex min-w-0 items-center gap-3">
-			<User size="default" user={profileUser} showUsername={false} />
+			<User avatarSize="default" user={profileUser} showUsername={false} />
 		</div>
 	);
 }
@@ -417,7 +417,7 @@ function PostDetails({ controller }: { controller: Controller }) {
 	return (
 		<article className="p-4">
 			<div className="flex flex-col items-start gap-3">
-				<User size="sm" user={profileUser} />
+				<User avatarSize="sm" user={profileUser} />
 
 				<div className="ml-11.5 min-w-0 flex-1 text-sm leading-relaxed">
 					<Typography.Paragraph size="sm" className="wrap-break-word">

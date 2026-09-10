@@ -13,10 +13,12 @@ export type SpokenLanguage = {
 	experience: SpokenLanguageExperience;
 };
 
-export type SocialLink = {
-	label: string;
-	url: string;
+export type UserSocial = {
+	platform: string;
+	value: string;
 };
+
+export type UserSocials = UserSocial[];
 
 export type UserMedia = {
 	avatar: string | null;
@@ -39,33 +41,22 @@ export type TUserResponse = {
 	userId: string;
 	username: string;
 	displayName: string;
-	pronouns?: string | null;
-	bio?: string | null;
-	avatarPath?: string | null;
-	// coverPath?: string | null;
-	accentColor?: string | null;
-	isVerified?: boolean;
-	isPremium?: boolean;
-	// isPrivate?: boolean;
-	createdAt: string;
+	pronouns: string | null;
+	bio: string | null;
+	avatarPath: string | null;
+	coverPath: string | null;
+	accentColor: string | null;
+	isVerified: boolean;
+	isPremium: boolean;
 	roles: TRoles[];
+	socials: UserSocials;
+	createdAt: string;
 };
 
-export type TUserProfile = TUserResponse & {
-	badges?: UserBadge[];
-	timezone?: string | null;
-	stats: UserStats;
-	spokenLanguages?: SpokenLanguage[];
-	socialLinks?: SocialLink[];
-};
+export type TUserProfile = TUserResponse;
 
-export type UserStats = {
-	followersCount: number;
-	followingCount: number;
-	worksCount: number;
-	commissionsCount: number;
-	charactersCount: number;
-};
+export type UserIdentity = Pick<TUserResponse, "displayName" | "username"> &
+	Partial<Pick<TUserResponse, "accentColor" | "avatarPath" | "userId">>;
 
 // export type User = {
 // 	uuid: UUID;
@@ -89,7 +80,6 @@ export type UserStats = {
 // 	commissions_count: number;
 // 	characters_count: number;
 
-// 	social_links: SocialLink[];
 // 	spoken_languages: SpokenLanguage[];
 // 	badges: UserBadge[];
 
