@@ -69,13 +69,13 @@ const FollowButton = ({
 
 export function UserInfoSkeleton() {
 	return (
-		<aside className="-mt-12 h-fit space-y-3 max-lg:px-4 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10 lg:pl-4">
+		<aside className="-mt-12 h-fit flex flex-col gap-3 max-lg:px-4 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10 lg:pl-4">
 			<div className="relative z-10 flex">
 				<Skeleton className="size-32 rounded-full ring-6 ring-background" />
 			</div>
 
-			<div className="space-y-4">
-				<div className="space-y-1">
+			<div className="flex flex-col gap-4">
+				<div className="flex flex-col gap-1">
 					<Skeleton className="h-6 w-36" />
 					<Skeleton className="h-5 w-24" />
 				</div>
@@ -90,7 +90,7 @@ export function UserInfoSkeleton() {
 					<Skeleton className="h-3 w-20" />
 				</div>
 
-				<div className="space-y-2 pt-1">
+				<div className="flex flex-col gap-2 pt-1">
 					<Skeleton className="h-4 w-full" />
 					<Skeleton className="h-4 w-4/5" />
 				</div>
@@ -103,7 +103,7 @@ export function UserInfoSkeleton() {
 
 export function CommissionsContentSkeleton() {
 	return (
-		<div className="space-y-4">
+		<div className="flex flex-col gap-4">
 			<Skeleton className="h-6 w-32 rounded-md" />
 			<div className="grid gap-4">
 				{COMMISSION_SKELETON_ITEMS.map((item) => (
@@ -113,12 +113,12 @@ export function CommissionsContentSkeleton() {
 					>
 						<Skeleton className="h-[180px] w-full rounded-2xl sm:h-full sm:w-2/5" />
 						<div className="flex flex-1 flex-col justify-between gap-4 p-3 sm:pl-6">
-							<div className="space-y-3">
+							<div className="flex flex-col gap-3">
 								<div className="flex justify-between">
 									<Skeleton className="h-6 w-3/4" />
 									<Skeleton className="size-9 rounded-full" />
 								</div>
-								<div className="space-y-2">
+								<div className="flex flex-col gap-2">
 									<Skeleton className="h-4 w-1/4" />
 									<Skeleton className="h-4 w-full" />
 									<Skeleton className="h-4 w-2/3" />
@@ -160,7 +160,7 @@ export function TabContentSkeleton({ tab = "portfolio" }: { tab?: string }) {
 
 export function UserFeedsSkeleton() {
 	return (
-		<div className="mt-6 flex h-full min-h-0 w-full flex-1 flex-col pb-24">
+		<div className="mt-2 flex min-h-0 lg:mt-6 w-full flex-1 flex-col pb-12 lg:pb-24">
 			<PortfolioContentSkeleton />
 		</div>
 	);
@@ -175,7 +175,7 @@ export function UserProfileSkeleton() {
 					<div className="shrink-0 lg:w-72">
 						<UserInfoSkeleton />
 					</div>
-					<div className="flex h-full min-w-0 flex-1 flex-col pt-0">
+					<div className="flex min-h-0 min-w-0 flex-1 flex-col pt-0">
 						<UserFeedsSkeleton />
 					</div>
 				</div>
@@ -321,6 +321,7 @@ export function UserProfileSidebar({
 	};
 
 	const handleCloseSettings = () => {
+		if (!settingsOpen) return;
 		router.history.back();
 	};
 
@@ -397,7 +398,7 @@ export function UserProfileSidebar({
 
 	return (
 		<>
-			<aside className="-mt-12 h-fit space-y-3 max-lg:px-4 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10 lg:pl-4">
+			<aside className="-mt-12 h-fit flex flex-col gap-3 max-lg:px-4 lg:sticky lg:top-20 lg:-mt-16 lg:pb-10 lg:pl-4">
 				<div className="relative z-10 flex flex-row items-start justify-between gap-4 lg:flex-col lg:justify-start">
 					<UserAvatar user={user} isHuge hasOutline />
 
@@ -477,7 +478,7 @@ export function UserProfileSidebar({
 					</div> */}
 				</div>
 
-				<div className="space-y-4">
+				<div className="flex flex-col gap-4">
 					{/* User identity */}
 					<div>
 						<Typography.Heading
@@ -498,7 +499,7 @@ export function UserProfileSidebar({
 					</div>
 
 					{/* Desktop actions */}
-					<div className="flex-col gap-2">
+					<div className="flex flex-col gap-2">
 						{isMe ? (
 							<div className="flex gap-2">
 								<Button
@@ -608,7 +609,7 @@ export function UserProfileSidebar({
 								type="button"
 								variant="link"
 								size="sm"
-								className="link h-auto text-xs text-muted-foreground hover:text-foreground"
+								className="link h-auto w-fit self-start justify-start text-left text-xs text-muted-foreground hover:text-foreground"
 							>
 								{t("components.profile.info.about_me", "About me")}
 
@@ -663,7 +664,7 @@ function UserFeeds({
 	}
 
 	return (
-		<div className="flex h-full flex-1 flex-col">
+		<div className="flex min-h-0 flex-1 flex-col">
 			{/* TODO: TABS DISABLED TILL WE WILL NOT TAKE CARE OF COMMMISSIONS AND OTHER STUFF */}
 			{/* <div className="mb-6 shrink-0 justify-start pb-0 pt-2 transition-all">
 				<ScrollShadow
@@ -682,7 +683,7 @@ function UserFeeds({
 				</ScrollShadow>
 			</div> */}
 
-			<div className="mt-6 flex h-full min-h-0 flex-1 flex-col pb-24">
+			<div className="mt-2 flex min-h-0 lg:mt-6 flex-1 flex-col pb-12 lg:pb-24">
 				{children}
 			</div>
 		</div>
@@ -705,7 +706,7 @@ function UserProfileMainContent({
 	onTabChange?: (tab: string) => void;
 }) {
 	return (
-		<main className="flex h-full min-w-0 flex-1 flex-col pt-0">
+		<main className="flex min-h-0 min-w-0 flex-1 flex-col pt-0">
 			{!isSuspended && (
 				<UserFeeds
 					user={user}

@@ -40,6 +40,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useIsMobile } from "@/hooks/ui/use-mobile";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -172,8 +173,8 @@ function getFolderPreview(
 
 	const postMatchingFolderCover = posts.find((post) =>
 		(post.images ?? []).some((image) =>
-			[image.fullSize?.path, image.thumbnail?.path].some(
-				(path) => Boolean(path && folderCoverPaths.has(path)),
+			[image.fullSize?.path, image.thumbnail?.path].some((path) =>
+				Boolean(path && folderCoverPaths.has(path)),
 			),
 		),
 	);
@@ -218,6 +219,7 @@ export function ProfilePortfolio({
 	isCreatingPost = false,
 }: ProfilePortfolioProps) {
 	const locale = RouteLocale();
+	const isMobile = useIsMobile();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 
@@ -260,8 +262,7 @@ export function ProfilePortfolio({
 		(folderId ? folders.find((folder) => folder.id === folderId) : undefined);
 
 	const currentFolderPosts = useMemo(
-		() =>
-			currentFolder ? (postsByCatalogId.get(currentFolder.id) ?? []) : [],
+		() => (currentFolder ? (postsByCatalogId.get(currentFolder.id) ?? []) : []),
 		[currentFolder, postsByCatalogId],
 	);
 
@@ -340,42 +341,36 @@ export function ProfilePortfolio({
 		[filterSourcePosts],
 	);
 
-	const filterGroups = useMemo<FilterGroup<PortfolioPostResponse>[]>(
-		() => {
-			const groups: FilterGroup<PortfolioPostResponse>[] = [];
+	const filterGroups = useMemo<FilterGroup<PortfolioPostResponse>[]>(() => {
+		const groups: FilterGroup<PortfolioPostResponse>[] = [];
 
-			if (availableTags.length > 0) {
-				groups.push({
-					id: "tags",
-					label: t("components.portfolio.filters.tags", "Tags"),
-					type: "multiselect",
-					icon: Tag,
-					getItemValue: (post) => post.tags ?? [],
-					options: availableTags.map((tag) => ({
-						id: tag,
-						label: tag,
-					})),
-				});
-			}
+		if (availableTags.length > 0) {
+			groups.push({
+				id: "tags",
+				label: t("components.portfolio.filters.tags", "Tags"),
+				type: "multiselect",
+				icon: Tag,
+				getItemValue: (post) => post.tags ?? [],
+				options: availableTags.map((tag) => ({
+					id: tag,
+					label: tag,
+				})),
+			});
+		}
 
-			if (!folderId && folderFilterOptions.length > 0) {
-				groups.push({
-					id: "folders",
-					label: t(
-						"components.portfolio.filters.folders",
-						"Folders",
-					),
-					type: "multiselect",
-					icon: Folder,
-					getItemValue: (post) => post.catalogIds ?? [],
-					options: folderFilterOptions,
-				});
-			}
+		if (!folderId && folderFilterOptions.length > 0) {
+			groups.push({
+				id: "folders",
+				label: t("components.portfolio.filters.folders", "Folders"),
+				type: "multiselect",
+				icon: Folder,
+				getItemValue: (post) => post.catalogIds ?? [],
+				options: folderFilterOptions,
+			});
+		}
 
-			return groups;
-		},
-		[availableTags, folderFilterOptions, folderId, t],
-	);
+		return groups;
+	}, [availableTags, folderFilterOptions, folderId, t]);
 
 	const filteredPosts = useMemo(() => {
 		let result = [...filterSourcePosts];
@@ -480,18 +475,13 @@ export function ProfilePortfolio({
 		const folderDescription = currentFolder.description?.trim();
 
 		return (
-			<div className="flex h-full flex-1 flex-col gap-6">
+			<div className="flex min-h-0 flex-1 flex-col gap-6">
 				<section
 					aria-label={currentFolder.name}
 					className="px-4 lg:px-0 xl:px-4"
 				>
 					<div className="flex min-w-0 items-start gap-3">
-						<Button
-							variant="ghost"
-							size="icon-xl"
-							className="shrink-0"
-							asChild
-						>
+						<Button variant="ghost" size="icon-xl" className="shrink-0" asChild>
 							<Link
 								to="/{-$locale}/user/$username/$tab"
 								params={{
@@ -502,10 +492,7 @@ export function ProfilePortfolio({
 							>
 								<ArrowLeft aria-hidden="true" />
 								<span className="sr-only">
-									{t(
-										"components.portfolio.folder.back",
-										"Back to portfolio",
-									)}
+									{t("components.portfolio.folder.back", "Back to portfolio")}
 								</span>
 							</Link>
 						</Button>
@@ -618,13 +605,13 @@ export function ProfilePortfolio({
 											>
 												{deleteCatalogMutation.isPending
 													? t(
-														"components.portfolio.folder.delete.deleting",
-														"Deleting...",
-													)
+															"components.portfolio.folder.delete.deleting",
+															"Deleting...",
+														)
 													: t(
-														"components.portfolio.folder.delete.confirm",
-														"Delete",
-													)}
+															"components.portfolio.folder.delete.confirm",
+															"Delete",
+														)}
 											</AlertDialogAction>
 										</AlertDialogFooter>
 									</AlertDialogContent>
@@ -676,7 +663,7 @@ export function ProfilePortfolio({
 
 	return (
 		<>
-			<div className="flex h-full flex-1 flex-col gap-6">
+			<div className="flex min-h-0 flex-1 flex-col gap-6">
 				<FilterBar
 					className="px-4 lg:px-0 xl:px-4"
 					data={posts}
@@ -696,26 +683,36 @@ export function ProfilePortfolio({
 								{canCreateCatalog && (
 									<Button
 										type="button"
-										size="xl"
+										size={isMobile ? "icon-xl" : "xl"}
 										variant="secondary"
-										onClick={() => setCreateCatalogOpen(true)}
-									>
-										<OutlineFolderAddOuLc />
-										{t(
+										aria-label={t(
 											"components.portfolio.folder.create.title",
 											"New folder",
 										)}
+										onClick={() => setCreateCatalogOpen(true)}
+									>
+										<OutlineFolderAddOuLc data-icon="inline-start" />
+										{!isMobile &&
+											t(
+												"components.portfolio.folder.create.title",
+												"New folder",
+											)}
 									</Button>
 								)}
 
 								{canCreatePost && (
 									<Button
-										size="xl"
+										size={isMobile ? "icon-xl" : "xl"}
 										type="button"
+										aria-label={t(
+											"components.profile.actions.add_post",
+											"Create post",
+										)}
 										onClick={() => setCreatePostOpen(true)}
 									>
-										<SolidPlus />
-										{t("components.profile.actions.add_post", "Create post")}
+										<SolidPlus data-icon="inline-start" />
+										{!isMobile &&
+											t("components.profile.actions.add_post", "Create post")}
 									</Button>
 								)}
 							</div>

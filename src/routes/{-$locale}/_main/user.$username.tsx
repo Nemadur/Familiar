@@ -1,12 +1,12 @@
 import {
 	createFileRoute,
 	Link,
-	Navigate,
 	notFound,
+	redirect,
 	Outlet,
 	useLocation,
 	useNavigate,
-	useParams,
+	useMatch,
 } from "@tanstack/react-router";
 import { t } from "i18next";
 
@@ -66,6 +66,17 @@ function getProfileFaviconUrl(
 }
 
 export const Route = createFileRoute("/{-$locale}/_main/user/$username")({
+	beforeLoad: ({ params, location }) => {
+		const profilePath = `${params.locale ? `/${params.locale}` : ""}/user/${encodeURIComponent(params.username)}`;
+		if (location.pathname.replace(/\/$/, "") === profilePath) {
+			throw redirect({
+				to: "/{-$locale}/user/$username/$tab",
+				params: { ...params, tab: "portfolio" },
+				search: location.search,
+				replace: true,
+			});
+		}
+	},
 	loader: async ({ params, context }) => {
 		const user = await context.queryClient.ensureQueryData(
 			userByUsernameQueryOptions(params.username),
@@ -201,14 +212,12 @@ function RouteComponent() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const isMobile = useIsMobile();
-	const params = useParams({ strict: false }) as {
-		locale?: string;
-		tab?: string;
-		commissionId?: string;
-		commisionId?: string;
-	};
-
-	const routeTab = typeof params.tab === "string" ? params.tab : undefined;
+	const params = Route.useParams();
+	const routeTab = useMatch({
+		from: "/{-$locale}/_main/user/$username/$tab",
+		shouldThrow: false,
+		select: (match) => match.params.tab,
+	});
 	const fallbackFavicon = !user.avatarPath ? (
 		<FacehashFavicon
 			name={
@@ -221,26 +230,8 @@ function RouteComponent() {
 		/>
 	) : null;
 
-	if (!routeTab) {
-		return (
-			<>
-				{fallbackFavicon}
-				<Navigate
-					to="/{-$locale}/user/$username/$tab"
-					params={{
-						locale: params.locale,
-						username,
-						tab: "portfolio",
-					}}
-					replace
-				/>
-			</>
-		);
-	}
-
-	const activeTab = routeTab;
+	const activeTab = routeTab ?? "portfolio";
 	const hasPortfolio = hasArtistPortfolio(user);
-	const isModalOpen = Boolean(params.commissionId || params.commisionId);
 	const pathParts = location.pathname.split("/").filter(Boolean);
 	const isPostRoute =
 		activeTab === "portfolio" &&
@@ -277,7 +268,7 @@ function RouteComponent() {
 							username,
 							tab,
 						},
-						replace: isModalOpen,
+						replace: isModal,
 					});
 				}}
 			>

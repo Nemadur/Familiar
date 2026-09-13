@@ -88,6 +88,7 @@ export function CreateCatalogModal({
 		<UniversalModalLayout
 			open={open}
 			onOpenChange={onOpenChange}
+			initialFocus="content"
 			title="Create portfolio folder"
 			mediaClassName="bg-muted/30"
 			mediaContent={<CatalogPreview name={name} description={description} />}
@@ -119,7 +120,6 @@ export function CreateCatalogModal({
 								value={name}
 								maxLength={100}
 								required
-								autoFocus
 								disabled={isCreating}
 								aria-invalid={nameInvalid || undefined}
 								aria-describedby={nameDescriptionId}

@@ -316,6 +316,7 @@ export function CreatePostModal({
 		<UniversalModalLayout
 			open={open}
 			onOpenChange={onOpenChange}
+			initialFocus="content"
 			title={t("components.portfolio.post.create.title", "New Post")}
 			mediaClassName="min-h-0 bg-surface-1 lg:overflow-hidden"
 			mediaContent={
@@ -415,7 +416,6 @@ export function CreatePostModal({
 												value={title}
 												maxLength={100}
 												required
-												autoFocus
 												aria-invalid={titleInvalid || undefined}
 												aria-describedby={titleDescriptionId}
 												placeholder={t(

@@ -10,6 +10,7 @@
     "build": "bun --bun vite build",
     "preview": "bun --bun vite preview",
     "test": "bun --bun vitest -- run",
+    "test:profile": "bun --bun vitest run --config vitest.profile.config.ts",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check"

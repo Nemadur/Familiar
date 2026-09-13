@@ -49,6 +49,7 @@ interface FilterSelectorProps<TData> {
 	strategy: FilterStrategy;
 	locale?: Locale;
 	backButtonMode?: "inside" | "floating";
+	compact?: boolean;
 }
 
 export const FilterSelector = memo(
@@ -62,6 +63,7 @@ function FilterSelectorInner<TData>({
 	strategy,
 	locale = "en",
 	backButtonMode = "inside",
+	compact = false,
 }: FilterSelectorProps<TData>) {
 	const [open, setOpen] = useState(false);
 	const [value, setValue] = useState("");
@@ -188,9 +190,13 @@ function FilterSelectorInner<TData>({
 			}}
 		>
 			<PopoverTrigger asChild>
-				<Button size={"xl"} variant="outline">
-					<OutlineFilter />
-					{t("filter", locale)}
+				<Button
+					size={compact ? "icon-xl" : "xl"}
+					variant="outline"
+					aria-label={t("filter", locale)}
+				>
+					<OutlineFilter data-icon="inline-start" />
+					{!compact && t("filter", locale)}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
