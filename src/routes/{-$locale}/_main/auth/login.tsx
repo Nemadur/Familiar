@@ -14,9 +14,9 @@ function LoginPage() {
 	const { t } = useTranslation();
 
 	return (
-		<article className="flex h-full flex-1 flex-col">
+		<article className="flex min-h-0 min-w-0 flex-1 flex-col">
 			<header className="flex flex-col py-3">
-				<Typography.Heading level={3}>
+				<Typography.Heading id="auth-page-title" level={3}>
 					{t("auth.login.title", "Login")}
 				</Typography.Heading>
 				<Typography.Paragraph size="sm" className="text-muted-foreground">
@@ -24,7 +24,10 @@ function LoginPage() {
 				</Typography.Paragraph>
 			</header>
 
-			<section aria-labelledby="auth-page-title" className="mt-4 h-full">
+			<section
+				aria-labelledby="auth-page-title"
+				className="mt-4 flex min-h-0 min-w-0 flex-1 flex-col"
+			>
 				<LoginForm
 					onSuccess={() => navigate({ to: "/{-$locale}", params: { locale } })}
 					onModeChange={() =>

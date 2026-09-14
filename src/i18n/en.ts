@@ -669,6 +669,18 @@ const en = {
 					"Markdown content in legal pages no longer creates invalid nested paragraph elements.",
 				],
 			},
+			v0_8_1: {
+				Improved: [
+					"Unified form styling and validation across authentication and profile editing.",
+					"Updated profiles with a refreshed layout, profile details, social links, and editing controls.",
+				],
+				Fixed: [
+					"Corrected mobile profile spacing and reduced excess space above empty portfolios.",
+					"Made mobile portfolio filter, new folder, and create post actions compact icon buttons while keeping search usable.",
+					"Aligned the login form and artwork with the available page height and removed unnecessary desktop scrolling.",
+					"Fixed repeated navigation when opening a user profile.",
+				],
+			},
 			v0_8_0: {
 				Added: [
 					"Added the Shop feature with browsing, categories, and item filtering.",

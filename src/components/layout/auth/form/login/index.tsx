@@ -57,7 +57,7 @@ function LoginForm({ onSuccess, onForgot }: LoginFormProps) {
 		<Form {...form}>
 			<form
 				onSubmit={handleSubmit(onSubmit)}
-				className="flex min-h-75 h-full w-full flex-col"
+				className="flex min-h-75 w-full flex-1 flex-col gap-6"
 				aria-label={t("auth.login.cta")}
 			>
 				<fieldset
@@ -129,7 +129,9 @@ function LoginForm({ onSuccess, onForgot }: LoginFormProps) {
 													size="icon-xs"
 													aria-label={passwordToggleLabel}
 													aria-pressed={showPassword}
-													onClick={() => setShowPassword((previous) => !previous)}
+													onClick={() =>
+														setShowPassword((previous) => !previous)
+													}
 												>
 													{showPassword ? (
 														<OutlineEyeOff aria-hidden="true" />

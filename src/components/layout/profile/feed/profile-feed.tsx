@@ -1,10 +1,4 @@
-import {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type {
@@ -38,15 +32,11 @@ const GAP = 1;
 const MOBILE_COLUMN_COUNT = 2;
 const TABLET_COLUMN_COUNT = 3;
 
-function hasPostId(
-	post: PortfolioPostResponse,
-): post is PortfolioPostWithId {
+function hasPostId(post: PortfolioPostResponse): post is PortfolioPostWithId {
 	return typeof post.id === "string" && post.id.length > 0;
 }
 
-function getImagePath(
-	image?: PortfolioPostImageResponse,
-): string | undefined {
+function getImagePath(image?: PortfolioPostImageResponse): string | undefined {
 	return image?.fullSize?.path ?? image?.thumbnail?.path;
 }
 
@@ -139,23 +129,17 @@ export function ProfileFeed({
 			tiles.map((tile) =>
 				tile.heightUnit > tile.widthUnit
 					? {
-						...tile,
-						widthUnit: 2,
-						heightUnit: 3,
-					}
+							...tile,
+							widthUnit: 2,
+							heightUnit: 3,
+						}
 					: tile,
 			),
 		[tiles],
 	);
 
 	const mobilePlaced = useMemo(
-		() =>
-			packAppend(
-				[],
-				mobileTiles,
-				MOBILE_COLUMN_COUNT,
-				"balanced",
-			),
+		() => packAppend([], mobileTiles, MOBILE_COLUMN_COUNT, "balanced"),
 		[mobileTiles],
 	);
 
@@ -164,10 +148,10 @@ export function ProfileFeed({
 			tiles.map((tile) =>
 				tile.heightUnit > tile.widthUnit
 					? {
-						...tile,
-						widthUnit: 1,
-						heightUnit: 2,
-					}
+							...tile,
+							widthUnit: 1,
+							heightUnit: 2,
+						}
 					: tile,
 			),
 		[tiles],
@@ -182,9 +166,7 @@ export function ProfileFeed({
 	const compactColumnCount = useTabletCompactLayout
 		? TABLET_COLUMN_COUNT
 		: MOBILE_COLUMN_COUNT;
-	const compactPlaced = useTabletCompactLayout
-		? tabletPlaced
-		: mobilePlaced;
+	const compactPlaced = useTabletCompactLayout ? tabletPlaced : mobilePlaced;
 
 	const { cols, placed } = useBento(tiles, "balanced");
 
@@ -282,8 +264,7 @@ export function ProfileFeed({
 
 		const cell = Math.max(
 			0,
-			(width - (compactColumnCount - 1) * GAP) /
-			compactColumnCount,
+			(width - (compactColumnCount - 1) * GAP) / compactColumnCount,
 		);
 		const layout = toPixels(compactPlaced, cell, GAP);
 
@@ -300,8 +281,7 @@ export function ProfileFeed({
 
 		const cell = Math.max(
 			0,
-			(width - (TABLET_COLUMN_COUNT - 1) * GAP) /
-			TABLET_COLUMN_COUNT,
+			(width - (TABLET_COLUMN_COUNT - 1) * GAP) / TABLET_COLUMN_COUNT,
 		);
 		const layout = toPixels(tabletPlaced, cell, GAP);
 
@@ -312,24 +292,26 @@ export function ProfileFeed({
 	}, [tabletPlaced, width]);
 
 	const emptyState = (
-		<div className="flex h-full flex-1 flex-col items-center justify-center py-12">
-			<EmptyPage
-				icon={OutlineFolderAddOuLc}
-				title={t(
-					"components.profile.portfolio.empty.title",
-					"No posts yet.",
-				)}
-				description={t(
-					"components.profile.portfolio.empty.description",
-					"This user hasn't posted anything to their portfolio yet.",
-				)}
-			/>
-		</div>
+		<EmptyPage
+			icon={OutlineFolderAddOuLc}
+			title={t("components.profile.portfolio.empty.title", "No posts yet.")}
+			description={t(
+				"components.profile.portfolio.empty.description",
+				"This user hasn't posted anything to their portfolio yet.",
+			)}
+			className="min-h-80 px-6 py-12"
+		/>
 	);
 
 	if (postById.size === 0 && !isMeasuring) {
 		return (
-			<div className={cn("w-auto min-w-0 max-w-full", className)}>
+			<div
+				ref={containerRef}
+				className={cn(
+					"flex min-h-0 w-auto min-w-0 max-w-full flex-1 flex-col",
+					className,
+				)}
+			>
 				{emptyState}
 			</div>
 		);

@@ -26,11 +26,11 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "../ui/sheet";
+import { Skeleton } from "../ui/skeleton";
 import { BasketDropdown } from "./basket-dropdown";
 import UserDropDown from "./profile/drop-down";
 import User from "./profile/user";
 import CurrencySelect from "./select/currency";
-import { Skeleton } from "../ui/skeleton";
 
 function HeaderUserSkeleton() {
 	return (
@@ -197,10 +197,10 @@ const NavLinks = memo(() => {
 				return isActive ? <SolidHome /> : <OutlineHome />;
 			// case "/roadmap":
 			// 	return isActive ? <SolidReceipt /> : <OutlineReceipt />;
-			case "/shop":
-				return isActive ? <SolidReceipt /> : <OutlineReceipt />;
-			case "/blog":
-				return isActive ? <SolidFileText /> : <OutlineFileText />;
+			// case "/shop":
+			// 	return isActive ? <SolidReceipt /> : <OutlineReceipt />;
+			// case "/blog":
+			// 	return isActive ? <SolidFileText /> : <OutlineFileText />;
 			// case "/chat":
 			// 	return isActive ? <SolidChat /> : <OutlineChat />;
 			default:
@@ -211,7 +211,7 @@ const NavLinks = memo(() => {
 	const navigationLinks = [
 		{ path: "/", label: t("header.navigation.home", "Home") },
 		// { path: "/roadmap", label: t("footer.navigation.roadmap", "Roadmap") },
-		{ path: "/shop", label: t("header.navigation.shop", "Shop") },
+		// { path: "/shop", label: t("header.navigation.shop", "Shop") },
 		// { path: "/chat", label: t("header.navigation.messages", "Messages") },
 		// { path: "/blog", label: t("header.navigation.blog") },
 		// { path: "/users", label: t("header.navigation.users") },

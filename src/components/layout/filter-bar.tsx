@@ -21,6 +21,7 @@ import type {
 	OptionFilterOperator,
 	TextFilterOperator,
 } from "@/components/data-table-filter/core/types";
+import { useIsMobile } from "@/hooks/ui/use-mobile";
 import { cn } from "@/lib/utils";
 import {
 	InputGroup,
@@ -453,6 +454,7 @@ export function FilterBar<TData>({
 	endAction,
 	className,
 }: FilterBarProps<TData>) {
+	const isMobile = useIsMobile();
 	const dtf = useMemo(() => createColumnConfigHelper<TData>(), []);
 
 	const columnsConfig = useMemo<ReadonlyArray<ColumnConfig<TData>>>(() => {
@@ -568,14 +570,15 @@ export function FilterBar<TData>({
 	);
 
 	return (
-		<div className={cn("flex flex-col gap-3", className)}>
-			<div className="flex items-center gap-3">
-				<div className="min-w-0 flex-1">
+		<div className={cn("flex min-w-0 flex-col gap-3", className)}>
+			<div className="flex flex-wrap items-center gap-2 sm:gap-3">
+				<div className="min-w-32 flex-1">
 					<InputGroup className="w-full">
 						<InputGroupAddon>
 							<Search className="size-4" />
 						</InputGroupAddon>
 						<InputGroupInput
+							aria-label={searchPlaceholder}
 							value={searchQuery}
 							onChange={(event) => onSearchChange?.(event.target.value)}
 							placeholder={searchPlaceholder}
@@ -590,29 +593,32 @@ export function FilterBar<TData>({
 						actions={wrappedActions}
 						strategy={strategy}
 						backButtonMode="floating"
+						compact={isMobile}
 					/>
 					{endAction}
 				</div>
 			</div>
 
-			<ScrollShadow
-				orientation="horizontal"
-				hideScrollBar
-				className="flex w-full justify-between"
-			>
-				<div className="flex min-w-max items-start gap-2 pb-1">
-					<ActiveFilters
-						columns={columns}
-						filters={filters}
+			{filters.length > 0 && (
+				<ScrollShadow
+					orientation="horizontal"
+					hideScrollBar
+					className="flex w-full justify-between"
+				>
+					<div className="flex min-w-max items-start gap-2 pb-1">
+						<ActiveFilters
+							columns={columns}
+							filters={filters}
+							actions={wrappedActions}
+							strategy={strategy}
+						/>
+					</div>
+					<FilterActions
+						hasFilters={filters.length > 0}
 						actions={wrappedActions}
-						strategy={strategy}
 					/>
-				</div>
-				<FilterActions
-					hasFilters={filters.length > 0}
-					actions={wrappedActions}
-				/>
-			</ScrollShadow>
+				</ScrollShadow>
+			)}
 		</div>
 	);
 }

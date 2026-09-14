@@ -40,6 +40,8 @@ interface UniversalModalLayoutProps {
 	detailsFooterContent?: ReactNode;
 
 	title?: string;
+	/** Focus the dialog container on opening without activating a text input. */
+	initialFocus?: "default" | "content";
 
 	showBookmark?: boolean;
 	isBookmarked?: boolean;
@@ -66,6 +68,7 @@ export function UniversalModalLayout({
 	detailsHeaderContent,
 	detailsFooterContent,
 	title = "Details",
+	initialFocus = "default",
 	showBookmark = false,
 	isBookmarked = false,
 	onBookmark,
@@ -75,6 +78,15 @@ export function UniversalModalLayout({
 	mediaAspectRatio,
 }: UniversalModalLayoutProps) {
 	const isTablet = useIsTablet();
+	const contentRef = useRef<HTMLDivElement>(null);
+	const handleOpenAutoFocus = useCallback(
+		(event: Event) => {
+			if (initialFocus !== "content") return;
+			event.preventDefault();
+			contentRef.current?.focus({ preventScroll: true });
+		},
+		[initialFocus],
+	);
 
 	const { active: bookmarked, handleAction } = useLocalAction({
 		initialActive: isBookmarked,
@@ -157,7 +169,12 @@ export function UniversalModalLayout({
 	if (isTablet) {
 		return (
 			<Drawer open={open} onOpenChange={onOpenChange}>
-				<DrawerContent className="flex max-h-[96dvh] flex-col overflow-hidden p-0">
+				<DrawerContent
+					ref={contentRef}
+					tabIndex={-1}
+					onOpenAutoFocus={handleOpenAutoFocus}
+					className="flex max-h-[96dvh] flex-col overflow-hidden p-0"
+				>
 					<DrawerTitle className="sr-only">{title}</DrawerTitle>
 
 					<DrawerDescription className="sr-only">
@@ -241,6 +258,9 @@ export function UniversalModalLayout({
 			</DialogPortal>
 
 			<DialogContent
+				ref={contentRef}
+				tabIndex={-1}
+				onOpenAutoFocus={handleOpenAutoFocus}
 				showCloseButton={false}
 				onInteractOutside={(event) => {
 					if (

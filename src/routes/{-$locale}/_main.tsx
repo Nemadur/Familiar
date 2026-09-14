@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useMatch } from "@tanstack/react-router";
 import { Container } from "@/components/layout/container";
 import FloatingToolbar from "@/components/layout/floating-toolbar";
 import Footer from "@/components/layout/footer";
@@ -14,8 +14,15 @@ export const Route = createFileRoute("/{-$locale}/_main")({
 });
 
 function MainLayout() {
+	const isAuthPage = Boolean(
+		useMatch({
+			from: "/{-$locale}/_main/auth",
+			shouldThrow: false,
+			select: (match) => match.id,
+		}),
+	);
 	return (
-		<div className={"flex min-h-screen flex-col"}>
+		<div className={"flex min-h-dvh flex-col"}>
 			<Container className="flex h-full flex-1 flex-col">
 				<Header />
 				<main
@@ -26,7 +33,7 @@ function MainLayout() {
 					<Outlet />
 				</main>
 				<FloatingToolbar />
-				<Footer />
+				{!isAuthPage && <Footer />}
 			</Container>
 		</div>
 	);

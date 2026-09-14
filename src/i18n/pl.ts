@@ -672,6 +672,18 @@ const pl = {
 					"Treści Markdown na stronach prawnych nie tworzą już niepoprawnych, zagnieżdżonych akapitów.",
 				],
 			},
+			v0_8_1: {
+				Improved: [
+					"Ujednolicono wygląd i walidację formularzy logowania, rejestracji oraz edycji profilu.",
+					"Odświeżono układ profilu, informacje o użytkowniku, linki społecznościowe i opcje edycji.",
+				],
+				Fixed: [
+					"Poprawiono odstępy profilu na urządzeniach mobilnych i zmniejszono pustą przestrzeń nad pustym portfolio.",
+					"Na telefonach zastąpiono przyciski filtrowania, tworzenia folderu i dodawania posta kompaktowymi ikonami, zachowując miejsce na wyszukiwanie.",
+					"Dopasowano formularz logowania i ilustrację do wysokości strony oraz usunięto zbędne przewijanie na komputerach.",
+					"Naprawiono zapętlone przekierowanie podczas otwierania profilu użytkownika.",
+				],
+			},
 			v0_8_0: {
 				Added: [
 					"Dodano moduł Sklepu z możliwością przeglądania, kategoriami i filtrowaniem przedmiotów.",
